@@ -1,4 +1,4 @@
-# yiwen.ai web app
+# yiwen.ai component library
 
 ## Development
 
@@ -6,9 +6,6 @@
 # install dependencies
 pnpm install
 
-# start dev server
+# start storybook
 pnpm start
-
-# build for production
-pnpm run build
 ```

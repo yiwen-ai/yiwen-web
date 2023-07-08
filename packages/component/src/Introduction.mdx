@@ -1,0 +1,27 @@
+import { Meta } from '@storybook/blocks'
+
+<Meta title="Introduction" />
+
+# Yiwen AI component library
+
+View the latest design in [Figma](https://www.figma.com/file/JXx2A1nhVCCDSSM3zGC8rf/Yiwen-AI-team-library?type=design&t=1iOshXmTB19zXpNf-6).
+
+Learn to write a story in the [Storybook](https://storybook.js.org/docs/react/writing-stories/introduction) docs.
+
+## Get started
+
+```typescript
+import { GlobalStyles, ThemeProvider } from '@yiwen-ai/component'
+import { darkTheme, lightTheme, useDarkMode } from '@yiwen-ai/component/theme'
+
+export default function App() {
+  const [darkMode] = useDarkMode()
+
+  return (
+    <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
+      <GlobalStyles />
+      <RouterProvider router={router} />
+    </ThemeProvider>
+  )
+}
+```
