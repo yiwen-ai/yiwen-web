@@ -1,19 +1,27 @@
 import { ThemeProvider, useTheme, type Theme } from '@emotion/react'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 
 export { ThemeProvider, useTheme }
+
+interface Typography
+  extends Required<
+    Pick<CSSProperties, 'fontSize' | 'fontWeight' | 'lineHeight'>
+  > {}
 
 declare module '@emotion/react' {
   // TODO: fix this
   interface Theme {
-    colors: {
+    color: {
+      primaryNormal: string
+      primaryLight: string
+      grayNormal: string
+      grayLight: string
+      grayLight0: string
+      grayLight1: string
+      orange: string
+      green: string
+      // TODO
       background: string
-      backgroundInverse: string
-      positive: string
-      negative: string
-      primary: string
-      secondary: string
-      tertiary: string
       text: string
     }
     spacing: {
@@ -27,42 +35,34 @@ declare module '@emotion/react' {
         default: number
       }
     }
+    font: {
+      primary: string
+      code: string
+    }
     typography: {
-      type: {
-        primary: string
-        code: string
-      }
-      weight: {
-        regular: number
-        bold: number
-        extrabold: number
-        black: number
-      }
-      size: {
-        s1: number
-        s2: number
-        s3: number
-        m1: number
-        m2: number
-        m3: number
-        l1: number
-        l2: number
-        l3: number
-      }
+      heading0: Typography
+      heading1: Typography
+      heading2: Typography
+      bodyText: Typography
+      bodyTextBold: Typography
+      tooltip: Typography
     }
   }
 }
 
 export const lightTheme: Theme = {
-  colors: {
-    background: '#F6F9FC',
-    backgroundInverse: '#7A8997',
-    positive: '#E1FFD4',
-    negative: '#FEDED2',
-    primary: '#FF4785',
-    secondary: '#1EA7FD',
-    tertiary: '#DDDDDD',
-    text: '#222222',
+  color: {
+    primaryNormal: '#745DF9',
+    primaryLight: '#988BFF',
+    grayNormal: '#1F1E40',
+    grayLight: '#7C7C94',
+    grayLight0: '#CECEE2',
+    grayLight1: '#F7F7FB',
+    orange: '#DA442F',
+    green: '#4BA755',
+    // TODO
+    background: '#F7F7FB',
+    text: '#1F1E40',
   },
   spacing: {
     padding: {
@@ -75,65 +75,71 @@ export const lightTheme: Theme = {
       default: 10,
     },
   },
+  font: {
+    primary: '"PingFang SC", sans-serif',
+    code: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
+  },
   typography: {
-    type: {
-      primary: '"Nunito Sans", "Helvetica Neue", Helvetica, Arial, sans-serif',
-      code: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
+    heading0: {
+      fontSize: '42px',
+      fontWeight: 600,
+      lineHeight: '50px',
     },
-    weight: {
-      regular: 400,
-      bold: 700,
-      extrabold: 800,
-      black: 900,
+    heading1: {
+      fontSize: '28px',
+      fontWeight: 400,
+      lineHeight: '36px',
     },
-    size: {
-      s1: 12,
-      s2: 14,
-      s3: 16,
-      m1: 20,
-      m2: 24,
-      m3: 28,
-      l1: 32,
-      l2: 40,
-      l3: 48,
+    heading2: {
+      fontSize: '20px',
+      fontWeight: 400,
+      lineHeight: '28px',
+    },
+    bodyText: {
+      fontSize: '16px',
+      fontWeight: 400,
+      lineHeight: '28px',
+    },
+    bodyTextBold: {
+      fontSize: '16px',
+      fontWeight: 600,
+      lineHeight: '28px',
+    },
+    tooltip: {
+      fontSize: '12px',
+      fontWeight: 400,
+      lineHeight: '20px',
     },
   },
 }
 
-// TODO
 export const darkTheme: Theme = {
   ...lightTheme,
-  colors: {
-    background: '#1b1c1d',
-    backgroundInverse: '#333333',
-    positive: '#9fd986',
-    negative: '#df987d',
-    primary: '#d43369',
-    secondary: '#1b8bd0',
-    tertiary: '#DDDDDD',
-    text: '#FFFFFF',
+  color: {
+    // TODO
+    ...lightTheme.color,
+    // TODO
+    background: lightTheme.color.grayNormal,
+    text: lightTheme.color.grayLight1,
   },
 }
 
 export const useDarkMode = () => {
-  const [darkMode, setDarkMode] = useState(false)
+  const query = useMemo(() => {
+    return window.matchMedia('(prefers-color-scheme: dark)')
+  }, [])
+
+  const [darkMode, setDarkMode] = useState(query.matches)
 
   useEffect(() => {
-    const list = window.matchMedia('(prefers-color-scheme: dark)')
-    setDarkMode(list.matches)
-
     const handleChange = (ev: MediaQueryListEvent) => {
       setDarkMode(ev.matches)
     }
-    list.addEventListener('change', handleChange)
+    query.addEventListener('change', handleChange)
     return () => {
-      list.removeEventListener('change', handleChange)
+      query.removeEventListener('change', handleChange)
     }
-  }, [])
+  }, [query])
 
-  const toggleTheme = useCallback(() => {
-    setDarkMode((prev) => !prev)
-  }, [])
-
-  return [darkMode, toggleTheme] as const
+  return darkMode
 }
