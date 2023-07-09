@@ -46,9 +46,14 @@ module.exports = {
         alphabetize: { order: 'asc' },
       },
     ],
+    'no-useless-rename': 'error',
     'react/jsx-boolean-value': ['error', 'always'],
     'react/no-unknown-property': ['error', { ignore: ['css'] }],
-    'react-refresh/only-export-components': 'error',
+    'react/prop-types': 'off',
+    'react-refresh/only-export-components': [
+      'error',
+      { allowConstantExport: true },
+    ],
   },
   settings: {
     'import/internal-regex': '^#',
