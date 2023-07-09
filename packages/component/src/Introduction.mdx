@@ -13,15 +13,35 @@ Learn to write a story in the [Storybook](https://storybook.js.org/docs/react/wr
 ```typescript
 import { GlobalStyles, ThemeProvider } from '@yiwen-ai/component'
 import { darkTheme, lightTheme, useDarkMode } from '@yiwen-ai/component/theme'
+import {
+  Outlet,
+  Route,
+  RouterProvider,
+  createBrowserRouter,
+  createRoutesFromElements,
+} from 'react-router-dom'
+import Home from './routes/Home.tsx'
 
-export default function App() {
-  const [darkMode] = useDarkMode()
+function Layout() {
+  const darkMode = useDarkMode()
 
   return (
     <ThemeProvider theme={darkMode ? darkTheme : lightTheme}>
       <GlobalStyles />
-      <RouterProvider router={router} />
+      <Outlet />
     </ThemeProvider>
   )
+}
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route element={<Layout />}>
+      <Route path="/" element={<Home />} />
+    </Route>
+  )
+)
+
+export default function App() {
+  return <RouterProvider router={router} />
 }
 ```

@@ -1,5 +1,5 @@
 import { ThemeProvider, useTheme, type Theme } from '@emotion/react'
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 export { ThemeProvider, useTheme }
 
@@ -116,24 +116,21 @@ export const darkTheme: Theme = {
 }
 
 export const useDarkMode = () => {
-  const [darkMode, setDarkMode] = useState(false)
+  const query = useMemo(() => {
+    return window.matchMedia('(prefers-color-scheme: dark)')
+  }, [])
+
+  const [darkMode, setDarkMode] = useState(query.matches)
 
   useEffect(() => {
-    const list = window.matchMedia('(prefers-color-scheme: dark)')
-    setDarkMode(list.matches)
-
     const handleChange = (ev: MediaQueryListEvent) => {
       setDarkMode(ev.matches)
     }
-    list.addEventListener('change', handleChange)
+    query.addEventListener('change', handleChange)
     return () => {
-      list.removeEventListener('change', handleChange)
+      query.removeEventListener('change', handleChange)
     }
-  }, [])
+  }, [query])
 
-  const toggleTheme = useCallback(() => {
-    setDarkMode((prev) => !prev)
-  }, [])
-
-  return [darkMode, toggleTheme] as const
+  return darkMode
 }

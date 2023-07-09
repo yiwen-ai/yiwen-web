@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 
 export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   title: string
@@ -13,7 +13,9 @@ export const Header = memo(function Header({
 }: HeaderProps) {
   return (
     <header {...props}>
-      <h1>{title}</h1>
+      <Link to="/">
+        <h1>{title}</h1>
+      </Link>
       <nav>
         <ul>
           {links.map((link, index) => (
