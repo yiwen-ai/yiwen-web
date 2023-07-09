@@ -1,4 +1,3 @@
-/* eslint-env node */
 /** @type {import('eslint').Linter.Config} */
 module.exports = {
   root: true,
@@ -20,9 +19,14 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
+    project: true,
   },
   plugins: ['react-refresh'],
   rules: {
+    '@typescript-eslint/consistent-type-exports': [
+      'error',
+      { fixMixedExportsWithInlineTypeSpecifier: true },
+    ],
     '@typescript-eslint/consistent-type-imports': [
       'error',
       { fixStyle: 'inline-type-imports' },
@@ -42,8 +46,9 @@ module.exports = {
         alphabetize: { order: 'asc' },
       },
     ],
+    'react/jsx-boolean-value': ['error', 'always'],
     'react/no-unknown-property': ['error', { ignore: ['css'] }],
-    'react-refresh/only-export-components': 'warn',
+    'react-refresh/only-export-components': 'error',
   },
   settings: {
     'import/internal-regex': '^#',
