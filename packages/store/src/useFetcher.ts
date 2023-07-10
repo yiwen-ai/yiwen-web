@@ -1,14 +1,13 @@
+import { joinURL } from '@yiwen-ai/util'
 import { createContext, useCallback, useContext } from 'react'
 
 export interface FetcherConfig {
+  PUBLIC_PATH: string
   API_URL: string
   AUTH_URL: string
 }
 
-const FetcherConfigContext = createContext<FetcherConfig>({
-  API_URL: 'https://api.yiwen.ai/',
-  AUTH_URL: 'https://auth.yiwen.ai/',
-})
+const FetcherConfigContext = createContext({} as FetcherConfig)
 
 export const FetcherConfigProvider = FetcherConfigContext.Provider
 
@@ -23,14 +22,18 @@ export function useFetcher(baseURL?: string) {
 
   return useCallback(
     async (url: string, method: Method = 'GET') => {
-      const resp = await fetch(new URL(url, baseURL ?? API_URL), {
+      const resp = await fetch(joinURL(baseURL ?? API_URL, url), {
         method,
         headers: {
           // TODO: add auth header
         },
         credentials: 'include', // TODO: remove this
       })
-      return resp.json()
+      if (resp.status >= 200 && resp.status < 300) {
+        return resp.json()
+      } else {
+        throw await resp.json()
+      }
     },
     [API_URL, baseURL]
   )

@@ -116,11 +116,8 @@ export const lightTheme: Theme = {
 export const darkTheme: Theme = {
   ...lightTheme,
   color: {
-    // TODO
+    // TODO: wait for design
     ...lightTheme.color,
-    // TODO
-    background: lightTheme.color.grayNormal,
-    text: lightTheme.color.grayLight1,
   },
 }
 

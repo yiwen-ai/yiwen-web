@@ -1,8 +1,8 @@
 import { css } from '@emotion/react'
 import { memo } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+import { AccountManager } from './AccountManager'
 import { Logo } from './Logo'
-import { UserBox } from './UserBox'
 
 export interface HeaderLink {
   to: string
@@ -75,7 +75,7 @@ export const Header = memo(function Header({
           gap: 40px;
         `}
       >
-        <UserBox />
+        <AccountManager />
       </div>
     </header>
   )
