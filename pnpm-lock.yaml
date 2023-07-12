@@ -132,13 +132,22 @@ importers:
 
   packages/store:
     dependencies:
+      lodash-es:
+        specifier: ^4.17.21
+        version: 4.17.21
       swr:
         specifier: ^2.2.0
         version: 2.2.0(react@18.2.0)
     devDependencies:
+      '@types/lodash-es':
+        specifier: ^4.17.7
+        version: 4.17.7
       '@types/react':
         specifier: ^18.2.14
         version: 18.2.14
+      '@yiwen-ai/util':
+        specifier: workspace:*
+        version: link:../util
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -148,7 +157,16 @@ importers:
       hex-rgb:
         specifier: ^5.0.0
         version: 5.0.0
+      lodash-es:
+        specifier: ^4.17.21
+        version: 4.17.21
+      url-join:
+        specifier: ^5.0.0
+        version: 5.0.0
     devDependencies:
+      '@types/lodash-es':
+        specifier: ^4.17.7
+        version: 4.17.7
       '@types/react':
         specifier: ^18.2.14
         version: 18.2.14
@@ -167,6 +185,9 @@ importers:
       '@emotion/react':
         specifier: ^11.11.1
         version: 11.11.1(@types/react@18.2.14)(react@18.2.0)
+      '@types/lodash-es':
+        specifier: ^4.17.7
+        version: 4.17.7
       '@types/react':
         specifier: ^18.2.14
         version: 18.2.14
@@ -188,6 +209,9 @@ importers:
       '@yiwen-ai/util':
         specifier: workspace:*
         version: link:../util
+      lodash-es:
+        specifier: ^4.17.21
+        version: 4.17.21
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -4672,6 +4696,12 @@ packages:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
     dev: true
 
+  /@types/lodash-es@4.17.7:
+    resolution: {integrity: sha512-z0ptr6UI10VlU6l5MYhGwS4mC8DZyYer2mCoyysZtSF7p26zOX8UpbrV0YpNYLGS8K4PUFIyEr62IMFFjveSiQ==}
+    dependencies:
+      '@types/lodash': 4.14.195
+    dev: true
+
   /@types/lodash@4.14.195:
     resolution: {integrity: sha512-Hwx9EUgdwf2GLarOjQp5ZH8ZmblzcbTBC2wtQWNKARBSxM9ezRIAUpeDTgoQRAFB0+8CNWXVA9+MaSOzOF3nPg==}
     dev: true
@@ -8463,6 +8493,9 @@ packages:
       p-locate: 5.0.0
     dev: true
 
+  /lodash-es@4.17.21:
+    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
+
   /lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
     dev: true
@@ -11009,6 +11042,11 @@ packages:
     dependencies:
       punycode: 2.3.0
     dev: true
+
+  /url-join@5.0.0:
+    resolution: {integrity: sha512-n2huDr9h9yzd6exQVnH/jU5mr+Pfx08LRXXZhkLLetAMESRj+anQsTAh940iMrIetKAmry9coFuZQ2jY8/p3WA==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dev: false
 
   /use-resize-observer@9.1.0(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-R25VqO9Wb3asSD4eqtcxk8sJalvIOYBqS8MNZlpDSQ4l4xMQxC/J7Id9HoTqPq8FwULIn0PVW+OAqF2dyYbjow==}

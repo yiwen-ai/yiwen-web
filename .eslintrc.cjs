@@ -46,14 +46,15 @@ module.exports = {
         alphabetize: { order: 'asc' },
       },
     ],
+    'no-console': 'error',
     'no-useless-rename': 'error',
-    'react/jsx-boolean-value': ['error', 'always'],
-    'react/no-unknown-property': ['error', { ignore: ['css'] }],
-    'react/prop-types': 'off',
     'react-refresh/only-export-components': [
       'error',
       { allowConstantExport: true },
     ],
+    'react/jsx-boolean-value': ['error', 'always'],
+    'react/no-unknown-property': ['error', { ignore: ['css'] }],
+    'react/prop-types': 'off',
   },
   settings: {
     'import/internal-regex': '^#',

@@ -11,9 +11,9 @@ const DEFAULT_SIZE: Record<AvatarSize, number> = {
 }
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
-  src?: string
+  src: string | undefined
   alt?: string
-  name?: string
+  name: string | undefined
   size?: AvatarSize
 }
 

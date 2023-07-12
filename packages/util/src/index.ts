@@ -1,2 +1,7 @@
+export { isWindow } from './isWindow'
+export { joinURL } from './joinURL'
 export { toRGBA } from './toRGBA'
+export { toURLSearchParams } from './toURLSearchParams'
+export { useChannel, useConnect, type ChannelMessage } from './useChannel'
+export { useSubscriptionManager } from './useSubscriptionManager'
 export { useUserTheme } from './useUserTheme'
