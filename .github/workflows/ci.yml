@@ -24,4 +24,5 @@ jobs:
       - run: pnpm install
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: pnpm test --recursive --if-present
+      - run: pnpm --recursive --parallel test
+      - run: pnpm --recursive --parallel run build
