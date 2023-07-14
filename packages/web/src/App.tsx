@@ -13,11 +13,11 @@ import {
   createBrowserRouter,
   createRoutesFromElements,
 } from 'react-router-dom'
-import useConfig from './config.ts'
-import Home from './routes/Home.tsx'
-import LoginState from './routes/LoginState.tsx'
-import NotFound from './routes/NotFound.tsx'
-import Publication from './routes/Publication.tsx'
+import useConfig from './config'
+import Home from './routes/Home'
+import LoginState from './routes/LoginState'
+import NotFound from './routes/NotFound'
+import Publication from './routes/Publication'
 
 function Layout() {
   const [theme] = useUserTheme()
@@ -49,7 +49,8 @@ const router = createBrowserRouter(
       <Route path="/p/:id" element={<Publication />} />
       <Route path="/login/state" element={<LoginState />} />
     </Route>
-  )
+  ),
+  { basename: import.meta.env.BASE_URL }
 )
 
 export default function App() {

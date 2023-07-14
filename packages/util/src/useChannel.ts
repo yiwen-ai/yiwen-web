@@ -1,16 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo } from 'react'
-import { isWindow } from './isWindow'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { ChannelMessageHelper, type ChannelMessage } from './ChannelMessage'
 import {
   useSubscriptionManager,
   type Unsubscribe,
 } from './useSubscriptionManager'
 
-export interface ChannelMessage<T = unknown> {
-  type: string
-  payload: T
-}
-
-type ChannelSource = Window | ServiceWorker | Worker | null
+type MessageEndpoint = Window | ServiceWorker | Worker | null
 
 interface Channel {
   send: (message: ChannelMessage) => void
@@ -19,17 +14,24 @@ interface Channel {
   ) => Unsubscribe
 }
 
-const CONNECT_MESSAGE = { type: '$$CONNECT' } as ChannelMessage
+const [CONNECT_MESSAGE, isConnectMessage] =
+  ChannelMessageHelper.create('$$CONNECT').freeze()
 
-export function useChannel(target: ChannelSource) {
+export function useChannel(target: MessageEndpoint) {
   const channel = useMemo(() => new MessageChannel(), [])
+  const initialized = useRef(false)
 
   useLayoutEffect(() => {
     if (!target) return
-    if (isWindow(target)) {
-      target.postMessage(CONNECT_MESSAGE, location.origin, [channel.port2])
-    } else {
-      target.postMessage(CONNECT_MESSAGE, [channel.port2])
+    if (initialized.current) return
+    try {
+      target.postMessage(CONNECT_MESSAGE, {
+        transfer: [channel.port2],
+        targetOrigin: location.origin, // send to same origin only
+      })
+      initialized.current = true
+    } catch {
+      // ignore
     }
   }, [channel.port2, target])
 
@@ -72,11 +74,15 @@ export function useConnect() {
   const subscriptionManager = useSubscriptionManager()
 
   return useCallback(
-    (source: ChannelSource) => {
+    (source: MessageEndpoint) => {
       return new Promise<Channel>((resolve) => {
         if (!source) return resolve(createChannel(undefined))
         const listener = (ev: MessageEvent<ChannelMessage | undefined>) => {
-          if (ev.source === source && ev.data?.type === CONNECT_MESSAGE.type) {
+          if (
+            ev.source === source &&
+            ev.origin === location.origin && // receive from same origin only
+            isConnectMessage(ev.data)
+          ) {
             const port2 = ev.ports[0]
             resolve(createChannel(port2))
             subscriptionManager.addUnsubscribe(() => port2.close()) // TODO: also remove all listeners

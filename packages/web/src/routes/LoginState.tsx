@@ -1,4 +1,4 @@
-import { AUTHORIZED } from '@yiwen-ai/store'
+import { AuthorizationResult } from '@yiwen-ai/store'
 import { useChannel } from '@yiwen-ai/util'
 import { useLayoutEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -9,7 +9,7 @@ export default function LoginState() {
   const channel = useChannel(window.opener as Window | null)
 
   useLayoutEffect(() => {
-    if (status === 200) channel.send(AUTHORIZED)
+    channel.send(AuthorizationResult({ status }))
   }, [channel, status])
 
   return (

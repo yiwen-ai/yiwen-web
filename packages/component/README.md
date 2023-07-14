@@ -8,4 +8,7 @@ pnpm install
 
 # start storybook
 pnpm start
+
+# build
+pnpm run build
 ```
