@@ -49,7 +49,8 @@ const router = createBrowserRouter(
       <Route path="/p/:id" element={<Publication />} />
       <Route path="/login/state" element={<LoginState />} />
     </Route>
-  )
+  ),
+  { basename: import.meta.env.BASE_URL }
 )
 
 export default function App() {

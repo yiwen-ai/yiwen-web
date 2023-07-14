@@ -1,8 +1,8 @@
 import {
+  ChannelMessageHelper,
   joinURL,
   useConnect,
   useSubscriptionManager,
-  type ChannelMessage,
 } from '@yiwen-ai/util'
 import { useCallback, useState } from 'react'
 import { useFetcherConfig } from './useFetcher'
@@ -10,7 +10,9 @@ import { useUser } from './useUser'
 
 export type IdentityProvider = 'github'
 
-export const AUTHORIZED = { type: '$$AUTHORIZED' } as ChannelMessage
+export const AuthorizationResult = ChannelMessageHelper.create<{
+  status: number
+}>('AUTHORIZATION_RESULT')
 
 export function useAuthorize() {
   const { PUBLIC_PATH, AUTH_URL } = useFetcherConfig()
@@ -39,10 +41,19 @@ export function useAuthorize() {
         const channel = await connect(popup)
         const unsubscribe = subscriptionManager.addUnsubscribe(
           channel.subscribe((message) => {
-            if (message.type === AUTHORIZED.type) {
-              popup.close()
-              refresh()
-              unsubscribe()
+            if (!AuthorizationResult.is(message)) return
+            switch (message.payload.status) {
+              case 200:
+                popup.close()
+                refresh()
+                unsubscribe()
+                break
+              default:
+                popup.close()
+                // TODO: failed to authorize, handle error
+                // show error message
+                unsubscribe()
+                break
             }
           })
         )
