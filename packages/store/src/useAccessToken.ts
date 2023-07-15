@@ -1,22 +1,31 @@
-import { useMemo } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import useSWR from 'swr'
-import { useFetcher, useFetcherConfig } from './useFetcher'
+import { useAuthFetcher } from './useFetcher'
 
 export interface AccessToken {
-  token: string
-  expiresAt: number
+  sub: string
+  access_token: string
+  /**
+   * 默认有效期为 1 小时 (3600s)
+   */
+  expires_in: number
 }
 
-export function useAccessToken(): AccessToken | undefined {
-  const { AUTH_URL } = useFetcherConfig()
-  const { data } = useSWR<string>('/access_token', useFetcher(AUTH_URL))
-
-  return useMemo<AccessToken | undefined>(() => {
-    if (!data) return undefined
-    return {
-      token: data,
-      // TODO: fix this
-      expiresAt: Date.now() + 1000 * 60 * 60 * 24,
-    }
-  }, [data])
+/**
+ * https://github.com/yiwen-ai/auth-api/blob/main/doc/api.md#%E7%99%BB%E5%BD%95%E6%88%90%E5%8A%9F%E8%8E%B7%E5%8F%96-access_token
+ */
+export function useAccessToken() {
+  const [refreshInterval, setRefreshInterval] = useState(1 * 60 * 60) // 1 小时 (3600s)
+  const { data, mutate } = useSWR<AccessToken>('/access_token', {
+    fetcher: useAuthFetcher(),
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+    refreshInterval: refreshInterval * 1000,
+  })
+  useEffect(
+    () => setRefreshInterval((prev) => data?.expires_in ?? prev),
+    [data?.expires_in]
+  )
+  const refresh = useCallback(() => mutate(), [mutate])
+  return [data?.access_token, refresh] as const
 }
