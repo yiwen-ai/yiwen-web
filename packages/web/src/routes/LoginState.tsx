@@ -1,14 +1,15 @@
 import { AuthenticationResult } from '@yiwen-ai/store'
 import { useChannel } from '@yiwen-ai/util'
-import { useLayoutEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import useIsomorphicLayoutEffect from 'use-isomorphic-layout-effect'
 
 export default function LoginState() {
   const [params] = useSearchParams()
   const status = useMemo(() => Number(params.get('status')), [params])
   const channel = useChannel(window.opener as Window | null)
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     channel?.send(AuthenticationResult({ status }))
   }, [channel, status])
 

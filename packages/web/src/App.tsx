@@ -6,7 +6,7 @@ import {
 } from '@yiwen-ai/component'
 import { FetcherConfigProvider } from '@yiwen-ai/store'
 import { LoggerProvider, useUserTheme } from '@yiwen-ai/util'
-import { useCallback, useLayoutEffect } from 'react'
+import { useCallback } from 'react'
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary'
 import {
   Outlet,
@@ -15,6 +15,7 @@ import {
   createBrowserRouter,
   createRoutesFromElements,
 } from 'react-router-dom'
+import useIsomorphicLayoutEffect from 'use-isomorphic-layout-effect'
 import useConfig from './config'
 import { useLogger } from './logger'
 import Home from './routes/Home'
@@ -92,7 +93,7 @@ export default function App() {
 function LoggingUnhandledError() {
   const logger = useLogger()
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const onError = (ev: ErrorEvent) => {
       logger.error('uncaught error', {
         message: ev.message,
