@@ -4,6 +4,15 @@
 
 Go forward to the specific package directory and read the README.md there.
 
+### Before Installing Dependencies
+
+Add the TipTap token to your `~/.npmrc` file, which is used to install the TipTap Pro packages, you can get the token from @zensh (严老师).
+
+```ini
+; ~/.npmrc
+//registry.tiptap.dev/:_authToken=[Put the TipTap token here]
+```
+
 ### Commit Convention
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
