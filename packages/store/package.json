@@ -8,17 +8,16 @@
   },
   "main": "src/index.ts",
   "dependencies": {
+    "@yiwen-ai/util": "workspace:*",
     "lodash-es": "^4.17.21",
     "swr": "^2.2.0"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.7",
     "@types/react": "^18.2.14",
-    "@yiwen-ai/util": "workspace:*",
     "react": "^18.2.0"
   },
   "peerDependencies": {
-    "@yiwen-ai/util": "workspace:*",
     "react": "^18.2.0"
   }
 }

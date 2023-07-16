@@ -1,7 +1,6 @@
 import { css } from '@emotion/react'
 import { memo } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { AccountManager } from './AccountManager'
 import { Logo } from './Logo'
 
 export interface HeaderLink {
@@ -12,11 +11,13 @@ export interface HeaderLink {
 export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   title: string
   menu: readonly HeaderLink[]
+  renderAccount: () => JSX.Element
 }
 
 export const Header = memo(function Header({
   title,
   menu,
+  renderAccount,
   ...props
 }: HeaderProps) {
   return (
@@ -75,7 +76,7 @@ export const Header = memo(function Header({
           gap: 40px;
         `}
       >
-        <AccountManager />
+        {renderAccount()}
       </div>
     </header>
   )

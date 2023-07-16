@@ -3,10 +3,15 @@ import { useAuthorize } from '@yiwen-ai/store'
 import { memo, useCallback } from 'react'
 import { Avatar } from './Avatar'
 import { Dialog } from './Dialog'
-import { Text } from './Text'
 
 export interface AccountManagerProps
-  extends React.HTMLAttributes<HTMLDivElement> {}
+  extends React.HTMLAttributes<HTMLDivElement> {
+  str: {
+    loginTitle: string
+    githubLogin: string
+    githubLoginInProgress: string
+  }
+}
 
 export const AccountManager = memo(function AccountManager(
   props: AccountManagerProps
@@ -30,10 +35,12 @@ export const AccountManager = memo(function AccountManager(
   ) : (
     <Dialog {...props} trigger={avatar}>
       <div {...props}>
-        <Text type="heading1">{'登录到 yiwen.ai'}</Text>
+        <h2>{props.str.loginTitle}</h2>
         <button onClick={onSignInWithGitHub} disabled={isAuthorizing}>
           <div>
-            {provider === 'github' ? '使用 GitHub 登录中…' : '使用 GitHub 登录'}
+            {provider === 'github'
+              ? props.str.githubLoginInProgress
+              : props.str.githubLogin}
           </div>
         </button>
       </div>

@@ -1,0 +1,30 @@
+name: CD
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: lts/*
+          registry-url: https://npm.pkg.github.com/
+      - run: npm config set //registry.tiptap.dev/:_authToken ${{ secrets.TIPTAP_TOKEN }}
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - run: pnpm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: pnpm --recursive --parallel run extract
+      # TODO
+      # 0. convert the extracted files to the format (CBOR) of the Translation Management System (our own API)
+      # 1. upload the extracted files to the Translation Management System (our own API)
+      # 2. download the translated files from the Translation Management System (our own API)
+      # 3. build the packages with the translated files and deploy them to the CDN
