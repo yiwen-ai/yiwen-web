@@ -22,14 +22,10 @@
     "@types/lodash-es": "^4.17.7",
     "@types/normalize-path": "^3.0.0",
     "@types/react": "^18.2.14",
-    "@yiwen-ai/component": "workspace:*",
-    "@yiwen-ai/store": "workspace:*",
     "react": "^18.2.0",
     "vitest": "^0.33.0"
   },
   "peerDependencies": {
-    "@yiwen-ai/component": "workspace:*",
-    "@yiwen-ai/store": "workspace:*",
     "react": "^18.2.0"
   }
 }

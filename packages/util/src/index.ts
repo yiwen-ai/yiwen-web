@@ -16,4 +16,3 @@ export {
 export { useChannel, useConnect } from './useChannel'
 export { useCheckWindowClosed } from './useCheckWindowClosed'
 export { useSubscriptionManager } from './useSubscriptionManager'
-export { useUserTheme } from './useUserTheme'

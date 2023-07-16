@@ -5,5 +5,9 @@ import { checker } from 'vite-plugin-checker'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), legacy(), checker({ typescript: true })],
+  plugins: [
+    react({ babel: { rootMode: 'upward', configFile: true } }),
+    legacy(),
+    checker({ typescript: true }),
+  ],
 })

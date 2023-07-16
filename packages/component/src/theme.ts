@@ -1,5 +1,12 @@
 import { ThemeProvider, useTheme, type Theme } from '@emotion/react'
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useUser, type ColorScheme } from '@yiwen-ai/store'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from 'react'
 
 export { ThemeProvider, useTheme }
 
@@ -40,12 +47,15 @@ declare module '@emotion/react' {
       code: string
     }
     typography: {
-      heading0: Typography
-      heading1: Typography
-      heading2: Typography
-      bodyText: Typography
-      bodyTextBold: Typography
+      h1: Typography
+      h2: Typography
+      h3: Typography
+      body: Typography
+      bodyBold: Typography
       tooltip: Typography
+    }
+    effect: {
+      shadow: string
     }
   }
 }
@@ -80,27 +90,27 @@ export const lightTheme: Theme = {
     code: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
   },
   typography: {
-    heading0: {
+    h1: {
       fontSize: '42px',
       fontWeight: 600,
       lineHeight: '50px',
     },
-    heading1: {
+    h2: {
       fontSize: '28px',
       fontWeight: 400,
       lineHeight: '36px',
     },
-    heading2: {
+    h3: {
       fontSize: '20px',
       fontWeight: 400,
       lineHeight: '28px',
     },
-    bodyText: {
+    body: {
       fontSize: '16px',
       fontWeight: 400,
       lineHeight: '28px',
     },
-    bodyTextBold: {
+    bodyBold: {
       fontSize: '16px',
       fontWeight: 600,
       lineHeight: '28px',
@@ -110,6 +120,10 @@ export const lightTheme: Theme = {
       fontWeight: 400,
       lineHeight: '20px',
     },
+  },
+  effect: {
+    // TODO: wait for design
+    shadow: '0px 4px 20px rgba(31, 30, 64, 0.1)',
   },
 }
 
@@ -139,4 +153,29 @@ export const useDarkMode = () => {
   }, [query])
 
   return darkMode
+}
+
+export function useUserTheme() {
+  const [user] = useUser()
+  const userTheme: ColorScheme = user?.theme ?? 'auto'
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const setUserTheme = useCallback((theme: ColorScheme) => {
+    // TODO: set user theme
+  }, [])
+
+  const darkMode = useDarkMode()
+
+  const theme = useMemo(() => {
+    switch (userTheme) {
+      case 'light':
+        return lightTheme
+      case 'dark':
+        return darkTheme
+      default:
+        return darkMode ? darkTheme : lightTheme
+    }
+  }, [darkMode, userTheme])
+
+  return [theme, userTheme, setUserTheme] as const
 }
