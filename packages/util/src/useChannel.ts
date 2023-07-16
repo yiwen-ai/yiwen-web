@@ -1,6 +1,7 @@
-import { useCallback, useLayoutEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Observable } from 'rxjs'
 import symbolObservable from 'symbol-observable'
+import useIsomorphicLayoutEffect from 'use-isomorphic-layout-effect'
 import { ChannelMessageHelper, type ChannelMessage } from './ChannelMessage'
 import { useLogger } from './logger'
 import {
@@ -17,7 +18,7 @@ export function useChannel(target: MessageEndpoint | null) {
   const logger = useLogger()
   const [channel, setChannel] = useState<Channel | undefined>()
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     try {
       if (!target) return undefined
       const channel = new MessageChannel()

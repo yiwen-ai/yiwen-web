@@ -12,7 +12,8 @@
     "start": "storybook dev -p 6006"
   },
   "dependencies": {
-    "@floating-ui/react-dom": "^2.0.1"
+    "@floating-ui/react-dom": "^2.0.1",
+    "react-use": "^17.4.0"
   },
   "devDependencies": {
     "@emotion/react": "^11.11.1",
