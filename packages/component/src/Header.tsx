@@ -39,9 +39,7 @@ export const Header = memo(function Header({
         `}
       >
         <Link to="/">
-          <h1>
-            <Logo title={title} />
-          </h1>
+          <Logo title={title} role="heading" aria-level={1} />
         </Link>
         <nav
           css={css`

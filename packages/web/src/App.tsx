@@ -69,6 +69,9 @@ function Layout() {
     return (
       <AccountManager
         str={{
+          login: intl.formatMessage({
+            defaultMessage: '登录',
+          }),
           loginTitle: intl.formatMessage({
             defaultMessage: '登录到 yiwen.ai',
           }),

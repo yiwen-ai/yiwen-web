@@ -81,8 +81,8 @@ export const Dialog = memo(function Dialog({
             css={css`
               width: 440px;
               padding: 16px;
-              background: ${theme.color.background};
-              color: ${theme.color.text};
+              background: ${theme.color.body.background};
+              color: ${theme.color.body.text};
               border-radius: 4px;
               position: relative;
             `}

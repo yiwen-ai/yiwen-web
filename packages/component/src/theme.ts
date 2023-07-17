@@ -1,51 +1,103 @@
-import { ThemeProvider, useTheme, type Theme } from '@emotion/react'
-import { useUser, type ColorScheme } from '@yiwen-ai/store'
 import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type CSSProperties,
-} from 'react'
+  ThemeProvider,
+  useTheme,
+  type CSSObject,
+  type Theme,
+} from '@emotion/react'
+import { useUser, type ColorScheme } from '@yiwen-ai/store'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 export { ThemeProvider, useTheme }
 
 interface Typography
-  extends Required<
-    Pick<CSSProperties, 'fontSize' | 'fontWeight' | 'lineHeight'>
-  > {}
+  extends Required<Pick<CSSObject, 'fontSize' | 'fontWeight' | 'lineHeight'>> {}
 
 declare module '@emotion/react' {
-  // TODO: fix this
+  /**
+   * @see https://www.figma.com/file/JXx2A1nhVCCDSSM3zGC8rf/Yiwen-AI-team-library?type=design&t=rWzXeFLxlQ4zVkrH-6
+   */
   interface Theme {
-    color: {
+    /**
+     * color palette
+     */
+    palette: {
       primaryNormal: string
       primaryLight: string
+      grayNormal1: string
       grayNormal: string
       grayLight: string
       grayLight0: string
       grayLight1: string
+      black: string
+      white: string
       orange: string
       green: string
-      // TODO
-      background: string
-      text: string
     }
-    spacing: {
-      padding: {
-        small: number
-        medium: number
-        large: number
+    /**
+     * semantic color
+     */
+    color: {
+      body: {
+        background: string
+        text: string
       }
-      borderRadius: {
-        small: number
-        default: number
+      button: {
+        primary: {
+          contained: {
+            border: string
+            background: string
+            text: string
+            hover: {
+              border: string
+              background: string
+              text: string
+            }
+          }
+          outlined: {
+            border: string
+            background: string
+            text: string
+            hover: {
+              border: string
+              background: string
+              text: string
+            }
+          }
+        }
+        secondary: {
+          contained: {
+            border: string
+            background: string
+            text: string
+            hover: {
+              border: string
+              background: string
+              text: string
+            }
+          }
+          outlined: {
+            border: string
+            background: string
+            text: string
+            hover: {
+              border: string
+              background: string
+              text: string
+            }
+          }
+        }
       }
     }
+    /**
+     * font family
+     */
     font: {
-      primary: string
+      body: string
       code: string
     }
+    /**
+     * typography
+     */
     typography: {
       h1: Typography
       h2: Typography
@@ -54,40 +106,86 @@ declare module '@emotion/react' {
       bodyBold: Typography
       tooltip: Typography
     }
+    /**
+     * effect
+     */
     effect: {
       shadow: string
     }
   }
 }
 
+const palette: Theme['palette'] = {
+  primaryNormal: '#745DF9',
+  primaryLight: '#988BFF',
+  grayNormal1: '#2D2C52',
+  grayNormal: '#1F1E40',
+  grayLight: '#7C7C94',
+  grayLight0: '#CECEE2',
+  grayLight1: '#F7F7FB',
+  black: '#000000',
+  white: '#FFFFFF',
+  orange: '#DA442F',
+  green: '#4BA755',
+}
+
 export const lightTheme: Theme = {
+  palette,
   color: {
-    primaryNormal: '#745DF9',
-    primaryLight: '#988BFF',
-    grayNormal: '#1F1E40',
-    grayLight: '#7C7C94',
-    grayLight0: '#CECEE2',
-    grayLight1: '#F7F7FB',
-    orange: '#DA442F',
-    green: '#4BA755',
-    // TODO
-    background: '#F7F7FB',
-    text: '#1F1E40',
-  },
-  spacing: {
-    padding: {
-      small: 10,
-      medium: 20,
-      large: 30,
+    body: {
+      background: palette.white,
+      text: palette.grayNormal,
     },
-    borderRadius: {
-      small: 5,
-      default: 10,
+    button: {
+      primary: {
+        contained: {
+          border: palette.primaryNormal,
+          background: palette.primaryNormal,
+          text: palette.white,
+          hover: {
+            border: palette.primaryLight,
+            background: palette.primaryLight,
+            text: palette.white,
+          },
+        },
+        outlined: {
+          border: palette.primaryNormal,
+          background: palette.grayLight1,
+          text: palette.primaryNormal,
+          hover: {
+            border: palette.primaryNormal,
+            background: palette.grayLight0,
+            text: palette.primaryNormal,
+          },
+        },
+      },
+      secondary: {
+        contained: {
+          border: palette.grayLight1,
+          background: palette.grayLight1,
+          text: palette.grayLight,
+          hover: {
+            border: palette.grayLight0,
+            background: palette.grayLight0,
+            text: palette.grayLight,
+          },
+        },
+        outlined: {
+          border: palette.grayLight0,
+          background: palette.grayLight1,
+          text: palette.grayLight,
+          hover: {
+            border: palette.grayLight,
+            background: palette.grayLight0,
+            text: palette.grayLight,
+          },
+        },
+      },
     },
   },
   font: {
-    primary: '"PingFang SC", sans-serif',
-    code: '"SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
+    body: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+    code: '"SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
   },
   typography: {
     h1: {
@@ -130,8 +228,56 @@ export const lightTheme: Theme = {
 export const darkTheme: Theme = {
   ...lightTheme,
   color: {
-    // TODO: wait for design
-    ...lightTheme.color,
+    body: {
+      background: palette.grayNormal,
+      text: palette.grayLight1,
+    },
+    button: {
+      primary: {
+        contained: {
+          border: palette.primaryNormal,
+          background: palette.primaryNormal,
+          text: palette.white,
+          hover: {
+            border: palette.primaryLight,
+            background: palette.primaryLight,
+            text: palette.white,
+          },
+        },
+        outlined: {
+          border: palette.grayLight,
+          background: palette.grayNormal,
+          text: palette.grayLight0,
+          hover: {
+            border: palette.grayLight,
+            background: palette.grayNormal1,
+            text: palette.grayLight0,
+          },
+        },
+      },
+      secondary: {
+        contained: {
+          border: palette.grayLight1,
+          background: palette.grayLight1,
+          text: palette.grayLight,
+          hover: {
+            border: palette.grayLight0,
+            background: palette.grayLight0,
+            text: palette.grayLight,
+          },
+        },
+        outlined: {
+          border: palette.grayLight,
+          background: palette.grayNormal,
+          text: palette.grayLight,
+          hover: {
+            border: palette.grayLight0,
+            background: palette.grayNormal1,
+            text: palette.grayLight,
+          },
+        },
+      },
+    },
   },
 }
 

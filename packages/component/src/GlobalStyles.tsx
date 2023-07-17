@@ -8,9 +8,9 @@ export function GlobalStyles() {
       styles={css`
         body {
           margin: 0;
-          background-color: ${theme.color.background};
-          color: ${theme.color.text};
-          font-family: ${theme.font.primary};
+          background-color: ${theme.color.body.background};
+          color: ${theme.color.body.text};
+          font-family: ${theme.font.body};
           ${theme.typography.body}
         }
 
