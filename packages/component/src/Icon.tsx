@@ -1,8 +1,9 @@
-import { memo, useEffect, useState } from 'react'
+import { css } from '@emotion/react'
+import { memo, useEffect, useState, type ImgHTMLAttributes } from 'react'
 import { usePromise } from 'react-use'
 import { useLogger } from './logger'
 
-type IconName =
+export type IconName =
   | 'backwarditem'
   | 'coin'
   | 'delete'
@@ -25,16 +26,31 @@ type IconName =
   | 'translate3'
   | 'wanchain1'
 
-export interface IconProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+export type IconSize = 'small' | 'medium' | number
+
+const SizeDict: Record<IconSize, number> = {
+  small: 16,
+  medium: 24,
+}
+
+export interface IconProps extends ImgHTMLAttributes<HTMLImageElement> {
   name: IconName
+  /**
+   * @default 'medium'
+   */
+  size?: IconSize
   // TODO: implement
-  // size?: 'small' | 'medium' | 'large'
   // color?: 'regular' | 'filled'
 }
 
-export const Icon = memo(function Icon({ name, ...props }: IconProps) {
+export const Icon = memo(function Icon({
+  name,
+  size = 'medium',
+  ...props
+}: IconProps) {
   const logger = useLogger()
   const mounted = usePromise()
+  const width = typeof size === 'number' ? size : SizeDict[size]
   const [src, setSrc] = useState<string | undefined>()
 
   useEffect(() => {
@@ -50,5 +66,16 @@ export const Icon = memo(function Icon({ name, ...props }: IconProps) {
     })()
   }, [logger, mounted, name])
 
-  return <img aria-describedby="icon" src={src} alt={name} {...props} />
+  return (
+    <img
+      src={src}
+      alt={name}
+      aria-hidden={true} // https://css-tricks.com/accessible-svg-icons/#aa-the-icon-is-decorative
+      {...props}
+      css={css`
+        width: ${width}px;
+        height: ${width}px;
+      `}
+    />
+  )
 })

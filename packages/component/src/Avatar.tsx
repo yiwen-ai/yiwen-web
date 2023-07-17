@@ -1,32 +1,41 @@
 import { css } from '@emotion/react'
-import { forwardRef, memo, useCallback } from 'react'
+import { forwardRef, memo, type HTMLAttributes } from 'react'
+import { useLogger } from './logger'
 
-// TODO: replace with real avatar
-const DEFAULT_AVATAR = 'https://via.placeholder.com/150'
+export type AvatarSize = 'small' | 'medium'
 
-type AvatarSize = 'medium'
-
-const DEFAULT_SIZE: Record<AvatarSize, number> = {
+const SizeDict: Record<AvatarSize, number> = {
+  small: 24,
   medium: 36,
 }
 
-export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
-  src: string | undefined
+export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
+  /**
+   * the avatar image URL
+   */
+  src: string
+  /**
+   * not required if `name` is provided
+   */
   alt?: string
-  name: string | undefined
+  /**
+   * optional name to display
+   */
+  name?: string
   size?: AvatarSize
 }
 
 export const Avatar = memo(
   forwardRef(function Avatar(
-    { src = DEFAULT_AVATAR, alt, name, size = 'medium', ...props }: AvatarProps,
+    { src, alt, name, size = 'medium', ...props }: AvatarProps,
     ref: React.Ref<HTMLDivElement>
   ) {
-    const width = DEFAULT_SIZE[size]
+    const width = SizeDict[size]
+    const logger = useLogger()
 
-    const onError = useCallback(() => {
-      // TODO: use default avatar on error
-    }, [])
+    if (!name && !alt) {
+      logger.warn('accessibility', 'name or alt is required for <Avatar />')
+    }
 
     return (
       <div
@@ -39,8 +48,8 @@ export const Avatar = memo(
       >
         <img
           src={src}
-          alt={alt ?? name}
-          onError={onError}
+          alt={alt}
+          aria-hidden={!!name} // hide from screen reader if name is provided
           css={css`
             width: ${width}px;
             height: ${width}px;

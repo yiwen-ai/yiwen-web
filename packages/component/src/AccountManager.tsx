@@ -1,12 +1,13 @@
-import { css } from '@emotion/react'
 import { useAuthorize } from '@yiwen-ai/store'
 import { memo, useCallback } from 'react'
 import { Avatar } from './Avatar'
+import { Button } from './Button'
 import { Dialog } from './Dialog'
 
 export interface AccountManagerProps
   extends React.HTMLAttributes<HTMLDivElement> {
   str: {
+    login: string
     loginTitle: string
     githubLogin: string
     githubLoginInProgress: string
@@ -19,21 +20,11 @@ export const AccountManager = memo(function AccountManager(
   const [user, authorize, isAuthorizing, provider] = useAuthorize()
   const onSignInWithGitHub = useCallback(() => authorize('github'), [authorize])
 
-  const avatar = (
-    <Avatar
-      src={user?.picture}
-      name={user?.name}
-      css={css`
-        cursor: pointer;
-      `}
-    />
-  )
-
   return user ? (
     // TODO: click to manage account
-    avatar
+    <Avatar src={user.picture} name={user.name} />
   ) : (
-    <Dialog {...props} trigger={avatar}>
+    <Dialog {...props} trigger={<Button>{props.str.login}</Button>}>
       <div {...props}>
         <h2>{props.str.loginTitle}</h2>
         <button onClick={onSignInWithGitHub} disabled={isAuthorizing}>
