@@ -1,21 +1,25 @@
-import { css } from '@emotion/react'
+import { css, useTheme } from '@emotion/react'
 import { useFloating } from '@floating-ui/react-dom'
-import { toRGBA } from '@yiwen-ai/util'
 import {
   cloneElement,
   memo,
   useCallback,
   useState,
+  type HTMLAttributes,
   type ReactElement,
 } from 'react'
-import { lightTheme } from './theme'
+import { Icon } from '.'
+import { Button } from './Button'
 
 interface ClickableProps {
   onClick?: (ev: React.SyntheticEvent) => void
 }
 
-export interface DialogProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface DialogProps extends HTMLAttributes<HTMLDivElement> {
   trigger?: ReactElement<ClickableProps> | null
+  head?: string | JSX.Element | (() => JSX.Element)
+  body?: string | JSX.Element | (() => JSX.Element)
+  foot?: string | JSX.Element | (() => JSX.Element)
   defaultIsOpen?: boolean
   onOpen?: () => void
   onClose?: () => void
@@ -24,13 +28,16 @@ export interface DialogProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const Dialog = memo(function Dialog({
   trigger,
+  head,
+  body,
+  foot,
   defaultIsOpen,
   onOpen,
   onClose,
   onToggle,
   ...props
 }: DialogProps) {
-  const theme = lightTheme // use light theme for dialog
+  const theme = useTheme()
   const [isOpen, setIsOpen] = useState(defaultIsOpen ?? false)
   const { refs } = useFloating({ open: isOpen })
 
@@ -61,34 +68,76 @@ export const Dialog = memo(function Dialog({
         } as ClickableProps)}
       {isOpen && (
         <div
-          {...props}
           ref={refs.setFloating}
           css={css`
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            padding: max(68px, 20%);
-            /* TODO: use correct color */
-            background: ${toRGBA('#000', 0.75)};
+            inset: 0;
+            background: ${theme.color.dialog.overlay};
             display: flex;
             flex-direction: column;
             align-items: center;
           `}
         >
           <div
+            role='dialog'
+            aria-modal='true'
+            {...props}
             css={css`
+              margin: max(68px, 20%);
               width: 440px;
-              padding: 16px;
-              background: ${theme.color.body.background};
-              color: ${theme.color.body.text};
-              border-radius: 4px;
+              background: ${theme.color.dialog.background};
+              border-radius: 20px;
               position: relative;
+              display: flex;
+              flex-direction: column;
             `}
           >
-            {props.children}
-            <button
+            {typeof head === 'function' ? (
+              head()
+            ) : head ? (
+              <h2
+                css={css`
+                  padding: 24px;
+                  text-align: center;
+                `}
+              >
+                {head}
+              </h2>
+            ) : null}
+            {typeof body === 'function' ? (
+              body()
+            ) : body ? (
+              <div
+                css={css`
+                  flex: 1;
+                  padding: 0 24px;
+                  :first-child {
+                    padding-top: 24px;
+                  }
+                  :last-of-type {
+                    padding-bottom: 24px;
+                  }
+                `}
+              >
+                {body}
+              </div>
+            ) : (
+              props.children
+            )}
+            {typeof foot === 'function' ? (
+              foot()
+            ) : foot ? (
+              <div
+                css={css`
+                  padding: 24px;
+                  text-align: center;
+                `}
+              >
+                {foot}
+              </div>
+            ) : null}
+            <Button
+              shape='circle'
               onClick={handleClose}
               css={css`
                 position: absolute;
@@ -96,8 +145,8 @@ export const Dialog = memo(function Dialog({
                 right: 16px;
               `}
             >
-              Close
-            </button>
+              <Icon name='closecircle' />
+            </Button>
           </div>
         </div>
       )}

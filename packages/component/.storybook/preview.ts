@@ -1,8 +1,17 @@
 import { withThemeFromJSXProvider } from '@storybook/addon-styling'
-import { type Preview } from '@storybook/react'
+import { Decorator, type Preview } from '@storybook/react'
+import { createElement } from 'react'
 import { withRouter } from 'storybook-addon-react-router-v6'
-import { GlobalStyles, ThemeProvider } from '../src'
+import {
+  DEFAULT_LOCALE,
+  GlobalStyles,
+  LocaleProvider,
+  ThemeProvider,
+} from '../src'
 import { darkTheme, lightTheme } from '../src/theme'
+
+const withLocale: Decorator = (Story) =>
+  createElement(LocaleProvider, { locale: DEFAULT_LOCALE }, Story())
 
 const preview: Preview = {
   parameters: {
@@ -17,6 +26,7 @@ const preview: Preview = {
       Provider: ThemeProvider,
       GlobalStyles,
     }),
+    withLocale,
   ],
 }
 

@@ -25,11 +25,11 @@ export interface User {
  * https://github.com/yiwen-ai/auth-api/blob/main/doc/api.md#%E7%99%BB%E5%BD%95%E6%88%90%E5%8A%9F%E8%8E%B7%E5%8F%96%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF
  */
 export function useUser() {
-  const { data, mutate } = useSWR<User>('/userinfo', {
+  const { data, isLoading, mutate } = useSWR<User>('/userinfo', {
     fetcher: useAuthFetcher(),
     revalidateOnFocus: false,
     shouldRetryOnError: false,
   })
   const refresh = useCallback(() => mutate(), [mutate])
-  return [data, refresh] as const
+  return [data, isLoading, refresh] as const
 }

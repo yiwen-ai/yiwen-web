@@ -1,15 +1,19 @@
 import { css } from '@emotion/react'
+import { Header } from '@yiwen-ai/component'
 
 export default function Home() {
   return (
-    <div
-      css={css`
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      `}
-    >
-      {'Hello, world!'}
-    </div>
+    <>
+      <Header />
+      <main
+        css={css`
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `}
+      >
+        <div>{'Hello, world!'}</div>
+      </main>
+    </>
   )
 }

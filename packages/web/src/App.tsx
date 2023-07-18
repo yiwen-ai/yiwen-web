@@ -1,8 +1,7 @@
 import {
-  AccountManager,
-  Footer,
+  DEFAULT_LOCALE,
   GlobalStyles,
-  Header,
+  LocaleProvider,
   ThemeProvider,
   useUserTheme,
 } from '@yiwen-ai/component'
@@ -39,8 +38,6 @@ import LoginState from './routes/LoginState'
 import NotFound from './routes/NotFound'
 import Publication from './routes/Publication'
 
-const DEFAULT_LOCALE = 'zh-CN'
-
 function Fallback(props: FallbackProps) {
   const intl = useIntl()
 
@@ -56,7 +53,6 @@ function Fallback(props: FallbackProps) {
 
 function Layout() {
   const logger = useLogger()
-  const intl = useIntl()
 
   const onError = useCallback(
     (error: Error, { componentStack }: { componentStack: string }) => {
@@ -65,43 +61,10 @@ function Layout() {
     [logger]
   )
 
-  const renderAccount = useCallback(() => {
-    return (
-      <AccountManager
-        str={{
-          login: intl.formatMessage({
-            defaultMessage: '登录',
-          }),
-          loginTitle: intl.formatMessage({
-            defaultMessage: '登录到 yiwen.ai',
-          }),
-          githubLogin: intl.formatMessage({
-            defaultMessage: '使用 GitHub 登录',
-          }),
-          githubLoginInProgress: intl.formatMessage({
-            defaultMessage: '使用 GitHub 登录中…',
-          }),
-        }}
-      />
-    )
-  }, [intl])
-
   return (
     <ErrorBoundary FallbackComponent={Fallback} onError={onError}>
       <GlobalStyles />
-      <Header
-        title={intl.formatMessage({ defaultMessage: '亿文' })}
-        menu={[
-          { to: 'p/test111', label: 'P #111' },
-          { to: 'p/test222', label: 'P #222' },
-          { to: 'ptest404', label: 'P #404' },
-        ]}
-        renderAccount={renderAccount}
-      />
-      <main>
-        <Outlet />
-      </main>
-      <Footer />
+      <Outlet />
     </ErrorBoundary>
   )
 }
@@ -109,10 +72,10 @@ function Layout() {
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<Layout />}>
-      <Route path="*" element={<NotFound />} />
-      <Route path="/" element={<Home />} />
-      <Route path="/p/:id" element={<Publication />} />
-      <Route path="/login/state" element={<LoginState />} />
+      <Route path='*' element={<NotFound />} />
+      <Route path='/' element={<Home />} />
+      <Route path='/p/:id' element={<Publication />} />
+      <Route path='/login/state' element={<LoginState />} />
     </Route>
   ),
   { basename: import.meta.env.BASE_URL }
@@ -203,7 +166,9 @@ function UserLocaleProvider(props: React.PropsWithChildren) {
       defaultLocale={DEFAULT_LOCALE}
       onError={onError}
     >
-      {props.children}
+      <LocaleProvider locale={locale} onError={onError}>
+        {props.children}
+      </LocaleProvider>
     </IntlProvider>
   )
 }

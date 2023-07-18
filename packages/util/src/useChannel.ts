@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Observable } from 'rxjs'
 import symbolObservable from 'symbol-observable'
 import useIsomorphicLayoutEffect from 'use-isomorphic-layout-effect'
@@ -17,31 +17,38 @@ const [CONNECT_MESSAGE, isConnectMessage] =
 export function useChannel(target: MessageEndpoint | null) {
   const logger = useLogger()
   const [channel, setChannel] = useState<Channel | undefined>()
+  const initialized = useRef(false)
 
   useIsomorphicLayoutEffect(() => {
     try {
-      if (!target) return undefined
+      if (!target || initialized.current) return
       const channel = new MessageChannel()
       target.postMessage(CONNECT_MESSAGE, {
         transfer: [channel.port2],
         targetOrigin: location.origin, // send to same origin only
       })
       setChannel(new Channel(channel.port1))
-      return () => {
-        channel.port1.close() // TODO: also remove all listeners
-      }
+      initialized.current = true
     } catch (error) {
       // TODO: handle error
       logger.error('failed to create channel', { error })
-      return undefined
     }
   }, [logger, target])
+
+  useIsomorphicLayoutEffect(() => {
+    if (!channel) return
+    return () => channel.close()
+  }, [channel])
 
   return channel
 }
 
 class Channel {
   constructor(private port: MessagePort) {}
+
+  close() {
+    this.port.close() // TODO: also remove all listeners
+  }
 
   send(message: ChannelMessage) {
     // TODO: wait for port to be ready
@@ -76,9 +83,9 @@ export function useConnect() {
             ev.origin === location.origin && // receive from same origin only
             isConnectMessage(ev.data)
           ) {
-            const port2 = ev.ports[0]
-            resolve(new Channel(port2))
-            subscriptionManager.addUnsubscribe(() => port2.close()) // TODO: also remove all listeners
+            const channel = new Channel(ev.ports[0])
+            resolve(channel)
+            subscriptionManager.addUnsubscribe(() => channel.close())
             unsubscribe()
           }
         }

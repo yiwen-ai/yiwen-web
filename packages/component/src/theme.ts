@@ -5,6 +5,7 @@ import {
   type Theme,
 } from '@emotion/react'
 import { useUser, type ColorScheme } from '@yiwen-ai/store'
+import { toRGBA } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 export { ThemeProvider, useTheme }
@@ -17,6 +18,7 @@ declare module '@emotion/react' {
    * @see https://www.figma.com/file/JXx2A1nhVCCDSSM3zGC8rf/Yiwen-AI-team-library?type=design&t=rWzXeFLxlQ4zVkrH-6
    */
   interface Theme {
+    name: Exclude<ColorScheme, 'auto'>
     /**
      * color palette
      */
@@ -40,6 +42,10 @@ declare module '@emotion/react' {
       body: {
         background: string
         text: string
+      }
+      link: {
+        normal: string
+        hover: string
       }
       button: {
         primary: {
@@ -87,6 +93,10 @@ declare module '@emotion/react' {
           }
         }
       }
+      dialog: {
+        overlay: string
+        background: string
+      }
     }
     /**
      * font family
@@ -130,11 +140,16 @@ const palette: Theme['palette'] = {
 }
 
 export const lightTheme: Theme = {
+  name: 'light',
   palette,
   color: {
     body: {
       background: palette.white,
       text: palette.grayNormal,
+    },
+    link: {
+      normal: palette.primaryNormal,
+      hover: palette.primaryLight,
     },
     button: {
       primary: {
@@ -182,6 +197,10 @@ export const lightTheme: Theme = {
         },
       },
     },
+    dialog: {
+      overlay: toRGBA(palette.grayNormal, 0.9),
+      background: palette.grayLight1,
+    },
   },
   font: {
     body: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
@@ -227,10 +246,15 @@ export const lightTheme: Theme = {
 
 export const darkTheme: Theme = {
   ...lightTheme,
+  name: 'dark',
   color: {
     body: {
       background: palette.grayNormal,
       text: palette.grayLight1,
+    },
+    link: {
+      normal: palette.primaryNormal,
+      hover: palette.primaryLight,
     },
     button: {
       primary: {
@@ -277,6 +301,10 @@ export const darkTheme: Theme = {
           },
         },
       },
+    },
+    dialog: {
+      overlay: toRGBA(palette.grayNormal, 0.9),
+      background: palette.grayNormal1,
     },
   },
 }

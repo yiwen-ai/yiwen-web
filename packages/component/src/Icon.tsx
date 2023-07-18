@@ -5,12 +5,15 @@ import { useLogger } from './logger'
 
 export type IconName =
   | 'backwarditem'
+  | 'closecircle'
   | 'coin'
   | 'delete'
   | 'directright'
   | 'directright2'
   | 'documentcopy'
   | 'edit'
+  | 'github'
+  | 'google'
   | 'heart'
   | 'heart2'
   | 'heart3'
@@ -25,6 +28,7 @@ export type IconName =
   | 'translate2'
   | 'translate3'
   | 'wanchain1'
+  | 'wechat'
 
 export type IconSize = 'small' | 'medium' | number
 

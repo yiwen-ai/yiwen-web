@@ -1,17 +1,20 @@
 import { Meta, IconGallery, IconItem } from '@storybook/blocks'
 import { Icon } from './Icon'
 
-<Meta title="Icon" />
+<Meta title='Icon' />
 
 <IconGallery>
   {[
     'backwarditem',
+    'closecircle',
     'coin',
     'delete',
     'directright',
     'directright2',
     'documentcopy',
     'edit',
+    'github',
+    'google',
     'heart',
     'heart2',
     'heart3',
@@ -26,6 +29,7 @@ import { Icon } from './Icon'
     'translate2',
     'translate3',
     'wanchain1',
+    'wechat',
   ].map((name) => (
     <IconItem name={name} key={name}>
       <Icon name={name} />

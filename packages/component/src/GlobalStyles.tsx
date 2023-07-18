@@ -14,19 +14,11 @@ export function GlobalStyles() {
           ${theme.typography.body}
         }
 
-        h1 {
-          margin: 0;
-          ${theme.typography.h1}
-        }
-
-        h2 {
-          margin: 0;
-          ${theme.typography.h2}
-        }
-
+        h1,
+        h2,
         h3 {
           margin: 0;
-          ${theme.typography.h3}
+          ${theme.typography.body}
         }
 
         ul {
@@ -41,6 +33,10 @@ export function GlobalStyles() {
         a {
           color: inherit;
           text-decoration: none;
+        }
+
+        button {
+          padding: 0;
         }
       `}
     />

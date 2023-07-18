@@ -1,3 +1,4 @@
+import { Header } from '@yiwen-ai/component'
 import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 
@@ -6,8 +7,11 @@ export default function Publication() {
   const item = useMemo(() => ({ id }), [id])
 
   return (
-    <div>
-      <h1>{`Publication ${item.id}`}</h1>
-    </div>
+    <>
+      <Header />
+      <main>
+        <h1>{`Publication ${item.id}`}</h1>
+      </main>
+    </>
   )
 }

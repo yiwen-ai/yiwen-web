@@ -48,6 +48,10 @@ module.exports = {
     ],
     'no-console': 'error',
     'no-useless-rename': 'error',
+    'react-hooks/exhaustive-deps': [
+      'error',
+      { 'additionalHooks': 'useIsomorphicLayoutEffect' },
+    ],
     'react-refresh/only-export-components': [
       'error',
       { allowConstantExport: true },
