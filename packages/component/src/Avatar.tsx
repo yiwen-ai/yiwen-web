@@ -1,5 +1,5 @@
 import { css } from '@emotion/react'
-import { forwardRef, memo, type HTMLAttributes } from 'react'
+import { forwardRef, memo, useEffect, type HTMLAttributes } from 'react'
 import { useLogger } from './logger'
 
 export type AvatarSize = 'small' | 'medium'
@@ -33,9 +33,11 @@ export const Avatar = memo(
     const width = SizeDict[size]
     const logger = useLogger()
 
-    if (!name && !alt) {
-      logger.warn('accessibility', 'name or alt is required for <Avatar />')
-    }
+    useEffect(() => {
+      if (!name && !alt) {
+        logger.warn('accessibility', 'name or alt is required for <Avatar />')
+      }
+    }, [alt, logger, name])
 
     return (
       <div

@@ -5,6 +5,7 @@ import {
   type Theme,
 } from '@emotion/react'
 import { useUser, type ColorScheme } from '@yiwen-ai/store'
+import { toRGBA } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 export { ThemeProvider, useTheme }
@@ -17,6 +18,7 @@ declare module '@emotion/react' {
    * @see https://www.figma.com/file/JXx2A1nhVCCDSSM3zGC8rf/Yiwen-AI-team-library?type=design&t=rWzXeFLxlQ4zVkrH-6
    */
   interface Theme {
+    name: Exclude<ColorScheme, 'auto'>
     /**
      * color palette
      */
@@ -39,7 +41,12 @@ declare module '@emotion/react' {
     color: {
       body: {
         background: string
-        text: string
+        primary: string
+        secondary: string
+      }
+      link: {
+        normal: string
+        hover: string
       }
       button: {
         primary: {
@@ -87,6 +94,20 @@ declare module '@emotion/react' {
           }
         }
       }
+      input: {
+        border: string
+        placeholder: string
+        hover: {
+          border: string
+        }
+        focus: {
+          border: string
+        }
+      }
+      dialog: {
+        overlay: string
+        background: string
+      }
     }
     /**
      * font family
@@ -130,11 +151,17 @@ const palette: Theme['palette'] = {
 }
 
 export const lightTheme: Theme = {
+  name: 'light',
   palette,
   color: {
     body: {
       background: palette.white,
-      text: palette.grayNormal,
+      primary: palette.grayNormal,
+      secondary: palette.grayLight,
+    },
+    link: {
+      normal: palette.primaryNormal,
+      hover: palette.primaryLight,
     },
     button: {
       primary: {
@@ -182,6 +209,20 @@ export const lightTheme: Theme = {
         },
       },
     },
+    input: {
+      border: palette.grayLight0,
+      placeholder: palette.grayLight0,
+      hover: {
+        border: palette.grayLight,
+      },
+      focus: {
+        border: palette.primaryNormal,
+      },
+    },
+    dialog: {
+      overlay: toRGBA(palette.grayNormal, 0.9),
+      background: palette.grayLight1,
+    },
   },
   font: {
     body: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
@@ -227,10 +268,16 @@ export const lightTheme: Theme = {
 
 export const darkTheme: Theme = {
   ...lightTheme,
+  name: 'dark',
   color: {
     body: {
       background: palette.grayNormal,
-      text: palette.grayLight1,
+      primary: palette.grayLight1,
+      secondary: palette.grayLight0,
+    },
+    link: {
+      normal: palette.primaryNormal,
+      hover: palette.primaryLight,
     },
     button: {
       primary: {
@@ -277,6 +324,20 @@ export const darkTheme: Theme = {
           },
         },
       },
+    },
+    input: {
+      border: palette.grayLight0,
+      placeholder: palette.grayLight,
+      hover: {
+        border: palette.white,
+      },
+      focus: {
+        border: palette.primaryNormal,
+      },
+    },
+    dialog: {
+      overlay: toRGBA(palette.grayNormal, 0.9),
+      background: palette.grayNormal1,
     },
   },
 }

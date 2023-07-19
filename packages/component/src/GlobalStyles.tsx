@@ -9,27 +9,21 @@ export function GlobalStyles() {
         body {
           margin: 0;
           background-color: ${theme.color.body.background};
-          color: ${theme.color.body.text};
+          color: ${theme.color.body.primary};
+          -webkit-font-smoothing: antialiased;
           font-family: ${theme.font.body};
           ${theme.typography.body}
         }
 
-        h1 {
-          margin: 0;
-          ${theme.typography.h1}
-        }
-
-        h2 {
-          margin: 0;
-          ${theme.typography.h2}
-        }
-
+        h1,
+        h2,
         h3 {
           margin: 0;
-          ${theme.typography.h3}
+          ${theme.typography.body}
         }
 
-        ul {
+        ul,
+        ol {
           margin: 0;
           padding: 0;
         }
@@ -41,6 +35,18 @@ export function GlobalStyles() {
         a {
           color: inherit;
           text-decoration: none;
+        }
+
+        button {
+          padding: 0;
+          border: none;
+          background: none;
+          font-size: inherit;
+          line-height: inherit;
+        }
+
+        input {
+          padding: 0;
         }
       `}
     />
