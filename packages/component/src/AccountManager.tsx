@@ -149,7 +149,7 @@ function ProviderItem({
         border-radius: 12px;
         border: 1px solid ${theme.palette.grayLight0};
         background: ${theme.color.body.background};
-        color: ${theme.color.body.text};
+        color: ${theme.color.body.primary};
         cursor: pointer;
       `}
     >

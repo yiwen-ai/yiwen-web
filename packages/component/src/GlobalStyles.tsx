@@ -9,7 +9,8 @@ export function GlobalStyles() {
         body {
           margin: 0;
           background-color: ${theme.color.body.background};
-          color: ${theme.color.body.text};
+          color: ${theme.color.body.primary};
+          -webkit-font-smoothing: antialiased;
           font-family: ${theme.font.body};
           ${theme.typography.body}
         }
@@ -21,7 +22,8 @@ export function GlobalStyles() {
           ${theme.typography.body}
         }
 
-        ul {
+        ul,
+        ol {
           margin: 0;
           padding: 0;
         }
@@ -36,6 +38,14 @@ export function GlobalStyles() {
         }
 
         button {
+          padding: 0;
+          border: none;
+          background: none;
+          font-size: inherit;
+          line-height: inherit;
+        }
+
+        input {
           padding: 0;
         }
       `}

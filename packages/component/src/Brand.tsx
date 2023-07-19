@@ -36,7 +36,9 @@ export const Brand = memo(
         css={css`
           ${SizeDict[size]}
           font-family: Mada;
-          color: ${theme.palette.primaryNormal};
+          color: ${theme.name === 'dark'
+            ? theme.palette.grayLight1
+            : theme.palette.primaryNormal};
           vertical-align: top;
         `}
       >

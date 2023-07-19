@@ -41,7 +41,8 @@ declare module '@emotion/react' {
     color: {
       body: {
         background: string
-        text: string
+        primary: string
+        secondary: string
       }
       link: {
         normal: string
@@ -91,6 +92,16 @@ declare module '@emotion/react' {
               text: string
             }
           }
+        }
+      }
+      input: {
+        border: string
+        placeholder: string
+        hover: {
+          border: string
+        }
+        focus: {
+          border: string
         }
       }
       dialog: {
@@ -145,7 +156,8 @@ export const lightTheme: Theme = {
   color: {
     body: {
       background: palette.white,
-      text: palette.grayNormal,
+      primary: palette.grayNormal,
+      secondary: palette.grayLight,
     },
     link: {
       normal: palette.primaryNormal,
@@ -195,6 +207,16 @@ export const lightTheme: Theme = {
             text: palette.grayLight,
           },
         },
+      },
+    },
+    input: {
+      border: palette.grayLight0,
+      placeholder: palette.grayLight0,
+      hover: {
+        border: palette.grayLight,
+      },
+      focus: {
+        border: palette.primaryNormal,
       },
     },
     dialog: {
@@ -250,7 +272,8 @@ export const darkTheme: Theme = {
   color: {
     body: {
       background: palette.grayNormal,
-      text: palette.grayLight1,
+      primary: palette.grayLight1,
+      secondary: palette.grayLight0,
     },
     link: {
       normal: palette.primaryNormal,
@@ -300,6 +323,16 @@ export const darkTheme: Theme = {
             text: palette.grayLight,
           },
         },
+      },
+    },
+    input: {
+      border: palette.grayLight0,
+      placeholder: palette.grayLight,
+      hover: {
+        border: palette.white,
+      },
+      focus: {
+        border: palette.primaryNormal,
       },
     },
     dialog: {
