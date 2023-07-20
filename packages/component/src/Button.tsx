@@ -61,7 +61,7 @@ export const Button = memo(
         css.minHeight = undefined
         css.paddingLeft = css.paddingRight = undefined
         css.borderRadius = '50%'
-        css.display = 'flex'
+        css.display = 'inline-flex'
         css.alignItems = 'center'
         css.justifyContent = 'center'
       } else if (shape === 'square') {
@@ -76,6 +76,8 @@ export const Button = memo(
         {...props}
         ref={ref}
         css={css`
+          display: inline-flex;
+          align-items: center;
           ${sizeCSS}
           border-style: solid;
           border-color: ${styles.border};

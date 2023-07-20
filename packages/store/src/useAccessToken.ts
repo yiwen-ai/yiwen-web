@@ -27,5 +27,8 @@ export function useAccessToken() {
     [data?.expires_in]
   )
   const refresh = useCallback(() => mutate(), [mutate])
-  return [data?.access_token, refresh] as const
+  return {
+    accessToken: data?.access_token,
+    refresh,
+  }
 }

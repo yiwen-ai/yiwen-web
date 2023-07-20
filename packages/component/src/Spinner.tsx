@@ -25,10 +25,12 @@ export const Spinner = memo(function Spinner({
       role='progressbar'
       {...props}
       css={css`
+        display: inline-block;
         width: ${width}px;
         height: ${width}px;
         box-sizing: border-box;
-        border: 1px solid ${theme.palette.primaryNormal};
+        color: ${theme.palette.primaryNormal};
+        border: 1px solid currentColor;
         border-radius: 50%;
         animation: 2s linear infinite ${keyframes`
             0% {

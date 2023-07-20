@@ -20,8 +20,8 @@ export const AuthenticationResult = ChannelMessageHelper.create<{
  */
 export function useAuthorize() {
   const { PUBLIC_PATH, AUTH_URL } = useFetcherConfig()
-  const [, , refreshUser] = useUser()
-  const [, refreshAccessToken] = useAccessToken()
+  const { refresh: refreshUser } = useUser()
+  const { refresh: refreshAccessToken } = useAccessToken()
   const [isAuthorizing, setIsAuthorizing] = useState(false)
   const [provider, setProvider] = useState<IdentityProvider | undefined>()
   const connect = useConnect()
@@ -82,5 +82,9 @@ export function useAuthorize() {
     ]
   )
 
-  return [authorize, isAuthorizing, provider] as const
+  return {
+    authorize,
+    isAuthorizing,
+    provider,
+  }
 }

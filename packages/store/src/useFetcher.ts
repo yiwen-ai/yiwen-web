@@ -4,8 +4,8 @@ import {
   type URLSearchParamsInit,
 } from '@yiwen-ai/util'
 import { createContext, useContext, useMemo } from 'react'
-import { useAccessToken } from '.'
 import { useLogger, type Logger } from './logger'
+import { useAccessToken } from './useAccessToken'
 
 export interface FetcherConfig {
   PUBLIC_PATH: string
@@ -60,32 +60,38 @@ export function createRequest(options: RequestOptions) {
       headers: { 'Content-Type': 'application/json' },
     })
   }
-  request.delete = <T>(url: string) => {
+  request.patch = <T>(url: string, body?: object) => {
+    return request<T>(url, {
+      method: 'PATCH',
+      body: body ? JSON.stringify(body) : null,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+  request.delete = <T>(url: string, query?: URLSearchParamsInit) => {
     return request<T>(url, {
       method: 'DELETE',
+      body: query ? toURLSearchParams(query) : null,
     })
   }
   return request
 }
 
 export function useRequest(options: RequestOptions) {
-  const stringifiedOptions = JSON.stringify({
-    ...options,
-    headers: Array.from(new Headers(options.headers).entries()),
-  } as RequestOptions)
+  const headers = Array.from(new Headers(options.headers).entries())
+  const stringifiedOptions = JSON.stringify({ ...options, headers })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => createRequest(options), [stringifiedOptions])
 }
 
 export function useFetcher(baseURL?: string) {
   const { API_URL } = useFetcherConfig()
-  const [accessToken] = useAccessToken()
+  const { accessToken } = useAccessToken()
   const logger = useLogger()
   return useMemo(() => {
-    if (!accessToken) return logger.debug('missing access token', undefined)
+    if (!accessToken) logger.debug('missing access token', undefined)
     return createRequest({
       baseURL: baseURL ?? API_URL,
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       logger,
     })
   }, [API_URL, accessToken, baseURL, logger])
@@ -94,9 +100,11 @@ export function useFetcher(baseURL?: string) {
 export function useAuthFetcher() {
   const { AUTH_URL } = useFetcherConfig()
   const logger = useLogger()
-  return useRequest({
-    baseURL: AUTH_URL,
-    credentials: 'include',
-    logger,
-  })
+  return useMemo(() => {
+    return createRequest({
+      baseURL: AUTH_URL,
+      credentials: 'include',
+      logger,
+    })
+  }, [AUTH_URL, logger])
 }

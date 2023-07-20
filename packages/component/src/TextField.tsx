@@ -122,6 +122,8 @@ export const TextField = memo(
             background: none;
             color: inherit;
             font-size: inherit;
+            font-weight: inherit;
+            line-height: inherit;
             ::placeholder {
               color: ${theme.color.input.placeholder};
             }

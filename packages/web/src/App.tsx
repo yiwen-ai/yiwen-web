@@ -33,10 +33,11 @@ import {
 } from 'react-router-dom'
 import useIsomorphicLayoutEffect from 'use-isomorphic-layout-effect'
 import { useLogger } from './logger'
-import Home from './routes/Home'
-import LoginState from './routes/LoginState'
-import NotFound from './routes/NotFound'
-import Publication from './routes/Publication'
+import Home from './pages'
+import NotFound from './pages/404'
+import NewCreation from './pages/c/new'
+import LoginState from './pages/login/state'
+import PublicationDetail from './pages/p/[id]'
 
 function Fallback(props: FallbackProps) {
   const intl = useIntl()
@@ -69,12 +70,16 @@ function Layout() {
   )
 }
 
+export const NEW_CREATION_PATH = '/c/new'
+export const PUBLICATION_DETAIL_PATH = '/p/:id'
+
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<Layout />}>
       <Route path='*' element={<NotFound />} />
       <Route path='/' element={<Home />} />
-      <Route path='/p/:id' element={<Publication />} />
+      <Route path={NEW_CREATION_PATH} element={<NewCreation />} />
+      <Route path={PUBLICATION_DETAIL_PATH} element={<PublicationDetail />} />
       <Route path='/login/state' element={<LoginState />} />
     </Route>
   ),
@@ -136,7 +141,7 @@ export default function App() {
 }
 
 function UserLocaleProvider(props: React.PropsWithChildren) {
-  const [user] = useUser()
+  const { user } = useUser()
   const locale = user?.locale || window.navigator.language
   // TODO: load messages based on locale
   const [messages] = useState({})

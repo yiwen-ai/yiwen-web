@@ -1,3 +1,4 @@
+import { NEW_CREATION_PATH } from '#@/App'
 import { css, useTheme, type SerializedStyles } from '@emotion/react'
 import {
   Avatar,
@@ -322,7 +323,7 @@ function LinkToCreatePage(props: Omit<LinkProps, 'to'>) {
 
   return (
     <Link
-      to='/create'
+      to={NEW_CREATION_PATH}
       {...props}
       css={css`
         display: flex;
@@ -333,6 +334,9 @@ function LinkToCreatePage(props: Omit<LinkProps, 'to'>) {
         variant='outlined'
         css={css`
           padding: 12px 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
           text-align: left;
           border-color: transparent;
           background-color: ${theme.name === 'dark'
