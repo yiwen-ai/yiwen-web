@@ -5,21 +5,21 @@ export type ButtonSize = 'small' | 'medium' | 'large'
 
 const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
   small: () => ({
-    height: 24,
+    minHeight: 24,
     paddingLeft: 16,
     paddingRight: 16,
     borderWidth: 1,
     borderRadius: 10,
   }),
   medium: () => ({
-    height: 32,
+    minHeight: 32,
     paddingLeft: 24,
     paddingRight: 24,
     borderWidth: 1,
     borderRadius: 12,
   }),
   large: () => ({
-    height: 48,
+    minHeight: 48,
     paddingLeft: 36,
     paddingRight: 36,
     borderWidth: 2,
@@ -57,7 +57,8 @@ export const Button = memo(
     const sizeCSS = useMemo(() => {
       const css: CSSObject = { ...SizeDict[size](theme) }
       if (shape === 'circle') {
-        css.width = css.height
+        css.width = css.height = css.minHeight
+        css.minHeight = undefined
         css.paddingLeft = css.paddingRight = undefined
         css.borderRadius = '50%'
         css.display = 'flex'
@@ -81,13 +82,14 @@ export const Button = memo(
           background-color: ${styles.background};
           color: ${styles.text};
           cursor: ${props.disabled ? 'not-allowed' : 'pointer'};
-          :not(:disabled):hover {
+          :hover {
             border-color: ${styles.hover.border};
             background-color: ${styles.hover.background};
             color: ${styles.hover.text};
           }
           /* TODO: focus state */
           /* TODO: active state */
+          /* TODO: disabled state */
         `}
       >
         {props.children}

@@ -22,7 +22,7 @@ export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
    * optional name to display
    */
   name?: string
-  size?: AvatarSize
+  size?: AvatarSize | number
 }
 
 export const Avatar = memo(
@@ -30,7 +30,7 @@ export const Avatar = memo(
     { src, alt, name, size = 'medium', ...props }: AvatarProps,
     ref: React.Ref<HTMLDivElement>
   ) {
-    const width = SizeDict[size]
+    const width = typeof size === 'number' ? size : SizeDict[size]
     const logger = useLogger()
 
     useEffect(() => {

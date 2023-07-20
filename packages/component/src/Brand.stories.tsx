@@ -9,4 +9,8 @@ export default meta
 
 type Story = StoryObj<typeof Brand>
 
-export const Default: Story = {}
+export const Default: Story = {
+  args: {
+    size: 'medium',
+  },
+}

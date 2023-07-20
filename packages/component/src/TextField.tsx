@@ -37,6 +37,7 @@ export interface TextFieldProps
     keyword: string,
     ev: React.KeyboardEvent<HTMLInputElement>
   ) => void
+  onDismiss?: (ev: React.KeyboardEvent<HTMLInputElement>) => void
 }
 
 export const TextField = memo(
@@ -48,6 +49,7 @@ export const TextField = memo(
       after,
       onKeyDown,
       onSearch,
+      onDismiss,
       ...props
     }: TextFieldProps,
     ref: React.Ref<HTMLInputElement>
@@ -62,9 +64,11 @@ export const TextField = memo(
         if (ev.isPropagationStopped()) return
         if (ev.key === 'Enter') {
           onSearch?.(ev.currentTarget.value, ev)
+        } else if (ev.key === 'Escape') {
+          onDismiss?.(ev)
         }
       },
-      [onKeyDown, onSearch]
+      [onDismiss, onKeyDown, onSearch]
     )
 
     const ariaLabel = props['aria-label']

@@ -44,6 +44,10 @@ declare module '@emotion/react' {
         primary: string
         secondary: string
       }
+      divider: {
+        primary: string
+        secondary: string
+      }
       link: {
         normal: string
         hover: string
@@ -131,6 +135,7 @@ declare module '@emotion/react' {
      * effect
      */
     effect: {
+      divider: string
       shadow: string
     }
   }
@@ -158,6 +163,10 @@ export const lightTheme: Theme = {
       background: palette.white,
       primary: palette.grayNormal,
       secondary: palette.grayLight,
+    },
+    divider: {
+      primary: palette.grayLight0,
+      secondary: toRGBA(palette.grayLight0, 0.25),
     },
     link: {
       normal: palette.primaryNormal,
@@ -261,6 +270,7 @@ export const lightTheme: Theme = {
     },
   },
   effect: {
+    divider: `0px 2px 0px 0px ${toRGBA(palette.grayLight0, 0.25)}`,
     // TODO: wait for design
     shadow: '0px 4px 20px rgba(31, 30, 64, 0.1)',
   },
@@ -274,6 +284,10 @@ export const darkTheme: Theme = {
       background: palette.grayNormal,
       primary: palette.grayLight1,
       secondary: palette.grayLight0,
+    },
+    divider: {
+      primary: palette.grayLight0,
+      secondary: toRGBA(palette.grayLight0, 0.25),
     },
     link: {
       normal: palette.primaryNormal,
