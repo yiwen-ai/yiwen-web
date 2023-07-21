@@ -377,7 +377,7 @@ export const useDarkMode = () => {
 }
 
 export function useUserTheme() {
-  const [user] = useUser()
+  const { user } = useUser()
   const userTheme: ColorScheme = user?.theme ?? 'auto'
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

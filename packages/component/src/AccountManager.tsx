@@ -12,8 +12,8 @@ import { Spinner } from './Spinner'
 export const AccountManager = memo(function AccountManager() {
   const intl = useIntl()
   const theme = useTheme()
-  const [user, isLoading] = useUser()
-  const [authorize, isAuthorizing, currentProvider] = useAuthorize()
+  const { user, isLoading } = useUser()
+  const { authorize, isAuthorizing, provider: currentProvider } = useAuthorize()
 
   return isLoading ? (
     <Spinner />

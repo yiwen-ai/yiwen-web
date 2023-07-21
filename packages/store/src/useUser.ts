@@ -31,5 +31,9 @@ export function useUser() {
     shouldRetryOnError: false,
   })
   const refresh = useCallback(() => mutate(), [mutate])
-  return [data, isLoading, refresh] as const
+  return {
+    user: data,
+    isLoading,
+    refresh,
+  }
 }
