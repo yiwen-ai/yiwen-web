@@ -17,5 +17,11 @@ export { LOGO_URL, Logo, type LogoProps } from './Logo' // eslint-disable-line r
 export { RichTextEditor, type RichTextEditorProps } from './RichTextEditor'
 export { Spinner, type SpinnerProps, type SpinnerSize } from './Spinner'
 export { TextField, type TextFieldProps, type TextFieldSize } from './TextField'
+export {
+  StructuredTileButton,
+  TileButton,
+  type StructuredTileButtonProps,
+  type TileButtonProps,
+} from './TileButton'
 export { DEFAULT_LOCALE, LocaleProvider } from './locale' // eslint-disable-line react-refresh/only-export-components
 export { ThemeProvider, useTheme, useUserTheme } from './theme' // eslint-disable-line react-refresh/only-export-components

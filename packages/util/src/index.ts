@@ -1,4 +1,5 @@
 export { ChannelMessageHelper } from './ChannelMessage'
+export { RGBA } from './RGBA'
 export { isWindow } from './isWindow'
 export { joinURL } from './joinURL'
 export {
@@ -8,7 +9,6 @@ export {
   type LoggingHandler,
 } from './logging'
 export { resolveURL } from './resolveURL'
-export { toRGBA } from './toRGBA'
 export {
   toURLSearchParams,
   type URLSearchParamsInit,

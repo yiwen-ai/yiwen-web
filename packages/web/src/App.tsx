@@ -35,9 +35,10 @@ import useIsomorphicLayoutEffect from 'use-isomorphic-layout-effect'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
-import NewCreation from './pages/c/new'
+import NewCreation from './pages/creation/new'
 import LoginState from './pages/login/state'
-import PublicationDetail from './pages/p/[id]'
+import PublicationDetail from './pages/publication/[id]'
+import Search from './pages/search'
 
 function Fallback(props: FallbackProps) {
   const intl = useIntl()
@@ -70,14 +71,16 @@ function Layout() {
   )
 }
 
-export const NEW_CREATION_PATH = '/c/new'
-export const PUBLICATION_DETAIL_PATH = '/p/:id'
+export const SEARCH_PATH = '/search'
+export const NEW_CREATION_PATH = '/creation/new'
+export const PUBLICATION_DETAIL_PATH = '/publication/:id'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<Layout />}>
       <Route path='*' element={<NotFound />} />
       <Route path='/' element={<Home />} />
+      <Route path={SEARCH_PATH} element={<Search />} />
       <Route path={NEW_CREATION_PATH} element={<NewCreation />} />
       <Route path={PUBLICATION_DETAIL_PATH} element={<PublicationDetail />} />
       <Route path='/login/state' element={<LoginState />} />
