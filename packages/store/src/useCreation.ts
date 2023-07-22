@@ -1,17 +1,17 @@
 import { type URLSearchParamsInit } from '@yiwen-ai/util'
 import { useCallback, useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
+import { useLogger } from './logger'
 import { useFetcher } from './useFetcher'
-import { type CBORRaw, type ID } from './util'
 
 export interface QueryCreation {
-  gid: ID | string
-  id: ID | string
+  gid: Uint8Array | string
+  id: Uint8Array | string
   fields?: string[]
 }
 
 export interface CreateCreationInput {
-  gid: ID
+  gid: Uint8Array
   language?: string
   original_url?: string
   genre?: string[]
@@ -22,18 +22,18 @@ export interface CreateCreationInput {
   labels?: string[]
   authors?: string[]
   summary?: string
-  content: CBORRaw
+  content: Uint8Array
   license?: string
 }
 
 export interface CreationOutput {
-  id: ID
-  gid: ID
+  id: Uint8Array
+  gid: Uint8Array
   status?: number
   rating?: number
   version?: number
   language?: string
-  creator?: ID
+  creator?: Uint8Array
   created_at?: number
   updated_at?: number
   original_url?: string
@@ -44,15 +44,15 @@ export interface CreationOutput {
   keywords?: string[]
   labels?: string[]
   authors?: string[]
-  reviewers?: ID[]
+  reviewers?: Uint8Array[]
   summary?: string
-  content?: CBORRaw
+  content?: Uint8Array
   license?: string
 }
 
 export interface UpdateCreationInput {
-  gid: ID
-  id: ID
+  gid: Uint8Array
+  id: Uint8Array
   updated_at: number
   title?: string
   description?: string
@@ -76,25 +76,28 @@ const toKey = (query: QueryCreation): [string, URLSearchParamsInit] => [
 ]
 
 export function useCreation(query: QueryCreation) {
+  const logger = useLogger()
   const fetcher = useFetcher()
   const [key] = useState(() => toKey(query))
-  const { data, isLoading, mutate } = useSWR<CreationOutput>(key, {
-    fetcher: fetcher.get,
-    revalidateOnFocus: false,
-  })
+  const { data, isLoading, mutate } = useSWR<CreationOutput>(
+    fetcher && key,
+    fetcher?.get ?? null
+  )
 
   const update = useCallback(
     async (input: UpdateCreationInput) => {
+      if (!fetcher) return logger.error('fetcher is not ready', { url: path })
       const item = await fetcher.patch<CreationOutput>(path, input)
       mutate(item)
     },
-    [fetcher, mutate]
+    [fetcher, logger, mutate]
   )
 
   const _delete = useCallback(async () => {
+    if (!fetcher) return logger.error('fetcher is not ready', { url: path })
     await fetcher.delete(path, key[1])
     mutate(Promise.resolve(undefined)) // TODO: mutate to undefined
-  }, [fetcher, key, mutate])
+  }, [fetcher, key, logger, mutate])
 
   return {
     creation: data,
@@ -105,15 +108,20 @@ export function useCreation(query: QueryCreation) {
 }
 
 export function useAddCreation() {
+  const logger = useLogger()
   const fetcher = useFetcher()
   const { mutate } = useSWRConfig()
 
   return useCallback(
     async (input: CreateCreationInput) => {
-      const item = await fetcher.post<CreationOutput>(path, input)
+      if (!fetcher) return logger.error('fetcher is not ready', { url: path })
+      const { result: item } = await fetcher.post<{ result: CreationOutput }>(
+        path,
+        input
+      )
       mutate(toKey(item), item)
       return item
     },
-    [fetcher, mutate]
+    [fetcher, logger, mutate]
   )
 }

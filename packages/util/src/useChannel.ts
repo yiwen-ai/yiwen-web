@@ -83,7 +83,9 @@ export function useConnect() {
             ev.origin === location.origin && // receive from same origin only
             isConnectMessage(ev.data)
           ) {
-            const channel = new Channel(ev.ports[0])
+            const port2 = ev.ports[0]
+            if (!port2) return // TODO: handle error
+            const channel = new Channel(port2)
             resolve(channel)
             subscriptionManager.addUnsubscribe(() => channel.close())
             unsubscribe()

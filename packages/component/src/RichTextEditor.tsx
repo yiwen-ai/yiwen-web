@@ -1,11 +1,7 @@
 import { css, useTheme } from '@emotion/react'
+import { type Editor } from '@tiptap/core'
 import { Placeholder } from '@tiptap/extension-placeholder'
-import {
-  EditorContent,
-  useEditor,
-  type Editor,
-  type EditorOptions,
-} from '@tiptap/react'
+import { EditorContent, useEditor, type EditorOptions } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import { forwardRef, memo, useImperativeHandle } from 'react'
 

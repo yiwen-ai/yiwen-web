@@ -31,6 +31,7 @@ import {
   createBrowserRouter,
   createRoutesFromElements,
 } from 'react-router-dom'
+import { SWRConfig, type SWRConfiguration } from 'swr'
 import useIsomorphicLayoutEffect from 'use-isomorphic-layout-effect'
 import { useLogger } from './logger'
 import Home from './pages'
@@ -129,15 +130,26 @@ export default function App() {
     []
   )
 
+  const swrConfig = useMemo<SWRConfiguration>(
+    () => ({
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+    }),
+    []
+  )
+
   return (
     <FetcherConfigProvider value={fetcherConfig}>
       <LoggerProvider handler={loggingHandler}>
-        <UserLocaleProvider>
-          <UserThemeProvider>
-            <RouterProvider router={router} />
-            <LoggingUnhandledError />
-          </UserThemeProvider>
-        </UserLocaleProvider>
+        <SWRConfig value={swrConfig}>
+          <UserLocaleProvider>
+            <UserThemeProvider>
+              <RouterProvider router={router} />
+              <LoggingUnhandledError />
+            </UserThemeProvider>
+          </UserLocaleProvider>
+        </SWRConfig>
       </LoggerProvider>
     </FetcherConfigProvider>
   )

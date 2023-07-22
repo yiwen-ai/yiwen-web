@@ -4,6 +4,7 @@ import {
   type URLSearchParamsInit,
 } from '@yiwen-ai/util'
 import { createContext, useContext, useMemo } from 'react'
+import { decode, encode } from './CBOR'
 import { useLogger, type Logger } from './logger'
 import { useAccessToken } from './useAccessToken'
 
@@ -21,25 +22,44 @@ export function useFetcherConfig() {
   return useContext(FetcherConfigContext)
 }
 
-interface RequestOptions extends Pick<RequestInit, 'credentials' | 'headers'> {
+interface RequestOptions extends RequestInit {
   baseURL: string
   logger: Logger
 }
 
-export function createRequest(options: RequestOptions) {
-  const request = async <T>(url: string, init?: RequestInit) => {
-    const headers = new Headers(options.headers)
-    new Headers(init?.headers).forEach((value, key) => headers.set(key, value))
-    url = joinURL(options.baseURL, url)
-    const resp = await fetch(url, { ...options, ...init, headers })
+const CBOR_MIME_TYPE = 'application/cbor'
+
+export function createRequest(defaultOptions: RequestOptions) {
+  const defaultHeaders = new Headers(defaultOptions.headers)
+  if (!defaultHeaders.has('Accept')) {
+    defaultHeaders.set('Accept', CBOR_MIME_TYPE)
+  }
+  const request = async <T>(url: string, options?: RequestInit) => {
+    const headers = new Headers(defaultHeaders)
+    new Headers(options?.headers).forEach((value, key) =>
+      headers.set(key, value)
+    )
+    url = joinURL(defaultOptions.baseURL, url)
+    const resp = await fetch(url, { ...defaultOptions, ...options, headers })
+    const body =
+      resp.headers.get('Content-Type') === CBOR_MIME_TYPE
+        ? decode(new Uint8Array(await resp.arrayBuffer()))
+        : resp.headers.get('Content-Type')?.startsWith('application/json')
+        ? await resp.json()
+        : await resp.text()
     if (resp.status >= 200 && resp.status < 300) {
-      return resp.json() as Promise<T>
+      return body as T
     } else {
-      const error = await resp.json()
-      options.logger.error('fetch error', { url, status: resp.status, error })
+      const error = body
+      defaultOptions.logger.error('fetch error', {
+        url,
+        status: resp.status,
+        error,
+      })
       throw error
     }
   }
+  request.defaultOptions = Object.freeze(defaultOptions)
   request.get = <T>(url: string, query?: URLSearchParamsInit) => {
     return request<T>(url, {
       method: 'GET',
@@ -49,22 +69,22 @@ export function createRequest(options: RequestOptions) {
   request.post = <T>(url: string, body?: object) => {
     return request<T>(url, {
       method: 'POST',
-      body: body ? JSON.stringify(body) : null,
-      headers: { 'Content-Type': 'application/json' },
+      body: body ? encode(body) : null,
+      headers: { 'Content-Type': CBOR_MIME_TYPE },
     })
   }
   request.put = <T>(url: string, body?: object) => {
     return request<T>(url, {
       method: 'PUT',
-      body: body ? JSON.stringify(body) : null,
-      headers: { 'Content-Type': 'application/json' },
+      body: body ? encode(body) : null,
+      headers: { 'Content-Type': CBOR_MIME_TYPE },
     })
   }
   request.patch = <T>(url: string, body?: object) => {
     return request<T>(url, {
       method: 'PATCH',
-      body: body ? JSON.stringify(body) : null,
-      headers: { 'Content-Type': 'application/json' },
+      body: body ? encode(body) : null,
+      headers: { 'Content-Type': CBOR_MIME_TYPE },
     })
   }
   request.delete = <T>(url: string, query?: URLSearchParamsInit) => {
@@ -88,9 +108,13 @@ export function useFetcher(baseURL?: string) {
   const { accessToken } = useAccessToken()
   const logger = useLogger()
   return useMemo(() => {
-    if (!accessToken) logger.debug('missing access token', undefined)
+    if (!accessToken) {
+      logger.debug('missing access token', undefined)
+      return undefined
+    }
     return createRequest({
       baseURL: baseURL ?? API_URL,
+      credentials: 'include',
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       logger,
     })

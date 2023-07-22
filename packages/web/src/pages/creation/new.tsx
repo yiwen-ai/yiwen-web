@@ -1,5 +1,5 @@
 import { css } from '@emotion/react'
-import { type EditorOptions, type JSONContent } from '@tiptap/core'
+import { type Editor, type EditorOptions, type JSONContent } from '@tiptap/core'
 import {
   Button,
   Header,
@@ -7,13 +7,15 @@ import {
   Spinner,
   TextField,
 } from '@yiwen-ai/component'
-import { useAddCreation, type CreateCreationInput } from '@yiwen-ai/store'
-import { useCallback, useState } from 'react'
+import { encode, useAddCreation, useMyGroupList } from '@yiwen-ai/store'
+import { nanoid } from 'nanoid'
+import { useCallback, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
 
 export default function NewCreation() {
   const intl = useIntl()
   const [isSaving, setIsSaving] = useState<boolean>(false)
+  const editorRef = useRef<Editor>(null)
   const [title, setTitle] = useState<string>('')
   const [content, setContent] = useState<JSONContent | undefined>()
   const onChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,24 +24,53 @@ export default function NewCreation() {
   const onUpdate = useCallback<EditorOptions['onUpdate']>(({ editor }) => {
     setContent(editor.getJSON())
   }, [])
-  const disabled = isSaving || !title || !content
+  const { groupList } = useMyGroupList()
+  const defaultGroupId = groupList?.[0]?.id
+  const disabled = isSaving || !title || !content || !defaultGroupId
   const addCreation = useAddCreation()
   const onSave = useCallback(async () => {
     try {
       setIsSaving(true)
       const item = await addCreation({
+        gid: defaultGroupId!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
         title,
-        content: content,
-      } as CreateCreationInput)
+        description: 'description...',
+        summary: 'summary - wiwi',
+        content: encode(
+          (() => {
+            const content2 = { ...content }
+            content2.content = (content2.content ?? []).map(addId)
+            return content2
+
+            // TODO: remove this temporary solution
+            function addId(node: JSONContent): JSONContent {
+              const node2: JSONContent = {
+                ...node,
+                attrs: { id: nanoid(6), ...node.attrs },
+              }
+              if (node.content) {
+                node2.content = node.content.map(addId)
+              }
+              return node2
+            }
+          })()
+        ),
+        language: 'eng',
+        original_url: 'https://www.yiwen.ltd/',
+        cover: 'https://placehold.co/600x400',
+        license: 'https://www.yiwen.ltd/',
+      })
       // TODO: redirect to the creation page
       // eslint-disable-next-line no-console
       console.log(item)
+      setTitle('')
+      editorRef.current?.commands.clearContent(true)
     } catch (error) {
       // TODO: show error
     } finally {
       setIsSaving(false)
     }
-  }, [addCreation, content, title])
+  }, [addCreation, content, defaultGroupId, title])
 
   return (
     <div
@@ -101,6 +132,7 @@ export default function NewCreation() {
             `}
           />
           <RichTextEditor
+            ref={editorRef}
             initialContent={''}
             onUpdate={onUpdate}
             css={css`
