@@ -5,24 +5,25 @@ import { useFetcher } from './useFetcher'
 import { type CBORRaw, type ID } from './util'
 
 export interface QueryCreation {
-  gid: ID
-  id: ID
+  gid: ID | string
+  id: ID | string
+  fields?: string[]
 }
 
 export interface CreateCreationInput {
   gid: ID
-  language: string
-  original_url: string
-  genre: string[]
+  language?: string
+  original_url?: string
+  genre?: string[]
   title: string
-  description: string
-  cover: string
-  keywords: string[]
-  labels: string[]
-  authors: string[]
-  summary: string
+  description?: string
+  cover?: string
+  keywords?: string[]
+  labels?: string[]
+  authors?: string[]
+  summary?: string
   content: CBORRaw
-  license: string
+  license?: string
 }
 
 export interface CreationOutput {
@@ -63,13 +64,14 @@ export interface UpdateCreationInput {
   license?: string
 }
 
-const path = '/creation'
+const path = '/v1/creation'
 
 const toKey = (query: QueryCreation): [string, URLSearchParamsInit] => [
   path,
   {
     gid: query.gid.toString(),
     id: query.id.toString(),
+    fields: query.fields?.join(','),
   },
 ]
 

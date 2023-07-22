@@ -86,7 +86,7 @@ export const TextField = memo(
         className={className}
         css={css`
           ${sizeCSS}
-          display: inline-flex;
+          display: flex;
           border: 1px solid ${theme.color.input.border};
           box-sizing: border-box;
           :hover {

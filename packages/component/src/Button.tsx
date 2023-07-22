@@ -69,7 +69,7 @@ export const Button = memo(
       }
       return css
     }, [shape, size, theme])
-    const styles = theme.color.button[color][variant]
+    const colorCSS = theme.color.button[color][variant]
 
     return (
       <button
@@ -80,18 +80,22 @@ export const Button = memo(
           align-items: center;
           ${sizeCSS}
           border-style: solid;
-          border-color: ${styles.border};
-          background-color: ${styles.background};
-          color: ${styles.text};
+          border-color: ${colorCSS.border};
+          background-color: ${colorCSS.background};
+          color: ${colorCSS.text};
           cursor: ${props.disabled ? 'not-allowed' : 'pointer'};
           :hover {
-            border-color: ${styles.hover.border};
-            background-color: ${styles.hover.background};
-            color: ${styles.hover.text};
+            border-color: ${colorCSS.hover.border};
+            background-color: ${colorCSS.hover.background};
+            color: ${colorCSS.hover.text};
           }
           /* TODO: focus state */
           /* TODO: active state */
-          /* TODO: disabled state */
+          :disabled {
+            border-color: ${colorCSS.disabled.border};
+            background-color: ${colorCSS.disabled.background};
+            color: ${colorCSS.disabled.text};
+          }
         `}
       >
         {props.children}

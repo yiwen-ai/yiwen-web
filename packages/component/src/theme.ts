@@ -5,13 +5,24 @@ import {
   type Theme,
 } from '@emotion/react'
 import { useUser, type ColorScheme } from '@yiwen-ai/store'
-import { toRGBA } from '@yiwen-ai/util'
+import { RGBA } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 export { ThemeProvider, useTheme }
 
 interface Typography
   extends Required<Pick<CSSObject, 'fontSize' | 'fontWeight' | 'lineHeight'>> {}
+
+interface ButtonColor {
+  border: string
+  background: string
+  text: string
+}
+
+interface Button extends ButtonColor {
+  hover: ButtonColor
+  disabled: ButtonColor
+}
 
 declare module '@emotion/react' {
   /**
@@ -54,48 +65,15 @@ declare module '@emotion/react' {
       }
       button: {
         primary: {
-          contained: {
-            border: string
-            background: string
-            text: string
-            hover: {
-              border: string
-              background: string
-              text: string
-            }
-          }
-          outlined: {
-            border: string
-            background: string
-            text: string
-            hover: {
-              border: string
-              background: string
-              text: string
-            }
-          }
+          contained: Button
+          outlined: Button
         }
         secondary: {
-          contained: {
-            border: string
-            background: string
-            text: string
-            hover: {
-              border: string
-              background: string
-              text: string
-            }
-          }
-          outlined: {
-            border: string
-            background: string
-            text: string
-            hover: {
-              border: string
-              background: string
-              text: string
-            }
-          }
+          contained: Button
+          outlined: Button
+        }
+        tile: ButtonColor & {
+          hover: ButtonColor
         }
       }
       input: {
@@ -166,7 +144,7 @@ export const lightTheme: Theme = {
     },
     divider: {
       primary: palette.grayLight0,
-      secondary: toRGBA(palette.grayLight0, 0.25),
+      secondary: RGBA(palette.grayLight0, 0.25),
     },
     link: {
       normal: palette.primaryNormal,
@@ -183,6 +161,11 @@ export const lightTheme: Theme = {
             background: palette.primaryLight,
             text: palette.white,
           },
+          disabled: {
+            border: RGBA(palette.primaryNormal, 0.8),
+            background: RGBA(palette.primaryNormal, 0.8),
+            text: palette.white,
+          },
         },
         outlined: {
           border: palette.primaryNormal,
@@ -191,6 +174,11 @@ export const lightTheme: Theme = {
           hover: {
             border: palette.primaryNormal,
             background: palette.grayLight0,
+            text: palette.primaryNormal,
+          },
+          disabled: {
+            border: RGBA(palette.primaryNormal, 0.8),
+            background: RGBA(palette.grayLight1, 0.8),
             text: palette.primaryNormal,
           },
         },
@@ -205,6 +193,11 @@ export const lightTheme: Theme = {
             background: palette.grayLight0,
             text: palette.grayLight,
           },
+          disabled: {
+            border: RGBA(palette.grayLight1, 0.8),
+            background: RGBA(palette.grayLight1, 0.8),
+            text: palette.grayLight,
+          },
         },
         outlined: {
           border: palette.grayLight0,
@@ -215,6 +208,21 @@ export const lightTheme: Theme = {
             background: palette.grayLight0,
             text: palette.grayLight,
           },
+          disabled: {
+            border: RGBA(palette.grayLight0, 0.8),
+            background: RGBA(palette.grayLight1, 0.8),
+            text: palette.grayLight,
+          },
+        },
+      },
+      tile: {
+        border: palette.grayLight1,
+        background: palette.grayLight1,
+        text: palette.primaryNormal,
+        hover: {
+          border: palette.primaryNormal,
+          background: palette.grayLight1,
+          text: palette.primaryNormal,
         },
       },
     },
@@ -229,7 +237,7 @@ export const lightTheme: Theme = {
       },
     },
     dialog: {
-      overlay: toRGBA(palette.grayNormal, 0.9),
+      overlay: RGBA(palette.grayNormal, 0.9),
       background: palette.grayLight1,
     },
   },
@@ -270,7 +278,7 @@ export const lightTheme: Theme = {
     },
   },
   effect: {
-    divider: `0px 2px 0px 0px ${toRGBA(palette.grayLight0, 0.25)}`,
+    divider: `0px 2px 0px 0px ${RGBA(palette.grayLight0, 0.25)}`,
     // TODO: wait for design
     shadow: '0px 4px 20px rgba(31, 30, 64, 0.1)',
   },
@@ -287,7 +295,7 @@ export const darkTheme: Theme = {
     },
     divider: {
       primary: palette.grayLight0,
-      secondary: toRGBA(palette.grayLight0, 0.25),
+      secondary: RGBA(palette.grayLight0, 0.25),
     },
     link: {
       normal: palette.primaryNormal,
@@ -304,6 +312,11 @@ export const darkTheme: Theme = {
             background: palette.primaryLight,
             text: palette.white,
           },
+          disabled: {
+            border: RGBA(palette.primaryNormal, 0.8),
+            background: RGBA(palette.primaryNormal, 0.8),
+            text: palette.white,
+          },
         },
         outlined: {
           border: palette.grayLight,
@@ -312,6 +325,11 @@ export const darkTheme: Theme = {
           hover: {
             border: palette.grayLight,
             background: palette.grayNormal1,
+            text: palette.grayLight0,
+          },
+          disabled: {
+            border: RGBA(palette.grayLight, 0.8),
+            background: RGBA(palette.grayNormal, 0.8),
             text: palette.grayLight0,
           },
         },
@@ -326,6 +344,11 @@ export const darkTheme: Theme = {
             background: palette.grayLight0,
             text: palette.grayLight,
           },
+          disabled: {
+            border: RGBA(palette.grayLight1, 0.8),
+            background: RGBA(palette.grayLight1, 0.8),
+            text: palette.grayLight,
+          },
         },
         outlined: {
           border: palette.grayLight,
@@ -336,6 +359,21 @@ export const darkTheme: Theme = {
             background: palette.grayNormal1,
             text: palette.grayLight,
           },
+          disabled: {
+            border: RGBA(palette.grayLight, 0.8),
+            background: RGBA(palette.grayNormal, 0.8),
+            text: palette.grayLight,
+          },
+        },
+      },
+      tile: {
+        border: palette.grayNormal1,
+        background: palette.grayNormal1,
+        text: palette.grayLight1,
+        hover: {
+          border: palette.grayLight0,
+          background: palette.grayNormal1,
+          text: palette.grayLight1,
         },
       },
     },
@@ -350,7 +388,7 @@ export const darkTheme: Theme = {
       },
     },
     dialog: {
-      overlay: toRGBA(palette.grayNormal, 0.9),
+      overlay: RGBA(palette.grayNormal, 0.9),
       background: palette.grayNormal1,
     },
   },
