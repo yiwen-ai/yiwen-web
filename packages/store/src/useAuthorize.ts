@@ -5,6 +5,7 @@ import {
   useSubscriptionManager,
 } from '@yiwen-ai/util'
 import { useCallback, useState } from 'react'
+import { useLogger } from './logger'
 import { useAccessToken } from './useAccessToken'
 import { useFetcherConfig } from './useFetcher'
 import { useUser } from './useUser'
@@ -26,10 +27,17 @@ export function useAuthorize() {
   const [provider, setProvider] = useState<IdentityProvider | undefined>()
   const connect = useConnect()
   const subscriptionManager = useSubscriptionManager()
+  const logger = useLogger()
 
   const authorize = useCallback(
     async (provider: IdentityProvider) => {
       if (isAuthorizing) return
+      if (!AUTH_URL || !PUBLIC_PATH) {
+        logger.error('fetcher config is not ready', {
+          config: { AUTH_URL, PUBLIC_PATH },
+        })
+        return
+      }
       try {
         setIsAuthorizing(true)
         setProvider(provider)
@@ -76,6 +84,7 @@ export function useAuthorize() {
       PUBLIC_PATH,
       connect,
       isAuthorizing,
+      logger,
       refreshAccessToken,
       refreshUser,
       subscriptionManager,

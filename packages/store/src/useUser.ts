@@ -27,7 +27,7 @@ export interface User {
 export function useUser() {
   const { data, isLoading, mutate } = useSWR<User>(
     '/userinfo',
-    useAuthFetcher()
+    useAuthFetcher() ?? null
   )
   const refresh = useCallback(() => mutate(), [mutate])
   return {

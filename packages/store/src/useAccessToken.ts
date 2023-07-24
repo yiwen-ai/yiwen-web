@@ -16,10 +16,11 @@ export interface AccessToken {
  */
 export function useAccessToken() {
   const [refreshInterval, setRefreshInterval] = useState(1 * 60 * 60) // 1 小时 (3600s)
-  const { data, mutate } = useSWR<AccessToken>('/access_token', {
-    fetcher: useAuthFetcher(),
-    refreshInterval: refreshInterval * 1000,
-  })
+  const { data, mutate } = useSWR<AccessToken>(
+    '/access_token',
+    useAuthFetcher() ?? null,
+    { refreshInterval: refreshInterval * 1000 }
+  )
   useEffect(
     () => setRefreshInterval((prev) => data?.expires_in ?? prev),
     [data?.expires_in]

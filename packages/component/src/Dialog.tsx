@@ -1,5 +1,6 @@
 import { css, useTheme } from '@emotion/react'
 import { useFloating } from '@floating-ui/react-dom'
+import { RGBA } from '@yiwen-ai/util'
 import {
   cloneElement,
   memo,
@@ -145,7 +146,10 @@ export const Dialog = memo(function Dialog({
                 right: 16px;
               `}
             >
-              <Icon name='closecircle' />
+              <Icon
+                name='closecircle2'
+                css={{ color: RGBA(theme.palette.grayLight, 0.4) }}
+              />
             </Button>
           </div>
         </div>

@@ -336,12 +336,12 @@ export const darkTheme: Theme = {
       },
       secondary: {
         contained: {
-          border: palette.grayLight1,
-          background: palette.grayLight1,
+          border: palette.grayNormal1,
+          background: palette.grayNormal1,
           text: palette.grayLight,
           hover: {
-            border: palette.grayLight0,
-            background: palette.grayLight0,
+            border: palette.grayNormal,
+            background: palette.grayNormal,
             text: palette.grayLight,
           },
           disabled: {

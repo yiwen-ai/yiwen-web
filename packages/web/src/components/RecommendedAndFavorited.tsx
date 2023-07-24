@@ -80,7 +80,7 @@ export default function RecommendedAndFavorited(
             <>
               <TabItem
                 tab={Tab.Recommended}
-                tabIcon='wanchain1'
+                tabIcon='wanchain'
                 tabName={intl.formatMessage({ defaultMessage: '推荐' })}
                 currentTab={tab}
                 onClick={setTab}
@@ -104,7 +104,7 @@ export default function RecommendedAndFavorited(
             caption={
               <TabItem
                 tab={Tab.Recommended}
-                tabIcon='wanchain1'
+                tabIcon='wanchain'
                 tabName={intl.formatMessage({ defaultMessage: '推荐' })}
               />
             }

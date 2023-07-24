@@ -1,5 +1,11 @@
 /// <reference types="vite/client" />
 
+declare module '*.svg' {
+  export const ReactComponent: React.FunctionComponent<
+    React.SVGProps<SVGSVGElement>
+  >
+}
+
 interface ImportMetaEnv {
   readonly VITE_API_URL: string
   readonly VITE_AUTH_URL: string

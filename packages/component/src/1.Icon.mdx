@@ -1,38 +1,26 @@
 import { Meta, IconGallery, IconItem } from '@storybook/blocks'
-import { Icon } from './Icon'
+import { Icon, IconNameList } from './Icon'
 
 <Meta title='Icon' />
 
+## Prerequisites
+
+```typescript
+// vite.config.ts
+import svgr from '@svgr/rollup'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [svgr()],
+})
+```
+
+## Gallery
+
 <IconGallery>
-  {[
-    'backwarditem',
-    'closecircle',
-    'coin',
-    'delete',
-    'directright',
-    'directright2',
-    'documentcopy',
-    'edit',
-    'github',
-    'google',
-    'heart',
-    'heart2',
-    'heart3',
-    'importcurve',
-    'lampon',
-    'messagenotif',
-    'more',
-    'more2',
-    'refresh',
-    'search',
-    'translate',
-    'translate2',
-    'translate3',
-    'wanchain1',
-    'wechat',
-  ].map((name) => (
+  {IconNameList.map((name) => (
     <IconItem name={name} key={name}>
-      <Icon name={name} />
+      <Icon name={name} style={{ color: '#745DF9' }} />
     </IconItem>
   ))}
 </IconGallery>
