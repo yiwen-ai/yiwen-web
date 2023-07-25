@@ -12,11 +12,11 @@ import {
   Spinner,
   TextField,
 } from '@yiwen-ai/component'
+import { useLayoutEffect } from '@yiwen-ai/util'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { usePromise } from 'react-use'
-import useIsomorphicLayoutEffect from 'use-isomorphic-layout-effect'
 
 export default function Search() {
   const intl = useIntl()
@@ -80,7 +80,7 @@ export default function Search() {
       .finally(() => setIsLoading(false))
   }, [keyword, mounted])
 
-  useIsomorphicLayoutEffect(() => {
+  useLayoutEffect(() => {
     inputRef.current?.focus()
   }, [])
 

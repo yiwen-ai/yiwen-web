@@ -14,6 +14,7 @@ import {
   LoggerProvider,
   LoggingLevel,
   resolveURL,
+  useLayoutEffect,
   type LoggingHandler,
 } from '@yiwen-ai/util'
 import { useCallback, useMemo, useState } from 'react'
@@ -32,7 +33,6 @@ import {
   createRoutesFromElements,
 } from 'react-router-dom'
 import { SWRConfig, type SWRConfiguration } from 'swr'
-import useIsomorphicLayoutEffect from 'use-isomorphic-layout-effect'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
@@ -201,7 +201,7 @@ function UserThemeProvider(props: React.PropsWithChildren) {
 function LoggingUnhandledError() {
   const logger = useLogger()
 
-  useIsomorphicLayoutEffect(() => {
+  useLayoutEffect(() => {
     const onError = (ev: ErrorEvent) => {
       logger.error('uncaught error', {
         message: ev.message,

@@ -47,11 +47,19 @@ module.exports = {
       },
     ],
     'no-console': 'error',
-    'no-useless-rename': 'error',
-    'react-hooks/exhaustive-deps': [
+    'no-restricted-imports': [
       'error',
-      { 'additionalHooks': 'useIsomorphicLayoutEffect' },
+      {
+        'paths': [
+          {
+            'name': 'react',
+            'importNames': ['useLayoutEffect'],
+            'message': "Please import from '@yiwen-ai/util' instead.",
+          },
+        ],
+      },
     ],
+    'no-useless-rename': 'error',
     'react-refresh/only-export-components': [
       'error',
       { allowConstantExport: true },
