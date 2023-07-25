@@ -22,13 +22,13 @@ export const AccountManager = memo(function AccountManager() {
     <Avatar src={user.picture} name={user.name} />
   ) : (
     <Dialog
-      trigger={
-        <Button>
+      trigger={(props) => (
+        <Button {...props}>
           {intl.formatMessage({
             defaultMessage: '登录',
           })}
         </Button>
-      }
+      )}
       head={
         <FormattedMessage
           defaultMessage='登录到 {brand}'
