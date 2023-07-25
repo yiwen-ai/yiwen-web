@@ -14,7 +14,7 @@ export interface FetcherConfig {
   AUTH_URL: string
 }
 
-const FetcherConfigContext = createContext({} as FetcherConfig)
+const FetcherConfigContext = createContext({} as Partial<FetcherConfig>)
 
 export const FetcherConfigProvider = FetcherConfigContext.Provider
 
@@ -108,6 +108,10 @@ export function useFetcher(baseURL?: string) {
   const { accessToken } = useAccessToken()
   const logger = useLogger()
   return useMemo(() => {
+    if (!API_URL) {
+      logger.debug('fetcher config is not ready', { config: { API_URL } })
+      return undefined
+    }
     if (!accessToken) {
       logger.debug('missing access token', undefined)
       return undefined
@@ -125,6 +129,10 @@ export function useAuthFetcher() {
   const { AUTH_URL } = useFetcherConfig()
   const logger = useLogger()
   return useMemo(() => {
+    if (!AUTH_URL) {
+      logger.debug('fetcher config is not ready', { config: { AUTH_URL } })
+      return undefined
+    }
     return createRequest({
       baseURL: AUTH_URL,
       credentials: 'include',

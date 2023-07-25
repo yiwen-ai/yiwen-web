@@ -32,6 +32,7 @@
     "@storybook/blocks": "^7.0.27",
     "@storybook/react": "^7.0.27",
     "@storybook/react-vite": "^7.0.27",
+    "@svgr/rollup": "^8.0.1",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.3",

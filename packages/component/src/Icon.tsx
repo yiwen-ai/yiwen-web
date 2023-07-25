@@ -1,34 +1,62 @@
 import { css } from '@emotion/react'
-import { memo, useEffect, useState, type ImgHTMLAttributes } from 'react'
+import {
+  forwardRef,
+  memo,
+  useEffect,
+  useState,
+  type ComponentType,
+  type SVGProps,
+} from 'react'
 import { usePromise } from 'react-use'
 import { useLogger } from './logger'
 
-export type IconName =
-  | 'backwarditem'
-  | 'closecircle'
-  | 'coin'
-  | 'delete'
-  | 'directright'
-  | 'directright2'
-  | 'documentcopy'
-  | 'edit'
-  | 'github'
-  | 'google'
-  | 'heart'
-  | 'heart2'
-  | 'heart3'
-  | 'importcurve'
-  | 'lampon'
-  | 'messagenotif'
-  | 'more'
-  | 'more2'
-  | 'refresh'
-  | 'search'
-  | 'translate'
-  | 'translate2'
-  | 'translate3'
-  | 'wanchain1'
-  | 'wechat'
+const SVG_LIST = {
+  'backwarditem': () => import('./icon/16/backwarditem.svg'),
+  'bold': () => import('./icon/format/bold.svg'),
+  'celo': () => import('./icon/bulk/celo.svg'),
+  'closecircle': () => import('./icon/16/closecircle.svg'),
+  'closecircle2': () => import('./icon/24/closecircle.svg'),
+  'coin': () => import('./icon/bulk/coin.svg'),
+  'delete': () => import('./icon/16/dele.svg'),
+  'directright': () => import('./icon/16/directright.svg'),
+  'directright2': () => import('./icon/24/directright.svg'),
+  'documentcopy': () => import('./icon/16/documentcopy.svg'),
+  'dropdown': () => import('./icon/16/dropdown.svg'),
+  'edit': () => import('./icon/16/edit.svg'),
+  'gallery': () => import('./icon/bulk/gallery.svg'),
+  'github': () => import('./icon/provider/github.svg'),
+  'google': () => import('./icon/provider/google.svg'),
+  'h1': () => import('./icon/format/H1.svg'),
+  'h2': () => import('./icon/format/H2.svg'),
+  'h3': () => import('./icon/format/H3.svg'),
+  'heart': () => import('./icon/16/heart.svg'),
+  'heart2': () => import('./icon/16/heart-1.svg'),
+  'heart3': () => import('./icon/24/heart.svg'),
+  'horizontal': () => import('./icon/format/Underline1.svg'),
+  'importcurve': () => import('./icon/16/importcurve.svg'),
+  'italic': () => import('./icon/format/Italic.svg'),
+  'lampon': () => import('./icon/bulk/lampon.svg'),
+  'messagenotif': () => import('./icon/16/messagenotif.svg'),
+  'more': () => import('./icon/16/more.svg'),
+  'more2': () => import('./icon/24/more.svg'),
+  'ol': () => import('./icon/format/Ordered list.svg'),
+  'quote': () => import('./icon/format/Ordered list.svg'),
+  'recoveryconvert': () => import('./icon/16/recoveryconvert.svg'),
+  'refresh': () => import('./icon/16/refresh.svg'),
+  'search': () => import('./icon/24/searchnormal1.svg'),
+  'tickcircle': () => import('./icon/bulk/tickcircle.svg'),
+  'translate': () => import('./icon/16/translate.svg'),
+  'translate2': () => import('./icon/24/translate.svg'),
+  'translate3': () => import('./icon/bulk/translate.svg'),
+  'ul': () => import('./icon/format/Unordered list.svg'),
+  'underline': () => import('./icon/format/Underline.svg'),
+  'wanchain': () => import('./icon/16/wanchain1.svg'),
+  'wechat': () => import('./icon/provider/wechat.svg'),
+}
+
+export const IconNameList = Object.keys(SVG_LIST) as IconName[]
+
+export type IconName = keyof typeof SVG_LIST
 
 export type IconSize = 'small' | 'medium' | number
 
@@ -37,49 +65,74 @@ const SizeDict: Record<IconSize, number> = {
   medium: 24,
 }
 
-export interface IconProps extends ImgHTMLAttributes<HTMLImageElement> {
-  name: IconName
+export interface IconProps extends SVGProps<SVGSVGElement> {
+  /**
+   * custom SVG component
+   */
+  as?: ComponentType<SVGProps<SVGSVGElement>>
+  /**
+   * required if `as` is not provided
+   */
+  name?: IconName
   /**
    * @default 'medium'
    */
   size?: IconSize
-  // TODO: implement
-  // color?: 'regular' | 'filled'
 }
 
-export const Icon = memo(function Icon({
-  name,
-  size = 'medium',
-  ...props
-}: IconProps) {
-  const logger = useLogger()
-  const mounted = usePromise()
-  const width = typeof size === 'number' ? size : SizeDict[size]
-  const [src, setSrc] = useState<string | undefined>()
+export const Icon = memo(
+  forwardRef(function Icon(
+    {
+      as: component,
+      name,
+      size = 'medium',
+      tabIndex = -1,
+      ...props
+    }: IconProps,
+    ref: React.Ref<SVGSVGElement>
+  ) {
+    const logger = useLogger()
+    const mounted = usePromise()
+    const width = typeof size === 'number' ? size : SizeDict[size]
+    const [SVG = 'svg', setSVG] = useState<
+      ComponentType<SVGProps<SVGSVGElement>> | undefined
+    >(component)
 
-  useEffect(() => {
-    ;(async () => {
-      try {
-        const { default: src } = await mounted(
-          import(`./icon/${name}.svg`) as Promise<{ default: string }>
-        )
-        setSrc(src)
-      } catch (error) {
-        logger.error('failed to load icon', { error })
+    useEffect(() => {
+      if (typeof SVG === 'function') return
+      if (!name) {
+        logger.warn('failed to load icon', {
+          error: new ReferenceError('name is required'),
+        })
+        return
       }
-    })()
-  }, [logger, mounted, name])
+      ;(async () => {
+        try {
+          const { ReactComponent } = await mounted(SVG_LIST[name]())
+          setSVG(() => ReactComponent)
+        } catch (error) {
+          logger.error('failed to load icon', { error })
+        }
+      })()
+    }, [SVG, logger, mounted, name])
 
-  return (
-    <img
-      src={src}
-      alt={name}
-      aria-hidden={true} // https://css-tricks.com/accessible-svg-icons/#aa-the-icon-is-decorative
-      {...props}
-      css={css`
-        width: ${width}px;
-        height: ${width}px;
-      `}
-    />
-  )
-})
+    return (
+      <SVG
+        focusable={tabIndex >= 0}
+        tabIndex={tabIndex}
+        aria-hidden={!props['aria-label']} // https://css-tricks.com/accessible-svg-icons/#aa-the-icon-is-decorative
+        role='img'
+        {...props}
+        ref={ref}
+        css={css`
+          flex-shrink: 0;
+          width: ${width}px;
+          height: ${width}px;
+          color: inherit;
+          fill: currentColor;
+          user-select: none;
+        `}
+      />
+    )
+  })
+)

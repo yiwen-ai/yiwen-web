@@ -1,3 +1,4 @@
+import svgr from '@svgr/rollup'
 import legacy from '@vitejs/plugin-legacy'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -9,5 +10,6 @@ export default defineConfig({
     react({ babel: { rootMode: 'upward', configFile: true } }),
     legacy(),
     checker({ typescript: true }),
+    svgr(),
   ],
 })
