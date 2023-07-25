@@ -21,7 +21,7 @@ export const Spinner = memo(function Spinner({
   const width = typeof size === 'number' ? size : SizeDict[size]
 
   return (
-    <div
+    <span
       role='progressbar'
       {...props}
       css={css`

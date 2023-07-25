@@ -5,6 +5,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useId,
   type InputHTMLAttributes,
 } from 'react'
 import { useLogger } from './logger'
@@ -31,8 +32,8 @@ const SizeDict: Record<TextFieldSize, CSSObject> = {
 export interface TextFieldProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   size?: TextFieldSize
-  before?: string | JSX.Element | (() => JSX.Element)
-  after?: string | JSX.Element | (() => JSX.Element)
+  before?: string | JSX.Element | (() => JSX.Element | null)
+  after?: string | JSX.Element | (() => JSX.Element | null)
   onSearch?: (
     keyword: string,
     ev: React.KeyboardEvent<HTMLInputElement>
@@ -56,6 +57,8 @@ export const TextField = memo(
   ) {
     const theme = useTheme()
     const logger = useLogger()
+    const _id = useId()
+    const id = props.id ?? _id
     const sizeCSS = SizeDict[size]
 
     const handleKeyDown = useCallback(
@@ -83,10 +86,12 @@ export const TextField = memo(
 
     return (
       <label
+        htmlFor={id}
         className={className}
+        role={onSearch ? 'search' : 'presentation'}
         css={css`
           ${sizeCSS}
-          display: flex;
+          display: inline-flex;
           border: 1px solid ${theme.color.input.border};
           box-sizing: border-box;
           :hover {
@@ -110,11 +115,11 @@ export const TextField = memo(
           </div>
         ) : null}
         <input
-          type='text'
-          aria-invalid={false}
+          id={id}
+          type={onSearch ? 'search' : 'text'}
+          onKeyDown={handleKeyDown}
           {...props}
           ref={ref}
-          onKeyDown={handleKeyDown}
           css={css`
             flex: 1;
             border: none;

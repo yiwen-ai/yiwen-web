@@ -73,6 +73,7 @@ export const Button = memo(
 
     return (
       <button
+        type='button'
         {...props}
         ref={ref}
         css={css`

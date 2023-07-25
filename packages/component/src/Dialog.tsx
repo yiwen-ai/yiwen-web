@@ -1,20 +1,18 @@
 import { css, useTheme } from '@emotion/react'
-import { useFloating } from '@floating-ui/react-dom'
-import { RGBA } from '@yiwen-ai/util'
+import { RGBA, useControlled } from '@yiwen-ai/util'
 import {
   forwardRef,
   memo,
   useCallback,
-  useState,
+  useImperativeHandle,
   type HTMLAttributes,
 } from 'react'
-import { Icon } from '.'
 import { Button } from './Button'
+import { Icon } from './Icon'
 import { Portal, type PortalProps } from './Portal'
 
 interface TriggerProps {
-  ref: React.RefCallback<HTMLElement>
-  onClick: (ev: React.SyntheticEvent) => void
+  onClick: (ev?: React.SyntheticEvent) => void
 }
 
 export interface DialogProps extends HTMLAttributes<HTMLDivElement> {
@@ -23,10 +21,16 @@ export interface DialogProps extends HTMLAttributes<HTMLDivElement> {
   head?: string | JSX.Element | (() => JSX.Element)
   body?: string | JSX.Element | (() => JSX.Element)
   foot?: string | JSX.Element | (() => JSX.Element)
-  defaultIsOpen?: boolean
-  onOpen?: () => void
+  defaultOpen?: boolean
+  open?: boolean
+  onToggle?: (open: boolean) => void
+  onShow?: () => void
   onClose?: () => void
-  onToggle?: (isOpen: boolean) => void
+}
+
+interface DialogRef {
+  show: () => void
+  close: () => void
 }
 
 export const Dialog = memo(
@@ -37,128 +41,134 @@ export const Dialog = memo(
       head,
       body,
       foot,
-      defaultIsOpen,
-      onOpen,
-      onClose,
+      defaultOpen = false,
+      open: _open,
       onToggle,
+      onShow,
+      onClose,
       ...props
     }: DialogProps,
-    ref: React.Ref<HTMLDivElement>
+    ref: React.Ref<DialogRef>
   ) {
     const theme = useTheme()
-    const [isOpen, setIsOpen] = useState(defaultIsOpen ?? false)
-    const { refs } = useFloating({ open: isOpen })
+    const [open, setOpen] = useControlled({
+      defaultValue: defaultOpen,
+      value: _open,
+      onChange: onToggle,
+    })
 
-    const handleOpen = useCallback(
-      (ev: React.SyntheticEvent) => {
-        if (ev.isPropagationStopped()) return
-        setIsOpen(true)
-        onOpen?.()
-        onToggle?.(true)
+    const handleShow = useCallback(
+      (ev?: React.SyntheticEvent) => {
+        if (ev?.isPropagationStopped()) return
+        setOpen(true)
+        onShow?.()
       },
-      [onOpen, onToggle]
+      [onShow, setOpen]
     )
 
     const handleClose = useCallback(() => {
-      setIsOpen(false)
+      setOpen(false)
       onClose?.()
-      onToggle?.(false)
-    }, [onClose, onToggle])
+    }, [onClose, setOpen])
+
+    useImperativeHandle(
+      ref,
+      (): DialogRef => ({
+        show: handleShow,
+        close: handleClose,
+      }),
+      [handleClose, handleShow]
+    )
 
     return (
       <>
-        {trigger?.({
-          ref: refs.setReference,
-          onClick: handleOpen,
-        })}
-        {isOpen && (
+        {trigger?.({ onClick: handleShow })}
+        {open && (
           <Portal container={container}>
             <div
-              ref={refs.setFloating}
               css={css`
                 position: fixed;
                 inset: 0;
-                background: ${theme.color.dialog.overlay};
+                background: ${theme.color.dialog.backdrop};
+              `}
+            />
+            <div
+              role='dialog'
+              aria-modal='true'
+              tabIndex={-1}
+              {...props}
+              css={css`
+                position: fixed;
+                inset: 0;
+                width: 440px;
+                height: fit-content;
+                margin: auto;
+                background: ${theme.color.dialog.background};
+                border-radius: 20px;
+                border: none;
                 display: flex;
                 flex-direction: column;
-                align-items: center;
                 z-index: 1;
               `}
             >
-              <div
-                role='dialog'
-                aria-modal='true'
-                {...props}
-                ref={ref}
-                css={css`
-                  margin: max(68px, 20%);
-                  width: 440px;
-                  background: ${theme.color.dialog.background};
-                  border-radius: 20px;
-                  position: relative;
-                  display: flex;
-                  flex-direction: column;
-                `}
-              >
-                {typeof head === 'function' ? (
-                  head()
-                ) : head ? (
-                  <h2
-                    css={css`
-                      padding: 24px;
-                      text-align: center;
-                    `}
-                  >
-                    {head}
-                  </h2>
-                ) : null}
-                {typeof body === 'function' ? (
-                  body()
-                ) : body ? (
-                  <div
-                    css={css`
-                      flex: 1;
-                      padding: 0 24px;
-                      :first-of-type {
-                        padding-top: 24px;
-                      }
-                      :last-of-type {
-                        padding-bottom: 24px;
-                      }
-                    `}
-                  >
-                    {body}
-                  </div>
-                ) : (
-                  props.children
-                )}
-                {typeof foot === 'function' ? (
-                  foot()
-                ) : foot ? (
-                  <div
-                    css={css`
-                      padding: 24px;
-                      text-align: center;
-                    `}
-                  >
-                    {foot}
-                  </div>
-                ) : null}
-                <Button
-                  shape='circle'
-                  onClick={handleClose}
+              {typeof head === 'function' ? (
+                head()
+              ) : head ? (
+                <h2
                   css={css`
-                    position: absolute;
-                    top: 16px;
-                    right: 16px;
+                    padding: 24px;
+                    text-align: center;
                   `}
                 >
-                  <Icon
-                    name='closecircle2'
-                    css={{ color: RGBA(theme.palette.grayLight, 0.4) }}
-                  />
-                </Button>
-              </div>
+                  {head}
+                </h2>
+              ) : null}
+              {typeof body === 'function' ? (
+                body()
+              ) : body ? (
+                <div
+                  css={css`
+                    flex: 1;
+                    padding: 0 24px;
+                    :first-of-type {
+                      padding-top: 24px;
+                    }
+                    :last-of-type {
+                      padding-bottom: 24px;
+                    }
+                  `}
+                >
+                  {body}
+                </div>
+              ) : (
+                props.children
+              )}
+              {typeof foot === 'function' ? (
+                foot()
+              ) : foot ? (
+                <div
+                  css={css`
+                    padding: 24px;
+                    text-align: center;
+                  `}
+                >
+                  {foot}
+                </div>
+              ) : null}
+              <Button
+                shape='circle'
+                onClick={handleClose}
+                css={css`
+                  position: absolute;
+                  top: 16px;
+                  right: 16px;
+                `}
+              >
+                <Icon
+                  name='closecircle2'
+                  css={{ color: RGBA(theme.palette.grayLight, 0.4) }}
+                />
+              </Button>
             </div>
           </Portal>
         )}

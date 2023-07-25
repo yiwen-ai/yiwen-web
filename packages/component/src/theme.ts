@@ -87,7 +87,7 @@ declare module '@emotion/react' {
         }
       }
       dialog: {
-        overlay: string
+        backdrop: string
         background: string
       }
     }
@@ -237,7 +237,7 @@ export const lightTheme: Theme = {
       },
     },
     dialog: {
-      overlay: RGBA(palette.grayNormal, 0.9),
+      backdrop: RGBA(palette.grayNormal, 0.9),
       background: palette.grayLight1,
     },
   },
@@ -388,7 +388,7 @@ export const darkTheme: Theme = {
       },
     },
     dialog: {
-      overlay: RGBA(palette.grayNormal, 0.9),
+      backdrop: RGBA(palette.grayNormal, 0.9),
       background: palette.grayNormal1,
     },
   },

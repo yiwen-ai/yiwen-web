@@ -15,5 +15,6 @@ export {
 } from './toURLSearchParams'
 export { useChannel, useConnect } from './useChannel'
 export { useCheckWindowClosed } from './useCheckWindowClosed'
+export { useControlled } from './useControlled'
 export { useLayoutEffect } from './useIsomorphicLayoutEffect'
 export { useSubscriptionManager } from './useSubscriptionManager'
