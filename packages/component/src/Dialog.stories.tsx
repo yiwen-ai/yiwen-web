@@ -17,13 +17,17 @@ export const Default: Story = {
     trigger: (props) => <Button {...props}>Open Dialog</Button>,
     head: 'Head',
     foot: 'Foot',
-    children: (
+    body: (
       <div
         css={css`
-          text-align: center;
+          height: 150%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
         `}
       >
-        Dialog Body
+        Scrollable Dialog Body
       </div>
     ),
   },
@@ -34,7 +38,7 @@ export const Nested: Story = {
     trigger: (props) => <Button {...props}>Open Dialog</Button>,
     head: 'Head',
     foot: 'Foot',
-    children: <NestedDialog />,
+    body: <NestedDialog />,
   },
 }
 
@@ -45,7 +49,11 @@ function NestedDialog() {
     <div
       ref={containerRef}
       css={css`
-        text-align: center;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
       `}
     >
       <Dialog
@@ -57,13 +65,17 @@ function NestedDialog() {
         container={containerRef}
         head='Nested Head'
         css={css`
-          margin-top: 25%;
+          margin: min(25%, 200px);
+          border-radius: 20px;
         `}
       >
         <div
           css={css`
-            margin: 20px 0 40px;
-            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
           `}
         >
           Nested Dialog Body

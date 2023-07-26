@@ -4,18 +4,11 @@ import RecommendedAndFavorited, {
   ARTICLE_ITEM_MIN_WIDTH,
 } from '#/components/RecommendedAndFavorited'
 import { css, useTheme } from '@emotion/react'
-import {
-  Avatar,
-  Brand,
-  Header,
-  Icon,
-  Spinner,
-  TextField,
-} from '@yiwen-ai/component'
+import { Avatar, Header, Icon, Spinner, TextField } from '@yiwen-ai/component'
 import { useLayoutEffect } from '@yiwen-ai/util'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { usePromise } from 'react-use'
 
 export default function Search() {
@@ -94,6 +87,7 @@ export default function Search() {
       `}
     >
       <Header
+        brand={true}
         css={css`
           box-shadow: ${theme.effect.divider};
         `}
@@ -102,26 +96,15 @@ export default function Search() {
           css={css`
             flex: 1;
             align-self: stretch;
-            margin-right: 40px;
+            margin: 0 40px;
             display: flex;
+            ::before {
+              content: '';
+              margin: 12px 20px 12px 0;
+              border-right: 1px solid ${theme.color.divider.primary};
+            }
           `}
         >
-          <Link
-            to='/'
-            css={css`
-              padding-left: 12px;
-              display: flex;
-              align-items: center;
-            `}
-          >
-            <Brand />
-          </Link>
-          <i
-            css={css`
-              margin: 12px 20px 12px 40px;
-              border-left: 1px solid ${theme.color.divider.primary};
-            `}
-          />
           <TextField
             size='large'
             before={<Icon name='search' />}

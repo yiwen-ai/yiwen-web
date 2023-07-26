@@ -3,10 +3,10 @@ import { useAuthorize, useUser, type IdentityProvider } from '@yiwen-ai/store'
 import { memo, useCallback } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { Icon, type IconName } from '.'
+import { AlertDialog } from './AlertDialog'
 import { Avatar } from './Avatar'
 import { Brand } from './Brand'
 import { Button } from './Button'
-import { Dialog } from './Dialog'
 import { Spinner } from './Spinner'
 
 export const AccountManager = memo(function AccountManager() {
@@ -21,7 +21,7 @@ export const AccountManager = memo(function AccountManager() {
     // TODO: click to manage account
     <Avatar src={user.picture} name={user.name} />
   ) : (
-    <Dialog
+    <AlertDialog
       trigger={(props) => (
         <Button {...props}>
           {intl.formatMessage({
@@ -111,7 +111,7 @@ export const AccountManager = memo(function AccountManager() {
           />
         </div>
       </div>
-    </Dialog>
+    </AlertDialog>
   )
 })
 

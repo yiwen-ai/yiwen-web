@@ -1,36 +1,39 @@
 import { css, useTheme } from '@emotion/react'
-import { RGBA, useControlled } from '@yiwen-ai/util'
+import { RGBA, useControlled, useLayoutEffect } from '@yiwen-ai/util'
 import {
   forwardRef,
   memo,
   useCallback,
   useImperativeHandle,
+  useRef,
   type HTMLAttributes,
 } from 'react'
+import { useClickAway } from 'react-use'
 import { Button } from './Button'
 import { Icon } from './Icon'
 import { Portal, type PortalProps } from './Portal'
 
 interface TriggerProps {
-  onClick: (ev?: React.SyntheticEvent) => void
+  onClick: (ev: React.SyntheticEvent) => void
+  onKeyDown: (ev: React.KeyboardEvent) => void
 }
 
 export interface DialogProps extends HTMLAttributes<HTMLDivElement> {
   trigger?: (props: TriggerProps) => JSX.Element
   container?: PortalProps['container']
-  head?: string | JSX.Element | (() => JSX.Element)
-  body?: string | JSX.Element | (() => JSX.Element)
-  foot?: string | JSX.Element | (() => JSX.Element)
+  head?: string | JSX.Element | null | (() => JSX.Element | null)
+  foot?: string | JSX.Element | null | (() => JSX.Element | null)
+  body?: string | JSX.Element | null | (() => JSX.Element | null)
   defaultOpen?: boolean
   open?: boolean
   onToggle?: (open: boolean) => void
   onShow?: () => void
-  onClose?: () => void
+  onHide?: () => void
 }
 
-interface DialogRef {
+export interface DialogRef {
   show: () => void
-  close: () => void
+  hide: () => void
 }
 
 export const Dialog = memo(
@@ -39,13 +42,14 @@ export const Dialog = memo(
       trigger,
       container,
       head,
-      body,
       foot,
+      body,
       defaultOpen = false,
       open: _open,
       onToggle,
       onShow,
-      onClose,
+      onHide,
+      onKeyDown,
       ...props
     }: DialogProps,
     ref: React.Ref<DialogRef>
@@ -57,32 +61,65 @@ export const Dialog = memo(
       onChange: onToggle,
     })
 
-    const handleShow = useCallback(
-      (ev?: React.SyntheticEvent) => {
-        if (ev?.isPropagationStopped()) return
-        setOpen(true)
-        onShow?.()
+    const handleToggle = useCallback(
+      (ev: React.SyntheticEvent) => {
+        if (ev.isPropagationStopped()) return
+        setOpen(!open)
+        open ? onHide?.() : onShow?.()
       },
-      [onShow, setOpen]
+      [onHide, onShow, open, setOpen]
     )
 
-    const handleClose = useCallback(() => {
+    const handleShow = useCallback(() => {
+      setOpen(true)
+      onShow?.()
+    }, [onShow, setOpen])
+
+    const handleHide = useCallback(() => {
       setOpen(false)
-      onClose?.()
-    }, [onClose, setOpen])
+      onHide?.()
+    }, [onHide, setOpen])
 
     useImperativeHandle(
       ref,
       (): DialogRef => ({
         show: handleShow,
-        close: handleClose,
+        hide: handleHide,
       }),
-      [handleClose, handleShow]
+      [handleHide, handleShow]
     )
+
+    const handleEscape = useCallback(
+      (ev: React.KeyboardEvent | KeyboardEvent) => {
+        if (!open) return
+        if ((ev as React.KeyboardEvent).isPropagationStopped?.()) return
+        if (ev.key === 'Escape') {
+          ev.stopPropagation()
+          handleHide()
+        }
+      },
+      [handleHide, open]
+    )
+
+    const handleKeyDown = useCallback(
+      (ev: React.KeyboardEvent<HTMLDivElement>) => {
+        onKeyDown?.(ev)
+        handleEscape(ev)
+      },
+      [handleEscape, onKeyDown]
+    )
+
+    useLayoutEffect(() => {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }, [handleEscape])
+
+    const dialogEl = useRef<HTMLDivElement>(null)
+    useClickAway(dialogEl, handleHide)
 
     return (
       <>
-        {trigger?.({ onClick: handleShow })}
+        {trigger?.({ onClick: handleToggle, onKeyDown: handleEscape })}
         {open && (
           <Portal container={container}>
             <div
@@ -90,21 +127,23 @@ export const Dialog = memo(
                 position: fixed;
                 inset: 0;
                 background: ${theme.color.dialog.backdrop};
+                z-index: 1;
               `}
             />
+            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
             <div
               role='dialog'
               aria-modal='true'
               tabIndex={-1}
+              onKeyDown={handleKeyDown}
               {...props}
+              ref={dialogEl}
               css={css`
                 position: fixed;
                 inset: 0;
-                width: 440px;
-                height: fit-content;
-                margin: auto;
+                margin: 96px 80px 0;
                 background: ${theme.color.dialog.background};
-                border-radius: 20px;
+                border-radius: 20px 20px 0 0;
                 border: none;
                 display: flex;
                 flex-direction: column;
@@ -114,28 +153,25 @@ export const Dialog = memo(
               {typeof head === 'function' ? (
                 head()
               ) : head ? (
-                <h2
+                <div
+                  data-dialog-head={true}
                   css={css`
                     padding: 24px;
                     text-align: center;
                   `}
                 >
                   {head}
-                </h2>
+                </div>
               ) : null}
               {typeof body === 'function' ? (
                 body()
               ) : body ? (
                 <div
+                  data-dialog-body={true}
                   css={css`
                     flex: 1;
-                    padding: 0 24px;
-                    :first-of-type {
-                      padding-top: 24px;
-                    }
-                    :last-of-type {
-                      padding-bottom: 24px;
-                    }
+                    padding: 24px;
+                    overflow-y: auto;
                   `}
                 >
                   {body}
@@ -147,6 +183,7 @@ export const Dialog = memo(
                 foot()
               ) : foot ? (
                 <div
+                  data-dialog-foot={true}
                   css={css`
                     padding: 24px;
                     text-align: center;
@@ -156,12 +193,15 @@ export const Dialog = memo(
                 </div>
               ) : null}
               <Button
+                data-dialog-close={true}
                 shape='circle'
-                onClick={handleClose}
+                onClick={handleHide}
                 css={css`
                   position: absolute;
-                  top: 16px;
-                  right: 16px;
+                  left: 100%;
+                  bottom: 100%;
+                  margin-left: 16px;
+                  margin-bottom: 16px;
                 `}
               >
                 <Icon

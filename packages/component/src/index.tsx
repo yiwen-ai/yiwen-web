@@ -1,4 +1,5 @@
 export { AccountManager } from './AccountManager'
+export { AlertDialog, type AlertDialogProps } from './AlertDialog'
 export { Avatar, type AvatarProps, type AvatarSize } from './Avatar'
 export { Brand, type BrandProps } from './Brand'
 export {
