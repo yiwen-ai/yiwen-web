@@ -2,9 +2,9 @@ import { css, useTheme } from '@emotion/react'
 import {
   RGBA,
   useModal,
+  type AnchorProps,
   type ModalProps,
   type ModalRef,
-  type TriggerProps,
 } from '@yiwen-ai/util'
 import {
   createContext,
@@ -22,22 +22,22 @@ import { Portal, type PortalProps } from './Portal'
 export interface DialogProps
   extends HTMLAttributes<HTMLDivElement>,
     ModalProps {
-  trigger?: (props: TriggerProps) => JSX.Element
+  anchor?: (props: AnchorProps) => JSX.Element
   container?: PortalProps['container']
 }
 
 export const Dialog = memo(
   forwardRef(function Dialog(
-    { trigger, container, ...props }: DialogProps,
+    { anchor, container, ...props }: DialogProps,
     ref: React.Ref<ModalRef>
   ) {
     const theme = useTheme()
-    const { open, modal, triggerProps, floatingProps } = useModal(props)
+    const { open, modal, anchorProps, floatingProps } = useModal(props)
     useImperativeHandle(ref, () => modal, [modal])
 
     return (
       <DialogContext.Provider value={modal}>
-        {trigger?.(triggerProps)}
+        {anchor?.(anchorProps)}
         {open && (
           <Portal container={container}>
             <div

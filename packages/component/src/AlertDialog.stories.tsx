@@ -18,7 +18,7 @@ type Story = StoryObj<typeof AlertDialog>
 
 export const Default: Story = {
   args: {
-    trigger: (props) => <Button {...props}>Open Alert Dialog</Button>,
+    anchor: (props) => <Button {...props}>Open Alert Dialog</Button>,
     children: (
       <>
         <AlertDialogHead>Head</AlertDialogHead>

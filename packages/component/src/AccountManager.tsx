@@ -27,7 +27,7 @@ export const AccountManager = memo(function AccountManager() {
     <Avatar src={user.picture} name={user.name} />
   ) : (
     <AlertDialog
-      trigger={(props) => (
+      anchor={(props) => (
         <Button {...props}>
           {intl.formatMessage({
             defaultMessage: '登录',

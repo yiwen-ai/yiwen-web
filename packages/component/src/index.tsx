@@ -29,6 +29,7 @@ export { GlobalStyles } from './GlobalStyles'
 export { Header, type HeaderProps } from './Header'
 export { Icon, type IconName, type IconProps, type IconSize } from './Icon'
 export { LOGO_URL, Logo, type LogoProps } from './Logo' // eslint-disable-line react-refresh/only-export-components
+export { Menu, MenuItem, type MenuProps } from './Menu'
 export { RichTextEditor, type RichTextEditorProps } from './RichTextEditor'
 export { Spinner, type SpinnerProps, type SpinnerSize } from './Spinner'
 export { TextField, type TextFieldProps, type TextFieldSize } from './TextField'

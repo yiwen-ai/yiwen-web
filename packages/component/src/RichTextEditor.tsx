@@ -52,7 +52,6 @@ export const RichTextEditor = memo(
         className={className}
         editor={editor}
         css={css`
-          /* Basic editor styles */
           .ProseMirror {
             :focus {
               outline: none;
@@ -63,17 +62,7 @@ export const RichTextEditor = memo(
             }
           }
 
-          /* Placeholder (at the top) */
           .ProseMirror p.is-editor-empty:first-of-child::before {
-            color: ${theme.color.input.placeholder};
-            content: attr(data-placeholder);
-            float: left;
-            height: 0;
-            pointer-events: none;
-          }
-
-          /* Placeholder (on every new line) */
-          .ProseMirror p.is-empty::before {
             color: ${theme.color.input.placeholder};
             content: attr(data-placeholder);
             float: left;

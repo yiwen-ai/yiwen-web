@@ -13,14 +13,14 @@ type Story = StoryObj<typeof Popover>
 
 export const Default: Story = {
   args: {
-    trigger: (props) => <Button {...props}>Open Popover</Button>,
+    anchor: (props) => <Button {...props}>Open Popover</Button>,
     children: <div>Popover Body</div>,
   },
 }
 
 export const Nested: Story = {
   args: {
-    trigger: (props) => <Button {...props}>Open Popover</Button>,
+    anchor: (props) => <Button {...props}>Open Popover</Button>,
     children: <NestedPopoverBody level={1} maxLevel={5} />,
   },
 }
@@ -45,7 +45,7 @@ function NestedPopoverBody({
       <div>{`#${level} Popover`}</div>
       {level < maxLevel && (
         <Popover
-          trigger={(props) => (
+          anchor={(props) => (
             <Button {...props} variant='outlined'>
               {`Open #${level + 1} Popover`}
             </Button>

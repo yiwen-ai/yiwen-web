@@ -1,3 +1,4 @@
+import { omit, pick } from 'lodash-es'
 import type React from 'react'
 import { useCallback, useMemo, useRef, type HTMLAttributes } from 'react'
 import { useControlled } from './useControlled'
@@ -5,7 +6,7 @@ import { useLayoutEffect } from './useIsomorphicLayoutEffect'
 
 type Prettify<T> = { [K in keyof T]: T[K] } & unknown
 
-export interface TriggerProps {
+export interface AnchorProps {
   ref: React.RefCallback<HTMLElement>
   onPointerUpCapture: React.PointerEventHandler<HTMLElement>
   onClick: React.MouseEventHandler<HTMLElement>
@@ -19,8 +20,8 @@ export interface FloatingProps<T extends HTMLElement> {
 }
 
 export interface ModalProps {
-  defaultOpen?: boolean
-  open?: boolean
+  defaultOpen?: boolean | undefined
+  open?: boolean | undefined
   onToggle?: (open: boolean) => void
   onShow?: () => void
   onClose?: () => void
@@ -61,7 +62,7 @@ export function useModal<T extends HTMLElement, U extends HTMLAttributes<T>>({
     if (!openRef.current) return
     setOpen(false)
     onClose?.()
-    triggerRef.current?.focus() // bring focus back to trigger
+    anchorRef.current?.focus() // bring focus back to anchor
   }, [onClose, setOpen])
 
   const toggle = useCallback(() => {
@@ -74,18 +75,18 @@ export function useModal<T extends HTMLElement, U extends HTMLAttributes<T>>({
   )
   //#endregion
 
-  //#region toggle on clicking trigger
-  const triggerRef = useRef<HTMLElement | null>(null)
+  //#region toggle on clicking anchor
+  const anchorRef = useRef<HTMLElement | null>(null)
 
-  const setTriggerRef = useCallback((el: HTMLElement | null) => {
-    triggerRef.current = el
+  const setAnchorRef = useCallback((el: HTMLElement | null) => {
+    anchorRef.current = el
   }, [])
 
-  const handleClick = useCallback<TriggerProps['onClick']>(
+  const handleClick = useCallback<AnchorProps['onClick']>(
     (ev) => {
       if (ev.isPropagationStopped()) return
       toggle()
-      triggerRef.current = ev.currentTarget
+      anchorRef.current = ev.currentTarget
     },
     [toggle]
   )
@@ -142,9 +143,9 @@ export function useModal<T extends HTMLElement, U extends HTMLAttributes<T>>({
   }, [close])
   //#endregion
 
-  //#region trigger and floating props
-  const triggerProps: TriggerProps = {
-    ref: setTriggerRef,
+  //#region anchor and floating props
+  const anchorProps: AnchorProps = {
+    ref: setAnchorRef,
     onPointerUpCapture: handlePointerUpCapture,
     onClick: handleClick,
     onKeyDown: handleKeyDown,
@@ -169,12 +170,12 @@ export function useModal<T extends HTMLElement, U extends HTMLAttributes<T>>({
     ),
   }
 
-  const mergeTriggerRef = useCallback(
+  const mergeAnchorRef = useCallback(
     (ref: React.ForwardedRef<HTMLElement>) => (el: HTMLElement | null) => {
-      setTriggerRef(el)
+      setAnchorRef(el)
       if (ref) typeof ref === 'function' ? ref(el) : (ref.current = el)
     },
-    [setTriggerRef]
+    [setAnchorRef]
   )
 
   const mergeFloatingRef = useCallback(
@@ -189,9 +190,9 @@ export function useModal<T extends HTMLElement, U extends HTMLAttributes<T>>({
   return {
     open,
     modal,
-    triggerProps,
+    anchorProps,
     floatingProps,
-    mergeTriggerRef,
+    mergeAnchorRef,
     mergeFloatingRef,
   }
 }
@@ -203,4 +204,19 @@ function isSameEvent(a: Event, b: Event) {
     a.type === b.type &&
     a.isTrusted === b.isTrusted
   )
+}
+
+export function pickModalProps<P extends ModalProps>(props: P) {
+  const keys: (keyof ModalProps)[] = [
+    'defaultOpen',
+    'open',
+    'onToggle',
+    'onShow',
+    'onClose',
+  ]
+
+  return {
+    modalProps: pick(props, keys) as ModalProps,
+    restProps: omit(props, keys),
+  }
 }

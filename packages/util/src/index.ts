@@ -20,10 +20,11 @@ export { useControlled } from './useControlled'
 export { useHover } from './useHover'
 export { useLayoutEffect } from './useIsomorphicLayoutEffect'
 export {
+  pickModalProps,
   useModal,
+  type AnchorProps,
   type ModalProps,
   type ModalRef,
-  type TriggerProps,
 } from './useModal'
 export { useRefCallback } from './useRefCallback'
 export { useSubscriptionManager } from './useSubscriptionManager'

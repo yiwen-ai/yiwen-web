@@ -1,4 +1,4 @@
-import { css } from '@emotion/react'
+import { css, useTheme } from '@emotion/react'
 import { type Editor, type EditorOptions, type JSONContent } from '@tiptap/core'
 import {
   Button,
@@ -6,6 +6,7 @@ import {
   RichTextEditor,
   Spinner,
   TextField,
+  useToast,
 } from '@yiwen-ai/component'
 import { encode, useAddCreation, useMyGroupList } from '@yiwen-ai/store'
 import { nanoid } from 'nanoid'
@@ -14,8 +15,10 @@ import { useIntl } from 'react-intl'
 
 export default function NewCreation() {
   const intl = useIntl()
-  const [isSaving, setIsSaving] = useState<boolean>(false)
+  const theme = useTheme()
+  const { push, render } = useToast()
   const editorRef = useRef<Editor>(null)
+  const [isSaving, setIsSaving] = useState<boolean>(false)
   const [title, setTitle] = useState<string>('')
   const [content, setContent] = useState<JSONContent | undefined>()
   const onChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,14 +66,22 @@ export default function NewCreation() {
       // TODO: redirect to the creation page
       // eslint-disable-next-line no-console
       console.log(item)
+      push({
+        type: 'success',
+        message: intl.formatMessage({ defaultMessage: '保存成功' }),
+      })
       setTitle('')
       editorRef.current?.commands.clearContent(true)
     } catch (error) {
       // TODO: show error
+      push({
+        type: 'warning',
+        message: intl.formatMessage({ defaultMessage: '保存失败' }),
+      })
     } finally {
       setIsSaving(false)
     }
-  }, [addCreation, content, defaultGroupId, title])
+  }, [addCreation, content, defaultGroupId, intl, push, title])
 
   return (
     <div
@@ -81,6 +92,7 @@ export default function NewCreation() {
         overflow: hidden;
       `}
     >
+      {render()}
       <Header>
         <div
           css={css`
@@ -112,7 +124,7 @@ export default function NewCreation() {
       >
         <main
           css={css`
-            max-width: 856px;
+            max-width: 800px;
             margin: 100px auto;
             padding: 24px;
           `}
@@ -140,6 +152,43 @@ export default function NewCreation() {
             `}
           />
         </main>
+      </div>
+      <div
+        css={css`
+          border-top: 1px solid ${theme.color.divider.secondary};
+        `}
+      >
+        <div
+          css={css`
+            max-width: 800px;
+            margin: auto;
+            padding: 16px 24px;
+          `}
+        >
+          <div
+            css={css`
+              ${theme.typography.bodyBold}
+            `}
+          >
+            {intl.formatMessage({ defaultMessage: '文章设置' })}
+          </div>
+          <div
+            css={css`
+              display: flex;
+              align-items: flex-start;
+            `}
+          >
+            <span>{intl.formatMessage({ defaultMessage: '关键词：' })}</span>
+          </div>
+          <div
+            css={css`
+              display: flex;
+              align-items: flex-start;
+            `}
+          >
+            <span>{intl.formatMessage({ defaultMessage: '声明：' })}</span>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -1,18 +1,20 @@
 import { css, useTheme } from '@emotion/react'
 import {
-  autoPlacement,
   autoUpdate,
+  flip,
   offset,
   shift,
   useFloating,
   type Placement,
 } from '@floating-ui/react-dom'
 import {
+  pickModalProps,
   useModal,
+  type AnchorProps,
   type ModalProps,
   type ModalRef,
-  type TriggerProps,
 } from '@yiwen-ai/util'
+import { omit, pick } from 'lodash-es'
 import {
   forwardRef,
   memo,
@@ -21,41 +23,44 @@ import {
 } from 'react'
 import { Portal, type PortalProps } from './Portal'
 
-export interface PopoverProps
-  extends HTMLAttributes<HTMLDivElement>,
-    ModalProps {
-  trigger?: (props: TriggerProps) => JSX.Element
+export interface PopoverProps extends ModalProps {
+  anchor?: (props: AnchorProps) => JSX.Element
   container?: PortalProps['container']
-  placement?: Placement
+  placement?: Placement | undefined
 }
 
 export const Popover = memo(
   forwardRef(function Popover(
-    { trigger, container, placement, ...props }: PopoverProps,
+    {
+      anchor,
+      container,
+      placement,
+      ...props
+    }: PopoverProps & HTMLAttributes<HTMLDivElement>,
     ref: React.Ref<ModalRef>
   ) {
     const theme = useTheme()
     const {
       open,
       modal,
-      triggerProps,
+      anchorProps,
       floatingProps,
-      mergeTriggerRef,
+      mergeAnchorRef,
       mergeFloatingRef,
     } = useModal(props)
     useImperativeHandle(ref, () => modal, [modal])
     const { refs, floatingStyles } = useFloating({
       placement: placement as Placement,
       open,
-      middleware: [offset(8), autoPlacement(), shift()],
+      middleware: [offset(8), flip(), shift()],
       whileElementsMounted: autoUpdate,
     })
-    const setTriggerRef = mergeTriggerRef(refs.setReference)
+    const setAnchorRef = mergeAnchorRef(refs.setReference)
     const setFloatingRef = mergeFloatingRef(refs.setFloating)
 
     return (
       <>
-        {trigger?.({ ...triggerProps, ref: setTriggerRef })}
+        {anchor?.({ ...anchorProps, ref: setAnchorRef })}
         {open && (
           <Portal container={container}>
             <div
@@ -78,3 +83,14 @@ export const Popover = memo(
     )
   })
 )
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function pickPopoverProps<P extends PopoverProps>(props: P) {
+  const { modalProps, restProps } = pickModalProps(props)
+  const keys: (keyof PopoverProps)[] = ['anchor', 'container', 'placement']
+
+  return {
+    popoverProps: { ...modalProps, ...pick(restProps, keys) } as PopoverProps,
+    restProps: omit(restProps, keys) as Omit<P, keyof PopoverProps>,
+  }
+}
