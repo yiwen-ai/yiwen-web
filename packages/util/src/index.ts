@@ -15,6 +15,15 @@ export {
 } from './toURLSearchParams'
 export { useChannel, useConnect } from './useChannel'
 export { useCheckWindowClosed } from './useCheckWindowClosed'
+export { useClickOutside } from './useClickOutside'
 export { useControlled } from './useControlled'
+export { useHover } from './useHover'
 export { useLayoutEffect } from './useIsomorphicLayoutEffect'
+export {
+  useModal,
+  type ModalProps,
+  type ModalRef,
+  type TriggerProps,
+} from './useModal'
+export { useRefCallback } from './useRefCallback'
 export { useSubscriptionManager } from './useSubscriptionManager'

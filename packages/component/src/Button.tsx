@@ -84,6 +84,7 @@ export const Button = memo(
           border-color: ${colorCSS.border};
           background-color: ${colorCSS.background};
           color: ${colorCSS.text};
+          white-space: nowrap;
           cursor: ${props.disabled ? 'not-allowed' : 'pointer'};
           :hover {
             border-color: ${colorCSS.hover.border};

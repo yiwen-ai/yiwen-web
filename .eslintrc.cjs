@@ -60,6 +60,7 @@ module.exports = {
       },
     ],
     'no-useless-rename': 'error',
+    'object-shorthand': ['error', 'always'],
     'react-refresh/only-export-components': [
       'error',
       { allowConstantExport: true },

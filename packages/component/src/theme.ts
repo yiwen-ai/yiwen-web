@@ -90,6 +90,23 @@ declare module '@emotion/react' {
         backdrop: string
         background: string
       }
+      popover: {
+        backdrop: string
+        border: string
+        background: string
+      }
+      alert: {
+        success: {
+          border: string
+          background: string
+          icon: string
+        }
+        warning: {
+          border: string
+          background: string
+          icon: string
+        }
+      }
     }
     /**
      * font family
@@ -239,6 +256,23 @@ export const lightTheme: Theme = {
     dialog: {
       backdrop: RGBA(palette.grayNormal, 0.9),
       background: palette.grayLight1,
+    },
+    popover: {
+      backdrop: RGBA(palette.grayNormal, 0.9),
+      border: palette.grayLight0,
+      background: palette.grayLight1,
+    },
+    alert: {
+      success: {
+        border: palette.green,
+        background: palette.white,
+        icon: palette.green,
+      },
+      warning: {
+        border: palette.orange,
+        background: palette.white,
+        icon: palette.orange,
+      },
     },
   },
   font: {
@@ -390,6 +424,23 @@ export const darkTheme: Theme = {
     dialog: {
       backdrop: RGBA(palette.grayNormal, 0.9),
       background: palette.grayNormal1,
+    },
+    popover: {
+      backdrop: RGBA(palette.grayNormal, 0.9),
+      border: palette.grayLight0,
+      background: palette.grayNormal1,
+    },
+    alert: {
+      success: {
+        border: palette.green,
+        background: palette.white,
+        icon: palette.green,
+      },
+      warning: {
+        border: palette.orange,
+        background: palette.white,
+        icon: palette.orange,
+      },
     },
   },
 }
