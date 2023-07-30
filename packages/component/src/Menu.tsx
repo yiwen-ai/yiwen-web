@@ -4,6 +4,7 @@ import {
   mergeAnchorProps,
   mergeForwardedRef,
   type AnchorProps,
+  type ModalRef,
 } from '@yiwen-ai/util'
 import {
   forwardRef,
@@ -21,7 +22,7 @@ export interface MenuProps
 }
 
 export const Menu = memo(
-  forwardRef(function Menu(props: MenuProps, ref: React.Ref<HTMLUListElement>) {
+  forwardRef(function Menu(props: MenuProps, ref: React.Ref<ModalRef>) {
     const theme = useTheme()
     const {
       popoverProps,
@@ -29,7 +30,7 @@ export const Menu = memo(
     } = pickPopoverProps(props)
 
     const render = () => (
-      <ul role='menu' {...menuProps} ref={ref}>
+      <ul role='menu' {...menuProps}>
         {items?.length
           ? items.map((item, index) => <MenuItem key={index} {...item} />)
           : menuProps.children}
@@ -41,6 +42,7 @@ export const Menu = memo(
     return (
       <Popover
         {...popoverProps}
+        ref={ref}
         css={css`
           width: 208px;
           padding: 20px 12px;

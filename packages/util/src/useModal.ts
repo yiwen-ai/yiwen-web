@@ -6,14 +6,16 @@ import { useLayoutEffect } from './useIsomorphicLayoutEffect'
 
 type Prettify<T> = { [K in keyof T]: T[K] } & unknown
 
-export interface AnchorProps<T extends HTMLElement = HTMLElement> {
+export interface AnchorProps<
+  T extends HTMLElement | SVGElement = HTMLElement | SVGElement
+> {
   ref: React.RefCallback<T>
   onPointerUpCapture: React.PointerEventHandler<T>
   onClick: React.MouseEventHandler<T>
   onKeyDown: React.KeyboardEventHandler<T>
 }
 
-export interface FloatingProps<T extends HTMLElement> {
+export interface FloatingProps<T extends HTMLElement | SVGElement> {
   ref: React.RefCallback<T>
   onPointerUpCapture: React.PointerEventHandler<T>
   onKeyDown: React.KeyboardEventHandler<T>
@@ -33,7 +35,10 @@ export interface ModalRef {
   toggle: () => void
 }
 
-export function useModal<T extends HTMLElement, P extends HTMLAttributes<T>>({
+export function useModal<
+  T extends HTMLElement | SVGElement,
+  P extends HTMLAttributes<T>
+>({
   defaultOpen = false,
   open: _open,
   onToggle,
@@ -76,9 +81,9 @@ export function useModal<T extends HTMLElement, P extends HTMLAttributes<T>>({
   //#endregion
 
   //#region toggle on clicking anchor
-  const anchorRef = useRef<HTMLElement | null>(null)
+  const anchorRef = useRef<HTMLElement | SVGElement | null>(null)
 
-  const setAnchorRef = useCallback((el: HTMLElement | null) => {
+  const setAnchorRef = useCallback((el: HTMLElement | SVGElement | null) => {
     anchorRef.current = el
   }, [])
 
@@ -171,10 +176,11 @@ export function useModal<T extends HTMLElement, P extends HTMLAttributes<T>>({
   }
 
   const mergeAnchorRef = useCallback(
-    (ref: React.ForwardedRef<HTMLElement>) => (el: HTMLElement | null) => {
-      setAnchorRef(el)
-      if (ref) typeof ref === 'function' ? ref(el) : (ref.current = el)
-    },
+    (ref: React.ForwardedRef<HTMLElement | SVGElement>) =>
+      (el: HTMLElement | SVGElement | null) => {
+        setAnchorRef(el)
+        if (ref) typeof ref === 'function' ? ref(el) : (ref.current = el)
+      },
     [setAnchorRef]
   )
 
@@ -222,7 +228,7 @@ export function pickModalProps<P extends ModalProps>(props: P) {
 }
 
 export function mergeAnchorProps<
-  T extends HTMLElement,
+  T extends HTMLElement | SVGElement,
   P extends HTMLAttributes<T>
 >(props: P, anchorProps: AnchorProps<T>): P & AnchorProps<T> {
   return {

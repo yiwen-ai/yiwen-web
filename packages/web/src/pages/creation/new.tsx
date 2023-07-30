@@ -1,8 +1,8 @@
+import { SetHeaderProps } from '#/App'
 import { css, useTheme } from '@emotion/react'
 import { type Editor, type EditorOptions } from '@tiptap/core'
 import {
   Button,
-  Header,
   RichTextEditor,
   Select,
   Spinner,
@@ -59,16 +59,9 @@ export default function NewCreation() {
   }, [intl, push, reset, save])
 
   return (
-    <div
-      css={css`
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      `}
-    >
+    <>
       {render()}
-      <Header>
+      <SetHeaderProps>
         <div
           css={css`
             flex: 1;
@@ -90,14 +83,14 @@ export default function NewCreation() {
             {intl.formatMessage({ defaultMessage: '保存' })}
           </Button>
         </div>
-      </Header>
+      </SetHeaderProps>
       <div
         css={css`
           flex: 1;
           overflow-y: auto;
         `}
       >
-        <main
+        <div
           css={css`
             max-width: ${MAX_WIDTH}px;
             margin: 100px auto;
@@ -126,7 +119,7 @@ export default function NewCreation() {
               margin: 24px 0;
             `}
           />
-        </main>
+        </div>
       </div>
       <div
         css={css`
@@ -140,7 +133,7 @@ export default function NewCreation() {
           `}
         />
       </div>
-    </div>
+    </>
   )
 }
 

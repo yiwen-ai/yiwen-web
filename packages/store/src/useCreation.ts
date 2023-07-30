@@ -5,7 +5,7 @@ import useSWR, { useSWRConfig } from 'swr'
 import { encode } from './CBOR'
 import { useLogger } from './logger'
 import { useFetcher } from './useFetcher'
-import { useMyDefaultGroupId } from './useGroup'
+import { useMyDefaultGroup } from './useGroup'
 
 export interface QueryCreation {
   gid: Uint8Array | string
@@ -120,7 +120,7 @@ export function useAddCreation() {
   const fetcher = useFetcher()
   const { mutate } = useSWRConfig()
 
-  const gid = useMyDefaultGroupId()
+  const gid = useMyDefaultGroup()?.id
 
   const [initialDraft] = useState<Draft>(() => ({
     gid,

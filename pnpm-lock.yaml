@@ -257,6 +257,9 @@ importers:
       react:
         specifier: ^18.2.0
         version: 18.2.0
+      vitest:
+        specifier: ^0.33.0
+        version: 0.33.0
 
   packages/web:
     devDependencies:

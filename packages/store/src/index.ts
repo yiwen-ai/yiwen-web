@@ -18,5 +18,5 @@ export {
   toMessage,
   type FetcherConfig,
 } from './useFetcher'
-export { useMyDefaultGroupId, useMyGroupList, type Group } from './useGroup'
+export { useMyDefaultGroup, useMyGroupList, type Group } from './useGroup'
 export { UserStatus, useUser, type ColorScheme, type User } from './useUser'

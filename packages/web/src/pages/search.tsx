@@ -1,12 +1,12 @@
-import { SEARCH_PATH } from '#/App'
+import { SEARCH_PATH, SetHeaderProps } from '#/App'
 import LinkToCreatePage from '#/components/LinkToCreatePage'
 import RecommendedAndFavorited, {
   ARTICLE_ITEM_MIN_WIDTH,
 } from '#/components/RecommendedAndFavorited'
 import { css, useTheme } from '@emotion/react'
-import { Avatar, Header, Icon, Spinner, TextField } from '@yiwen-ai/component'
-import { useLayoutEffect } from '@yiwen-ai/util'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Avatar, Icon, Spinner, TextField } from '@yiwen-ai/component'
+import { useLayoutEffect, useRefCallback } from '@yiwen-ai/util'
+import { useCallback, useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { usePromise } from 'react-use'
@@ -15,7 +15,7 @@ export default function Search() {
   const intl = useIntl()
   const theme = useTheme()
   const mounted = usePromise()
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [inputRef, setInputRef] = useRefCallback<HTMLInputElement>(null)
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [keyword, setKeyword] = useState(params.get('q')?.trim() ?? '')
@@ -74,19 +74,12 @@ export default function Search() {
   }, [keyword, mounted])
 
   useLayoutEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    inputRef?.focus()
+  }, [inputRef])
 
   return (
-    <div
-      css={css`
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      `}
-    >
-      <Header
+    <>
+      <SetHeaderProps
         brand={true}
         css={css`
           box-shadow: ${theme.effect.divider};
@@ -113,7 +106,7 @@ export default function Search() {
             })}
             defaultValue={keyword}
             onSearch={onSearch}
-            ref={inputRef}
+            ref={setInputRef}
             css={css`
               flex: 1;
               height: unset;
@@ -123,118 +116,111 @@ export default function Search() {
             `}
           />
         </div>
-      </Header>
+      </SetHeaderProps>
       <div
         css={css`
-          flex: 1;
-          overflow-y: auto;
+          margin: 0 auto;
+          padding: 80px;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 32px;
         `}
       >
-        <main
+        <div
           css={css`
-            margin: 0 auto;
-            padding: 80px;
+            flex: 1;
+            min-width: ${ARTICLE_ITEM_MIN_WIDTH}px;
+            max-width: 680px;
             display: flex;
-            flex-wrap: wrap;
-            align-items: flex-start;
-            justify-content: space-between;
+            flex-direction: column;
+          `}
+        >
+          {isLoading ? (
+            <div
+              css={css`
+                margin-bottom: 48px;
+                height: 100px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              `}
+            >
+              <Spinner />
+            </div>
+          ) : (
+            <ul
+              css={css`
+                margin-top: -24px;
+              `}
+            >
+              {searchItems.map((item) => (
+                <li
+                  key={item.id}
+                  css={css`
+                    padding: 24px 0;
+                    border-bottom: 1px solid ${theme.color.divider.primary};
+                  `}
+                >
+                  <div
+                    css={css`
+                      ${theme.typography.h3}
+                      color: ${theme.palette.primaryNormal};
+                    `}
+                  >
+                    {item.title}
+                  </div>
+                  <div
+                    css={css`
+                      margin-top: 12px;
+                    `}
+                  >
+                    {item.content}
+                  </div>
+                  <div
+                    css={css`
+                      margin-top: 8px;
+                      display: flex;
+                      align-items: center;
+                      color: ${theme.color.body.secondary};
+                    `}
+                  >
+                    <Avatar
+                      src={item.author.picture}
+                      name={item.author.name}
+                      size={20}
+                    />
+                    <span
+                      css={css`
+                        margin: 0 12px;
+                      `}
+                    >
+                      ·
+                    </span>
+                    <span>{item.createdAt}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div
+          css={css`
+            width: 360px;
+            display: flex;
+            flex-direction: column;
             gap: 32px;
           `}
         >
-          <div
+          <LinkToCreatePage />
+          <RecommendedAndFavorited
             css={css`
-              flex: 1;
-              min-width: ${ARTICLE_ITEM_MIN_WIDTH}px;
-              max-width: 680px;
-              display: flex;
-              flex-direction: column;
+              padding: 0 12px;
             `}
-          >
-            {isLoading ? (
-              <div
-                css={css`
-                  margin-bottom: 48px;
-                  height: 100px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                `}
-              >
-                <Spinner />
-              </div>
-            ) : (
-              <ul
-                css={css`
-                  margin-top: -24px;
-                `}
-              >
-                {searchItems.map((item) => (
-                  <li
-                    key={item.id}
-                    css={css`
-                      padding: 24px 0;
-                      border-bottom: 1px solid ${theme.color.divider.primary};
-                    `}
-                  >
-                    <div
-                      css={css`
-                        ${theme.typography.h3}
-                        color: ${theme.palette.primaryNormal};
-                      `}
-                    >
-                      {item.title}
-                    </div>
-                    <div
-                      css={css`
-                        margin-top: 12px;
-                      `}
-                    >
-                      {item.content}
-                    </div>
-                    <div
-                      css={css`
-                        margin-top: 8px;
-                        display: flex;
-                        align-items: center;
-                        color: ${theme.color.body.secondary};
-                      `}
-                    >
-                      <Avatar
-                        src={item.author.picture}
-                        name={item.author.name}
-                        size={20}
-                      />
-                      <span
-                        css={css`
-                          margin: 0 12px;
-                        `}
-                      >
-                        ·
-                      </span>
-                      <span>{item.createdAt}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div
-            css={css`
-              width: 360px;
-              display: flex;
-              flex-direction: column;
-              gap: 32px;
-            `}
-          >
-            <LinkToCreatePage />
-            <RecommendedAndFavorited
-              css={css`
-                padding: 0 12px;
-              `}
-            />
-          </div>
-        </main>
+          />
+        </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -7,6 +7,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type HTMLAttributes,
@@ -77,6 +78,11 @@ export const ToastContainer = memo(function ToastContainer(
   )
 })
 
+export interface ToastAPI {
+  push(toast: Readonly<ToastProps>): () => void
+  render(): JSX.Element | null
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
   const [list, setList] = useState<readonly Readonly<ToastProps>[]>([])
@@ -120,8 +126,5 @@ export function useToast() {
     )
   }, [list])
 
-  return {
-    push,
-    render,
-  }
+  return useMemo<ToastAPI>(() => ({ push, render }), [push, render])
 }
