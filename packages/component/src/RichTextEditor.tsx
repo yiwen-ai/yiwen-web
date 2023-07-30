@@ -1,8 +1,10 @@
 import { css, useTheme } from '@emotion/react'
+import { UniqueID } from '@tiptap-pro/extension-unique-id'
 import { type Editor } from '@tiptap/core'
 import { Placeholder } from '@tiptap/extension-placeholder'
 import { EditorContent, useEditor, type EditorOptions } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
+import { nanoid } from 'nanoid'
 import { forwardRef, memo, useImperativeHandle } from 'react'
 
 export interface RichTextEditorProps extends Partial<EditorOptions> {
@@ -22,6 +24,11 @@ export const RichTextEditor = memo(
         content: initialContent ?? props.content ?? '',
         extensions: [
           StarterKit,
+          UniqueID.configure({
+            attributeName: 'id',
+            types: ['heading', 'paragraph'],
+            generateID: () => nanoid(6),
+          }),
           // TODO: multiple placeholders
           Placeholder.configure({
             placeholder: '直接输入内容',
@@ -52,7 +59,6 @@ export const RichTextEditor = memo(
         className={className}
         editor={editor}
         css={css`
-          /* Basic editor styles */
           .ProseMirror {
             :focus {
               outline: none;
@@ -61,24 +67,14 @@ export const RichTextEditor = memo(
             > * + * {
               margin-top: 0.75em;
             }
-          }
 
-          /* Placeholder (at the top) */
-          .ProseMirror p.is-editor-empty:first-of-child::before {
-            color: ${theme.color.input.placeholder};
-            content: attr(data-placeholder);
-            float: left;
-            height: 0;
-            pointer-events: none;
-          }
-
-          /* Placeholder (on every new line) */
-          .ProseMirror p.is-empty::before {
-            color: ${theme.color.input.placeholder};
-            content: attr(data-placeholder);
-            float: left;
-            height: 0;
-            pointer-events: none;
+            p.is-empty:first-of-type::before {
+              color: ${theme.color.input.placeholder};
+              content: attr(data-placeholder);
+              float: left;
+              height: 0;
+              pointer-events: none;
+            }
           }
         `}
       />

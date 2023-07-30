@@ -19,9 +19,6 @@ export const TileButton = memo(
         ref={ref}
         css={css`
           padding: 12px 24px;
-          display: flex;
-          flex-direction: column;
-          align-items: stretch;
           text-align: left;
           border-radius: 12px;
           border: 1px solid ${colorCSS.border};

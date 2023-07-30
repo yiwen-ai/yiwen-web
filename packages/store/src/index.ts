@@ -12,6 +12,11 @@ export {
   type QueryCreation,
   type UpdateCreationInput,
 } from './useCreation'
-export { FetcherConfigProvider, type FetcherConfig } from './useFetcher'
-export { useMyGroupList, type Group } from './useGroup'
+export {
+  FetcherConfigProvider,
+  RequestError,
+  toMessage,
+  type FetcherConfig,
+} from './useFetcher'
+export { useMyDefaultGroup, useMyGroupList, type Group } from './useGroup'
 export { UserStatus, useUser, type ColorScheme, type User } from './useUser'

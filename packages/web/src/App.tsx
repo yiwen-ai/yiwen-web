@@ -1,9 +1,12 @@
+import { css } from '@emotion/react'
 import {
   DEFAULT_LOCALE,
   GlobalStyles,
+  Header,
   LocaleProvider,
   ThemeProvider,
   useUserTheme,
+  type HeaderProps,
 } from '@yiwen-ai/component'
 import {
   FetcherConfigProvider,
@@ -14,9 +17,17 @@ import {
   LoggerProvider,
   LoggingLevel,
   resolveURL,
+  useLayoutEffect,
   type LoggingHandler,
 } from '@yiwen-ai/util'
-import { useCallback, useMemo, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary'
 import {
   IntlProvider,
@@ -32,10 +43,10 @@ import {
   createRoutesFromElements,
 } from 'react-router-dom'
 import { SWRConfig, type SWRConfiguration } from 'swr'
-import useIsomorphicLayoutEffect from 'use-isomorphic-layout-effect'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
+import CreationList from './pages/creation/list'
 import NewCreation from './pages/creation/new'
 import LoginState from './pages/login/state'
 import PublicationDetail from './pages/publication/[id]'
@@ -64,16 +75,52 @@ function Layout() {
     [logger]
   )
 
+  const [headerProps, setHeaderProps] = useState<HeaderProps>({})
+
   return (
     <ErrorBoundary FallbackComponent={Fallback} onError={onError}>
-      <GlobalStyles />
-      <Outlet />
+      <SetHeaderPropsContext.Provider value={setHeaderProps}>
+        <main
+          css={css`
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+          `}
+        >
+          <Header {...headerProps} />
+          <div
+            css={css`
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              overflow-y: auto;
+            `}
+          >
+            <Outlet />
+          </div>
+        </main>
+      </SetHeaderPropsContext.Provider>
     </ErrorBoundary>
   )
 }
 
+const SetHeaderPropsContext = createContext<(props: HeaderProps) => void>(
+  () => undefined
+)
+
+export function SetHeaderProps(props: HeaderProps) {
+  const setHeaderProps = useContext(SetHeaderPropsContext)
+  useEffect(() => {
+    setHeaderProps(props)
+    return () => setHeaderProps({})
+  }, [props, setHeaderProps])
+  return null
+}
+
 export const SEARCH_PATH = '/search'
 export const NEW_CREATION_PATH = '/creation/new'
+export const CREATION_LIST_PATH = '/creation/list'
 export const PUBLICATION_DETAIL_PATH = '/publication/:id'
 
 const router = createBrowserRouter(
@@ -83,6 +130,7 @@ const router = createBrowserRouter(
       <Route path='/' element={<Home />} />
       <Route path={SEARCH_PATH} element={<Search />} />
       <Route path={NEW_CREATION_PATH} element={<NewCreation />} />
+      <Route path={CREATION_LIST_PATH} element={<CreationList />} />
       <Route path={PUBLICATION_DETAIL_PATH} element={<PublicationDetail />} />
       <Route path='/login/state' element={<LoginState />} />
     </Route>
@@ -145,6 +193,7 @@ export default function App() {
         <SWRConfig value={swrConfig}>
           <UserLocaleProvider>
             <UserThemeProvider>
+              <GlobalStyles />
               <RouterProvider router={router} />
               <LoggingUnhandledError />
             </UserThemeProvider>
@@ -201,7 +250,7 @@ function UserThemeProvider(props: React.PropsWithChildren) {
 function LoggingUnhandledError() {
   const logger = useLogger()
 
-  useIsomorphicLayoutEffect(() => {
+  useLayoutEffect(() => {
     const onError = (ev: ErrorEvent) => {
       logger.error('uncaught error', {
         message: ev.message,

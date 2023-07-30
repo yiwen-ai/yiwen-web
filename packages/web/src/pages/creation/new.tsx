@@ -1,87 +1,67 @@
-import { css } from '@emotion/react'
-import { type Editor, type EditorOptions, type JSONContent } from '@tiptap/core'
+import { SetHeaderProps } from '#/App'
+import { css, useTheme } from '@emotion/react'
+import { type Editor, type EditorOptions } from '@tiptap/core'
 import {
   Button,
-  Header,
   RichTextEditor,
+  Select,
   Spinner,
   TextField,
+  useToast,
 } from '@yiwen-ai/component'
-import { encode, useAddCreation, useMyGroupList } from '@yiwen-ai/store'
-import { nanoid } from 'nanoid'
-import { useCallback, useRef, useState } from 'react'
+import { toMessage, useAddCreation } from '@yiwen-ai/store'
+import type React from 'react'
+import { useCallback, useRef } from 'react'
 import { useIntl } from 'react-intl'
+
+const MAX_WIDTH = 800
 
 export default function NewCreation() {
   const intl = useIntl()
-  const [isSaving, setIsSaving] = useState<boolean>(false)
+  const theme = useTheme()
+  const { push, render } = useToast()
   const editorRef = useRef<Editor>(null)
-  const [title, setTitle] = useState<string>('')
-  const [content, setContent] = useState<JSONContent | undefined>()
-  const onChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(ev.currentTarget.value)
-  }, [])
-  const onUpdate = useCallback<EditorOptions['onUpdate']>(({ editor }) => {
-    setContent(editor.getJSON())
-  }, [])
-  const { groupList } = useMyGroupList()
-  const defaultGroupId = groupList?.[0]?.id
-  const disabled = isSaving || !title || !content || !defaultGroupId
-  const addCreation = useAddCreation()
-  const onSave = useCallback(async () => {
-    try {
-      setIsSaving(true)
-      const item = await addCreation({
-        gid: defaultGroupId!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
-        title,
-        description: 'description...',
-        summary: 'summary - wiwi',
-        content: encode(
-          (() => {
-            const content2 = { ...content }
-            content2.content = (content2.content ?? []).map(addId)
-            return content2
 
-            // TODO: remove this temporary solution
-            function addId(node: JSONContent): JSONContent {
-              const node2: JSONContent = {
-                ...node,
-                attrs: { id: nanoid(6), ...node.attrs },
-              }
-              if (node.content) {
-                node2.content = node.content.map(addId)
-              }
-              return node2
-            }
-          })()
-        ),
-        language: 'eng',
-        original_url: 'https://www.yiwen.ltd/',
-        cover: 'https://placehold.co/600x400',
-        license: 'https://www.yiwen.ltd/',
+  const { draft, updateDraft, isDisabled, isSaving, save, reset } =
+    useAddCreation()
+
+  const handleTitleUpdate = useCallback(
+    (ev: React.ChangeEvent<HTMLInputElement>) => {
+      updateDraft({ title: ev.currentTarget.value })
+    },
+    [updateDraft]
+  )
+
+  const handleContentUpdate = useCallback<EditorOptions['onUpdate']>(
+    ({ editor }) => {
+      updateDraft({ content: editor.getJSON() })
+    },
+    [updateDraft]
+  )
+
+  const handleSave = useCallback(async () => {
+    try {
+      await save()
+      reset()
+      editorRef.current?.commands.clearContent(true)
+      push({
+        type: 'success',
+        message: intl.formatMessage({ defaultMessage: '保存成功' }),
       })
       // TODO: redirect to the creation page
-      // eslint-disable-next-line no-console
-      console.log(item)
-      setTitle('')
-      editorRef.current?.commands.clearContent(true)
     } catch (error) {
-      // TODO: show error
-    } finally {
-      setIsSaving(false)
+      push({
+        type: 'warning',
+        message: intl.formatMessage({ defaultMessage: '保存失败' }),
+        description: toMessage(error),
+      })
     }
-  }, [addCreation, content, defaultGroupId, title])
+  }, [intl, push, reset, save])
 
   return (
-    <div
-      css={css`
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      `}
-    >
-      <Header>
+    <>
+      {render()}
+      <SetHeaderProps>
         <div
           css={css`
             flex: 1;
@@ -90,7 +70,7 @@ export default function NewCreation() {
             justify-content: flex-end;
           `}
         >
-          <Button disabled={disabled} onClick={onSave}>
+          <Button disabled={isDisabled} onClick={handleSave}>
             {isSaving && (
               <Spinner
                 size='small'
@@ -103,16 +83,16 @@ export default function NewCreation() {
             {intl.formatMessage({ defaultMessage: '保存' })}
           </Button>
         </div>
-      </Header>
+      </SetHeaderProps>
       <div
         css={css`
           flex: 1;
           overflow-y: auto;
         `}
       >
-        <main
+        <div
           css={css`
-            max-width: 856px;
+            max-width: ${MAX_WIDTH}px;
             margin: 100px auto;
             padding: 24px;
           `}
@@ -120,8 +100,8 @@ export default function NewCreation() {
           <TextField
             size='large'
             placeholder={intl.formatMessage({ defaultMessage: '标题' })}
-            value={title}
-            onChange={onChange}
+            value={draft.title}
+            onChange={handleTitleUpdate}
             css={css`
               height: 60px;
               padding: 0;
@@ -134,13 +114,100 @@ export default function NewCreation() {
           <RichTextEditor
             ref={editorRef}
             initialContent={''}
-            onUpdate={onUpdate}
+            onUpdate={handleContentUpdate}
             css={css`
               margin: 24px 0;
             `}
           />
-        </main>
+        </div>
       </div>
+      <div
+        css={css`
+          border-top: 1px solid ${theme.color.divider.secondary};
+        `}
+      >
+        <ArticleSettings
+          css={css`
+            max-width: ${MAX_WIDTH}px;
+            margin: auto;
+          `}
+        />
+      </div>
+    </>
+  )
+}
+
+function ArticleSettings(props: React.HTMLAttributes<HTMLDivElement>) {
+  const intl = useIntl()
+  const theme = useTheme()
+
+  return (
+    <div
+      {...props}
+      css={css`
+        padding: 16px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      `}
+    >
+      <div
+        css={css`
+          ${theme.typography.bodyBold}
+        `}
+      >
+        {intl.formatMessage({ defaultMessage: '文章设置' })}
+      </div>
+      <Field label={intl.formatMessage({ defaultMessage: '关键词：' })} />
+      <Field label={intl.formatMessage({ defaultMessage: '声明：' })}>
+        <Select
+          placeholder={intl.formatMessage({ defaultMessage: '请选择' })}
+          options={[
+            {
+              label: intl.formatMessage({ defaultMessage: '原创' }),
+              value: 'original',
+            },
+            {
+              label: intl.formatMessage({ defaultMessage: '非原创' }),
+              value: 'non-original',
+            },
+          ]}
+        />
+      </Field>
     </div>
   )
+
+  function Field({
+    label,
+    ...props
+  }: React.PropsWithChildren<{
+    label: string
+  }>) {
+    return (
+      <div
+        css={css`
+          display: flex;
+          align-items: flex-start;
+        `}
+      >
+        <span
+          css={css`
+            min-width: 80px;
+            text-align: right;
+          `}
+        >
+          {label}
+        </span>
+        <div
+          css={css`
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+          `}
+        >
+          {props.children}
+        </div>
+      </div>
+    )
+  }
 }

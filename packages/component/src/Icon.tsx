@@ -11,6 +11,7 @@ import { usePromise } from 'react-use'
 import { useLogger } from './logger'
 
 const SVG_LIST = {
+  'arrowcircleright': () => import('./icon/24/arrowcircleright.svg'),
   'backwarditem': () => import('./icon/16/backwarditem.svg'),
   'bold': () => import('./icon/format/bold.svg'),
   'celo': () => import('./icon/bulk/celo.svg'),
@@ -51,6 +52,7 @@ const SVG_LIST = {
   'ul': () => import('./icon/format/Unordered list.svg'),
   'underline': () => import('./icon/format/Underline.svg'),
   'wanchain': () => import('./icon/16/wanchain1.svg'),
+  'warning': () => import('./icon/bulk/warning.svg'),
   'wechat': () => import('./icon/provider/wechat.svg'),
 }
 

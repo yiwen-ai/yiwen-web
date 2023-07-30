@@ -87,8 +87,34 @@ declare module '@emotion/react' {
         }
       }
       dialog: {
-        overlay: string
+        backdrop: string
         background: string
+      }
+      popover: {
+        backdrop: string
+        border: string
+        background: string
+      }
+      alert: {
+        success: {
+          border: string
+          background: string
+          icon: string
+        }
+        warning: {
+          border: string
+          background: string
+          icon: string
+        }
+      }
+      menu: {
+        border: string
+        background: string
+        item: {
+          hover: {
+            background: string
+          }
+        }
       }
     }
     /**
@@ -102,6 +128,7 @@ declare module '@emotion/react' {
      * typography
      */
     typography: {
+      h0: Typography
       h1: Typography
       h2: Typography
       h3: Typography
@@ -237,8 +264,34 @@ export const lightTheme: Theme = {
       },
     },
     dialog: {
-      overlay: RGBA(palette.grayNormal, 0.9),
+      backdrop: RGBA(palette.grayNormal, 0.9),
       background: palette.grayLight1,
+    },
+    popover: {
+      backdrop: RGBA(palette.grayNormal, 0.9),
+      border: palette.grayLight0,
+      background: palette.grayLight1,
+    },
+    alert: {
+      success: {
+        border: palette.green,
+        background: palette.grayLight1,
+        icon: palette.green,
+      },
+      warning: {
+        border: palette.orange,
+        background: palette.grayLight1,
+        icon: palette.orange,
+      },
+    },
+    menu: {
+      border: palette.grayLight0,
+      background: palette.white,
+      item: {
+        hover: {
+          background: palette.grayLight1,
+        },
+      },
     },
   },
   font: {
@@ -246,19 +299,24 @@ export const lightTheme: Theme = {
     code: '"SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
   },
   typography: {
-    h1: {
+    h0: {
       fontSize: '42px',
       fontWeight: 600,
-      lineHeight: '50px',
+      lineHeight: '60px',
+    },
+    h1: {
+      fontSize: '28px',
+      fontWeight: 600,
+      lineHeight: '36px',
     },
     h2: {
-      fontSize: '28px',
-      fontWeight: 400,
-      lineHeight: '36px',
+      fontSize: '24px',
+      fontWeight: 600,
+      lineHeight: '32px',
     },
     h3: {
       fontSize: '20px',
-      fontWeight: 400,
+      fontWeight: 600,
       lineHeight: '28px',
     },
     body: {
@@ -388,8 +446,34 @@ export const darkTheme: Theme = {
       },
     },
     dialog: {
-      overlay: RGBA(palette.grayNormal, 0.9),
+      backdrop: RGBA(palette.grayNormal, 0.9),
       background: palette.grayNormal1,
+    },
+    popover: {
+      backdrop: RGBA(palette.grayNormal, 0.9),
+      border: palette.grayLight0,
+      background: palette.grayNormal1,
+    },
+    alert: {
+      success: {
+        border: palette.green,
+        background: palette.grayNormal1,
+        icon: palette.green,
+      },
+      warning: {
+        border: palette.orange,
+        background: palette.grayNormal1,
+        icon: palette.orange,
+      },
+    },
+    menu: {
+      border: palette.grayLight0,
+      background: palette.grayNormal,
+      item: {
+        hover: {
+          background: palette.grayNormal1,
+        },
+      },
     },
   },
 }

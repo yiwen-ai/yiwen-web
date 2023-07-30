@@ -14,14 +14,14 @@
     "hex-rgb": "^5.0.0",
     "lodash-es": "^4.17.21",
     "normalize-path": "^3.0.0",
+    "react-use": "^17.4.0",
     "rxjs": "^7.8.1",
-    "symbol-observable": "^4.0.0",
-    "use-isomorphic-layout-effect": "^1.1.2"
+    "symbol-observable": "^4.0.0"
   },
   "devDependencies": {
     "@types/lodash-es": "^4.17.8",
     "@types/normalize-path": "^3.0.0",
-    "@types/react": "^18.2.15",
+    "@types/react": "^18.2.17",
     "react": "^18.2.0",
     "vitest": "^0.33.0"
   },

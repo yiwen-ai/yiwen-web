@@ -3,10 +3,15 @@ import { useAuthorize, useUser, type IdentityProvider } from '@yiwen-ai/store'
 import { memo, useCallback } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { Icon, type IconName } from '.'
+import {
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogClose,
+  AlertDialogHead,
+} from './AlertDialog'
 import { Avatar } from './Avatar'
 import { Brand } from './Brand'
 import { Button } from './Button'
-import { Dialog } from './Dialog'
 import { Spinner } from './Spinner'
 
 export const AccountManager = memo(function AccountManager() {
@@ -21,24 +26,23 @@ export const AccountManager = memo(function AccountManager() {
     // TODO: click to manage account
     <Avatar src={user.picture} name={user.name} />
   ) : (
-    <Dialog
-      trigger={
-        <Button>
+    <AlertDialog
+      anchor={(props) => (
+        <Button {...props}>
           {intl.formatMessage({
             defaultMessage: '登录',
           })}
         </Button>
-      }
-      head={
+      )}
+    >
+      <AlertDialogHead>
         <FormattedMessage
           defaultMessage='登录到 {brand}'
           values={{ brand: <Brand /> }}
         />
-      }
-    >
-      <div
+      </AlertDialogHead>
+      <AlertDialogBody
         css={css`
-          padding: 0 24px 24px;
           display: flex;
           flex-direction: column;
           gap: 16px;
@@ -110,8 +114,9 @@ export const AccountManager = memo(function AccountManager() {
             }}
           />
         </div>
-      </div>
-    </Dialog>
+      </AlertDialogBody>
+      <AlertDialogClose />
+    </AlertDialog>
   )
 })
 

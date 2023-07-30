@@ -44,7 +44,7 @@ export const Avatar = memo(
         {...props}
         ref={ref}
         css={css`
-          display: flex;
+          display: inline-flex;
           align-items: center;
         `}
       >

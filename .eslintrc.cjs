@@ -43,15 +43,24 @@ module.exports = {
           ['sibling', 'index'],
         ],
         'newlines-between': 'never',
-        alphabetize: { order: 'asc' },
+        alphabetize: { order: 'ignore' },
       },
     ],
     'no-console': 'error',
-    'no-useless-rename': 'error',
-    'react-hooks/exhaustive-deps': [
+    'no-restricted-imports': [
       'error',
-      { 'additionalHooks': 'useIsomorphicLayoutEffect' },
+      {
+        'paths': [
+          {
+            'name': 'react',
+            'importNames': ['useLayoutEffect'],
+            'message': "Please import from '@yiwen-ai/util' instead.",
+          },
+        ],
+      },
     ],
+    'no-useless-rename': 'error',
+    'object-shorthand': ['error', 'always'],
     'react-refresh/only-export-components': [
       'error',
       { allowConstantExport: true },

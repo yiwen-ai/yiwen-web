@@ -3,6 +3,7 @@ import {
   toURLSearchParams,
   type URLSearchParamsInit,
 } from '@yiwen-ai/util'
+import { compact } from 'lodash-es'
 import { createContext, useContext, useMemo } from 'react'
 import { decode, encode } from './CBOR'
 import { useLogger, type Logger } from './logger'
@@ -41,21 +42,18 @@ export function createRequest(defaultOptions: RequestOptions) {
     )
     url = joinURL(defaultOptions.baseURL, url)
     const resp = await fetch(url, { ...defaultOptions, ...options, headers })
+    const { status } = resp
     const body =
       resp.headers.get('Content-Type') === CBOR_MIME_TYPE
         ? decode(new Uint8Array(await resp.arrayBuffer()))
         : resp.headers.get('Content-Type')?.startsWith('application/json')
         ? await resp.json()
         : await resp.text()
-    if (resp.status >= 200 && resp.status < 300) {
+    if (status >= 200 && status < 300) {
       return body as T
     } else {
-      const error = body
-      defaultOptions.logger.error('fetch error', {
-        url,
-        status: resp.status,
-        error,
-      })
+      const error = createRequestError(status, body) ?? body
+      defaultOptions.logger.error('fetch error', { url, status, error })
       throw error
     }
   }
@@ -139,4 +137,46 @@ export function useAuthFetcher() {
       logger,
     })
   }, [AUTH_URL, logger])
+}
+
+function createRequestError(status: number, body: unknown) {
+  if (
+    typeof body === 'object' &&
+    !!body &&
+    'error' in body &&
+    typeof body.error === 'string' &&
+    'message' in body &&
+    typeof body.message === 'string'
+  ) {
+    return new RequestError(status, body.error, body.message)
+  }
+  return null
+}
+
+export class RequestError extends Error {
+  constructor(public status: number, name: string, message: string) {
+    super(message)
+    this.name = name
+  }
+}
+
+export function toMessage(error: unknown) {
+  if (error instanceof RequestError) {
+    return compact([
+      compact([error.status, error.name]).join(' '),
+      error.message,
+    ]).join('\n')
+  }
+  if (typeof error === 'string') {
+    return error
+  }
+  if (
+    typeof error === 'object' &&
+    !!error &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
+    return error.message
+  }
+  return undefined
 }

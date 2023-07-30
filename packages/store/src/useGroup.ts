@@ -36,3 +36,8 @@ export function useMyGroupList() {
     isLoading,
   }
 }
+
+export function useMyDefaultGroup() {
+  const { groupList } = useMyGroupList()
+  return groupList?.[0]
+}
