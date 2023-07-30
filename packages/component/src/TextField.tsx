@@ -94,6 +94,7 @@ export const TextField = memo(
           display: inline-flex;
           border: 1px solid ${theme.color.input.border};
           box-sizing: border-box;
+          cursor: text;
           :hover {
             border-color: ${theme.color.input.hover.border};
           }
@@ -129,6 +130,7 @@ export const TextField = memo(
             font-size: inherit;
             font-weight: inherit;
             line-height: inherit;
+            cursor: inherit;
             ::placeholder {
               color: ${theme.color.input.placeholder};
             }

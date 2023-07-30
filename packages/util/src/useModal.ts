@@ -6,11 +6,11 @@ import { useLayoutEffect } from './useIsomorphicLayoutEffect'
 
 type Prettify<T> = { [K in keyof T]: T[K] } & unknown
 
-export interface AnchorProps {
-  ref: React.RefCallback<HTMLElement>
-  onPointerUpCapture: React.PointerEventHandler<HTMLElement>
-  onClick: React.MouseEventHandler<HTMLElement>
-  onKeyDown: React.KeyboardEventHandler<HTMLElement>
+export interface AnchorProps<T extends HTMLElement = HTMLElement> {
+  ref: React.RefCallback<T>
+  onPointerUpCapture: React.PointerEventHandler<T>
+  onClick: React.MouseEventHandler<T>
+  onKeyDown: React.KeyboardEventHandler<T>
 }
 
 export interface FloatingProps<T extends HTMLElement> {
@@ -33,7 +33,7 @@ export interface ModalRef {
   toggle: () => void
 }
 
-export function useModal<T extends HTMLElement, U extends HTMLAttributes<T>>({
+export function useModal<T extends HTMLElement, P extends HTMLAttributes<T>>({
   defaultOpen = false,
   open: _open,
   onToggle,
@@ -42,7 +42,7 @@ export function useModal<T extends HTMLElement, U extends HTMLAttributes<T>>({
   onPointerUpCapture,
   onKeyDown,
   ...props
-}: ModalProps & HTMLAttributes<T> & U) {
+}: ModalProps & HTMLAttributes<T> & P) {
   const [open, setOpen] = useControlled({
     defaultValue: defaultOpen,
     value: _open,
@@ -218,5 +218,27 @@ export function pickModalProps<P extends ModalProps>(props: P) {
   return {
     modalProps: pick(props, keys) as ModalProps,
     restProps: omit(props, keys),
+  }
+}
+
+export function mergeAnchorProps<
+  T extends HTMLElement,
+  P extends HTMLAttributes<T>
+>(props: P, anchorProps: AnchorProps<T>): P & AnchorProps<T> {
+  return {
+    ...props,
+    ...anchorProps,
+    onPointerUpCapture: (ev) => {
+      props.onPointerUpCapture?.(ev)
+      anchorProps.onPointerUpCapture(ev)
+    },
+    onClick: (ev) => {
+      props.onClick?.(ev)
+      anchorProps.onClick(ev)
+    },
+    onKeyDown: (ev) => {
+      props.onKeyDown?.(ev)
+      anchorProps.onKeyDown(ev)
+    },
   }
 }

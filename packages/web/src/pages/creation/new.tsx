@@ -4,14 +4,18 @@ import {
   Button,
   Header,
   RichTextEditor,
+  Select,
   Spinner,
   TextField,
   useToast,
 } from '@yiwen-ai/component'
 import { encode, useAddCreation, useMyGroupList } from '@yiwen-ai/store'
 import { nanoid } from 'nanoid'
+import type React from 'react'
 import { useCallback, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
+
+const MAX_WIDTH = 800
 
 export default function NewCreation() {
   const intl = useIntl()
@@ -124,7 +128,7 @@ export default function NewCreation() {
       >
         <main
           css={css`
-            max-width: 800px;
+            max-width: ${MAX_WIDTH}px;
             margin: 100px auto;
             padding: 24px;
           `}
@@ -158,38 +162,88 @@ export default function NewCreation() {
           border-top: 1px solid ${theme.color.divider.secondary};
         `}
       >
-        <div
+        <ArticleSettings
           css={css`
-            max-width: 800px;
+            max-width: ${MAX_WIDTH}px;
             margin: auto;
-            padding: 16px 24px;
           `}
-        >
-          <div
-            css={css`
-              ${theme.typography.bodyBold}
-            `}
-          >
-            {intl.formatMessage({ defaultMessage: '文章设置' })}
-          </div>
-          <div
-            css={css`
-              display: flex;
-              align-items: flex-start;
-            `}
-          >
-            <span>{intl.formatMessage({ defaultMessage: '关键词：' })}</span>
-          </div>
-          <div
-            css={css`
-              display: flex;
-              align-items: flex-start;
-            `}
-          >
-            <span>{intl.formatMessage({ defaultMessage: '声明：' })}</span>
-          </div>
-        </div>
+        />
       </div>
     </div>
   )
+}
+
+function ArticleSettings(props: React.HTMLAttributes<HTMLDivElement>) {
+  const intl = useIntl()
+  const theme = useTheme()
+
+  return (
+    <div
+      {...props}
+      css={css`
+        padding: 16px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      `}
+    >
+      <div
+        css={css`
+          ${theme.typography.bodyBold}
+        `}
+      >
+        {intl.formatMessage({ defaultMessage: '文章设置' })}
+      </div>
+      <Field label={intl.formatMessage({ defaultMessage: '关键词：' })} />
+      <Field label={intl.formatMessage({ defaultMessage: '声明：' })}>
+        <Select
+          placeholder={intl.formatMessage({ defaultMessage: '请选择' })}
+          options={[
+            {
+              label: intl.formatMessage({ defaultMessage: '原创' }),
+              value: 'original',
+            },
+            {
+              label: intl.formatMessage({ defaultMessage: '非原创' }),
+              value: 'non-original',
+            },
+          ]}
+        />
+      </Field>
+    </div>
+  )
+
+  function Field({
+    label,
+    ...props
+  }: React.PropsWithChildren<{
+    label: string
+  }>) {
+    return (
+      <div
+        css={css`
+          display: flex;
+          align-items: flex-start;
+        `}
+      >
+        <span
+          css={css`
+            min-width: 80px;
+            text-align: right;
+          `}
+        >
+          {label}
+        </span>
+        <div
+          css={css`
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+          `}
+        >
+          {props.children}
+        </div>
+      </div>
+    )
+  }
 }
