@@ -1,8 +1,11 @@
+import { type JSONContent } from '@tiptap/core'
 import { type URLSearchParamsInit } from '@yiwen-ai/util'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
+import { encode } from './CBOR'
 import { useLogger } from './logger'
 import { useFetcher } from './useFetcher'
+import { useMyDefaultGroupId } from './useGroup'
 
 export interface QueryCreation {
   gid: Uint8Array | string
@@ -107,21 +110,77 @@ export function useCreation(query: QueryCreation) {
   }
 }
 
+interface Draft extends Omit<CreateCreationInput, 'gid' | 'content'> {
+  gid: Uint8Array | undefined
+  content: JSONContent | undefined
+}
+
 export function useAddCreation() {
   const logger = useLogger()
   const fetcher = useFetcher()
   const { mutate } = useSWRConfig()
 
-  return useCallback(
-    async (input: CreateCreationInput) => {
+  const gid = useMyDefaultGroupId()
+
+  const [initialDraft] = useState<Draft>(() => ({
+    gid,
+    title: '',
+    content: undefined,
+    description: 'description...',
+    summary: 'summary - wiwi',
+    language: 'eng',
+    original_url: 'https://www.yiwen.ltd/',
+    cover: 'https://placehold.co/600x400',
+    license: 'https://www.yiwen.ltd/',
+  }))
+
+  const [draft, setDraft] = useState(initialDraft)
+  const draftRef = useRef(draft)
+  draftRef.current = draft
+
+  const updateDraft = useCallback((draft: Partial<Draft>) => {
+    setDraft((prev) => ({ ...prev, ...draft }))
+  }, [])
+
+  useEffect(() => gid && updateDraft({ gid }), [gid, updateDraft])
+
+  const [isSaving, setIsSaving] = useState(false)
+
+  const isDisabled =
+    isSaving || !draft.title.trim() || !draft.content || !draft.gid
+
+  const save = useCallback(async () => {
+    try {
+      setIsSaving(true)
       if (!fetcher) return logger.error('fetcher is not ready', { url: path })
+      const draft = draftRef.current as Required<Draft>
+      const input: CreateCreationInput = {
+        ...draft,
+        gid: draft.gid as Uint8Array,
+        content: encode(draft.content),
+      }
       const { result: item } = await fetcher.post<{ result: CreationOutput }>(
         path,
         input
       )
       mutate(toKey(item), item)
       return item
-    },
-    [fetcher, logger, mutate]
-  )
+    } finally {
+      setIsSaving(false)
+    }
+  }, [fetcher, logger, mutate])
+
+  const reset = useCallback(() => {
+    setDraft(initialDraft)
+  }, [initialDraft])
+
+  return {
+    draft,
+    updateDraft,
+    isDisabled,
+    isSaving,
+    setIsSaving,
+    save,
+    reset,
+  } as const
 }

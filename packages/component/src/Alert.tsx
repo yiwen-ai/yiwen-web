@@ -14,7 +14,7 @@ const IconDict: Record<AlertType, IconName> = {
 export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
   type: AlertType
   message: string | JSX.Element
-  description?: string | JSX.Element
+  description?: string | JSX.Element | null | undefined
   onClose?: React.MouseEventHandler<HTMLButtonElement> | undefined
 }
 
@@ -74,6 +74,7 @@ export const Alert = memo(
               css={css`
                 ${theme.typography.tooltip}
                 color: ${theme.color.body.secondary};
+                white-space: pre-line;
               `}
             >
               {description}

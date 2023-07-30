@@ -43,7 +43,7 @@ module.exports = {
           ['sibling', 'index'],
         ],
         'newlines-between': 'never',
-        alphabetize: { order: 'asc' },
+        alphabetize: { order: 'ignore' },
       },
     ],
     'no-console': 'error',
