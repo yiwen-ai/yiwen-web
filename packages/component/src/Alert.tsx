@@ -60,15 +60,7 @@ export const Alert = memo(
             flex: 1;
           `}
         >
-          <div
-            css={css`
-              display: flex;
-              justify-content: space-between;
-              gap: 8px;
-            `}
-          >
-            {message}
-          </div>
+          <div>{message}</div>
           {description && (
             <div
               css={css`
@@ -86,18 +78,13 @@ export const Alert = memo(
             shape='circle'
             onClick={onClose}
             css={css`
+              color: ${RGBA(theme.palette.grayLight, 0.4)};
               position: absolute;
               top: 16px;
               right: 16px;
             `}
           >
-            <Icon
-              name='delete'
-              size='small'
-              css={css`
-                color: ${RGBA(theme.palette.grayLight, 0.4)};
-              `}
-            />
+            <Icon name='delete' size='small' />
           </Button>
         )}
       </div>

@@ -78,8 +78,12 @@ export const ToastContainer = memo(function ToastContainer(
   )
 })
 
+interface Close {
+  (): void
+}
+
 export interface ToastAPI {
-  push(toast: Readonly<ToastProps>): () => void
+  push(toast: Readonly<ToastProps>): Close
   render(): JSX.Element | null
 }
 
@@ -92,10 +96,6 @@ export function useToast() {
     setList((list) => without(list, toast))
     map.current.delete(toast)
   }, [])
-
-  interface Close {
-    (): void
-  }
 
   const push = useCallback(
     (toast: Readonly<ToastProps>): Close => {

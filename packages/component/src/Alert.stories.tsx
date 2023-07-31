@@ -24,6 +24,7 @@ export const Success: Story = {
     type: 'success',
     message: 'Success',
     description: 'This is a success alert',
+    onClose: undefined,
   },
 }
 
@@ -35,6 +36,7 @@ export const Warning: Story = {
     type: 'warning',
     message: 'Warning',
     description: 'This is a warning alert',
+    onClose: undefined,
   },
 }
 
@@ -44,7 +46,10 @@ export const Close: Story = {
 
     function Uncontrolled() {
       const [open, setOpen] = useState(true)
-      const onClose = useCallback(() => setOpen(false), [])
+      const onClose = useCallback((ev: React.MouseEvent<HTMLButtonElement>) => {
+        setOpen(false)
+        args.onClose?.(ev)
+      }, [])
       return open && <Alert key={args.type} {...args} onClose={onClose} />
     }
   },

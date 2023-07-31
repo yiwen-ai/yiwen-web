@@ -1,16 +1,16 @@
 import { type JSONContent } from '@tiptap/core'
-import { type URLSearchParamsInit } from '@yiwen-ai/util'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import useSWR, { useSWRConfig } from 'swr'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import useSWRInfinite, { type SWRInfiniteKeyLoader } from 'swr/infinite'
+import { type SetNonNullable } from 'type-fest'
 import { encode } from './CBOR'
-import { useLogger } from './logger'
+import { type GIDPagination } from './common'
 import { useFetcher } from './useFetcher'
 import { useMyDefaultGroup } from './useGroup'
 
 export interface QueryCreation {
-  gid: Uint8Array | string
-  id: Uint8Array | string
-  fields?: string[]
+  gid: Uint8Array
+  id: Uint8Array
+  fields: readonly string[]
 }
 
 export interface CreateCreationInput {
@@ -69,70 +69,73 @@ export interface UpdateCreationInput {
 
 const path = '/v1/creation'
 
-const toKey = (query: QueryCreation): [string, URLSearchParamsInit] => [
-  path,
-  {
-    gid: query.gid.toString(),
-    id: query.id.toString(),
-    fields: query.fields?.join(','),
-  },
-]
-
-export function useCreation(query: QueryCreation) {
-  const logger = useLogger()
+export function useCreationAPI() {
   const fetcher = useFetcher()
-  const [key] = useState(() => toKey(query))
-  const { data, isLoading, mutate } = useSWR<CreationOutput>(
-    fetcher && key,
-    fetcher?.get ?? null
-  )
 
-  const update = useCallback(
-    async (input: UpdateCreationInput) => {
-      if (!fetcher) return logger.error('fetcher is not ready', { url: path })
-      const item = await fetcher.patch<CreationOutput>(path, input)
-      mutate(item)
-    },
-    [fetcher, logger, mutate]
-  )
-
-  const _delete = useCallback(async () => {
-    if (!fetcher) return logger.error('fetcher is not ready', { url: path })
-    await fetcher.delete(path, key[1])
-    mutate(Promise.resolve(undefined)) // TODO: mutate to undefined
-  }, [fetcher, key, logger, mutate])
-
-  return {
-    creation: data,
-    isLoading,
-    update,
-    delete: _delete,
-  }
-}
-
-interface Draft extends Omit<CreateCreationInput, 'gid' | 'content'> {
-  gid: Uint8Array | undefined
-  content: JSONContent | undefined
+  return useMemo(() => {
+    if (!fetcher) {
+      // TODO: assert fetcher is ready
+      // logger.error('fetcher is not ready', { url: path })
+      return null
+    }
+    return {
+      get: async (query: QueryCreation) => {
+        const item = await fetcher.get<CreationOutput>(path, {
+          gid: query.gid.toString(),
+          id: query.id.toString(),
+          fields: query.fields.join(','),
+        })
+        return item
+      },
+      list: async (query: GIDPagination) => {
+        const items = await fetcher.post<CreationOutput[]>(
+          `${path}/list`,
+          query
+        )
+        return items
+      },
+      create: async (input: CreateCreationInput) => {
+        const { result: item } = await fetcher.post<{
+          result: CreationOutput
+        }>(path, input)
+        return item
+      },
+      update: async (input: UpdateCreationInput) => {
+        const item = await fetcher.patch<CreationOutput>(path, input)
+        return item
+      },
+      delete: async () => {
+        await fetcher.delete(path)
+        return
+      },
+    }
+  }, [fetcher])
 }
 
 export function useAddCreation() {
-  const logger = useLogger()
-  const fetcher = useFetcher()
-  const { mutate } = useSWRConfig()
+  const create = useCreationAPI()?.create
+
+  interface Draft extends Omit<CreateCreationInput, 'gid' | 'content'> {
+    gid: Uint8Array | undefined
+    content: JSONContent | undefined
+  }
 
   const gid = useMyDefaultGroup()?.id
 
-  const [initialDraft] = useState<Draft>(() => ({
-    gid,
-    title: '',
-    content: undefined,
-    description: 'description...',
-    summary: 'summary - wiwi',
-    language: 'eng',
-    original_url: 'https://www.yiwen.ltd/',
-    cover: 'https://placehold.co/600x400',
-    license: 'https://www.yiwen.ltd/',
-  }))
+  const initialDraft = useMemo<Draft>(
+    () => ({
+      gid,
+      title: '',
+      content: undefined,
+      description: 'description...',
+      summary: 'summary - wiwi',
+      language: 'eng',
+      original_url: 'https://www.yiwen.ltd/',
+      cover: 'https://placehold.co/600x400',
+      license: 'https://www.yiwen.ltd/',
+    }),
+    [gid]
+  )
 
   const [draft, setDraft] = useState(initialDraft)
   const draftRef = useRef(draft)
@@ -150,25 +153,20 @@ export function useAddCreation() {
     isSaving || !draft.title.trim() || !draft.content || !draft.gid
 
   const save = useCallback(async () => {
+    // TODO: assert create is ready
+    if (!create) throw new Error('create is not ready')
     try {
       setIsSaving(true)
-      if (!fetcher) return logger.error('fetcher is not ready', { url: path })
-      const draft = draftRef.current as Required<Draft>
-      const input: CreateCreationInput = {
+      const draft = draftRef.current as SetNonNullable<Draft>
+      return create({
         ...draft,
-        gid: draft.gid as Uint8Array,
+        gid: draft.gid,
         content: encode(draft.content),
-      }
-      const { result: item } = await fetcher.post<{ result: CreationOutput }>(
-        path,
-        input
-      )
-      mutate(toKey(item), item)
-      return item
+      })
     } finally {
       setIsSaving(false)
     }
-  }, [fetcher, logger, mutate])
+  }, [create])
 
   const reset = useCallback(() => {
     setDraft(initialDraft)
@@ -183,4 +181,58 @@ export function useAddCreation() {
     save,
     reset,
   } as const
+}
+
+export function useCreationList(
+  query: GIDPagination,
+  fetcher: NonNullable<ReturnType<typeof useFetcher>>
+) {
+  const getKey: SWRInfiniteKeyLoader<{
+    next_page_token: Uint8Array
+    result: CreationOutput[]
+  }> = (pageIndex, previousPageData) => {
+    if (previousPageData && !previousPageData.next_page_token) return null
+
+    return [
+      `${path}/list`,
+      { gid: query.gid, page_token: previousPageData?.next_page_token },
+    ]
+  }
+
+  const { data, error, isLoading, isValidating, mutate, setSize } =
+    useSWRInfinite<{
+      next_page_token: Uint8Array
+      result: CreationOutput[]
+    }>(
+      getKey,
+      ([url, query]: [string, GIDPagination]) => fetcher.post(url, query),
+      {
+        revalidateIfStale: true,
+      }
+    )
+
+  const items = useMemo(() => {
+    if (!data) return []
+    return data.flatMap((page) => page.result)
+  }, [data])
+
+  const hasMore = useMemo(() => {
+    if (!data) return true
+    return !!data[data.length - 1]?.next_page_token
+  }, [data])
+
+  const loadMore = useCallback(() => {
+    if (isLoading || isValidating || !hasMore) return
+    setSize((size) => size + 1)
+  }, [hasMore, isLoading, isValidating, setSize])
+
+  return {
+    items,
+    error,
+    hasMore,
+    isLoading,
+    isValidating,
+    mutate,
+    loadMore,
+  }
 }

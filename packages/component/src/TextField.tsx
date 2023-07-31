@@ -94,7 +94,11 @@ export const TextField = memo(
           display: inline-flex;
           border: 1px solid ${theme.color.input.border};
           box-sizing: border-box;
-          cursor: text;
+          cursor: ${props.disabled
+            ? 'not-allowed'
+            : props.readOnly
+            ? 'default'
+            : 'text'};
           :hover {
             border-color: ${theme.color.input.hover.border};
           }

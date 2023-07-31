@@ -114,7 +114,7 @@ export const MenuItem = memo(
         {before && (
           <span
             css={css`
-              height: ${theme.typography.body.lineHeight};
+              min-height: ${theme.typography.body.lineHeight};
               display: flex;
               align-items: center;
               color: ${theme.palette.grayLight};
@@ -146,7 +146,7 @@ export const MenuItem = memo(
             {(after || children?.length) && (
               <span
                 css={css`
-                  height: ${theme.typography.body.lineHeight};
+                  min-height: ${theme.typography.body.lineHeight};
                   display: flex;
                   align-items: center;
                   color: ${RGBA(theme.palette.grayLight, 0.4)};

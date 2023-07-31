@@ -34,14 +34,14 @@ export const Select = memo(
         options,
         defaultValue,
         value: _value,
-        onChange,
+        onChange: _onChange,
         ...selectProps
       },
     } = pickPopoverProps(props)
-    const [value, setValue] = useControlled({
+    const [value, onChange] = useControlled({
       defaultValue,
       value: _value,
-      onChange,
+      onChange: _onChange,
     })
     const option = useMemo(
       () => options?.find((option) => option.value === value),
@@ -81,7 +81,7 @@ export const Select = memo(
                   onSelect={(value, ev) => {
                     onSelect?.(value as T, ev)
                     if (!ev.isPropagationStopped()) {
-                      setValue(value as T)
+                      onChange(value as T)
                       ref?.close()
                     }
                   }}

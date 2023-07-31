@@ -1,7 +1,5 @@
 import { useCallback, useRef, useState } from 'react'
 
-const handleChange = () => undefined
-
 export function useControlled<T>(options: {
   defaultValue: T
   value: T | undefined
@@ -17,23 +15,38 @@ export function useControlled<T>(options: {
 export function useControlled<T>({
   defaultValue,
   value,
-  onChange = handleChange,
+  onChange: _onChange,
 }: {
   defaultValue: T | undefined
   value: T | undefined
   onChange: ((value: T) => void) | undefined
 }) {
+  const valueRef = useRef(value)
+  valueRef.current = value
+
+  const onChange = useCallback(
+    (value: T) => {
+      if (value !== valueRef.current) {
+        _onChange?.(value)
+      }
+    },
+    [_onChange]
+  )
+
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue)
   const uncontrolledValueRef = useRef(uncontrolledValue)
   uncontrolledValueRef.current = uncontrolledValue
+
   const updateUncontrolledValue = useCallback(
     (value: T) => {
-      if (value === uncontrolledValueRef.current) return
-      setUncontrolledValue(value)
-      onChange(value)
+      if (value !== uncontrolledValueRef.current) {
+        setUncontrolledValue(value)
+        _onChange?.(value)
+      }
     },
-    [onChange]
+    [_onChange]
   )
+
   return [
     value !== undefined ? value : uncontrolledValue,
     value !== undefined ? onChange : updateUncontrolledValue,
