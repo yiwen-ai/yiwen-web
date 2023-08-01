@@ -31,7 +31,9 @@ module.exports = {
       'error',
       { fixStyle: 'inline-type-imports' },
     ],
+    '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/no-empty-interface': 'off',
+    '@typescript-eslint/no-unused-vars': 'off',
     'import/newline-after-import': 'error',
     'import/no-unresolved': 'off',
     'import/order': [

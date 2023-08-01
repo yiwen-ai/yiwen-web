@@ -6,6 +6,10 @@ import {
   Icon,
   Menu,
   Spinner,
+  Tab,
+  TabList,
+  TabPanel,
+  TabSection,
   useToast,
   type MenuItemProps,
   type ToastAPI,
@@ -14,8 +18,10 @@ import {
   useCreationList,
   useFetcher,
   useMyDefaultGroup,
+  usePublicationList,
   type CreationOutput,
   type Group,
+  type PublicationOutput,
 } from '@yiwen-ai/store'
 import { type ModalRef } from '@yiwen-ai/util'
 import { useCallback, useMemo, useRef } from 'react'
@@ -23,7 +29,7 @@ import { useIntl } from 'react-intl'
 import { Link } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
-export default function CreationList() {
+export default function GroupDetail() {
   const intl = useIntl()
   const toast = useToast()
   const group = useMyDefaultGroup()
@@ -76,15 +82,33 @@ export default function CreationList() {
       ) : (
         <div>
           <GroupPart toast={toast} group={group} />
-          <div
+          <TabSection
+            defaultValue={TabKey.Creation}
             css={css`
               max-width: 800px;
               margin: 0 auto;
-              padding: 72px 24px 40px;
+              padding: 0 24px 40px;
             `}
           >
-            {fetcher && <CreationPart group={group} fetcher={fetcher} />}
-          </div>
+            <TabList
+              css={css`
+                padding: 16px 24px;
+              `}
+            >
+              <Tab value={TabKey.Publication}>
+                {intl.formatMessage({ defaultMessage: '发布' })}
+              </Tab>
+              <Tab value={TabKey.Creation}>
+                {intl.formatMessage({ defaultMessage: '原稿' })}
+              </Tab>
+            </TabList>
+            <TabPanel value={TabKey.Publication}>
+              {fetcher && <PublicationPart group={group} fetcher={fetcher} />}
+            </TabPanel>
+            <TabPanel value={TabKey.Creation}>
+              {fetcher && <CreationPart group={group} fetcher={fetcher} />}
+            </TabPanel>
+          </TabSection>
         </div>
       )}
     </>
@@ -214,7 +238,12 @@ function GroupPart({
   )
 }
 
-function CreationPart({
+enum TabKey {
+  Publication = 'publication',
+  Creation = 'creation',
+}
+
+function PublicationPart({
   group,
   fetcher,
 }: {
@@ -222,7 +251,8 @@ function CreationPart({
   fetcher: NonNullable<ReturnType<typeof useFetcher>>
 }) {
   const intl = useIntl()
-  const { items, isLoading, isValidating, hasMore, loadMore } = useCreationList(
+  const theme = useTheme()
+  const { items, isLoading, hasMore, loadMore } = usePublicationList(
     { gid: group.id },
     fetcher
   )
@@ -235,36 +265,51 @@ function CreationPart({
         gap: 24px;
       `}
     >
-      {items.map((item) => (
-        <CreationItem key={Xid.fromValue(item.id).toString()} item={item} />
-      ))}
-      {isLoading || isValidating ? (
+      {!isLoading && items.length === 0 ? (
         <div
           css={css`
-            padding: 24px;
+            height: 80px;
             display: flex;
+            align-items: center;
             justify-content: center;
+            ${theme.typography.tooltip}
+            color: ${theme.color.body.secondary};
           `}
         >
-          <Spinner />
+          {intl.formatMessage({ defaultMessage: '暂无数据，请稍后再试' })}
         </div>
-      ) : hasMore ? (
-        <div
-          css={css`
-            display: flex;
-            justify-content: center;
-          `}
-        >
+      ) : (
+        items.map((item) => (
+          <PublicationItem
+            key={`${Xid.fromValue(item.cid).toString()}:${item.version}`}
+            item={item}
+          />
+        ))
+      )}
+      <div
+        css={css`
+          height: 80px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          :empty {
+            display: none;
+          }
+        `}
+      >
+        {isLoading ? (
+          <Spinner />
+        ) : hasMore ? (
           <Button variant='outlined' onClick={loadMore}>
             {intl.formatMessage({ defaultMessage: '加载更多' })}
           </Button>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   )
 }
 
-export function CreationItem(props: { item: CreationOutput }) {
+export function PublicationItem(props: { item: PublicationOutput }) {
   const intl = useIntl()
   const theme = useTheme()
 
@@ -301,7 +346,129 @@ export function CreationItem(props: { item: CreationOutput }) {
         `}
       >
         <Button
-          color='secondary'
+          color='primary'
+          variant='outlined'
+          size='small'
+          css={css`
+            gap: 8px;
+          `}
+        >
+          <Icon name='edit' size='small' />
+          <span>{intl.formatMessage({ defaultMessage: '编辑' })}</span>
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function CreationPart({
+  group,
+  fetcher,
+}: {
+  group: Group
+  fetcher: NonNullable<ReturnType<typeof useFetcher>>
+}) {
+  const intl = useIntl()
+  const theme = useTheme()
+  const { items, isLoading, hasMore, loadMore } = useCreationList(
+    { gid: group.id },
+    fetcher
+  )
+
+  return (
+    <div
+      css={css`
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      `}
+    >
+      {!isLoading && items.length === 0 ? (
+        <div
+          css={css`
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            ${theme.typography.tooltip}
+            color: ${theme.color.body.secondary};
+          `}
+        >
+          {intl.formatMessage({ defaultMessage: '暂无数据，请稍后再试' })}
+        </div>
+      ) : (
+        items.map((item) => (
+          <CreationItem key={Xid.fromValue(item.id).toString()} item={item} />
+        ))
+      )}
+      <div
+        css={css`
+          height: 80px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          :empty {
+            display: none;
+          }
+        `}
+      >
+        {isLoading ? (
+          <Spinner />
+        ) : hasMore ? (
+          <Button variant='outlined' onClick={loadMore}>
+            {intl.formatMessage({ defaultMessage: '加载更多' })}
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+export function CreationItem(props: { item: CreationOutput }) {
+  const intl = useIntl()
+  const theme = useTheme()
+
+  const handleEdit = useCallback(() => {
+    // TODO: edit creation
+  }, [])
+
+  return (
+    <div
+      css={css`
+        padding: 32px 40px;
+        border: 1px solid ${theme.color.divider.primary};
+        border-radius: 12px;
+      `}
+    >
+      <div
+        css={css`
+          ${theme.typography.h3}
+        `}
+      >
+        {props.item.title}
+      </div>
+      {props.item.summary && (
+        <div
+          css={css`
+            margin-top: 12px;
+          `}
+        >
+          {props.item.summary}
+        </div>
+      )}
+      <div
+        css={css`
+          margin-top: 12px;
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        `}
+      >
+        <Button
+          color='primary'
+          variant='outlined'
+          size='small'
+          onClick={handleEdit}
           css={css`
             gap: 8px;
           `}

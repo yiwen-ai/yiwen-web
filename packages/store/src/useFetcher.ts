@@ -15,7 +15,7 @@ export interface FetcherConfig {
   AUTH_URL: string
 }
 
-const FetcherConfigContext = createContext({} as Partial<FetcherConfig>)
+const FetcherConfigContext = createContext<Partial<FetcherConfig>>({})
 
 export const FetcherConfigProvider = FetcherConfigContext.Provider
 

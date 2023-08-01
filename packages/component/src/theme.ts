@@ -24,6 +24,12 @@ interface Button extends ButtonColor {
   disabled: ButtonColor
 }
 
+interface AlertColor {
+  border: string
+  background: string
+  icon: string
+}
+
 declare module '@emotion/react' {
   /**
    * @see https://www.figma.com/file/JXx2A1nhVCCDSSM3zGC8rf/Yiwen-AI-team-library?type=design&t=rWzXeFLxlQ4zVkrH-6
@@ -96,16 +102,8 @@ declare module '@emotion/react' {
         background: string
       }
       alert: {
-        success: {
-          border: string
-          background: string
-          icon: string
-        }
-        warning: {
-          border: string
-          background: string
-          icon: string
-        }
+        success: AlertColor
+        warning: AlertColor
       }
       menu: {
         border: string
@@ -114,6 +112,19 @@ declare module '@emotion/react' {
           hover: {
             background: string
           }
+        }
+      }
+      tab: {
+        background: string
+        text: string
+        hover: {
+          background: string
+          text: string
+        }
+        active: {
+          background: string
+          text: string
+          indicator: string
         }
       }
     }
@@ -291,6 +302,19 @@ export const lightTheme: Theme = {
         hover: {
           background: palette.grayLight1,
         },
+      },
+    },
+    tab: {
+      background: palette.white,
+      text: palette.grayLight,
+      hover: {
+        background: palette.grayLight1,
+        text: '',
+      },
+      active: {
+        background: palette.white,
+        text: palette.primaryNormal,
+        indicator: palette.primaryNormal,
       },
     },
   },
@@ -475,6 +499,19 @@ export const darkTheme: Theme = {
         },
       },
     },
+    tab: {
+      background: palette.grayNormal,
+      text: palette.grayLight0,
+      hover: {
+        background: palette.grayNormal1,
+        text: '',
+      },
+      active: {
+        background: palette.grayNormal,
+        text: palette.primaryNormal,
+        indicator: palette.primaryNormal,
+      },
+    },
   },
 }
 
@@ -502,7 +539,6 @@ export function useUserTheme() {
   const { user } = useUser()
   const userTheme: ColorScheme = user?.theme ?? 'auto'
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const setUserTheme = useCallback((theme: ColorScheme) => {
     // TODO: set user theme
   }, [])

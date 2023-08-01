@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
   type ComponentType,
-  type SVGProps,
+  type SVGAttributes,
 } from 'react'
 import { usePromise } from 'react-use'
 import { useLogger } from './logger'
@@ -67,13 +67,13 @@ const SizeDict: Record<IconSize, number> = {
   medium: 24,
 }
 
-export interface IconProps extends SVGProps<SVGSVGElement> {
+export interface IconProps extends SVGAttributes<SVGSVGElement> {
   /**
    * custom SVG component
    */
-  as?: ComponentType<SVGProps<SVGSVGElement>>
+  component?: ComponentType<SVGAttributes<SVGSVGElement>>
   /**
-   * required if `as` is not provided
+   * required if `component` is not provided
    */
   name?: IconName
   /**
@@ -84,20 +84,14 @@ export interface IconProps extends SVGProps<SVGSVGElement> {
 
 export const Icon = memo(
   forwardRef(function Icon(
-    {
-      as: component,
-      name,
-      size = 'medium',
-      tabIndex = -1,
-      ...props
-    }: IconProps,
+    { component, name, size = 'medium', tabIndex = -1, ...props }: IconProps,
     ref: React.Ref<SVGSVGElement>
   ) {
     const logger = useLogger()
     const mounted = usePromise()
     const width = typeof size === 'number' ? size : SizeDict[size]
     const [SVG = 'svg', setSVG] = useState<
-      ComponentType<SVGProps<SVGSVGElement>> | undefined
+      ComponentType<SVGAttributes<SVGSVGElement>> | undefined
     >(component)
 
     useEffect(() => {

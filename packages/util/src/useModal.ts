@@ -1,5 +1,4 @@
 import { omit, pick } from 'lodash-es'
-import type React from 'react'
 import { useCallback, useMemo, useRef, type DOMAttributes } from 'react'
 import { useControlled } from './useControlled'
 import { useLayoutEffect } from './useIsomorphicLayoutEffect'
@@ -27,6 +26,7 @@ export interface ModalProps {
 }
 
 export interface ModalRef {
+  open: boolean
   show: () => void
   close: () => void
   toggle: () => void
@@ -73,8 +73,8 @@ export function useModal<
   }, [close, show])
 
   const modal = useMemo<ModalRef>(
-    () => ({ show, close, toggle }),
-    [close, show, toggle]
+    () => ({ open, show, close, toggle }),
+    [close, open, show, toggle]
   )
   //#endregion
 

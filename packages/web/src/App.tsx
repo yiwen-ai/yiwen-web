@@ -46,8 +46,8 @@ import { SWRConfig, type SWRConfiguration } from 'swr'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
-import CreationList from './pages/creation/list'
 import NewCreation from './pages/creation/new'
+import GroupDetail from './pages/group/[id]'
 import LoginState from './pages/login/state'
 import PublicationDetail from './pages/publication/[id]'
 import Search from './pages/search'
@@ -120,8 +120,8 @@ export function SetHeaderProps(props: HeaderProps) {
 
 export const SEARCH_PATH = '/search'
 export const NEW_CREATION_PATH = '/creation/new'
-export const CREATION_LIST_PATH = '/creation/list'
 export const PUBLICATION_DETAIL_PATH = '/publication/:id'
+export const GROUP_DETAIL_PATH = '/group/:id'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -130,7 +130,7 @@ const router = createBrowserRouter(
       <Route path='/' element={<Home />} />
       <Route path={SEARCH_PATH} element={<Search />} />
       <Route path={NEW_CREATION_PATH} element={<NewCreation />} />
-      <Route path={CREATION_LIST_PATH} element={<CreationList />} />
+      <Route path={GROUP_DETAIL_PATH} element={<GroupDetail />} />
       <Route path={PUBLICATION_DETAIL_PATH} element={<PublicationDetail />} />
       <Route path='/login/state' element={<LoginState />} />
     </Route>

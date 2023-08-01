@@ -1,20 +1,41 @@
-import { memo } from 'react'
+import { css, useTheme } from '@emotion/react'
+import { forwardRef, memo, type SVGAttributes } from 'react'
 import { useIntl } from 'react-intl'
-import { Avatar, type AvatarProps } from './Avatar'
-import LOGO_URL from './logo.svg'
+import { ReactComponent as SVG } from './logo.svg'
 
-export interface LogoProps extends Omit<AvatarProps, 'src' | 'alt'> {}
+export type LogoSize = 'small' | 'medium'
 
-export const Logo = memo(function Logo(props: LogoProps) {
-  const intl = useIntl()
-  return (
-    <Avatar
-      {...props}
-      src={LOGO_URL}
-      alt={intl.formatMessage({ defaultMessage: '亿文' })}
-    />
-  )
-})
+const SizeDict: Record<LogoSize, number> = {
+  small: 24,
+  medium: 36,
+}
 
-// eslint-disable-next-line react-refresh/only-export-components
-export { LOGO_URL }
+export interface LogoProps extends SVGAttributes<SVGSVGElement> {
+  size?: LogoSize | number
+}
+
+export const Logo = memo(
+  forwardRef(function Logo(
+    { size = 'medium', ...props }: LogoProps,
+    ref: React.Ref<SVGSVGElement>
+  ) {
+    const intl = useIntl()
+    const theme = useTheme()
+    const width = typeof size === 'number' ? size : SizeDict[size]
+
+    return (
+      <SVG
+        role='img'
+        aria-label={intl.formatMessage({ defaultMessage: '亿文' })}
+        {...props}
+        css={css`
+          width: ${width}px;
+          height: ${width}px;
+          color: ${theme.palette.primaryNormal};
+          fill: currentColor;
+          user-select: none;
+        `}
+      />
+    )
+  })
+)

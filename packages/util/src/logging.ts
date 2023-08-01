@@ -94,7 +94,6 @@ export function LoggerProvider({ handler, ...props }: LoggerProviderProps) {
 
 export function createUseLogger<T extends Record<string, unknown>>() {
   return function useLogger() {
-    const logger = useContext(LoggerContext)
-    return logger as Logger<T>
+    return useContext<Logger<T>>(LoggerContext)
   }
 }

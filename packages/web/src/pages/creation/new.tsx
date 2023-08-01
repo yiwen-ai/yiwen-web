@@ -1,4 +1,4 @@
-import { CREATION_LIST_PATH, SetHeaderProps } from '#/App'
+import { GROUP_DETAIL_PATH, SetHeaderProps } from '#/App'
 import { css, useTheme } from '@emotion/react'
 import { type Editor, type EditorOptions } from '@tiptap/core'
 import {
@@ -10,10 +10,10 @@ import {
   useToast,
 } from '@yiwen-ai/component'
 import { toMessage, useAddCreation } from '@yiwen-ai/store'
-import type React from 'react'
 import { useCallback, useRef } from 'react'
 import { useIntl } from 'react-intl'
-import { useNavigate } from 'react-router-dom'
+import { generatePath, useNavigate } from 'react-router-dom'
+import { Xid } from 'xid-ts'
 
 const MAX_WIDTH = 800
 
@@ -43,14 +43,16 @@ export default function NewCreation() {
 
   const handleSave = useCallback(async () => {
     try {
-      await save()
+      const { gid } = await save()
       reset()
       editorRef.current?.commands.clearContent(true)
       push({
         type: 'success',
         message: intl.formatMessage({ defaultMessage: '保存成功' }),
       })
-      navigate(CREATION_LIST_PATH)
+      navigate(
+        generatePath(GROUP_DETAIL_PATH, { id: Xid.fromValue(gid).toString() })
+      )
     } catch (error) {
       push({
         type: 'warning',

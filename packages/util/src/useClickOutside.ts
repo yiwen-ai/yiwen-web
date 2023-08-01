@@ -1,4 +1,3 @@
-import type React from 'react'
 import { useRef } from 'react'
 import { useLayoutEffect } from './useIsomorphicLayoutEffect'
 
