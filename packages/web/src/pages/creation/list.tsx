@@ -10,16 +10,24 @@ import {
   type MenuItemProps,
   type ToastAPI,
 } from '@yiwen-ai/component'
-import { useMyDefaultGroup, type Group } from '@yiwen-ai/store'
+import {
+  useCreationList,
+  useFetcher,
+  useMyDefaultGroup,
+  type CreationOutput,
+  type Group,
+} from '@yiwen-ai/store'
 import { type ModalRef } from '@yiwen-ai/util'
 import { useCallback, useMemo, useRef } from 'react'
 import { useIntl } from 'react-intl'
 import { Link } from 'react-router-dom'
+import { Xid } from 'xid-ts'
 
 export default function CreationList() {
   const intl = useIntl()
   const toast = useToast()
   const group = useMyDefaultGroup()
+  const fetcher = useFetcher()
 
   return (
     <>
@@ -68,6 +76,15 @@ export default function CreationList() {
       ) : (
         <div>
           <GroupPart toast={toast} group={group} />
+          <div
+            css={css`
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 72px 24px 40px;
+            `}
+          >
+            {fetcher && <CreationPart group={group} fetcher={fetcher} />}
+          </div>
         </div>
       )}
     </>
@@ -192,6 +209,106 @@ function GroupPart({
           )}
           items={menuItems}
         />
+      </div>
+    </div>
+  )
+}
+
+function CreationPart({
+  group,
+  fetcher,
+}: {
+  group: Group
+  fetcher: NonNullable<ReturnType<typeof useFetcher>>
+}) {
+  const intl = useIntl()
+  const { items, isLoading, isValidating, hasMore, loadMore } = useCreationList(
+    { gid: group.id },
+    fetcher
+  )
+
+  return (
+    <div
+      css={css`
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      `}
+    >
+      {items.map((item) => (
+        <CreationItem key={Xid.fromValue(item.id).toString()} item={item} />
+      ))}
+      {isLoading || isValidating ? (
+        <div
+          css={css`
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+          `}
+        >
+          <Spinner />
+        </div>
+      ) : hasMore ? (
+        <div
+          css={css`
+            display: flex;
+            justify-content: center;
+          `}
+        >
+          <Button variant='outlined' onClick={loadMore}>
+            {intl.formatMessage({ defaultMessage: '加载更多' })}
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+export function CreationItem(props: { item: CreationOutput }) {
+  const intl = useIntl()
+  const theme = useTheme()
+
+  return (
+    <div
+      css={css`
+        padding: 32px 40px;
+        border: 1px solid ${theme.color.divider.primary};
+        border-radius: 12px;
+      `}
+    >
+      <div
+        css={css`
+          ${theme.typography.h3}
+        `}
+      >
+        {props.item.title}
+      </div>
+      {props.item.summary && (
+        <div
+          css={css`
+            margin-top: 12px;
+          `}
+        >
+          {props.item.summary}
+        </div>
+      )}
+      <div
+        css={css`
+          margin-top: 12px;
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        `}
+      >
+        <Button
+          color='secondary'
+          css={css`
+            gap: 8px;
+          `}
+        >
+          <Icon name='edit' size='small' />
+          <span>{intl.formatMessage({ defaultMessage: '编辑' })}</span>
+        </Button>
       </div>
     </div>
   )

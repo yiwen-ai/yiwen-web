@@ -6,6 +6,7 @@ import { EditorContent, useEditor, type EditorOptions } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import { nanoid } from 'nanoid'
 import { forwardRef, memo, useImperativeHandle } from 'react'
+import { useIntl } from 'react-intl'
 
 export interface RichTextEditorProps extends Partial<EditorOptions> {
   className?: string
@@ -17,6 +18,7 @@ export const RichTextEditor = memo(
     { className, initialContent, ...props }: RichTextEditorProps,
     ref: React.Ref<Editor | null>
   ) {
+    const intl = useIntl()
     const theme = useTheme()
     const editor = useEditor(
       {
@@ -26,12 +28,21 @@ export const RichTextEditor = memo(
           StarterKit,
           UniqueID.configure({
             attributeName: 'id',
-            types: ['heading', 'paragraph'],
+            types: [
+              'blockquote',
+              'codeBlock',
+              'detailsContent',
+              'detailsSummary',
+              'heading',
+              'listItem',
+              'paragraph',
+              'tableCell',
+              'tableHeader',
+            ],
             generateID: () => nanoid(6),
           }),
-          // TODO: multiple placeholders
           Placeholder.configure({
-            placeholder: '直接输入内容',
+            placeholder: intl.formatMessage({ defaultMessage: '直接输入内容' }),
           }),
         ],
       },

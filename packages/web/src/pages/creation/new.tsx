@@ -1,4 +1,4 @@
-import { SetHeaderProps } from '#/App'
+import { CREATION_LIST_PATH, SetHeaderProps } from '#/App'
 import { css, useTheme } from '@emotion/react'
 import { type Editor, type EditorOptions } from '@tiptap/core'
 import {
@@ -13,12 +13,14 @@ import { toMessage, useAddCreation } from '@yiwen-ai/store'
 import type React from 'react'
 import { useCallback, useRef } from 'react'
 import { useIntl } from 'react-intl'
+import { useNavigate } from 'react-router-dom'
 
 const MAX_WIDTH = 800
 
 export default function NewCreation() {
   const intl = useIntl()
   const theme = useTheme()
+  const navigate = useNavigate()
   const { push, render } = useToast()
   const editorRef = useRef<Editor>(null)
 
@@ -48,7 +50,7 @@ export default function NewCreation() {
         type: 'success',
         message: intl.formatMessage({ defaultMessage: '保存成功' }),
       })
-      // TODO: redirect to the creation page
+      navigate(CREATION_LIST_PATH)
     } catch (error) {
       push({
         type: 'warning',
@@ -56,7 +58,7 @@ export default function NewCreation() {
         description: toMessage(error),
       })
     }
-  }, [intl, push, reset, save])
+  }, [intl, navigate, push, reset, save])
 
   return (
     <>

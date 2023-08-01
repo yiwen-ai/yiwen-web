@@ -205,8 +205,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0(react@18.2.0)
       xid-ts:
-        specifier: ^1.0.1
-        version: 1.0.1
+        specifier: 1.0.0
+        version: 1.0.0
     devDependencies:
       '@types/lodash-es':
         specifier: ^4.17.8
@@ -257,6 +257,9 @@ importers:
       react:
         specifier: ^18.2.0
         version: 18.2.0
+      type-fest:
+        specifier: ^4.0.0
+        version: 4.0.0
       vitest:
         specifier: ^0.33.0
         version: 0.33.0
@@ -344,6 +347,9 @@ importers:
       vite-plugin-checker:
         specifier: ^0.6.1
         version: 0.6.1(eslint@8.46.0)(stylelint@15.10.2)(typescript@5.1.6)(vite@4.4.7)
+      xid-ts:
+        specifier: 1.0.0
+        version: 1.0.0
 
 packages:
 
@@ -4622,7 +4628,7 @@ packages:
       '@babel/plugin-transform-react-jsx-self': 7.22.5(@babel/core@7.22.9)
       '@babel/plugin-transform-react-jsx-source': 7.22.5(@babel/core@7.22.9)
       react-refresh: 0.14.0
-      vite: 4.4.7(@types/node@20.4.5)(less@4.1.3)
+      vite: 4.4.7(@types/node@20.4.5)(terser@5.19.2)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -11495,7 +11501,7 @@ packages:
       stylelint: 15.10.2
       tiny-invariant: 1.3.1
       typescript: 5.1.6
-      vite: 4.4.7(@types/node@20.4.5)(less@4.1.3)
+      vite: 4.4.7(@types/node@20.4.5)(terser@5.19.2)
       vscode-languageclient: 7.0.0
       vscode-languageserver: 7.0.0
       vscode-languageserver-textdocument: 1.0.8
@@ -11931,10 +11937,9 @@ packages:
         optional: true
     dev: true
 
-  /xid-ts@1.0.1:
-    resolution: {integrity: sha512-LsMHj43UfTLARLgB+IxvIHUhNRlEZMS1rWNCSprBOmHiy1Sc1A8FET1ZPL8x5VYC/dGi3Drf31bnefQgxNrhWQ==}
+  /xid-ts@1.0.0:
+    resolution: {integrity: sha512-A+ACF7x4NPP9fkZYTFpvITVHSk/gMwJ+K3S9kPiKQ2j8RSI3gTnxSxPuLwDThOCFemF6XwpqXzBTpUy9Mewm8w==}
     engines: {node: '>=18.0.0'}
-    dev: false
 
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}

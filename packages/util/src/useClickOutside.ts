@@ -10,12 +10,12 @@ export function useClickOutside<T extends HTMLElement>(
   onClickRef.current = onClick
 
   useLayoutEffect(() => {
-    const handlePointerDown = (ev: PointerEvent) => {
+    const handlePointerUp = (ev: PointerEvent) => {
       if (!ref.current?.contains(ev.target as Node)) {
         onClickRef.current()
       }
     }
-    document.addEventListener('pointerdown', handlePointerDown)
-    return () => document.removeEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('pointerup', handlePointerUp)
+    return () => document.removeEventListener('pointerup', handlePointerUp)
   }, [ref])
 }

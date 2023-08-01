@@ -1,21 +1,18 @@
 import { omit, pick } from 'lodash-es'
 import type React from 'react'
-import { useCallback, useMemo, useRef, type HTMLAttributes } from 'react'
+import { useCallback, useMemo, useRef, type DOMAttributes } from 'react'
 import { useControlled } from './useControlled'
 import { useLayoutEffect } from './useIsomorphicLayoutEffect'
+import { mergeForwardedRef } from './useRefCallback'
 
-type Prettify<T> = { [K in keyof T]: T[K] } & unknown
-
-export interface AnchorProps<
-  T extends HTMLElement | SVGElement = HTMLElement | SVGElement
-> {
+export interface AnchorProps<T extends Element = Element> {
   ref: React.RefCallback<T>
   onPointerUpCapture: React.PointerEventHandler<T>
   onClick: React.MouseEventHandler<T>
   onKeyDown: React.KeyboardEventHandler<T>
 }
 
-export interface FloatingProps<T extends HTMLElement | SVGElement> {
+export interface FloatingProps<T extends Element> {
   ref: React.RefCallback<T>
   onPointerUpCapture: React.PointerEventHandler<T>
   onKeyDown: React.KeyboardEventHandler<T>
@@ -36,22 +33,20 @@ export interface ModalRef {
 }
 
 export function useModal<
-  T extends HTMLElement | SVGElement,
-  P extends HTMLAttributes<T>
+  P extends DOMAttributes<T>,
+  T extends Element = P extends DOMAttributes<infer T> ? T : Element
 >({
   defaultOpen = false,
   open: _open,
-  onToggle,
+  onToggle: _onToggle,
   onShow,
   onClose,
-  onPointerUpCapture,
-  onKeyDown,
   ...props
-}: ModalProps & HTMLAttributes<T> & P) {
-  const [open, setOpen] = useControlled({
+}: ModalProps & P) {
+  const [open, onToggle] = useControlled({
     defaultValue: defaultOpen,
     value: _open,
-    onChange: onToggle,
+    onChange: _onToggle,
   })
   const openRef = useRef(open)
   openRef.current = open
@@ -59,16 +54,19 @@ export function useModal<
   //#region modal
   const show = useCallback(() => {
     if (openRef.current) return
-    setOpen(true)
+    onToggle(true)
     onShow?.()
-  }, [onShow, setOpen])
+  }, [onShow, onToggle])
 
   const close = useCallback(() => {
     if (!openRef.current) return
-    setOpen(false)
+    onToggle(false)
     onClose?.()
-    anchorRef.current?.focus() // bring focus back to anchor
-  }, [onClose, setOpen])
+    const anchorEl = anchorRef.current
+    if (anchorEl instanceof HTMLElement || anchorEl instanceof SVGElement) {
+      anchorEl.focus() // bring focus back to anchor
+    }
+  }, [onClose, onToggle])
 
   const toggle = useCallback(() => {
     openRef.current ? close() : show()
@@ -81,9 +79,9 @@ export function useModal<
   //#endregion
 
   //#region toggle on clicking anchor
-  const anchorRef = useRef<HTMLElement | SVGElement | null>(null)
+  const anchorRef = useRef<Element | null>(null)
 
-  const setAnchorRef = useCallback((el: HTMLElement | SVGElement | null) => {
+  const setAnchorRef = useCallback((el: Element | null) => {
     anchorRef.current = el
   }, [])
 
@@ -156,8 +154,9 @@ export function useModal<
     onKeyDown: handleKeyDown,
   }
 
-  const floatingProps: Prettify<FloatingProps<T> & typeof props> = {
-    ...props,
+  const { onPointerUpCapture, onKeyDown } = props
+  const floatingProps: FloatingProps<T> & P = {
+    ...(props as P),
     ref: setFloatingRef,
     onPointerUpCapture: useCallback(
       (ev) => {
@@ -176,19 +175,12 @@ export function useModal<
   }
 
   const mergeAnchorRef = useCallback(
-    (ref: React.ForwardedRef<HTMLElement | SVGElement>) =>
-      (el: HTMLElement | SVGElement | null) => {
-        setAnchorRef(el)
-        if (ref) typeof ref === 'function' ? ref(el) : (ref.current = el)
-      },
+    (ref: React.ForwardedRef<Element>) => mergeForwardedRef(ref, setAnchorRef),
     [setAnchorRef]
   )
 
   const mergeFloatingRef = useCallback(
-    (ref: React.ForwardedRef<T>) => (el: T | null) => {
-      setFloatingRef(el)
-      if (ref) typeof ref === 'function' ? ref(el) : (ref.current = el)
-    },
+    (ref: React.ForwardedRef<T>) => mergeForwardedRef(ref, setFloatingRef),
     [setFloatingRef]
   )
   //#endregion
@@ -228,8 +220,8 @@ export function pickModalProps<P extends ModalProps>(props: P) {
 }
 
 export function mergeAnchorProps<
-  T extends HTMLElement | SVGElement,
-  P extends HTMLAttributes<T>
+  P extends DOMAttributes<T>,
+  T extends Element = P extends DOMAttributes<infer T> ? T : Element
 >(props: P, anchorProps: AnchorProps<T>): P & AnchorProps<T> {
   return {
     ...props,

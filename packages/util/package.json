@@ -23,6 +23,7 @@
     "@types/normalize-path": "^3.0.0",
     "@types/react": "^18.2.17",
     "react": "^18.2.0",
+    "type-fest": "^4.0.0",
     "vitest": "^0.33.0"
   },
   "peerDependencies": {
