@@ -1,33 +1,44 @@
 import { css, useTheme } from '@emotion/react'
 import {
   RGBA,
+  isArray,
   mergeAnchorProps,
+  mergeClickProps,
   mergeForwardedRef,
+  useRefCallback,
   type AnchorProps,
   type ModalRef,
 } from '@yiwen-ai/util'
 import {
+  createContext,
   forwardRef,
   memo,
+  useContext,
   type HTMLAttributes,
   type LiHTMLAttributes,
 } from 'react'
+import { useMountedState } from 'react-use'
 import { Icon } from './Icon'
 import { Popover, pickPopoverProps, type PopoverProps } from './Popover'
 
 export interface MenuProps
   extends HTMLAttributes<HTMLUListElement>,
     PopoverProps {
-  items?: readonly MenuItemProps[]
+  items?: readonly MenuItemProps[] | undefined
 }
 
 export const Menu = memo(
-  forwardRef(function Menu(props: MenuProps, ref: React.Ref<ModalRef>) {
+  forwardRef(function Menu(
+    props: MenuProps,
+    forwardedRef: React.ForwardedRef<ModalRef>
+  ) {
     const theme = useTheme()
     const {
       popoverProps,
       restProps: { items, ...menuProps },
     } = pickPopoverProps(props)
+    const [ref, setRef] = useRefCallback(forwardedRef)
+    const parentRef = useContext(MenuContext)
 
     const render = () => (
       <ul role='menu' {...menuProps}>
@@ -42,7 +53,7 @@ export const Menu = memo(
     return (
       <Popover
         {...popoverProps}
-        ref={ref}
+        ref={setRef}
         css={css`
           width: 208px;
           padding: 20px 12px;
@@ -51,52 +62,64 @@ export const Menu = memo(
           background: ${theme.color.menu.background};
         `}
       >
-        {render()}
+        <MenuContext.Provider value={parentRef || ref}>
+          {render()}
+        </MenuContext.Provider>
       </Popover>
     )
   })
 )
 
+const MenuContext = createContext<ModalRef | null>(null)
+
 export interface MenuItemProps
   extends Omit<LiHTMLAttributes<HTMLLIElement>, 'children'> {
-  disabled?: boolean | undefined
   before?: JSX.Element
   after?: JSX.Element
   label: string | JSX.Element
   description?: string | JSX.Element
-  children?: readonly MenuItemProps[]
+  disabled?: boolean | undefined
+  closeOnClick?: boolean | number | undefined
+  children?: readonly MenuItemProps[] | JSX.Element | null | undefined
 }
 
 export const MenuItem = memo(
   forwardRef(function MenuItem(
     {
-      disabled,
       before,
       after,
       label,
       description,
+      disabled,
+      closeOnClick = true,
       children,
       ...props
     }: MenuItemProps,
     ref: React.ForwardedRef<HTMLLIElement>
   ) {
     const theme = useTheme()
+    const menuRef = useContext(MenuContext)
+    const isMounted = useMountedState()
 
     const render = (
-      props: LiHTMLAttributes<HTMLLIElement>,
+      { onClick, ...props }: LiHTMLAttributes<HTMLLIElement>,
       ref: React.Ref<HTMLLIElement>
     ) => (
       <li
         role='menuitem'
         aria-disabled={disabled}
         data-disabled={disabled ? '' : undefined}
-        {...props}
+        {...mergeClickProps(
+          props,
+          (ev) => !disabled && onClick?.(ev as React.MouseEvent<HTMLLIElement>)
+        )}
         ref={ref}
         css={css`
           min-height: 36px;
           padding: 4px 12px;
           box-sizing: border-box;
           display: flex;
+          align-items: flex-start;
           gap: 8px;
           border-radius: 8px;
           &[data-disabled] {
@@ -133,6 +156,7 @@ export const MenuItem = memo(
           <div
             css={css`
               display: flex;
+              align-items: flex-start;
               gap: 8px;
             `}
           >
@@ -143,7 +167,7 @@ export const MenuItem = memo(
             >
               {label}
             </span>
-            {(after || children?.length) && (
+            {(after || children) && (
               <span
                 css={css`
                   min-height: ${theme.typography.body.lineHeight};
@@ -170,18 +194,43 @@ export const MenuItem = memo(
       </li>
     )
 
-    if (!children?.length) return render(props, ref)
+    if (!children) {
+      const { onClick } = props
+      return render(
+        {
+          ...props,
+          onClick: (ev) => {
+            onClick?.(ev)
+            if (!ev.isPropagationStopped()) {
+              if (closeOnClick === true) {
+                menuRef?.close()
+              } else if (typeof closeOnClick === 'number') {
+                setTimeout(() => {
+                  isMounted() && menuRef?.close()
+                }, closeOnClick)
+              }
+            }
+          },
+        },
+        ref
+      )
+    }
+
+    const anchor = (anchorProps: AnchorProps<HTMLLIElement>) => {
+      return render(
+        mergeAnchorProps(props, anchorProps),
+        mergeForwardedRef(ref, anchorProps.ref)
+      )
+    }
 
     return (
       <Menu
-        anchor={(anchorProps: AnchorProps<HTMLLIElement>) =>
-          render(
-            mergeAnchorProps(props, anchorProps),
-            mergeForwardedRef(ref, anchorProps.ref)
-          )
-        }
-        items={children}
-      />
+        anchor={anchor}
+        placement='right-start'
+        items={isArray(children) ? children : undefined}
+      >
+        {isArray(children) ? null : children}
+      </Menu>
     )
   })
 )

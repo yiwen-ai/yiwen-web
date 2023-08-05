@@ -5,6 +5,7 @@ export { Alert, type AlertProps, type AlertType } from './Alert'
 export {
   AlertDialog,
   AlertDialogBody,
+  AlertDialogClose,
   AlertDialogFoot,
   AlertDialogHead,
   type AlertDialogProps,

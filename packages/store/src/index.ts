@@ -5,6 +5,7 @@ export {
   type IdentityProvider,
 } from './useAuthorize'
 export {
+  CreationStatus,
   useAddCreation,
   useCreationAPI,
   useCreationList,
@@ -21,5 +22,9 @@ export {
   type FetcherConfig,
 } from './useFetcher'
 export { useMyDefaultGroup, useMyGroupList, type Group } from './useGroup'
-export { usePublicationList, type PublicationOutput } from './usePublication'
+export {
+  PublicationStatus,
+  usePublicationList,
+  type PublicationOutput,
+} from './usePublication'
 export { UserStatus, useUser, type ColorScheme, type User } from './useUser'

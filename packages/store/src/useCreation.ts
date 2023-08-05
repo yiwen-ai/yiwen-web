@@ -2,10 +2,20 @@ import { type JSONContent } from '@tiptap/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useSWRInfinite, { type SWRInfiniteKeyLoader } from 'swr/infinite'
 import { type SetNonNullable } from 'type-fest'
+import { Xid } from 'xid-ts'
 import { encode } from './CBOR'
-import { type GIDPagination } from './common'
+import { type GIDPagination, type Page } from './common'
 import { useFetcher } from './useFetcher'
 import { useMyDefaultGroup } from './useGroup'
+import { type CreatePublicationInput } from './usePublication'
+
+export enum CreationStatus {
+  Deleted = -2,
+  Archived = -1,
+  Draft = 0,
+  Review = 1,
+  Approved = 2,
+}
 
 export interface QueryCreation {
   gid: Uint8Array
@@ -32,13 +42,13 @@ export interface CreateCreationInput {
 export interface CreationOutput {
   id: Uint8Array
   gid: Uint8Array
-  status?: number
+  status: CreationStatus
   rating?: number
-  version?: number
-  language?: string
+  version: number
+  language: string
   creator?: Uint8Array
-  created_at?: number
-  updated_at?: number
+  created_at: number
+  updated_at: number
   original_url?: string
   genre?: string[]
   title?: string
@@ -65,6 +75,13 @@ export interface UpdateCreationInput {
   authors?: string[]
   summary?: string
   license?: string
+}
+
+export interface UpdateCreationStatusInput {
+  gid: Uint8Array
+  id: Uint8Array
+  updated_at: number
+  status: CreationStatus
 }
 
 const path = '/v1/creation'
@@ -184,32 +201,103 @@ export function useAddCreation() {
 }
 
 export function useCreationList(
-  query: GIDPagination,
+  { status, ...query }: GIDPagination,
   fetcher: NonNullable<ReturnType<typeof useFetcher>>
 ) {
-  const getKey: SWRInfiniteKeyLoader<{
-    next_page_token: Uint8Array
-    result: CreationOutput[]
-  }> = (pageIndex, previousPageData) => {
+  const getKey: SWRInfiniteKeyLoader<Page<CreationOutput>> = (
+    pageIndex,
+    previousPageData
+  ) => {
     if (previousPageData && !previousPageData.next_page_token) return null
 
     return [
-      `${path}/list`,
-      { gid: query.gid, page_token: previousPageData?.next_page_token },
+      status === CreationStatus.Archived
+        ? `${path}/list_archived`
+        : `${path}/list`,
+      {
+        ...query,
+        page_token: previousPageData?.next_page_token,
+      },
     ]
   }
 
   const { data, error, isLoading, isValidating, mutate, setSize } =
-    useSWRInfinite<{
-      next_page_token: Uint8Array
-      result: CreationOutput[]
-    }>(
+    useSWRInfinite<Page<CreationOutput>>(
       getKey,
       ([url, query]: [string, GIDPagination]) => fetcher.post(url, query),
       {
         revalidateIfStale: true,
       }
     )
+
+  const [state, setState] = useState({
+    isDeleting: {} as Record<string, boolean>,
+    isArchiving: {} as Record<string, boolean>,
+    isRestoring: {} as Record<string, boolean>,
+    isReleasing: {} as Record<string, boolean>,
+  })
+
+  const setDeleting = useCallback((id: Uint8Array, isDeleting: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      isDeleting: {
+        ...prev.isDeleting,
+        [Xid.fromValue(id).toString()]: isDeleting,
+      },
+    }))
+  }, [])
+  const setArchiving = useCallback((id: Uint8Array, isArchiving: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      isArchiving: {
+        ...prev.isArchiving,
+        [Xid.fromValue(id).toString()]: isArchiving,
+      },
+    }))
+  }, [])
+  const setRestoring = useCallback((id: Uint8Array, isRestoring: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      isRestoring: {
+        ...prev.isRestoring,
+        [Xid.fromValue(id).toString()]: isRestoring,
+      },
+    }))
+  }, [])
+  const setReleasing = useCallback((id: Uint8Array, isReleasing: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      isReleasing: {
+        ...prev.isReleasing,
+        [Xid.fromValue(id).toString()]: isReleasing,
+      },
+    }))
+  }, [])
+
+  const isDeleting = useCallback(
+    (item: Pick<CreationOutput, 'id'>) => {
+      return state.isDeleting[Xid.fromValue(item.id).toString()] ?? false
+    },
+    [state.isDeleting]
+  )
+  const isArchiving = useCallback(
+    (item: Pick<CreationOutput, 'id'>) => {
+      return state.isArchiving[Xid.fromValue(item.id).toString()] ?? false
+    },
+    [state.isArchiving]
+  )
+  const isRestoring = useCallback(
+    (item: Pick<CreationOutput, 'id'>) => {
+      return state.isRestoring[Xid.fromValue(item.id).toString()] ?? false
+    },
+    [state.isRestoring]
+  )
+  const isReleasing = useCallback(
+    (item: Pick<CreationOutput, 'id'>) => {
+      return state.isReleasing[Xid.fromValue(item.id).toString()] ?? false
+    },
+    [state.isReleasing]
+  )
 
   const items = useMemo(() => {
     if (!data) return []
@@ -226,12 +314,134 @@ export function useCreationList(
     setSize((size) => size + 1)
   }, [hasMore, isLoading, isValidating, setSize])
 
+  const releaseItem = useCallback(
+    async (item: CreationOutput) => {
+      try {
+        setReleasing(item.id, true)
+        const body: CreatePublicationInput = {
+          gid: item.gid,
+          cid: item.id,
+          language: item.language,
+          version: item.version,
+        }
+        await fetcher.post<{
+          result: CreationOutput
+        }>(`${path}/release`, body)
+        mutate()
+      } finally {
+        setReleasing(item.id, false)
+      }
+    },
+    [fetcher, mutate, setReleasing]
+  )
+
+  const archiveItem = useCallback(
+    async (item: Pick<CreationOutput, 'gid' | 'id' | 'updated_at'>) => {
+      try {
+        setArchiving(item.id, true)
+        const gid2 = Xid.fromValue(item.gid)
+        const id2 = Xid.fromValue(item.id)
+        const body: UpdateCreationStatusInput = {
+          gid: item.gid,
+          id: item.id,
+          updated_at: item.updated_at,
+          status: CreationStatus.Archived,
+        }
+        await fetcher.patch<{
+          result: CreationOutput
+        }>(`${path}/archive`, body)
+        mutate((prev) =>
+          prev?.map((page): typeof page => ({
+            ...page,
+            result: page.result.filter((item) => {
+              return !(
+                Xid.fromValue(item.gid).equals(gid2) &&
+                Xid.fromValue(item.id).equals(id2)
+              )
+            }),
+          }))
+        )
+      } finally {
+        setArchiving(item.id, false)
+      }
+    },
+    [fetcher, mutate, setArchiving]
+  )
+
+  const restoreItem = useCallback(
+    async (item: Pick<CreationOutput, 'gid' | 'id' | 'updated_at'>) => {
+      try {
+        setRestoring(item.id, true)
+        const gid2 = Xid.fromValue(item.gid)
+        const id2 = Xid.fromValue(item.id)
+        const body: UpdateCreationStatusInput = {
+          gid: item.gid,
+          id: item.id,
+          updated_at: item.updated_at,
+          status: CreationStatus.Draft,
+        }
+        await fetcher.patch<{
+          result: CreationOutput
+        }>(`${path}/redraft`, body)
+        mutate((prev) =>
+          prev?.map((page): typeof page => ({
+            ...page,
+            result: page.result.filter((item) => {
+              return !(
+                Xid.fromValue(item.gid).equals(gid2) &&
+                Xid.fromValue(item.id).equals(id2)
+              )
+            }),
+          }))
+        )
+      } finally {
+        setRestoring(item.id, false)
+      }
+    },
+    [fetcher, mutate, setRestoring]
+  )
+
+  const deleteItem = useCallback(
+    async (item: Pick<CreationOutput, 'gid' | 'id'>) => {
+      try {
+        setDeleting(item.id, true)
+        const gid2 = Xid.fromValue(item.gid)
+        const id2 = Xid.fromValue(item.id)
+        await fetcher.delete(path, {
+          gid: gid2.toString(),
+          id: id2.toString(),
+        })
+        mutate((prev) =>
+          prev?.map((page): typeof page => ({
+            ...page,
+            result: page.result.filter((item) => {
+              return !(
+                Xid.fromValue(item.gid).equals(gid2) &&
+                Xid.fromValue(item.id).equals(id2)
+              )
+            }),
+          }))
+        )
+      } finally {
+        setDeleting(item.id, false)
+      }
+    },
+    [fetcher, mutate, setDeleting]
+  )
+
   return {
     items,
     error,
     hasMore,
     isLoading: isLoading || isValidating,
-    mutate,
+    isDeleting,
+    isArchiving,
+    isRestoring,
+    isReleasing,
     loadMore,
+    releaseItem,
+    archiveItem,
+    restoreItem,
+    deleteItem,
   }
 }

@@ -1,7 +1,8 @@
 export { ChannelMessageHelper } from './ChannelMessage'
 export { RGBA } from './RGBA'
+export { isArray } from './isArray'
 export { isWindow } from './isWindow'
-export { joinURL } from './joinURL'
+export { joinURL, joinURLPath } from './joinURL'
 export {
   LoggerProvider,
   LoggingLevel,
@@ -15,7 +16,7 @@ export {
 } from './toURLSearchParams'
 export { useChannel, useConnect } from './useChannel'
 export { useCheckWindowClosed } from './useCheckWindowClosed'
-export { useClick } from './useClick'
+export { mergeClickProps, useClick } from './useClick'
 export { useClickOutside } from './useClickOutside'
 export { useControlled } from './useControlled'
 export { useHover } from './useHover'

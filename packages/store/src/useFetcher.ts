@@ -1,8 +1,4 @@
-import {
-  joinURL,
-  toURLSearchParams,
-  type URLSearchParamsInit,
-} from '@yiwen-ai/util'
+import { joinURL, joinURLPath, type URLSearchParamsInit } from '@yiwen-ai/util'
 import { compact } from 'lodash-es'
 import { createContext, useContext, useMemo } from 'react'
 import { decode, encode } from './CBOR'
@@ -59,9 +55,8 @@ export function createRequest(defaultOptions: RequestOptions) {
   }
   request.defaultOptions = Object.freeze(defaultOptions)
   request.get = <T>(url: string, query?: URLSearchParamsInit) => {
-    return request<T>(url, {
+    return request<T>(joinURLPath(url, query), {
       method: 'GET',
-      body: query ? toURLSearchParams(query) : null,
     })
   }
   request.post = <T>(url: string, body?: object) => {
@@ -85,10 +80,14 @@ export function createRequest(defaultOptions: RequestOptions) {
       headers: { 'Content-Type': CBOR_MIME_TYPE },
     })
   }
-  request.delete = <T>(url: string, query?: URLSearchParamsInit) => {
-    return request<T>(url, {
+  request.delete = <T>(
+    url: string,
+    query?: URLSearchParamsInit,
+    body?: object
+  ) => {
+    return request<T>(joinURLPath(url, query), {
       method: 'DELETE',
-      body: query ? toURLSearchParams(query) : null,
+      body: body ? encode(body) : null,
     })
   }
   return request

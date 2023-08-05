@@ -3,13 +3,21 @@ import useSWRInfinite, { type SWRInfiniteKeyLoader } from 'swr/infinite'
 import { type GIDPagination } from './common'
 import { type useFetcher } from './useFetcher'
 
+export enum PublicationStatus {
+  Deleted = -2,
+  Archived = -1,
+  Review = 0,
+  Approved = 1,
+  Published = 2,
+}
+
 export interface PublicationOutput {
   gid: Uint8Array
   cid: Uint8Array
   language: string
   version: number
   rating?: number
-  status?: number
+  status?: PublicationStatus
   creator?: Uint8Array
   created_at?: number
   updated_at?: number
@@ -23,6 +31,16 @@ export interface PublicationOutput {
   summary?: string
   content?: Uint8Array
   license?: string
+}
+
+export interface CreatePublicationInput {
+  gid: Uint8Array
+  cid: Uint8Array
+  language: string
+  version: number
+  model?: string
+  to_gid?: Uint8Array
+  to_language?: string
 }
 
 const path = '/v1/publication'
