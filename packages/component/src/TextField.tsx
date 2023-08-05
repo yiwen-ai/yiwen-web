@@ -1,5 +1,4 @@
 import { css, useTheme, type CSSObject } from '@emotion/react'
-import type React from 'react'
 import {
   forwardRef,
   memo,
@@ -88,7 +87,7 @@ export const TextField = memo(
       <label
         htmlFor={id}
         className={className}
-        role={onSearch ? 'search' : 'presentation'}
+        role={onSearch ? 'search' : undefined}
         css={css`
           ${sizeCSS}
           display: inline-flex;

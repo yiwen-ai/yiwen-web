@@ -1,7 +1,6 @@
 import { withThemeFromJSXProvider } from '@storybook/addon-styling'
 import { Decorator, type Preview } from '@storybook/react'
 import { createElement } from 'react'
-import { withRouter } from 'storybook-addon-react-router-v6'
 import {
   DEFAULT_LOCALE,
   GlobalStyles,
@@ -19,7 +18,6 @@ const preview: Preview = {
     actions: { argTypesRegex: '^on[A-Z].*' },
   },
   decorators: [
-    withRouter,
     withThemeFromJSXProvider({
       themes: { light: lightTheme, dark: darkTheme },
       defaultTheme: 'light',

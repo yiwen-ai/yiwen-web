@@ -230,8 +230,7 @@ export function useCreationList(
     items,
     error,
     hasMore,
-    isLoading,
-    isValidating,
+    isLoading: isLoading || isValidating,
     mutate,
     loadMore,
   }

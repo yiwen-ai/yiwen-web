@@ -15,6 +15,7 @@ export {
 } from './toURLSearchParams'
 export { useChannel, useConnect } from './useChannel'
 export { useCheckWindowClosed } from './useCheckWindowClosed'
+export { useClick } from './useClick'
 export { useClickOutside } from './useClickOutside'
 export { useControlled } from './useControlled'
 export { useHover } from './useHover'

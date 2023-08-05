@@ -11,7 +11,7 @@ import svgr from '@svgr/rollup'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  plugins: [svgr()],
+  plugins: [svgr({ ref: true })],
 })
 ```
 

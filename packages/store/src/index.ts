@@ -21,4 +21,5 @@ export {
   type FetcherConfig,
 } from './useFetcher'
 export { useMyDefaultGroup, useMyGroupList, type Group } from './useGroup'
+export { usePublicationList, type PublicationOutput } from './usePublication'
 export { UserStatus, useUser, type ColorScheme, type User } from './useUser'

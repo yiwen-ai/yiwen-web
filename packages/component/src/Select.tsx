@@ -4,6 +4,7 @@ import {
   forwardRef,
   memo,
   useCallback,
+  useId,
   useMemo,
   type HTMLAttributes,
 } from 'react'
@@ -48,15 +49,20 @@ export const Select = memo(
       [options, value]
     )
     const [ref, setRef] = useRefCallback(forwardedRef)
+    const id = useId()
 
     return (
       <Popover
         anchor={(props) => (
           <TextField
-            {...props}
+            role='combobox'
+            aria-controls={id}
+            aria-expanded={ref?.open}
+            aria-haspopup='listbox'
             placeholder={placeholder}
             value={option?.label ?? ''}
             readOnly={true}
+            {...props}
             css={css`
               cursor: pointer;
             `}
@@ -72,16 +78,16 @@ export const Select = memo(
           background: ${theme.color.menu.background};
         `}
       >
-        <ul role='listbox' {...selectProps}>
+        <ul role='listbox' id={id} {...selectProps}>
           {options?.length
             ? options.map(({ onSelect, ...option }, index) => (
                 <SelectOption
                   key={index}
                   selected={value === option.value}
                   onSelect={(value, ev) => {
-                    onSelect?.(value as T, ev)
+                    onSelect?.(value, ev)
                     if (!ev.isPropagationStopped()) {
-                      onChange(value as T)
+                      onChange(value)
                       ref?.close()
                     }
                   }}

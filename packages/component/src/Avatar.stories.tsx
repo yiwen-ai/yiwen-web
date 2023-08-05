@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import logo from '../../web/public/logo.svg'
 import { Avatar } from './Avatar'
-import { LOGO_URL } from './Logo'
 
 const meta: Meta<typeof Avatar> = {
   component: Avatar,
@@ -19,7 +19,7 @@ type Story = StoryObj<typeof Avatar>
 export const Medium: Story = {
   name: 'Medium (36x36, default)',
   args: {
-    src: LOGO_URL,
+    src: logo,
     size: 'medium',
     alt: 'Logo',
   },
@@ -28,7 +28,7 @@ export const Medium: Story = {
 export const MediumWithName: Story = {
   name: 'Medium (36x36, with name)',
   args: {
-    src: LOGO_URL,
+    src: logo,
     size: 'medium',
     name: 'Logo',
   },

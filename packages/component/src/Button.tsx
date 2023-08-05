@@ -4,12 +4,15 @@ import { forwardRef, memo, useMemo, type ButtonHTMLAttributes } from 'react'
 export type ButtonSize = 'small' | 'medium' | 'large'
 
 const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
-  small: () => ({
+  small: (theme) => ({
     minHeight: 24,
     paddingLeft: 16,
     paddingRight: 16,
     borderWidth: 1,
     borderRadius: 10,
+    fontSize: theme.typography.tooltip.fontSize,
+    fontWeight: theme.typography.tooltip.fontWeight,
+    lineHeight: theme.typography.tooltip.lineHeight,
   }),
   medium: () => ({
     minHeight: 32,
