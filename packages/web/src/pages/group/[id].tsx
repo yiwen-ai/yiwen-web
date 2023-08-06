@@ -35,7 +35,12 @@ import {
 import { type AnchorProps } from '@yiwen-ai/util'
 import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
-import { Link } from 'react-router-dom'
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
 enum TabKey {
@@ -48,7 +53,21 @@ export default function GroupDetail() {
   const toast = useToast()
   const group = useMyDefaultGroup()
   const fetcher = useFetcher()
-  const [tab, setTab] = useState(TabKey.Creation)
+  const [params] = useSearchParams()
+  const [tab, setTab] = useState(
+    () => (params.get('tab') as TabKey | null) ?? TabKey.Creation
+  )
+  const location = useLocation()
+  const navigate = useNavigate()
+  const updateTab = useCallback(
+    (tab: TabKey) => {
+      setTab(tab)
+      const search = new URLSearchParams(location.search)
+      search.set('tab', tab)
+      navigate({ ...location, search: search.toString() }, { replace: true })
+    },
+    [location, navigate]
+  )
 
   return (
     <>
@@ -90,7 +109,7 @@ export default function GroupDetail() {
           <GroupPart toast={toast} group={group} />
           <TabSection
             value={tab}
-            onChange={setTab}
+            onChange={updateTab}
             css={css`
               max-width: 800px;
               margin: 0 auto;
