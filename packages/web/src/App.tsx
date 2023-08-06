@@ -10,7 +10,8 @@ import {
 } from '@yiwen-ai/component'
 import {
   FetcherConfigProvider,
-  useUser,
+  UserProvider,
+  useUserAPI,
   type FetcherConfig,
 } from '@yiwen-ai/store'
 import {
@@ -28,7 +29,11 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { ErrorBoundary, type FallbackProps } from 'react-error-boundary'
+import {
+  ErrorBoundary,
+  type ErrorBoundaryProps,
+  type FallbackProps,
+} from 'react-error-boundary'
 import {
   IntlProvider,
   MissingTranslationError,
@@ -68,8 +73,8 @@ function Fallback(props: FallbackProps) {
 function Layout() {
   const logger = useLogger()
 
-  const onError = useCallback(
-    (error: Error, { componentStack }: { componentStack: string }) => {
+  const onError = useCallback<NonNullable<ErrorBoundaryProps['onError']>>(
+    (error, { componentStack }) => {
       logger.fatal('component error', { error, stack: componentStack })
     },
     [logger]
@@ -191,13 +196,15 @@ export default function App() {
     <FetcherConfigProvider value={fetcherConfig}>
       <LoggerProvider handler={loggingHandler}>
         <SWRConfig value={swrConfig}>
-          <UserLocaleProvider>
-            <UserThemeProvider>
-              <GlobalStyles />
-              <RouterProvider router={router} />
-              <LoggingUnhandledError />
-            </UserThemeProvider>
-          </UserLocaleProvider>
+          <UserProvider>
+            <UserLocaleProvider>
+              <UserThemeProvider>
+                <GlobalStyles />
+                <RouterProvider router={router} />
+                <LoggingUnhandledError />
+              </UserThemeProvider>
+            </UserLocaleProvider>
+          </UserProvider>
         </SWRConfig>
       </LoggerProvider>
     </FetcherConfigProvider>
@@ -205,7 +212,7 @@ export default function App() {
 }
 
 function UserLocaleProvider(props: React.PropsWithChildren) {
-  const { user } = useUser()
+  const user = useUserAPI()?.user
   const locale = user?.locale || window.navigator.language
   // TODO: load messages based on locale
   const [messages] = useState({})

@@ -1,6 +1,6 @@
 import { type JSONContent } from '@tiptap/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import useSWRInfinite, { type SWRInfiniteKeyLoader } from 'swr/infinite'
+import useSWRInfinite from 'swr/infinite'
 import { type SetNonNullable } from 'type-fest'
 import { Xid } from 'xid-ts'
 import { encode } from './CBOR'
@@ -144,12 +144,7 @@ export function useAddCreation() {
       gid,
       title: '',
       content: undefined,
-      description: 'description...',
-      summary: 'summary - wiwi',
       language: 'eng',
-      original_url: 'https://www.yiwen.ltd/',
-      cover: 'https://placehold.co/600x400',
-      license: 'https://www.yiwen.ltd/',
     }),
     [gid]
   )
@@ -200,36 +195,41 @@ export function useAddCreation() {
   } as const
 }
 
-export function useCreationList(
-  { status, ...query }: GIDPagination,
-  fetcher: NonNullable<ReturnType<typeof useFetcher>>
-) {
-  const getKey: SWRInfiniteKeyLoader<Page<CreationOutput>> = (
-    pageIndex,
-    previousPageData
-  ) => {
-    if (previousPageData && !previousPageData.next_page_token) return null
+export function useCreationList({ status, ...query }: GIDPagination) {
+  const request = useFetcher()
 
-    return [
-      status === CreationStatus.Archived
-        ? `${path}/list_archived`
-        : `${path}/list`,
-      {
-        ...query,
-        page_token: previousPageData?.next_page_token,
-      },
-    ]
-  }
+  const getKey = useCallback(
+    (
+      index: number,
+      previousPageData: Page<CreationOutput> | null
+    ): [string, GIDPagination] | null => {
+      if (previousPageData && !previousPageData.next_page_token) return null
 
-  const { data, error, isLoading, isValidating, mutate, setSize } =
-    useSWRInfinite<Page<CreationOutput>>(
+      return [
+        status === CreationStatus.Archived
+          ? `${path}/list_archived`
+          : `${path}/list`,
+        {
+          ...query,
+          page_token: previousPageData?.next_page_token,
+        },
+      ]
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(query), status]
+  )
+
+  const { data, error, mutate, isValidating, isLoading, setSize } =
+    useSWRInfinite(
       getKey,
-      ([url, query]: [string, GIDPagination]) => fetcher.post(url, query),
+      ([url, body]) => request.post<Page<CreationOutput>>(url, body),
       {
         revalidateIfStale: true,
+        revalidateOnMount: false,
       }
     )
 
+  //#region processing state
   const [state, setState] = useState({
     isDeleting: {} as Record<string, boolean>,
     isArchiving: {} as Record<string, boolean>,
@@ -298,7 +298,9 @@ export function useCreationList(
     },
     [state.isReleasing]
   )
+  //#endregion
 
+  //#region loading state
   const items = useMemo(() => {
     if (!data) return []
     return data.flatMap((page) => page.result)
@@ -310,10 +312,15 @@ export function useCreationList(
   }, [data])
 
   const loadMore = useCallback(() => {
-    if (isLoading || isValidating || !hasMore) return
-    setSize((size) => size + 1)
-  }, [hasMore, isLoading, isValidating, setSize])
+    if (isValidating || isLoading || !hasMore) return
+    if (items.length === 0) mutate()
+    else setSize((size) => size + 1)
+  }, [hasMore, isLoading, isValidating, items.length, mutate, setSize])
 
+  const refresh = useCallback(() => mutate(), [mutate])
+  //#endregion
+
+  //#region actions
   const releaseItem = useCallback(
     async (item: CreationOutput) => {
       try {
@@ -324,7 +331,7 @@ export function useCreationList(
           language: item.language,
           version: item.version,
         }
-        await fetcher.post<{
+        await request.post<{
           result: CreationOutput
         }>(`${path}/release`, body)
         mutate()
@@ -332,7 +339,7 @@ export function useCreationList(
         setReleasing(item.id, false)
       }
     },
-    [fetcher, mutate, setReleasing]
+    [request, mutate, setReleasing]
   )
 
   const archiveItem = useCallback(
@@ -347,7 +354,7 @@ export function useCreationList(
           updated_at: item.updated_at,
           status: CreationStatus.Archived,
         }
-        await fetcher.patch<{
+        await request.patch<{
           result: CreationOutput
         }>(`${path}/archive`, body)
         mutate((prev) =>
@@ -365,7 +372,7 @@ export function useCreationList(
         setArchiving(item.id, false)
       }
     },
-    [fetcher, mutate, setArchiving]
+    [request, mutate, setArchiving]
   )
 
   const restoreItem = useCallback(
@@ -380,7 +387,7 @@ export function useCreationList(
           updated_at: item.updated_at,
           status: CreationStatus.Draft,
         }
-        await fetcher.patch<{
+        await request.patch<{
           result: CreationOutput
         }>(`${path}/redraft`, body)
         mutate((prev) =>
@@ -398,7 +405,7 @@ export function useCreationList(
         setRestoring(item.id, false)
       }
     },
-    [fetcher, mutate, setRestoring]
+    [request, mutate, setRestoring]
   )
 
   const deleteItem = useCallback(
@@ -407,7 +414,7 @@ export function useCreationList(
         setDeleting(item.id, true)
         const gid2 = Xid.fromValue(item.gid)
         const id2 = Xid.fromValue(item.id)
-        await fetcher.delete(path, {
+        await request.delete(path, {
           gid: gid2.toString(),
           id: id2.toString(),
         })
@@ -426,19 +433,21 @@ export function useCreationList(
         setDeleting(item.id, false)
       }
     },
-    [fetcher, mutate, setDeleting]
+    [request, mutate, setDeleting]
   )
+  //#endregion
 
   return {
     items,
     error,
     hasMore,
-    isLoading: isLoading || isValidating,
+    isLoading: isValidating || isLoading,
     isDeleting,
     isArchiving,
     isRestoring,
     isReleasing,
     loadMore,
+    refresh,
     releaseItem,
     archiveItem,
     restoreItem,

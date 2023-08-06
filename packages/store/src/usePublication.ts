@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import useSWRInfinite, { type SWRInfiniteKeyLoader } from 'swr/infinite'
 import { type GIDPagination } from './common'
-import { type useFetcher } from './useFetcher'
+import { useFetcher } from './useFetcher'
 
 export enum PublicationStatus {
   Deleted = -2,
@@ -45,10 +45,8 @@ export interface CreatePublicationInput {
 
 const path = '/v1/publication'
 
-export function usePublicationList(
-  query: GIDPagination,
-  fetcher: NonNullable<ReturnType<typeof useFetcher>>
-) {
+export function usePublicationList(query: GIDPagination) {
+  const fetcher = useFetcher()
   const getKey: SWRInfiniteKeyLoader<{
     next_page_token: Uint8Array
     result: PublicationOutput[]

@@ -26,14 +26,13 @@ import {
   PublicationStatus,
   toMessage,
   useCreationList,
-  useFetcher,
   useMyDefaultGroup,
   usePublicationList,
   type CreationOutput,
   type Group,
 } from '@yiwen-ai/store'
 import { type AnchorProps } from '@yiwen-ai/util'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import {
   Link,
@@ -52,7 +51,6 @@ export default function GroupDetail() {
   const intl = useIntl()
   const toast = useToast()
   const group = useMyDefaultGroup()
-  const fetcher = useFetcher()
   const [params] = useSearchParams()
   const [tab, setTab] = useState(
     () => (params.get('tab') as TabKey | null) ?? TabKey.Creation
@@ -105,94 +103,121 @@ export default function GroupDetail() {
       {!group ? (
         <Loading />
       ) : (
-        <div>
-          <GroupPart toast={toast} group={group} />
-          <TabSection
-            value={tab}
-            onChange={updateTab}
-            css={css`
-              max-width: 800px;
-              margin: 0 auto;
-              padding: 0 24px 40px;
-            `}
-          >
-            <TabList
-              css={css`
-                padding: 16px 24px;
-              `}
-            >
-              <Tab value={TabKey.Publication}>
-                {intl.formatMessage({ defaultMessage: '发布' })}
-              </Tab>
-              <Tab value={TabKey.Creation}>
-                {intl.formatMessage({ defaultMessage: '原稿' })}
-              </Tab>
-              <div
-                css={css`
-                  margin-left: auto;
-                  display: flex;
-                  align-items: center;
-                `}
-              >
-                {(() => {
-                  const anchor = (props: AnchorProps) => (
-                    <Button color='secondary' variant='text' {...props}>
-                      {intl.formatMessage({
-                        defaultMessage: '已归档的文章',
-                      })}
-                    </Button>
-                  )
-                  switch (tab) {
-                    case TabKey.Publication:
-                      return (
-                        <MediumDialog
-                          anchor={anchor}
-                          title={intl.formatMessage({
-                            defaultMessage: '已归档的发布',
-                          })}
-                        >
-                          {fetcher && (
-                            <ArchivedPublicationPart
-                              toast={toast}
-                              group={group}
-                              fetcher={fetcher}
-                            />
-                          )}
-                        </MediumDialog>
-                      )
-                    case TabKey.Creation:
-                      return (
-                        <MediumDialog
-                          anchor={anchor}
-                          title={intl.formatMessage({
-                            defaultMessage: '已归档的原稿',
-                          })}
-                        >
-                          {fetcher && (
-                            <ArchivedCreationPart
-                              toast={toast}
-                              group={group}
-                              fetcher={fetcher}
-                            />
-                          )}
-                        </MediumDialog>
-                      )
-                  }
-                })()}
-              </div>
-            </TabList>
-            <TabPanel value={TabKey.Publication}>
-              {fetcher && <PublicationPart group={group} fetcher={fetcher} />}
-            </TabPanel>
-            <TabPanel value={TabKey.Creation}>
-              {fetcher && (
-                <CreationPart toast={toast} group={group} fetcher={fetcher} />
-              )}
-            </TabPanel>
-          </TabSection>
-        </div>
+        <WithGroup toast={toast} group={group} tab={tab} setTab={updateTab} />
       )}
     </>
+  )
+}
+
+function WithGroup({
+  toast,
+  group,
+  tab,
+  setTab,
+}: {
+  toast: ToastAPI
+  group: Group
+  tab: TabKey
+  setTab: (tab: TabKey) => void
+}) {
+  const intl = useIntl()
+  const creationList = useCreationList({ gid: group.id })
+  const archivedCreationList = useCreationList({
+    gid: group.id,
+    status: CreationStatus.Archived,
+  })
+  const { refresh: refreshCreationList } = creationList
+  const { refresh: refreshArchivedCreationList } = archivedCreationList
+  const onArchive = useCallback(
+    () => refreshArchivedCreationList(),
+    [refreshArchivedCreationList]
+  )
+  const onRestore = useCallback(
+    () => refreshCreationList(),
+    [refreshCreationList]
+  )
+
+  return (
+    <div>
+      <GroupPart toast={toast} group={group} />
+      <TabSection
+        value={tab}
+        onChange={setTab}
+        css={css`
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 0 24px 40px;
+        `}
+      >
+        <TabList
+          css={css`
+            padding: 16px 24px;
+          `}
+        >
+          <Tab value={TabKey.Publication}>
+            {intl.formatMessage({ defaultMessage: '发布' })}
+          </Tab>
+          <Tab value={TabKey.Creation}>
+            {intl.formatMessage({ defaultMessage: '原稿' })}
+          </Tab>
+          <div
+            css={css`
+              margin-left: auto;
+              display: flex;
+              align-items: center;
+            `}
+          >
+            {(() => {
+              const anchor = (props: AnchorProps) => (
+                <Button color='secondary' variant='text' {...props}>
+                  {intl.formatMessage({
+                    defaultMessage: '已归档的文章',
+                  })}
+                </Button>
+              )
+              switch (tab) {
+                case TabKey.Publication:
+                  return (
+                    <MediumDialog
+                      anchor={anchor}
+                      title={intl.formatMessage({
+                        defaultMessage: '已归档的发布',
+                      })}
+                    >
+                      <ArchivedPublicationPart toast={toast} group={group} />
+                    </MediumDialog>
+                  )
+                case TabKey.Creation:
+                  return (
+                    <MediumDialog
+                      anchor={anchor}
+                      title={intl.formatMessage({
+                        defaultMessage: '已归档的原稿',
+                      })}
+                    >
+                      <ArchivedCreationPart
+                        toast={toast}
+                        list={archivedCreationList}
+                        onRestore={onRestore}
+                      />
+                    </MediumDialog>
+                  )
+              }
+            })()}
+          </div>
+        </TabList>
+        <TabPanel value={TabKey.Publication}>
+          <PublicationPart group={group} />
+        </TabPanel>
+        <TabPanel value={TabKey.Creation}>
+          <CreationPart
+            toast={toast}
+            list={creationList}
+            onArchive={onArchive}
+          />
+        </TabPanel>
+      </TabSection>
+    </div>
   )
 }
 
@@ -317,17 +342,10 @@ function GroupPart({
   )
 }
 
-function PublicationPart({
-  group,
-  fetcher,
-}: {
-  group: Group
-  fetcher: NonNullable<ReturnType<typeof useFetcher>>
-}) {
-  const { items, isLoading, hasMore, loadMore } = usePublicationList(
-    { gid: group.id },
-    fetcher
-  )
+function PublicationPart({ group }: { group: Group }) {
+  const { items, isLoading, hasMore, loadMore } = usePublicationList({
+    gid: group.id,
+  })
 
   return (
     <div
@@ -352,21 +370,11 @@ function PublicationPart({
   )
 }
 
-function ArchivedPublicationPart({
-  group,
-  fetcher,
-}: {
-  toast: ToastAPI
-  group: Group
-  fetcher: NonNullable<ReturnType<typeof useFetcher>>
-}) {
-  const { items, isLoading, hasMore, loadMore } = usePublicationList(
-    {
-      gid: group.id,
-      status: PublicationStatus.Archived,
-    },
-    fetcher
-  )
+function ArchivedPublicationPart({ group }: { toast: ToastAPI; group: Group }) {
+  const { items, isLoading, hasMore, loadMore } = usePublicationList({
+    gid: group.id,
+    status: PublicationStatus.Archived,
+  })
 
   return (
     <div
@@ -401,12 +409,12 @@ function ArchivedPublicationPart({
 
 function CreationPart({
   toast: { push },
-  group,
-  fetcher,
+  list,
+  onArchive,
 }: {
   toast: ToastAPI
-  group: Group
-  fetcher: NonNullable<ReturnType<typeof useFetcher>>
+  list: ReturnType<typeof useCreationList>
+  onArchive: (item: CreationOutput) => void
 }) {
   const intl = useIntl()
   const {
@@ -418,7 +426,10 @@ function CreationPart({
     archiveItem,
     isReleasing,
     isArchiving,
-  } = useCreationList({ gid: group.id }, fetcher)
+  } = list
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => loadMore(), [])
 
   const onRelease = useCallback(
     async (item: CreationOutput) => {
@@ -443,7 +454,7 @@ function CreationPart({
     [intl, push, releaseItem]
   )
 
-  const onArchive = useCallback(
+  const handleArchive = useCallback(
     async (item: CreationOutput) => {
       try {
         await archiveItem(item)
@@ -455,6 +466,7 @@ function CreationPart({
             { title: item.title }
           ),
         })
+        onArchive(item)
       } catch (error) {
         push({
           type: 'warning',
@@ -463,7 +475,7 @@ function CreationPart({
         })
       }
     },
-    [archiveItem, intl, push]
+    [archiveItem, intl, onArchive, push]
   )
 
   return (
@@ -484,7 +496,7 @@ function CreationPart({
             isReleasing={isReleasing(item)}
             isArchiving={isArchiving(item)}
             onRelease={onRelease}
-            onArchive={onArchive}
+            onArchive={handleArchive}
           />
         ))
       )}
@@ -495,12 +507,12 @@ function CreationPart({
 
 function ArchivedCreationPart({
   toast: { push },
-  group,
-  fetcher,
+  list,
+  onRestore,
 }: {
   toast: ToastAPI
-  group: Group
-  fetcher: NonNullable<ReturnType<typeof useFetcher>>
+  list: ReturnType<typeof useCreationList>
+  onRestore: (item: CreationOutput) => void
 }) {
   const intl = useIntl()
   const {
@@ -512,12 +524,12 @@ function ArchivedCreationPart({
     deleteItem,
     isRestoring,
     isDeleting,
-  } = useCreationList(
-    { gid: group.id, status: CreationStatus.Archived },
-    fetcher
-  )
+  } = list
 
-  const onRestore = useCallback(
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => loadMore(), [])
+
+  const handleRestore = useCallback(
     async (item: CreationOutput) => {
       try {
         await restoreItem(item)
@@ -529,6 +541,7 @@ function ArchivedCreationPart({
             { title: item.title }
           ),
         })
+        onRestore(item)
       } catch (error) {
         push({
           type: 'warning',
@@ -537,7 +550,7 @@ function ArchivedCreationPart({
         })
       }
     },
-    [intl, push, restoreItem]
+    [intl, onRestore, push, restoreItem]
   )
 
   const onDelete = useCallback(
@@ -581,7 +594,7 @@ function ArchivedCreationPart({
             item={item}
             isRestoring={isRestoring(item)}
             isDeleting={isDeleting(item)}
-            onRestore={onRestore}
+            onRestore={handleRestore}
             onDelete={onDelete}
           />
         ))
