@@ -75,6 +75,7 @@ export const Popover = memo(
                 border-radius: 12px;
                 border: 1px solid ${theme.color.popover.border};
                 background: ${theme.color.popover.background};
+                z-index: 1;
               `}
             />
           </Portal>

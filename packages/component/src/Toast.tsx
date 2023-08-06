@@ -72,6 +72,7 @@ export const ToastContainer = memo(function ToastContainer(
           align-items: center;
           gap: 24px;
           transform: translateX(-50%);
+          z-index: 1;
         `}
       />
     </Portal>

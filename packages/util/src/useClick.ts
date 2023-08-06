@@ -1,35 +1,48 @@
-import { useCallback, useRef, type DOMAttributes } from 'react'
+import { useMemo, useRef, type DOMAttributes, type SyntheticEvent } from 'react'
 
 export function useClick<
   P extends DOMAttributes<T>,
   T extends Element = P extends DOMAttributes<infer T> ? T : Element
->(props: P, handleClick?: (ev: React.SyntheticEvent<T>) => void): P {
-  const { onClick, onKeyUp } = props
+>(props: P, handleClick?: ((ev: SyntheticEvent<T>) => void) | undefined): P {
   const handleClickRef = useRef(handleClick)
   handleClickRef.current = handleClick
 
+  const { onClick, onKeyUp } = useMemo(() => {
+    return mergeClickProps(
+      { onClick: props.onClick, onKeyUp: props.onKeyUp } as P,
+      (ev) => handleClickRef.current?.(ev)
+    )
+  }, [props.onClick, props.onKeyUp])
+
   return {
     ...props,
-    onClick: useCallback(
-      (ev: React.MouseEvent<T>) => {
-        onClick?.(ev)
-        if (!ev.isPropagationStopped()) {
-          handleClickRef.current?.(ev)
-        }
-      },
-      [onClick]
-    ),
-    onKeyUp: useCallback(
-      (ev: React.KeyboardEvent<T>) => {
-        onKeyUp?.(ev)
-        if (
-          !ev.isPropagationStopped() &&
-          (ev.key === 'Enter' || ev.key === ' ')
-        ) {
-          handleClickRef.current?.(ev)
-        }
-      },
-      [onKeyUp]
-    ),
+    onClick,
+    onKeyUp,
+  }
+}
+
+export function mergeClickProps<
+  P extends DOMAttributes<T>,
+  T extends Element = P extends DOMAttributes<infer T> ? T : Element
+>(props: P, handleClick?: ((ev: SyntheticEvent<T>) => void) | undefined): P {
+  if (!handleClick) return props
+  const { onClick, onKeyUp } = props
+  return {
+    ...props,
+    onClick: (ev: React.MouseEvent<T>) => {
+      onClick?.(ev)
+      if (!ev.isPropagationStopped()) {
+        handleClick(ev)
+      }
+    },
+    onKeyUp: (ev: React.KeyboardEvent<T>) => {
+      onKeyUp?.(ev)
+      if (
+        !ev.isPropagationStopped() &&
+        (ev.key === 'Enter' || ev.key === ' ')
+      ) {
+        handleClick(ev)
+      }
+    },
   }
 }

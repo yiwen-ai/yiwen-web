@@ -134,20 +134,6 @@ export const SelectOption = memo(
       [onClick, onSelect, props.disabled, value]
     )
 
-    const handleKeyDown = useCallback(
-      (ev: React.KeyboardEvent<HTMLLIElement>) => {
-        onKeyDown?.(ev)
-        if (
-          !props.disabled &&
-          !ev.isPropagationStopped() &&
-          (ev.key === 'Enter' || ev.key === ' ')
-        ) {
-          onSelect?.(value, ev)
-        }
-      },
-      [onKeyDown, onSelect, props.disabled, value]
-    )
-
     if (props.hidden) return null
 
     return (
@@ -157,7 +143,6 @@ export const SelectOption = memo(
         data-selected={selected ? '' : undefined}
         label={label}
         onClick={handleClick}
-        onKeyDown={handleKeyDown}
         {...props}
         ref={ref}
         css={css`

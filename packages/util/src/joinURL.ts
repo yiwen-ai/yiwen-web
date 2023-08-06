@@ -24,3 +24,8 @@ export function joinURL(
   })
   return url.href
 }
+
+export function joinURLPath(path: string, params?: URLSearchParamsInit) {
+  const baseURL = 'http://localhost/'
+  return joinURL(baseURL, path, params).slice(baseURL.length)
+}

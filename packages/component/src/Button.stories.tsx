@@ -12,7 +12,7 @@ const meta: Meta<typeof Button> = {
     },
     variant: {
       control: { type: 'radio' },
-      options: ['contained', 'outlined'],
+      options: ['contained', 'outlined', 'text'],
     },
     shape: {
       control: { type: 'radio' },
@@ -48,6 +48,20 @@ export const Secondary: Story = {
     children: 'Button',
     size: 'medium',
     variant: 'outlined',
+    shape: 'rounded',
+    disabled: false,
+  },
+}
+
+export const TextButton: Story = {
+  render: (args) => <Button {...args} variant='text' />,
+  argTypes: {
+    variant: { control: { disable: true } },
+  },
+  args: {
+    children: 'Text Button',
+    size: 'medium',
+    color: 'primary',
     shape: 'rounded',
     disabled: false,
   },

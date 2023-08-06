@@ -18,11 +18,12 @@ export interface FloatingProps<T extends Element> {
 }
 
 export interface ModalProps {
+  bringFocusBack?: boolean | undefined
   defaultOpen?: boolean | undefined
   open?: boolean | undefined
-  onToggle?: (open: boolean) => void
-  onShow?: () => void
-  onClose?: () => void
+  onToggle?: ((open: boolean) => void) | undefined
+  onShow?: (() => void) | undefined
+  onClose?: (() => void) | undefined
 }
 
 export interface ModalRef {
@@ -36,6 +37,7 @@ export function useModal<
   P extends DOMAttributes<T>,
   T extends Element = P extends DOMAttributes<infer T> ? T : Element
 >({
+  bringFocusBack = true,
   defaultOpen = false,
   open: _open,
   onToggle: _onToggle,
@@ -56,17 +58,15 @@ export function useModal<
     if (openRef.current) return
     onToggle(true)
     onShow?.()
-  }, [onShow, onToggle])
+    bringFocusBack && tryFocus(anchorRef.current) // ensure focus is on anchor
+  }, [bringFocusBack, onShow, onToggle])
 
   const close = useCallback(() => {
     if (!openRef.current) return
     onToggle(false)
     onClose?.()
-    const anchorEl = anchorRef.current
-    if (anchorEl instanceof HTMLElement || anchorEl instanceof SVGElement) {
-      anchorEl.focus() // bring focus back to anchor
-    }
-  }, [onClose, onToggle])
+    bringFocusBack && tryFocus(anchorRef.current) // bring focus back to anchor
+  }, [bringFocusBack, onClose, onToggle])
 
   const toggle = useCallback(() => {
     openRef.current ? close() : show()
@@ -88,8 +88,8 @@ export function useModal<
   const handleClick = useCallback<AnchorProps['onClick']>(
     (ev) => {
       if (ev.isPropagationStopped()) return
-      toggle()
       anchorRef.current = ev.currentTarget
+      toggle()
     },
     [toggle]
   )
@@ -195,6 +195,12 @@ export function useModal<
   }
 }
 
+function tryFocus(el: Element | null) {
+  if (el instanceof HTMLElement || el instanceof SVGElement) {
+    el.focus()
+  }
+}
+
 function isSameEvent(a: Event, b: Event) {
   return (
     a.target === b.target &&
@@ -206,6 +212,7 @@ function isSameEvent(a: Event, b: Event) {
 
 export function pickModalProps<P extends ModalProps>(props: P) {
   const keys: (keyof ModalProps)[] = [
+    'bringFocusBack',
     'defaultOpen',
     'open',
     'onToggle',

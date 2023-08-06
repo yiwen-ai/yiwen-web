@@ -1,11 +1,18 @@
 import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
+import CompactCreationItem from '#/components/CompactCreationItem'
+import CompactPublicationItem from '#/components/CompactPublicationItem'
+import CreationItem from '#/components/CreationItem'
+import LoadMore from '#/components/LoadMore'
+import Loading from '#/components/Loading'
+import MediumDialog from '#/components/MediumDialog'
+import Placeholder from '#/components/Placeholder'
+import PublicationItem from '#/components/PublicationItem'
 import { css, useTheme } from '@emotion/react'
 import {
   Avatar,
   Button,
   Icon,
   Menu,
-  Spinner,
   Tab,
   TabList,
   TabPanel,
@@ -15,25 +22,33 @@ import {
   type ToastAPI,
 } from '@yiwen-ai/component'
 import {
+  CreationStatus,
+  PublicationStatus,
+  toMessage,
   useCreationList,
   useFetcher,
   useMyDefaultGroup,
   usePublicationList,
   type CreationOutput,
   type Group,
-  type PublicationOutput,
 } from '@yiwen-ai/store'
-import { type ModalRef } from '@yiwen-ai/util'
-import { useCallback, useMemo, useRef } from 'react'
+import { type AnchorProps } from '@yiwen-ai/util'
+import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { Link } from 'react-router-dom'
 import { Xid } from 'xid-ts'
+
+enum TabKey {
+  Publication = 'publication',
+  Creation = 'creation',
+}
 
 export default function GroupDetail() {
   const intl = useIntl()
   const toast = useToast()
   const group = useMyDefaultGroup()
   const fetcher = useFetcher()
+  const [tab, setTab] = useState(TabKey.Creation)
 
   return (
     <>
@@ -62,28 +77,20 @@ export default function GroupDetail() {
               margin-left: auto;
             `}
           >
-            <Button variant='outlined'>
+            <Button variant='text'>
               {intl.formatMessage({ defaultMessage: '创作内容' })}
             </Button>
           </Link>
         </div>
       </SetHeaderProps>
       {!group ? (
-        <div
-          css={css`
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          `}
-        >
-          <Spinner />
-        </div>
+        <Loading />
       ) : (
         <div>
           <GroupPart toast={toast} group={group} />
           <TabSection
-            defaultValue={TabKey.Creation}
+            value={tab}
+            onChange={setTab}
             css={css`
               max-width: 800px;
               margin: 0 auto;
@@ -101,12 +108,67 @@ export default function GroupDetail() {
               <Tab value={TabKey.Creation}>
                 {intl.formatMessage({ defaultMessage: '原稿' })}
               </Tab>
+              <div
+                css={css`
+                  margin-left: auto;
+                  display: flex;
+                  align-items: center;
+                `}
+              >
+                {(() => {
+                  const anchor = (props: AnchorProps) => (
+                    <Button color='secondary' variant='text' {...props}>
+                      {intl.formatMessage({
+                        defaultMessage: '已归档的文章',
+                      })}
+                    </Button>
+                  )
+                  switch (tab) {
+                    case TabKey.Publication:
+                      return (
+                        <MediumDialog
+                          anchor={anchor}
+                          title={intl.formatMessage({
+                            defaultMessage: '已归档的发布',
+                          })}
+                        >
+                          {fetcher && (
+                            <ArchivedPublicationPart
+                              toast={toast}
+                              group={group}
+                              fetcher={fetcher}
+                            />
+                          )}
+                        </MediumDialog>
+                      )
+                    case TabKey.Creation:
+                      return (
+                        <MediumDialog
+                          anchor={anchor}
+                          title={intl.formatMessage({
+                            defaultMessage: '已归档的原稿',
+                          })}
+                        >
+                          {fetcher && (
+                            <ArchivedCreationPart
+                              toast={toast}
+                              group={group}
+                              fetcher={fetcher}
+                            />
+                          )}
+                        </MediumDialog>
+                      )
+                  }
+                })()}
+              </div>
             </TabList>
             <TabPanel value={TabKey.Publication}>
               {fetcher && <PublicationPart group={group} fetcher={fetcher} />}
             </TabPanel>
             <TabPanel value={TabKey.Creation}>
-              {fetcher && <CreationPart group={group} fetcher={fetcher} />}
+              {fetcher && (
+                <CreationPart toast={toast} group={group} fetcher={fetcher} />
+              )}
             </TabPanel>
           </TabSection>
         </div>
@@ -127,7 +189,6 @@ function GroupPart({
   const logo = group.logo || group.owner?.picture
 
   //#region menu
-  const menuRef = useRef<ModalRef>(null)
   const handleDelete = useCallback(() => {
     // TODO
     push({
@@ -135,7 +196,6 @@ function GroupPart({
       message: intl.formatMessage({ defaultMessage: '删除' }),
       description: intl.formatMessage({ defaultMessage: '功能暂未实现' }),
     })
-    menuRef.current?.close()
   }, [intl, push])
   const handleSubscribe = useCallback(() => {
     // TODO
@@ -144,7 +204,6 @@ function GroupPart({
       message: intl.formatMessage({ defaultMessage: '订阅' }),
       description: intl.formatMessage({ defaultMessage: '功能暂未实现' }),
     })
-    menuRef.current?.close()
   }, [intl, push])
   const menuItems = useMemo<readonly MenuItemProps[]>(
     () => [
@@ -164,83 +223,79 @@ function GroupPart({
   return (
     <div
       css={css`
-        max-width: 1080px;
-        margin: 0 auto;
-        padding: 40px 24px;
         border-bottom: 1px solid ${theme.color.divider.primary};
       `}
     >
-      {group.slogan && (
-        <h2
-          css={css`
-            margin-bottom: 12px;
-            ${theme.typography.h3}
-          `}
-        >
-          {group.slogan}
-        </h2>
-      )}
       <div
         css={css`
-          display: flex;
-          align-items: center;
+          max-width: 1080px;
+          margin: 0 auto;
+          padding: 40px 24px 48px;
         `}
       >
-        {logo && (
-          <Avatar
-            src={logo}
-            alt={group.name}
+        {group.slogan && (
+          <h2
             css={css`
-              margin-right: 12px;
+              margin-bottom: 12px;
+              ${theme.typography.h3}
             `}
-          />
+          >
+            {group.slogan}
+          </h2>
         )}
-        <span
+        <div
           css={css`
-            color: ${theme.color.body.secondary};
+            display: flex;
+            align-items: center;
           `}
         >
-          {intl.formatMessage(
-            { defaultMessage: '{owner} · {count} 篇公开文章' },
-            { owner: group.owner?.name || group.name, count: 0 }
-          )}
-        </span>
-      </div>
-      <div
-        css={css`
-          margin-top: 24px;
-          display: flex;
-          align-items: center;
-          gap: 24px;
-        `}
-      >
-        <Button variant='outlined'>
-          {intl.formatMessage({ defaultMessage: '编辑简介' })}
-        </Button>
-        <Menu
-          ref={menuRef}
-          anchor={(props) => (
-            <div
-              {...props}
+          {logo && (
+            <Avatar
+              src={logo}
+              alt={group.name}
               css={css`
-                display: flex;
-                align-items: center;
-                cursor: pointer;
+                margin-right: 12px;
               `}
-            >
-              <Icon name='more' />
-            </div>
+            />
           )}
-          items={menuItems}
-        />
+          <span
+            css={css`
+              color: ${theme.color.body.secondary};
+            `}
+          >
+            {intl.formatMessage(
+              { defaultMessage: '{owner} · {count} 篇公开文章' },
+              { owner: group.owner?.name || group.name, count: 0 }
+            )}
+          </span>
+        </div>
+        <div
+          css={css`
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+          `}
+        >
+          <Button variant='outlined'>
+            {intl.formatMessage({ defaultMessage: '编辑简介' })}
+          </Button>
+          <Menu
+            anchor={(props) => (
+              <Icon
+                name='more'
+                {...props}
+                css={css`
+                  cursor: pointer;
+                `}
+              />
+            )}
+            items={menuItems}
+          />
+        </div>
       </div>
     </div>
   )
-}
-
-enum TabKey {
-  Publication = 'publication',
-  Creation = 'creation',
 }
 
 function PublicationPart({
@@ -250,8 +305,6 @@ function PublicationPart({
   group: Group
   fetcher: NonNullable<ReturnType<typeof useFetcher>>
 }) {
-  const intl = useIntl()
-  const theme = useTheme()
   const { items, isLoading, hasMore, loadMore } = usePublicationList(
     { gid: group.id },
     fetcher
@@ -266,18 +319,7 @@ function PublicationPart({
       `}
     >
       {!isLoading && items.length === 0 ? (
-        <div
-          css={css`
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            ${theme.typography.tooltip}
-            color: ${theme.color.body.secondary};
-          `}
-        >
-          {intl.formatMessage({ defaultMessage: '暂无数据，请稍后再试' })}
-        </div>
+        <Placeholder />
       ) : (
         items.map((item) => (
           <PublicationItem
@@ -286,93 +328,123 @@ function PublicationPart({
           />
         ))
       )}
-      <div
-        css={css`
-          height: 80px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          :empty {
-            display: none;
-          }
-        `}
-      >
-        {isLoading ? (
-          <Spinner />
-        ) : hasMore ? (
-          <Button variant='outlined' onClick={loadMore}>
-            {intl.formatMessage({ defaultMessage: '加载更多' })}
-          </Button>
-        ) : null}
-      </div>
+      <LoadMore isLoading={isLoading} hasMore={hasMore} loadMore={loadMore} />
     </div>
   )
 }
 
-export function PublicationItem(props: { item: PublicationOutput }) {
-  const intl = useIntl()
-  const theme = useTheme()
+function ArchivedPublicationPart({
+  group,
+  fetcher,
+}: {
+  toast: ToastAPI
+  group: Group
+  fetcher: NonNullable<ReturnType<typeof useFetcher>>
+}) {
+  const { items, isLoading, hasMore, loadMore } = usePublicationList(
+    {
+      gid: group.id,
+      status: PublicationStatus.Archived,
+    },
+    fetcher
+  )
 
   return (
     <div
       css={css`
-        padding: 32px 40px;
-        border: 1px solid ${theme.color.divider.primary};
-        border-radius: 12px;
+        padding: 0 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
       `}
     >
-      <div
-        css={css`
-          ${theme.typography.h3}
-        `}
-      >
-        {props.item.title}
-      </div>
-      {props.item.summary && (
-        <div
-          css={css`
-            margin-top: 12px;
-          `}
-        >
-          {props.item.summary}
-        </div>
+      {!isLoading && items.length === 0 ? (
+        <Placeholder />
+      ) : (
+        items.map((item) => (
+          <CompactPublicationItem
+            key={`${Xid.fromValue(item.cid).toString()}:${item.version}`}
+            item={item}
+          />
+        ))
       )}
-      <div
+      <LoadMore
+        isLoading={isLoading}
+        hasMore={hasMore}
+        loadMore={loadMore}
         css={css`
-          margin-top: 12px;
-          display: flex;
-          align-items: center;
-          gap: 24px;
+          margin-bottom: -24px;
         `}
-      >
-        <Button
-          color='primary'
-          variant='outlined'
-          size='small'
-          css={css`
-            gap: 8px;
-          `}
-        >
-          <Icon name='edit' size='small' />
-          <span>{intl.formatMessage({ defaultMessage: '编辑' })}</span>
-        </Button>
-      </div>
+      />
     </div>
   )
 }
 
 function CreationPart({
+  toast: { push },
   group,
   fetcher,
 }: {
+  toast: ToastAPI
   group: Group
   fetcher: NonNullable<ReturnType<typeof useFetcher>>
 }) {
   const intl = useIntl()
-  const theme = useTheme()
-  const { items, isLoading, hasMore, loadMore } = useCreationList(
-    { gid: group.id },
-    fetcher
+  const {
+    items,
+    isLoading,
+    hasMore,
+    loadMore,
+    releaseItem,
+    archiveItem,
+    isReleasing,
+    isArchiving,
+  } = useCreationList({ gid: group.id }, fetcher)
+
+  const onRelease = useCallback(
+    async (item: CreationOutput) => {
+      try {
+        await releaseItem(item)
+        push({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '发布成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已发布待审核：{title}' },
+            { title: item.title }
+          ),
+        })
+      } catch (error) {
+        push({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '发布失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [intl, push, releaseItem]
+  )
+
+  const onArchive = useCallback(
+    async (item: CreationOutput) => {
+      try {
+        await archiveItem(item)
+        push({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '归档成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已归档文章：{title}' },
+            { title: item.title }
+          ),
+        })
+      } catch (error) {
+        push({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '归档失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [archiveItem, intl, push]
   )
 
   return (
@@ -384,99 +456,125 @@ function CreationPart({
       `}
     >
       {!isLoading && items.length === 0 ? (
-        <div
-          css={css`
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            ${theme.typography.tooltip}
-            color: ${theme.color.body.secondary};
-          `}
-        >
-          {intl.formatMessage({ defaultMessage: '暂无数据，请稍后再试' })}
-        </div>
+        <Placeholder />
       ) : (
         items.map((item) => (
-          <CreationItem key={Xid.fromValue(item.id).toString()} item={item} />
+          <CreationItem
+            key={Xid.fromValue(item.id).toString()}
+            item={item}
+            isReleasing={isReleasing(item)}
+            isArchiving={isArchiving(item)}
+            onRelease={onRelease}
+            onArchive={onArchive}
+          />
         ))
       )}
-      <div
-        css={css`
-          height: 80px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          :empty {
-            display: none;
-          }
-        `}
-      >
-        {isLoading ? (
-          <Spinner />
-        ) : hasMore ? (
-          <Button variant='outlined' onClick={loadMore}>
-            {intl.formatMessage({ defaultMessage: '加载更多' })}
-          </Button>
-        ) : null}
-      </div>
+      <LoadMore isLoading={isLoading} hasMore={hasMore} loadMore={loadMore} />
     </div>
   )
 }
 
-export function CreationItem(props: { item: CreationOutput }) {
+function ArchivedCreationPart({
+  toast: { push },
+  group,
+  fetcher,
+}: {
+  toast: ToastAPI
+  group: Group
+  fetcher: NonNullable<ReturnType<typeof useFetcher>>
+}) {
   const intl = useIntl()
-  const theme = useTheme()
+  const {
+    items,
+    isLoading,
+    hasMore,
+    loadMore,
+    restoreItem,
+    deleteItem,
+    isRestoring,
+    isDeleting,
+  } = useCreationList(
+    { gid: group.id, status: CreationStatus.Archived },
+    fetcher
+  )
 
-  const handleEdit = useCallback(() => {
-    // TODO: edit creation
-  }, [])
+  const onRestore = useCallback(
+    async (item: CreationOutput) => {
+      try {
+        await restoreItem(item)
+        push({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '恢复成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已恢复文章：{title}' },
+            { title: item.title }
+          ),
+        })
+      } catch (error) {
+        push({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '恢复失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [intl, push, restoreItem]
+  )
+
+  const onDelete = useCallback(
+    async (item: CreationOutput) => {
+      try {
+        await deleteItem(item)
+        push({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '删除成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已删除文章：{title}' },
+            { title: item.title }
+          ),
+        })
+      } catch (error) {
+        push({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '删除失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [deleteItem, intl, push]
+  )
 
   return (
     <div
       css={css`
-        padding: 32px 40px;
-        border: 1px solid ${theme.color.divider.primary};
-        border-radius: 12px;
+        padding: 0 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
       `}
     >
-      <div
-        css={css`
-          ${theme.typography.h3}
-        `}
-      >
-        {props.item.title}
-      </div>
-      {props.item.summary && (
-        <div
-          css={css`
-            margin-top: 12px;
-          `}
-        >
-          {props.item.summary}
-        </div>
+      {!isLoading && items.length === 0 ? (
+        <Placeholder />
+      ) : (
+        items.map((item) => (
+          <CompactCreationItem
+            key={Xid.fromValue(item.id).toString()}
+            item={item}
+            isRestoring={isRestoring(item)}
+            isDeleting={isDeleting(item)}
+            onRestore={onRestore}
+            onDelete={onDelete}
+          />
+        ))
       )}
-      <div
+      <LoadMore
+        isLoading={isLoading}
+        hasMore={hasMore}
+        loadMore={loadMore}
         css={css`
-          margin-top: 12px;
-          display: flex;
-          align-items: center;
-          gap: 24px;
+          margin-bottom: -24px;
         `}
-      >
-        <Button
-          color='primary'
-          variant='outlined'
-          size='small'
-          onClick={handleEdit}
-          css={css`
-            gap: 8px;
-          `}
-        >
-          <Icon name='edit' size='small' />
-          <span>{intl.formatMessage({ defaultMessage: '编辑' })}</span>
-        </Button>
-      </div>
+      />
     </div>
   )
 }

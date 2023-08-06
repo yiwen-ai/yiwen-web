@@ -19,7 +19,7 @@ const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
     paddingLeft: 24,
     paddingRight: 24,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 16,
   }),
   large: () => ({
     minHeight: 48,
@@ -32,7 +32,7 @@ const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
 
 export type ButtonColor = 'primary' | 'secondary'
 
-export type ButtonVariant = 'contained' | 'outlined'
+export type ButtonVariant = 'contained' | 'outlined' | 'text'
 
 export type ButtonShape = 'square' | 'rounded' | 'circle'
 
@@ -59,6 +59,9 @@ export const Button = memo(
     const theme = useTheme()
     const sizeCSS = useMemo(() => {
       const css: CSSObject = { ...SizeDict[size](theme) }
+      if (variant === 'text') {
+        css.paddingLeft = css.paddingRight = 8
+      }
       if (shape === 'circle') {
         css.width = css.height = css.minHeight
         css.minHeight = undefined
@@ -71,7 +74,7 @@ export const Button = memo(
         css.borderRadius = 0
       }
       return css
-    }, [shape, size, theme])
+    }, [shape, size, theme, variant])
     const colorCSS = theme.color.button[color][variant]
 
     return (
@@ -82,6 +85,7 @@ export const Button = memo(
         css={css`
           display: inline-flex;
           align-items: center;
+          gap: 4px;
           ${sizeCSS}
           border-style: solid;
           border-color: ${colorCSS.border};
@@ -102,9 +106,7 @@ export const Button = memo(
             color: ${colorCSS.disabled.text};
           }
         `}
-      >
-        {props.children}
-      </button>
+      />
     )
   })
 )

@@ -73,10 +73,12 @@ declare module '@emotion/react' {
         primary: {
           contained: Button
           outlined: Button
+          text: Button
         }
         secondary: {
           contained: Button
           outlined: Button
+          text: Button
         }
         tile: ButtonColor & {
           hover: ButtonColor
@@ -220,6 +222,21 @@ export const lightTheme: Theme = {
             text: palette.primaryNormal,
           },
         },
+        text: {
+          border: 'transparent',
+          background: '',
+          text: palette.primaryNormal,
+          hover: {
+            border: 'transparent',
+            background: palette.grayLight1,
+            text: palette.primaryNormal,
+          },
+          disabled: {
+            border: 'transparent',
+            background: '',
+            text: palette.primaryNormal,
+          },
+        },
       },
       secondary: {
         contained: {
@@ -249,6 +266,21 @@ export const lightTheme: Theme = {
           disabled: {
             border: RGBA(palette.grayLight0, 0.5),
             background: RGBA(palette.grayLight1, 0.5),
+            text: palette.grayLight,
+          },
+        },
+        text: {
+          border: 'transparent',
+          background: '',
+          text: palette.grayLight,
+          hover: {
+            border: 'transparent',
+            background: palette.grayLight1,
+            text: palette.grayLight,
+          },
+          disabled: {
+            border: 'transparent',
+            background: '',
             text: palette.grayLight,
           },
         },
@@ -335,12 +367,12 @@ export const lightTheme: Theme = {
     },
     h2: {
       fontSize: '24px',
-      fontWeight: 600,
+      fontWeight: 400,
       lineHeight: '32px',
     },
     h3: {
       fontSize: '20px',
-      fontWeight: 600,
+      fontWeight: 400,
       lineHeight: '28px',
     },
     body: {
@@ -415,6 +447,21 @@ export const darkTheme: Theme = {
             text: palette.grayLight0,
           },
         },
+        text: {
+          border: 'transparent',
+          background: '',
+          text: palette.primaryNormal,
+          hover: {
+            border: 'transparent',
+            background: palette.grayNormal1,
+            text: palette.primaryNormal,
+          },
+          disabled: {
+            border: 'transparent',
+            background: '',
+            text: palette.primaryNormal,
+          },
+        },
       },
       secondary: {
         contained: {
@@ -444,6 +491,21 @@ export const darkTheme: Theme = {
           disabled: {
             border: RGBA(palette.grayLight, 0.5),
             background: RGBA(palette.grayNormal, 0.5),
+            text: palette.grayLight,
+          },
+        },
+        text: {
+          border: 'transparent',
+          background: '',
+          text: palette.grayLight,
+          hover: {
+            border: 'transparent',
+            background: palette.grayNormal1,
+            text: palette.grayLight,
+          },
+          disabled: {
+            border: 'transparent',
+            background: '',
             text: palette.grayLight,
           },
         },

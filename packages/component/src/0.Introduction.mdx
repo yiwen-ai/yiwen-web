@@ -1,6 +1,6 @@
 import { Meta } from '@storybook/blocks'
 
-<Meta title="Introduction" />
+<Meta title='Introduction' />
 
 # Yiwen AI component library
 
@@ -8,9 +8,21 @@ View the latest design in [Figma](https://www.figma.com/file/JXx2A1nhVCCDSSM3zGC
 
 Learn to write a story in the [Storybook](https://storybook.js.org/docs/react/writing-stories/introduction) docs.
 
-## Get started
+## Prerequisites
 
 ```typescript
+// vite.config.ts
+import svgr from '@svgr/rollup'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [svgr({ ref: true })],
+})
+```
+
+## Get started
+
+```tsx
 import {
   GlobalStyles,
   ThemeProvider,
@@ -40,7 +52,7 @@ function Layout() {
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<Layout />}>
-      <Route path="/" element={<Home />} />
+      <Route path='/' element={<Home />} />
     </Route>
   )
 )

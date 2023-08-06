@@ -96,30 +96,28 @@ function NestedMenu({
   level: number
   maxLevel: number
 }): JSX.Element {
-  const renderMenu = (label: string) =>
-    level < maxLevel ? (
-      <Menu
-        anchor={(props) => (
-          <MenuItem
-            {...props}
-            before={<Icon name='edit' size='small' />}
-            after={<Icon name='arrowcircleright' size='small' />}
-            label={label}
-            description='描述文字，描述文字，描述文字，描述文字，描述文字，描述文字'
-          />
-        )}
-        placement='right-start'
-      >
-        <NestedMenu level={level + 1} maxLevel={maxLevel} />
-      </Menu>
-    ) : (
-      <MenuItem label={label} />
-    )
-
   return (
     <>
       <MenuItem before={<Icon name='edit' size='small' />} label='添加为链接' />
-      {renderMenu('添加为书签')}
+      <MenuItem
+        before={<Icon name='edit' size='small' />}
+        label='添加为书签'
+        description='描述文字，描述文字，描述文字，描述文字，描述文字，描述文字'
+      >
+        {level < maxLevel ? (
+          <NestedMenu level={level + 1} maxLevel={maxLevel} />
+        ) : null}
+      </MenuItem>
+      <MenuItem
+        before={<Icon name='edit' size='small' />}
+        label='添加为书签'
+        description='描述文字，描述文字，描述文字，描述文字，描述文字，描述文字'
+        disabled={true}
+      >
+        {level < maxLevel ? (
+          <NestedMenu level={level + 1} maxLevel={maxLevel} />
+        ) : null}
+      </MenuItem>
       <MenuItem
         before={<Icon name='edit' size='small' />}
         label='添加为链接'
@@ -132,7 +130,15 @@ function NestedMenu({
         description='描述文字，描述文字，描述文字，描述文字，描述文字，描述文字'
         disabled={true}
       />
-      {renderMenu('添加为书签/书签/书签/书签/书签/书签')}
+      <MenuItem
+        before={<Icon name='edit' size='small' />}
+        label='添加为书签/书签/书签/书签/书签/书签'
+        description='描述文字，描述文字，描述文字，描述文字，描述文字，描述文字'
+      >
+        {level < maxLevel ? (
+          <NestedMenu level={level + 1} maxLevel={maxLevel} />
+        ) : null}
+      </MenuItem>
       <MenuItem label='添加为链接' />
       <MenuItem
         label='添加为书签'
