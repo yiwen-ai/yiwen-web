@@ -1,5 +1,5 @@
 import { css, useTheme } from '@emotion/react'
-import { useAuthorize, useUser, type IdentityProvider } from '@yiwen-ai/store'
+import { useUserAPI, type IdentityProvider } from '@yiwen-ai/store'
 import { memo, useCallback } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { Icon, type IconName } from '.'
@@ -17,8 +17,13 @@ import { Spinner } from './Spinner'
 export const AccountManager = memo(function AccountManager() {
   const intl = useIntl()
   const theme = useTheme()
-  const { user, isLoading } = useUser()
-  const { authorize, isAuthorizing, provider: currentProvider } = useAuthorize()
+  const {
+    isLoading,
+    user,
+    authorize,
+    isAuthorizing = false,
+    provider: currentProvider,
+  } = useUserAPI() ?? {}
 
   return isLoading ? (
     <Spinner />
@@ -133,12 +138,12 @@ function ProviderItem({
   providerName: string
   isAuthorizing: boolean
   currentProvider: IdentityProvider | undefined
-  onAuthorize: (provider: IdentityProvider) => void
+  onAuthorize: ((provider: IdentityProvider) => void) | undefined
 }) {
   const intl = useIntl()
   const theme = useTheme()
   const onClick = useCallback(
-    () => onAuthorize(provider),
+    () => onAuthorize?.(provider),
     [onAuthorize, provider]
   )
 

@@ -3,7 +3,7 @@ import { type PublicationStatus } from './usePublication'
 
 export interface GIDPagination {
   gid: Uint8Array
-  page_token?: Uint8Array
+  page_token?: Uint8Array | null | undefined
   page_size?: number
   status?: CreationStatus | PublicationStatus
   fields?: string[]

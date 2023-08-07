@@ -31,7 +31,9 @@ export const Logo = memo(
         css={css`
           width: ${width}px;
           height: ${width}px;
-          color: ${theme.palette.primaryNormal};
+          color: ${theme.name === 'dark'
+            ? theme.palette.grayLight1
+            : theme.palette.primaryNormal};
           fill: currentColor;
           user-select: none;
         `}

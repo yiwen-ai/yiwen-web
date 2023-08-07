@@ -16,7 +16,7 @@ export interface AccessToken {
  */
 export function useAccessToken() {
   const [refreshInterval, setRefreshInterval] = useState(1 * 60 * 60) // 1 小时 (3600s)
-  const { data, mutate } = useSWR<AccessToken>(
+  const { data, mutate, isLoading } = useSWR<AccessToken>(
     '/access_token',
     useAuthFetcher() ?? null,
     { refreshInterval: refreshInterval * 1000 }
@@ -27,6 +27,7 @@ export function useAccessToken() {
   )
   const refresh = useCallback(() => mutate(), [mutate])
   return {
+    isLoading,
     accessToken: data?.access_token,
     refresh,
   }

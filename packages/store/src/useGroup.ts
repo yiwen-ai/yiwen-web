@@ -27,7 +27,7 @@ export interface Group {
 export function useMyGroupList() {
   const fetcher = useFetcher()
   const { data, isLoading } = useSWR<{ result: Group[] }>(
-    fetcher && '/v1/group/list_my',
+    '/v1/group/list_my',
     fetcher?.post ?? null
   )
 
