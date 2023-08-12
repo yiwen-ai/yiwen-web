@@ -1,8 +1,15 @@
 import { css, useTheme } from '@emotion/react'
-import { Icon, Menu, MenuItem, Spinner } from '@yiwen-ai/component'
+import {
+  Icon,
+  Menu,
+  MenuItem,
+  Spinner,
+  textEllipsis,
+} from '@yiwen-ai/component'
 import { type CreationOutput } from '@yiwen-ai/store'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
+import { IconMoreAnchor } from './IconMoreAnchor'
 
 export default function CompactCreationItem({
   item,
@@ -38,19 +45,8 @@ export default function CompactCreationItem({
           gap: 24px;
         `}
       >
-        <div>{item.title}</div>
-        <Menu
-          bringFocusBack={false}
-          anchor={(props) => (
-            <Icon
-              name='more'
-              {...props}
-              css={css`
-                cursor: pointer;
-              `}
-            />
-          )}
-        >
+        <div css={textEllipsis}>{item.title}</div>
+        <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
           <MenuItem
             before={
               isRestoring ? (
@@ -73,6 +69,7 @@ export default function CompactCreationItem({
               )
             }
             label={intl.formatMessage({ defaultMessage: '彻底删除' })}
+            danger={true}
             disabled={disabled}
             onClick={handleDelete}
             closeOnClick={3000}

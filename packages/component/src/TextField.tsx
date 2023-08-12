@@ -63,7 +63,7 @@ export const TextField = memo(
     const handleKeyDown = useCallback(
       (ev: React.KeyboardEvent<HTMLInputElement>) => {
         onKeyDown?.(ev)
-        if (ev.isPropagationStopped()) return
+        if (ev.isDefaultPrevented()) return
         if (ev.key === 'Enter') {
           onSearch?.(ev.currentTarget.value, ev)
         } else if (ev.key === 'Escape') {

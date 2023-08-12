@@ -87,7 +87,7 @@ export function useModal<
 
   const handleClick = useCallback<AnchorProps['onClick']>(
     (ev) => {
-      if (ev.isPropagationStopped()) return
+      if (ev.isDefaultPrevented()) return
       anchorRef.current = ev.currentTarget
       toggle()
     },
@@ -101,7 +101,7 @@ export function useModal<
       if (
         openRef.current &&
         ev.key === 'Escape' &&
-        !(ev as React.KeyboardEvent).isPropagationStopped?.()
+        !(ev as React.KeyboardEvent).isDefaultPrevented?.()
       ) {
         ev.stopPropagation()
         close()

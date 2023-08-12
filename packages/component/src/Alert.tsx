@@ -67,6 +67,7 @@ export const Alert = memo(
                 ${theme.typography.tooltip}
                 color: ${theme.color.body.secondary};
                 white-space: pre-line;
+                word-break: break-all;
               `}
             >
               {description}

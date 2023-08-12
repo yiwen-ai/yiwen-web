@@ -9,24 +9,27 @@ import {
   TextField,
   useToast,
 } from '@yiwen-ai/component'
-import { toMessage, useAddCreation } from '@yiwen-ai/store'
+import { toMessage, useCreation } from '@yiwen-ai/store'
 import { useCallback, useRef } from 'react'
 import { useIntl } from 'react-intl'
-import { generatePath, useNavigate } from 'react-router-dom'
+import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
 import { Xid } from 'xid-ts'
-import { GroupDetailTabKey } from '../group/[id]'
+import { GroupDetailTabKey } from '../group/[gid]'
 
 const MAX_WIDTH = 800
 
-export default function NewCreation() {
+export default function EditCreation() {
   const intl = useIntl()
   const theme = useTheme()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
   const { push, render } = useToast()
   const editorRef = useRef<Editor>(null)
 
-  const { draft, updateDraft, isDisabled, isSaving, save, reset } =
-    useAddCreation()
+  const { draft, updateDraft, isDisabled, isSaving, save } = useCreation(
+    params.get('gid'),
+    params.get('id')
+  )
 
   const handleTitleUpdate = useCallback(
     (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +48,6 @@ export default function NewCreation() {
   const handleSave = useCallback(async () => {
     try {
       const { gid } = await save()
-      reset()
       editorRef.current?.commands.clearContent(true)
       push({
         type: 'success',
@@ -53,7 +55,7 @@ export default function NewCreation() {
       })
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
-          id: Xid.fromValue(gid).toString(),
+          gid: Xid.fromValue(gid).toString(),
         }),
         search: new URLSearchParams({
           tab: GroupDetailTabKey.Creation,
@@ -66,7 +68,7 @@ export default function NewCreation() {
         description: toMessage(error),
       })
     }
-  }, [intl, navigate, push, reset, save])
+  }, [intl, navigate, push, save])
 
   return (
     <>

@@ -17,6 +17,7 @@ import {
   from,
   type Subscription,
 } from 'rxjs'
+import { useSWRConfig } from 'swr'
 import { useLogger } from './logger'
 import {
   createRequest,
@@ -159,7 +160,7 @@ export function AuthProvider(
     [config, logger]
   )
   const [state, setState] = useState(useAuth())
-  const { isInitialized, refreshInterval } = state
+  const { isInitialized, accessToken, refreshInterval } = state
 
   const refresh = useCallback(
     async (authAPI: AuthAPI, signal: AbortSignal | null) => {
@@ -257,6 +258,13 @@ export function AuthProvider(
       subscriptionList.clear()
     }
   }, [authAPI, refresh])
+
+  //#region refresh all SWR cache when access token changed
+  const { mutate } = useSWRConfig()
+  useEffect(() => {
+    mutate(() => true)
+  }, [mutate, accessToken])
+  //#endregion
 
   return createElement(
     Context.Provider,

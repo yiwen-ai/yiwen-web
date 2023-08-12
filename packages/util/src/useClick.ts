@@ -31,16 +31,13 @@ export function mergeClickProps<
     ...props,
     onClick: (ev: React.MouseEvent<T>) => {
       onClick?.(ev)
-      if (!ev.isPropagationStopped()) {
+      if (!ev.isDefaultPrevented()) {
         handleClick(ev)
       }
     },
     onKeyUp: (ev: React.KeyboardEvent<T>) => {
       onKeyUp?.(ev)
-      if (
-        !ev.isPropagationStopped() &&
-        (ev.key === 'Enter' || ev.key === ' ')
-      ) {
+      if (!ev.isDefaultPrevented() && (ev.key === 'Enter' || ev.key === ' ')) {
         handleClick(ev)
       }
     },

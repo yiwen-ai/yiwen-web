@@ -52,5 +52,7 @@ export {
   type ToastAPI,
   type ToastProps,
 } from './Toast'
+// eslint-disable-next-line react-refresh/only-export-components
+export { textEllipsis } from './common'
 export { DEFAULT_LOCALE, LocaleProvider } from './locale' // eslint-disable-line react-refresh/only-export-components
 export { ThemeProvider, useTheme, useUserTheme } from './theme' // eslint-disable-line react-refresh/only-export-components

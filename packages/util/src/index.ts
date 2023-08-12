@@ -12,6 +12,7 @@ export {
   type LoggingHandler,
 } from './logging'
 export { resolveURL } from './resolveURL'
+export { stopPropagation } from './stopPropagation'
 export {
   toURLSearchParams,
   type URLSearchParamsInit,
