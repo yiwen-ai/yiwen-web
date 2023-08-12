@@ -1,8 +1,8 @@
 import { css, useTheme, type SerializedStyles } from '@emotion/react'
 import { Icon, Spinner, type IconName } from '@yiwen-ai/component'
+import { useIsMounted } from '@yiwen-ai/util'
 import { useCallback, useState, type HTMLAttributes } from 'react'
 import { useIntl } from 'react-intl'
-import { usePromise } from 'react-use'
 import useResizeObserver from 'use-resize-observer'
 
 enum Tab {
@@ -16,7 +16,7 @@ export default function RecommendedAndFavorited(
   const intl = useIntl()
   const { ref, width = 0 } = useResizeObserver<HTMLDivElement>()
   const [tab, setTab] = useState(Tab.Recommended)
-  const mounted = usePromise()
+  const isMounted = useIsMounted()
   const [isLoading, setIsLoading] = useState(false)
   const [recommendedItems, setRecommendedItems] = useState(() => [
     // TODO: integrate with API
@@ -62,12 +62,12 @@ export default function RecommendedAndFavorited(
   ])
   const onRefresh = useCallback(() => {
     setIsLoading(true)
-    mounted(new Promise((resolve) => setTimeout(resolve, 1000)))
-      .then(() => setRecommendedItems((prev) => prev.slice(0)))
-      .then(() => setFavoritedItems((prev) => prev.slice(0)))
+    new Promise((resolve) => setTimeout(resolve, 1000))
+      .then(() => isMounted() && setRecommendedItems((prev) => prev.slice(0)))
+      .then(() => isMounted() && setFavoritedItems((prev) => prev.slice(0)))
       .catch(() => undefined)
-      .finally(() => setIsLoading(false))
-  }, [mounted])
+      .finally(() => isMounted() && setIsLoading(false))
+  }, [isMounted])
 
   return (
     <div {...props} ref={ref}>

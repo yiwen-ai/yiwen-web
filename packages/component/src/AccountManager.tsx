@@ -1,6 +1,6 @@
 import { css, useTheme } from '@emotion/react'
-import { useUserAPI, type IdentityProvider } from '@yiwen-ai/store'
-import { memo, useCallback } from 'react'
+import { useAuth, type IdentityProvider } from '@yiwen-ai/store'
+import { memo, useCallback, useMemo } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { Icon, type IconName } from '.'
 import {
@@ -12,24 +12,40 @@ import {
 import { Avatar } from './Avatar'
 import { Brand } from './Brand'
 import { Button } from './Button'
+import { Menu, type MenuProps } from './Menu'
 import { Spinner } from './Spinner'
 
-export const AccountManager = memo(function AccountManager() {
+export const AccountManager = memo(function AccountManager({
+  items: _items,
+  ...props
+}: MenuProps) {
   const intl = useIntl()
   const theme = useTheme()
-  const {
-    isLoading,
-    user,
-    authorize,
-    isAuthorizing = false,
-    provider: currentProvider,
-  } = useUserAPI() ?? {}
+  const { user, authorize, authorizingProvider, logout } = useAuth()
+  const items = useMemo(() => {
+    return (_items || []).concat({
+      label: intl.formatMessage({ defaultMessage: '退出登录' }),
+      danger: true,
+      onClick: logout,
+    })
+  }, [_items, intl, logout])
 
-  return isLoading ? (
-    <Spinner />
-  ) : user ? (
-    // TODO: click to manage account
-    <Avatar src={user.picture} name={user.name} />
+  return user ? (
+    <Menu
+      anchor={(props) => (
+        <Avatar
+          src={user.picture}
+          name={user.name}
+          {...props}
+          css={css`
+            cursor: pointer;
+          `}
+        />
+      )}
+      placement='bottom-end'
+      items={items}
+      {...props}
+    />
   ) : (
     <AlertDialog
       anchor={(props) => (
@@ -57,24 +73,24 @@ export const AccountManager = memo(function AccountManager() {
           provider={'github'}
           providerLogo={'github'}
           providerName={intl.formatMessage({ defaultMessage: 'GitHub' })}
-          isAuthorizing={isAuthorizing}
-          currentProvider={currentProvider}
+          isAuthorizing={authorizingProvider === 'github'}
+          disabled={!!authorizingProvider}
           onAuthorize={authorize}
         />
         <ProviderItem
           provider={'google'}
           providerLogo={'google'}
           providerName={intl.formatMessage({ defaultMessage: 'Google' })}
-          isAuthorizing={isAuthorizing}
-          currentProvider={currentProvider}
+          isAuthorizing={authorizingProvider === 'google'}
+          disabled={!!authorizingProvider}
           onAuthorize={authorize}
         />
         <ProviderItem
           provider={'wechat'}
           providerLogo={'wechat'}
           providerName={intl.formatMessage({ defaultMessage: '微信' })}
-          isAuthorizing={isAuthorizing}
-          currentProvider={currentProvider}
+          isAuthorizing={authorizingProvider === 'wechat'}
+          disabled={!!authorizingProvider}
           onAuthorize={authorize}
         />
         <div
@@ -130,27 +146,27 @@ function ProviderItem({
   providerLogo,
   providerName,
   isAuthorizing,
-  currentProvider,
+  disabled,
   onAuthorize,
 }: {
   provider: IdentityProvider
   providerLogo: IconName
   providerName: string
   isAuthorizing: boolean
-  currentProvider: IdentityProvider | undefined
-  onAuthorize: ((provider: IdentityProvider) => void) | undefined
+  disabled: boolean
+  onAuthorize: (provider: IdentityProvider) => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
   const onClick = useCallback(
-    () => onAuthorize?.(provider),
+    () => onAuthorize(provider),
     [onAuthorize, provider]
   )
 
   return (
     <button
       onClick={onClick}
-      disabled={isAuthorizing}
+      disabled={disabled}
       css={css`
         height: 42px;
         display: flex;
@@ -161,6 +177,10 @@ function ProviderItem({
         background: ${theme.color.body.background};
         color: ${theme.color.body.primary};
         cursor: pointer;
+        :disabled {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
       `}
     >
       <div
@@ -173,16 +193,18 @@ function ProviderItem({
           justify-content: center;
         `}
       >
-        {currentProvider === provider ? (
+        {isAuthorizing ? (
           <Spinner size={16} />
         ) : (
           <Icon name={providerLogo} size={16} />
         )}
       </div>
-      {intl.formatMessage(
-        { defaultMessage: '使用 {provider} 登录' },
-        { provider: providerName }
-      )}
+      <span>
+        {intl.formatMessage(
+          { defaultMessage: '使用 {provider} 登录' },
+          { provider: providerName }
+        )}
+      </span>
     </button>
   )
 }

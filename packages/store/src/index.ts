@@ -1,6 +1,12 @@
+export {
+  AuthProvider,
+  UserStatus,
+  useAuth,
+  type ColorScheme,
+  type IdentityProvider,
+  type User,
+} from './AuthContext'
 export { decode, encode } from './CBOR'
-export { UserProvider, useUserAPI } from './UserContext'
-export { AuthenticationResult, type IdentityProvider } from './useAuthorize'
 export {
   CreationStatus,
   useAddCreation,
@@ -14,6 +20,7 @@ export {
 export {
   FetcherConfigProvider,
   RequestError,
+  RequestMethod,
   toMessage,
   type FetcherConfig,
 } from './useFetcher'
@@ -23,4 +30,3 @@ export {
   usePublicationList,
   type PublicationOutput,
 } from './usePublication'
-export { UserStatus, type ColorScheme, type User } from './useUser'
