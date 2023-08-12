@@ -23,10 +23,10 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ```shell
 pnpm install
-pnpm --filter web run build # build for production (.env.production applied)
-pnpm --filter web run build --mode testing # build for testing (.env.testing applied)
-pnpm --filter web run build --mode staging # build for staging (.env.staging applied)
-# then deploy the `packages/web/dist` directory
+pnpm --filter web run build --mode=testing --base=https://cdn.yiwen.pub/dev/assets # build for testing (.env.testing applied)
+pnpm --filter web run build --mode=staging --base=https://cdn.yiwen.pub/assets # build for staging (.env.staging applied)
+pnpm --filter web run build --mode=production --base=https://cdn.yiwen.pub/assets # build for production (.env.production applied)
+# then deploy all the files in the `packages/web/dist` directory
 ```
 
 ### Component Library
@@ -34,5 +34,5 @@ pnpm --filter web run build --mode staging # build for staging (.env.staging app
 ```shell
 pnpm install
 pnpm --filter component run build
-# then deploy the `packages/component/storybook-static` directory
+# then deploy all the files in the `packages/component/storybook-static` directory
 ```
