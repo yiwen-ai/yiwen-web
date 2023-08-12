@@ -42,7 +42,8 @@ import {
 } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
-enum TabKey {
+// eslint-disable-next-line react-refresh/only-export-components
+export enum GroupDetailTabKey {
   Publication = 'publication',
   Creation = 'creation',
 }
@@ -53,12 +54,13 @@ export default function GroupDetail() {
   const group = useMyDefaultGroup()
   const [params] = useSearchParams()
   const [tab, setTab] = useState(
-    () => (params.get('tab') as TabKey | null) ?? TabKey.Creation
+    (params.get('tab') as GroupDetailTabKey | null) ??
+      GroupDetailTabKey.Publication
   )
   const location = useLocation()
   const navigate = useNavigate()
   const updateTab = useCallback(
-    (tab: TabKey) => {
+    (tab: GroupDetailTabKey) => {
       setTab(tab)
       const search = new URLSearchParams(location.search)
       search.set('tab', tab)
@@ -117,8 +119,8 @@ function WithGroup({
 }: {
   toast: ToastAPI
   group: Group
-  tab: TabKey
-  setTab: (tab: TabKey) => void
+  tab: GroupDetailTabKey
+  setTab: (tab: GroupDetailTabKey) => void
 }) {
   const intl = useIntl()
   const creationList = useCreationList({ gid: group.id })
@@ -154,10 +156,10 @@ function WithGroup({
             padding: 16px 24px;
           `}
         >
-          <Tab value={TabKey.Publication}>
+          <Tab value={GroupDetailTabKey.Publication}>
             {intl.formatMessage({ defaultMessage: '发布' })}
           </Tab>
-          <Tab value={TabKey.Creation}>
+          <Tab value={GroupDetailTabKey.Creation}>
             {intl.formatMessage({ defaultMessage: '原稿' })}
           </Tab>
           <div
@@ -176,7 +178,7 @@ function WithGroup({
                 </Button>
               )
               switch (tab) {
-                case TabKey.Publication:
+                case GroupDetailTabKey.Publication:
                   return (
                     <MediumDialog
                       anchor={anchor}
@@ -187,7 +189,7 @@ function WithGroup({
                       <ArchivedPublicationPart toast={toast} group={group} />
                     </MediumDialog>
                   )
-                case TabKey.Creation:
+                case GroupDetailTabKey.Creation:
                   return (
                     <MediumDialog
                       anchor={anchor}
@@ -206,10 +208,10 @@ function WithGroup({
             })()}
           </div>
         </TabList>
-        <TabPanel value={TabKey.Publication}>
+        <TabPanel value={GroupDetailTabKey.Publication}>
           <PublicationPart group={group} />
         </TabPanel>
-        <TabPanel value={TabKey.Creation}>
+        <TabPanel value={GroupDetailTabKey.Creation}>
           <CreationPart
             toast={toast}
             list={creationList}

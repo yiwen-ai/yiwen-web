@@ -14,6 +14,7 @@ import { useCallback, useRef } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { Xid } from 'xid-ts'
+import { GroupDetailTabKey } from '../group/[id]'
 
 const MAX_WIDTH = 800
 
@@ -50,9 +51,14 @@ export default function NewCreation() {
         type: 'success',
         message: intl.formatMessage({ defaultMessage: '保存成功' }),
       })
-      navigate(
-        generatePath(GROUP_DETAIL_PATH, { id: Xid.fromValue(gid).toString() })
-      )
+      navigate({
+        pathname: generatePath(GROUP_DETAIL_PATH, {
+          id: Xid.fromValue(gid).toString(),
+        }),
+        search: new URLSearchParams({
+          tab: GroupDetailTabKey.Creation,
+        }).toString(),
+      })
     } catch (error) {
       push({
         type: 'warning',
