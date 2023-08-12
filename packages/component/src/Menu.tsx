@@ -142,7 +142,9 @@ export const MenuItem = memo(
               min-height: ${theme.typography.body.lineHeight};
               display: flex;
               align-items: center;
-              color: ${theme.palette.grayLight};
+              color: ${danger
+                ? theme.color.body.danger
+                : theme.color.body.secondary};
             `}
           >
             {before}
@@ -204,7 +206,7 @@ export const MenuItem = memo(
           ...props,
           onClick: (ev) => {
             onClick?.(ev)
-            if (!ev.isPropagationStopped()) {
+            if (!ev.isDefaultPrevented()) {
               if (closeOnClick === true) {
                 menuRef?.close()
               } else if (typeof closeOnClick === 'number') {

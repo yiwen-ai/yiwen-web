@@ -130,7 +130,7 @@ export const DialogClose = memo(function DialogClose({
   const handleClick = useCallback(
     (ev: React.MouseEvent<HTMLButtonElement>) => {
       onClick?.(ev)
-      !ev.isPropagationStopped() && dialog?.close()
+      !ev.isDefaultPrevented() && dialog?.close()
     },
     [dialog, onClick]
   )

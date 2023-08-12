@@ -57,10 +57,10 @@ import Loading from './components/Loading'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
-import NewCreation from './pages/creation/new'
-import GroupDetail from './pages/group/[id]'
+import EditCreation from './pages/creation/edit'
+import GroupDetail from './pages/group/[gid]'
 import LoginState from './pages/login/state'
-import PublicationDetail from './pages/publication/[id]'
+import PublicationShare from './pages/pub/[cid]'
 import Search from './pages/search'
 
 function Fallback(props: FallbackProps) {
@@ -104,7 +104,7 @@ function Layout() {
             if (!gid) return
             navigate(
               generatePath(GROUP_DETAIL_PATH, {
-                id: Xid.fromValue(gid).toString(),
+                gid: Xid.fromValue(gid).toString(),
               })
             )
           },
@@ -163,8 +163,11 @@ export function SetHeaderProps(props: HeaderProps) {
 
 export const SEARCH_PATH = '/search'
 export const NEW_CREATION_PATH = '/creation/new'
-export const PUBLICATION_DETAIL_PATH = '/publication/:id'
-export const GROUP_DETAIL_PATH = '/group/:id'
+export const CREATION_EDIT_PATH = '/creation/:cid'
+export const PUBLICATION_SHARE_PATH = '/pub/:cid'
+export const GROUP_DETAIL_PATH = '/group/:gid'
+export const PUBLICATION_DETAIL_PATH = '/group/:gid/publication/:cid'
+export const CREATION_DETAIL_PATH = '/group/:gid/creation/:cid'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -172,9 +175,12 @@ const router = createBrowserRouter(
       <Route path='*' element={<NotFound />} />
       <Route path='/' element={<Home />} />
       <Route path={SEARCH_PATH} element={<Search />} />
-      <Route path={NEW_CREATION_PATH} element={<NewCreation />} />
+      <Route path={NEW_CREATION_PATH} element={<EditCreation />} />
+      <Route path={CREATION_EDIT_PATH} element={<EditCreation />} />
+      <Route path={PUBLICATION_SHARE_PATH} element={<PublicationShare />} />
       <Route path={GROUP_DETAIL_PATH} element={<GroupDetail />} />
-      <Route path={PUBLICATION_DETAIL_PATH} element={<PublicationDetail />} />
+      <Route path={PUBLICATION_DETAIL_PATH} element={<GroupDetail />} />
+      <Route path={CREATION_DETAIL_PATH} element={<GroupDetail />} />
       <Route path='/login/state' element={<LoginState />} />
     </Route>
   ),

@@ -86,7 +86,7 @@ export const Select = memo(
                   selected={value === option.value}
                   onSelect={(value, ev) => {
                     onSelect?.(value, ev)
-                    if (!ev.isPropagationStopped()) {
+                    if (!ev.isDefaultPrevented()) {
                       onChange(value)
                       ref?.close()
                     }
@@ -127,7 +127,7 @@ export const SelectOption = memo(
     const handleClick = useCallback(
       (ev: React.MouseEvent<HTMLLIElement>) => {
         onClick?.(ev)
-        if (!props.disabled && !ev.isPropagationStopped()) {
+        if (!props.disabled && !ev.isDefaultPrevented()) {
           onSelect?.(value, ev)
         }
       },

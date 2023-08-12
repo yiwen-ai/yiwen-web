@@ -1,7 +1,13 @@
-import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
+import {
+  CREATION_DETAIL_PATH,
+  NEW_CREATION_PATH,
+  PUBLICATION_DETAIL_PATH,
+  SetHeaderProps,
+} from '#/App'
 import CompactCreationItem from '#/components/CompactCreationItem'
 import CompactPublicationItem from '#/components/CompactPublicationItem'
 import CreationItem from '#/components/CreationItem'
+import { IconMoreAnchor } from '#/components/IconMoreAnchor'
 import LoadMore from '#/components/LoadMore'
 import Loading from '#/components/Loading'
 import MediumDialog from '#/components/MediumDialog'
@@ -11,7 +17,6 @@ import { css, useTheme } from '@emotion/react'
 import {
   Avatar,
   Button,
-  Icon,
   Menu,
   Tab,
   TabList,
@@ -24,20 +29,24 @@ import {
 import {
   CreationStatus,
   PublicationStatus,
+  buildCreationKey,
+  buildPublicationKey,
   toMessage,
   useCreationList,
   useMyDefaultGroup,
   usePublicationList,
   type CreationOutput,
   type Group,
+  type PublicationOutput,
 } from '@yiwen-ai/store'
 import { type AnchorProps } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import {
   Link,
-  useLocation,
+  generatePath,
   useNavigate,
+  useParams,
   useSearchParams,
 } from 'react-router-dom'
 import { Xid } from 'xid-ts'
@@ -51,23 +60,27 @@ export enum GroupDetailTabKey {
 export default function GroupDetail() {
   const intl = useIntl()
   const toast = useToast()
-  const group = useMyDefaultGroup()
-  const [params] = useSearchParams()
+  const params = useParams<{ gid: string; cid?: string }>()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [tab, setTab] = useState(
-    (params.get('tab') as GroupDetailTabKey | null) ??
+    (searchParams.get('tab') as GroupDetailTabKey | null) ??
       GroupDetailTabKey.Publication
   )
-  const location = useLocation()
-  const navigate = useNavigate()
   const updateTab = useCallback(
     (tab: GroupDetailTabKey) => {
       setTab(tab)
-      const search = new URLSearchParams(location.search)
-      search.set('tab', tab)
-      navigate({ ...location, search: search.toString() }, { replace: true })
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          next.set('tab', tab)
+          return next
+        },
+        { replace: true }
+      )
     },
-    [location, navigate]
+    [setSearchParams]
   )
+  const group = useMyDefaultGroup() // TODO: get group by gid
 
   return (
     <>
@@ -91,7 +104,12 @@ export default function GroupDetail() {
             </span>
           )}
           <Link
-            to={NEW_CREATION_PATH}
+            to={{
+              pathname: NEW_CREATION_PATH,
+              search: params.gid
+                ? new URLSearchParams({ gid: params.gid }).toString()
+                : '',
+            }}
             css={css`
               margin-left: auto;
             `}
@@ -123,6 +141,8 @@ function WithGroup({
   setTab: (tab: GroupDetailTabKey) => void
 }) {
   const intl = useIntl()
+
+  //#region creation list
   const creationList = useCreationList({ gid: group.id })
   const archivedCreationList = useCreationList({
     gid: group.id,
@@ -130,14 +150,33 @@ function WithGroup({
   })
   const { refresh: refreshCreationList } = creationList
   const { refresh: refreshArchivedCreationList } = archivedCreationList
-  const onArchive = useCallback(
+  const onArchiveCreation = useCallback(
     () => refreshArchivedCreationList(),
     [refreshArchivedCreationList]
   )
-  const onRestore = useCallback(
+  const onRestoreCreation = useCallback(
     () => refreshCreationList(),
     [refreshCreationList]
   )
+  //#endregion
+
+  //#region publication list
+  const publicationList = usePublicationList({ gid: group.id })
+  const archivedPublicationList = usePublicationList({
+    gid: group.id,
+    status: PublicationStatus.Archived,
+  })
+  const { refresh: refreshPublicationList } = publicationList
+  const { refresh: refreshArchivedPublicationList } = archivedPublicationList
+  const onArchivePublication = useCallback(
+    () => refreshArchivedPublicationList(),
+    [refreshArchivedPublicationList]
+  )
+  const onRestorePublication = useCallback(
+    () => refreshPublicationList(),
+    [refreshPublicationList]
+  )
+  //#endregion
 
   return (
     <div>
@@ -186,7 +225,11 @@ function WithGroup({
                         defaultMessage: '已归档的发布',
                       })}
                     >
-                      <ArchivedPublicationPart toast={toast} group={group} />
+                      <ArchivedPublicationPart
+                        toast={toast}
+                        list={archivedPublicationList}
+                        onRestore={onRestorePublication}
+                      />
                     </MediumDialog>
                   )
                 case GroupDetailTabKey.Creation:
@@ -200,7 +243,7 @@ function WithGroup({
                       <ArchivedCreationPart
                         toast={toast}
                         list={archivedCreationList}
-                        onRestore={onRestore}
+                        onRestore={onRestoreCreation}
                       />
                     </MediumDialog>
                   )
@@ -209,13 +252,17 @@ function WithGroup({
           </div>
         </TabList>
         <TabPanel value={GroupDetailTabKey.Publication}>
-          <PublicationPart group={group} />
+          <PublicationPart
+            toast={toast}
+            list={publicationList}
+            onArchive={onArchivePublication}
+          />
         </TabPanel>
         <TabPanel value={GroupDetailTabKey.Creation}>
           <CreationPart
             toast={toast}
             list={creationList}
-            onArchive={onArchive}
+            onArchive={onArchiveCreation}
           />
         </TabPanel>
       </TabSection>
@@ -326,28 +373,101 @@ function GroupPart({
           <Button variant='outlined'>
             {intl.formatMessage({ defaultMessage: '编辑简介' })}
           </Button>
-          <Menu
-            anchor={(props) => (
-              <Icon
-                name='more'
-                {...props}
-                css={css`
-                  cursor: pointer;
-                `}
-              />
-            )}
-            items={menuItems}
-          />
+          <Menu anchor={IconMoreAnchor} items={menuItems} />
         </div>
       </div>
     </div>
   )
 }
 
-function PublicationPart({ group }: { group: Group }) {
-  const { items, isLoading, hasMore, loadMore } = usePublicationList({
-    gid: group.id,
-  })
+function PublicationPart({
+  toast: { push },
+  list,
+  onArchive,
+}: {
+  toast: ToastAPI
+  list: ReturnType<typeof usePublicationList>
+  onArchive: (item: PublicationOutput) => void
+}) {
+  const intl = useIntl()
+  const {
+    items,
+    isLoading,
+    hasMore,
+    loadMore,
+    publishItem,
+    archiveItem,
+    isPublishing,
+    isArchiving,
+  } = list
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => loadMore(), [])
+
+  const onPublish = useCallback(
+    async (item: PublicationOutput) => {
+      try {
+        await publishItem(item)
+        push({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '发布成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已发布待审核：{title}' },
+            { title: item.title }
+          ),
+        })
+      } catch (error) {
+        push({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '发布失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [intl, publishItem, push]
+  )
+
+  const handleArchive = useCallback(
+    async (item: PublicationOutput) => {
+      try {
+        await archiveItem(item)
+        push({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '归档成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已归档文章：{title}' },
+            { title: item.title }
+          ),
+        })
+        onArchive(item)
+      } catch (error) {
+        push({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '归档失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [archiveItem, intl, onArchive, push]
+  )
+
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const handleClick = useCallback(
+    (item: PublicationOutput) => {
+      const searchParams2 = new URLSearchParams(searchParams)
+      searchParams2.set('language', item.language)
+      searchParams2.set('version', item.version.toString())
+      navigate({
+        pathname: generatePath(PUBLICATION_DETAIL_PATH, {
+          gid: Xid.fromValue(item.gid).toString(),
+          cid: Xid.fromValue(item.cid).toString(),
+        }),
+        search: searchParams2.toString(),
+      })
+    },
+    [navigate, searchParams]
+  )
 
   return (
     <div
@@ -362,8 +482,13 @@ function PublicationPart({ group }: { group: Group }) {
       ) : (
         items.map((item) => (
           <PublicationItem
-            key={`${Xid.fromValue(item.cid).toString()}:${item.version}`}
+            key={buildPublicationKey(item)}
             item={item}
+            isPublishing={isPublishing(item)}
+            isArchiving={isArchiving(item)}
+            onClick={handleClick}
+            onPublish={onPublish}
+            onArchive={handleArchive}
           />
         ))
       )}
@@ -372,11 +497,76 @@ function PublicationPart({ group }: { group: Group }) {
   )
 }
 
-function ArchivedPublicationPart({ group }: { toast: ToastAPI; group: Group }) {
-  const { items, isLoading, hasMore, loadMore } = usePublicationList({
-    gid: group.id,
-    status: PublicationStatus.Archived,
-  })
+function ArchivedPublicationPart({
+  toast: { push },
+  list,
+  onRestore,
+}: {
+  toast: ToastAPI
+  list: ReturnType<typeof usePublicationList>
+  onRestore: (item: PublicationOutput) => void
+}) {
+  const intl = useIntl()
+  const {
+    items,
+    isLoading,
+    hasMore,
+    loadMore,
+    restoreItem,
+    deleteItem,
+    isRestoring,
+    isDeleting,
+  } = list
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => loadMore(), [])
+
+  const handleRestore = useCallback(
+    async (item: PublicationOutput) => {
+      try {
+        await restoreItem(item)
+        push({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '恢复成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已恢复文章：{title}' },
+            { title: item.title }
+          ),
+        })
+        onRestore(item)
+      } catch (error) {
+        push({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '恢复失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [intl, onRestore, push, restoreItem]
+  )
+
+  const onDelete = useCallback(
+    async (item: PublicationOutput) => {
+      try {
+        await deleteItem(item)
+        push({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '删除成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已删除文章：{title}' },
+            { title: item.title }
+          ),
+        })
+      } catch (error) {
+        push({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '删除失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [deleteItem, intl, push]
+  )
 
   return (
     <div
@@ -392,8 +582,12 @@ function ArchivedPublicationPart({ group }: { toast: ToastAPI; group: Group }) {
       ) : (
         items.map((item) => (
           <CompactPublicationItem
-            key={`${Xid.fromValue(item.cid).toString()}:${item.version}`}
+            key={buildPublicationKey(item)}
             item={item}
+            isRestoring={isRestoring(item)}
+            isDeleting={isDeleting(item)}
+            onRestore={handleRestore}
+            onDelete={onDelete}
           />
         ))
       )}
@@ -480,6 +674,21 @@ function CreationPart({
     [archiveItem, intl, onArchive, push]
   )
 
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const handleClick = useCallback(
+    (item: CreationOutput) => {
+      navigate({
+        pathname: generatePath(CREATION_DETAIL_PATH, {
+          gid: Xid.fromValue(item.gid).toString(),
+          cid: Xid.fromValue(item.id).toString(),
+        }),
+        search: searchParams.toString(),
+      })
+    },
+    [navigate, searchParams]
+  )
+
   return (
     <div
       css={css`
@@ -493,10 +702,11 @@ function CreationPart({
       ) : (
         items.map((item) => (
           <CreationItem
-            key={Xid.fromValue(item.id).toString()}
+            key={buildCreationKey(item)}
             item={item}
             isReleasing={isReleasing(item)}
             isArchiving={isArchiving(item)}
+            onClick={handleClick}
             onRelease={onRelease}
             onArchive={handleArchive}
           />
@@ -592,7 +802,7 @@ function ArchivedCreationPart({
       ) : (
         items.map((item) => (
           <CompactCreationItem
-            key={Xid.fromValue(item.id).toString()}
+            key={buildCreationKey(item)}
             item={item}
             isRestoring={isRestoring(item)}
             isDeleting={isDeleting(item)}

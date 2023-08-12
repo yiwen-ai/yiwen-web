@@ -9,7 +9,8 @@ export {
 export { decode, encode } from './CBOR'
 export {
   CreationStatus,
-  useAddCreation,
+  buildCreationKey,
+  useCreation,
   useCreationAPI,
   useCreationList,
   type CreateCreationInput,
@@ -27,6 +28,7 @@ export {
 export { useMyDefaultGroup, useMyGroupList, type Group } from './useGroup'
 export {
   PublicationStatus,
+  buildPublicationKey,
   usePublicationList,
   type PublicationOutput,
 } from './usePublication'

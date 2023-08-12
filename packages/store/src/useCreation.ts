@@ -124,7 +124,7 @@ export function useCreationAPI() {
   }, [fetcher])
 }
 
-export function useAddCreation() {
+export function useCreation(_gid: string | null, _id: string | null) {
   const { create } = useCreationAPI()
 
   interface Draft extends Omit<CreateCreationInput, 'gid' | 'content'> {
@@ -173,19 +173,27 @@ export function useAddCreation() {
     }
   }, [create])
 
-  const reset = useCallback(() => {
-    setDraft(initialDraft)
-  }, [initialDraft])
-
   return {
     draft,
     updateDraft,
     isDisabled,
     isSaving,
-    setIsSaving,
     save,
-    reset,
   } as const
+}
+
+export function buildCreationKey(item: CreationOutput) {
+  return [
+    Xid.fromValue(item.gid).toString(),
+    Xid.fromValue(item.id).toString(),
+  ].join(':')
+}
+
+function isSameCreation(a: CreationOutput, b: CreationOutput) {
+  return (
+    Xid.fromValue(a.gid).equals(Xid.fromValue(b.gid)) &&
+    Xid.fromValue(a.id).equals(Xid.fromValue(b.id))
+  )
 }
 
 export function useCreationList({ status, ...query }: GIDPagination) {
@@ -230,64 +238,76 @@ export function useCreationList({ status, ...query }: GIDPagination) {
     isReleasing: {} as Record<string, boolean>,
   })
 
-  const setDeleting = useCallback((id: Uint8Array, isDeleting: boolean) => {
-    setState((prev) => ({
-      ...prev,
-      isDeleting: {
-        ...prev.isDeleting,
-        [Xid.fromValue(id).toString()]: isDeleting,
-      },
-    }))
-  }, [])
-  const setArchiving = useCallback((id: Uint8Array, isArchiving: boolean) => {
-    setState((prev) => ({
-      ...prev,
-      isArchiving: {
-        ...prev.isArchiving,
-        [Xid.fromValue(id).toString()]: isArchiving,
-      },
-    }))
-  }, [])
-  const setRestoring = useCallback((id: Uint8Array, isRestoring: boolean) => {
-    setState((prev) => ({
-      ...prev,
-      isRestoring: {
-        ...prev.isRestoring,
-        [Xid.fromValue(id).toString()]: isRestoring,
-      },
-    }))
-  }, [])
-  const setReleasing = useCallback((id: Uint8Array, isReleasing: boolean) => {
-    setState((prev) => ({
-      ...prev,
-      isReleasing: {
-        ...prev.isReleasing,
-        [Xid.fromValue(id).toString()]: isReleasing,
-      },
-    }))
-  }, [])
+  const setDeleting = useCallback(
+    (item: CreationOutput, isDeleting: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        isDeleting: {
+          ...prev.isDeleting,
+          [buildCreationKey(item)]: isDeleting,
+        },
+      }))
+    },
+    []
+  )
+  const setArchiving = useCallback(
+    (item: CreationOutput, isArchiving: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        isArchiving: {
+          ...prev.isArchiving,
+          [buildCreationKey(item)]: isArchiving,
+        },
+      }))
+    },
+    []
+  )
+  const setRestoring = useCallback(
+    (item: CreationOutput, isRestoring: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        isRestoring: {
+          ...prev.isRestoring,
+          [buildCreationKey(item)]: isRestoring,
+        },
+      }))
+    },
+    []
+  )
+  const setReleasing = useCallback(
+    (item: CreationOutput, isReleasing: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        isReleasing: {
+          ...prev.isReleasing,
+          [buildCreationKey(item)]: isReleasing,
+        },
+      }))
+    },
+    []
+  )
 
   const isDeleting = useCallback(
-    (item: Pick<CreationOutput, 'id'>) => {
-      return state.isDeleting[Xid.fromValue(item.id).toString()] ?? false
+    (item: CreationOutput) => {
+      return state.isDeleting[buildCreationKey(item)] ?? false
     },
     [state.isDeleting]
   )
   const isArchiving = useCallback(
-    (item: Pick<CreationOutput, 'id'>) => {
-      return state.isArchiving[Xid.fromValue(item.id).toString()] ?? false
+    (item: CreationOutput) => {
+      return state.isArchiving[buildCreationKey(item)] ?? false
     },
     [state.isArchiving]
   )
   const isRestoring = useCallback(
-    (item: Pick<CreationOutput, 'id'>) => {
-      return state.isRestoring[Xid.fromValue(item.id).toString()] ?? false
+    (item: CreationOutput) => {
+      return state.isRestoring[buildCreationKey(item)] ?? false
     },
     [state.isRestoring]
   )
   const isReleasing = useCallback(
-    (item: Pick<CreationOutput, 'id'>) => {
-      return state.isReleasing[Xid.fromValue(item.id).toString()] ?? false
+    (item: CreationOutput) => {
+      return state.isReleasing[buildCreationKey(item)] ?? false
     },
     [state.isReleasing]
   )
@@ -317,7 +337,7 @@ export function useCreationList({ status, ...query }: GIDPagination) {
   const releaseItem = useCallback(
     async (item: CreationOutput) => {
       try {
-        setReleasing(item.id, true)
+        setReleasing(item, true)
         const body: CreatePublicationInput = {
           gid: item.gid,
           cid: item.id,
@@ -329,18 +349,16 @@ export function useCreationList({ status, ...query }: GIDPagination) {
         }>(`${path}/release`, body)
         mutate()
       } finally {
-        setReleasing(item.id, false)
+        setReleasing(item, false)
       }
     },
     [request, mutate, setReleasing]
   )
 
   const archiveItem = useCallback(
-    async (item: Pick<CreationOutput, 'gid' | 'id' | 'updated_at'>) => {
+    async (item: CreationOutput) => {
       try {
-        setArchiving(item.id, true)
-        const gid2 = Xid.fromValue(item.gid)
-        const id2 = Xid.fromValue(item.id)
+        setArchiving(item, true)
         const body: UpdateCreationStatusInput = {
           gid: item.gid,
           id: item.id,
@@ -353,27 +371,20 @@ export function useCreationList({ status, ...query }: GIDPagination) {
         mutate((prev) =>
           prev?.map((page): typeof page => ({
             ...page,
-            result: page.result.filter((item) => {
-              return !(
-                Xid.fromValue(item.gid).equals(gid2) &&
-                Xid.fromValue(item.id).equals(id2)
-              )
-            }),
+            result: page.result.filter((_item) => !isSameCreation(_item, item)),
           }))
         )
       } finally {
-        setArchiving(item.id, false)
+        setArchiving(item, false)
       }
     },
     [request, mutate, setArchiving]
   )
 
   const restoreItem = useCallback(
-    async (item: Pick<CreationOutput, 'gid' | 'id' | 'updated_at'>) => {
+    async (item: CreationOutput) => {
       try {
-        setRestoring(item.id, true)
-        const gid2 = Xid.fromValue(item.gid)
-        const id2 = Xid.fromValue(item.id)
+        setRestoring(item, true)
         const body: UpdateCreationStatusInput = {
           gid: item.gid,
           id: item.id,
@@ -386,44 +397,32 @@ export function useCreationList({ status, ...query }: GIDPagination) {
         mutate((prev) =>
           prev?.map((page): typeof page => ({
             ...page,
-            result: page.result.filter((item) => {
-              return !(
-                Xid.fromValue(item.gid).equals(gid2) &&
-                Xid.fromValue(item.id).equals(id2)
-              )
-            }),
+            result: page.result.filter((_item) => !isSameCreation(_item, item)),
           }))
         )
       } finally {
-        setRestoring(item.id, false)
+        setRestoring(item, false)
       }
     },
     [request, mutate, setRestoring]
   )
 
   const deleteItem = useCallback(
-    async (item: Pick<CreationOutput, 'gid' | 'id'>) => {
+    async (item: CreationOutput) => {
       try {
-        setDeleting(item.id, true)
-        const gid2 = Xid.fromValue(item.gid)
-        const id2 = Xid.fromValue(item.id)
+        setDeleting(item, true)
         await request.delete(path, {
-          gid: gid2.toString(),
-          id: id2.toString(),
+          gid: Xid.fromValue(item.gid).toString(),
+          id: Xid.fromValue(item.id).toString(),
         })
         mutate((prev) =>
           prev?.map((page): typeof page => ({
             ...page,
-            result: page.result.filter((item) => {
-              return !(
-                Xid.fromValue(item.gid).equals(gid2) &&
-                Xid.fromValue(item.id).equals(id2)
-              )
-            }),
+            result: page.result.filter((_item) => !isSameCreation(_item, item)),
           }))
         )
       } finally {
-        setDeleting(item.id, false)
+        setDeleting(item, false)
       }
     },
     [request, mutate, setDeleting]
