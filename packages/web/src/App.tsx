@@ -7,11 +7,13 @@ import {
   ThemeProvider,
   useUserTheme,
   type HeaderProps,
+  type MenuProps,
 } from '@yiwen-ai/component'
 import {
+  AuthProvider,
   FetcherConfigProvider,
-  UserProvider,
-  useUserAPI,
+  useAuth,
+  useMyDefaultGroup,
   type FetcherConfig,
 } from '@yiwen-ai/store'
 import {
@@ -46,8 +48,12 @@ import {
   RouterProvider,
   createBrowserRouter,
   createRoutesFromElements,
+  generatePath,
+  useNavigate,
 } from 'react-router-dom'
 import { SWRConfig, type SWRConfiguration } from 'swr'
+import { Xid } from 'xid-ts'
+import Loading from './components/Loading'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
@@ -72,6 +78,8 @@ function Fallback(props: FallbackProps) {
 
 function Layout() {
   const logger = useLogger()
+  const intl = useIntl()
+  const navigate = useNavigate()
 
   const onError = useCallback<NonNullable<ErrorBoundaryProps['onError']>>(
     (error, { componentStack }) => {
@@ -81,6 +89,36 @@ function Layout() {
   )
 
   const [headerProps, setHeaderProps] = useState<HeaderProps>({})
+
+  const gid = useMyDefaultGroup()?.id
+  const userMenu = useMemo<MenuProps>(
+    () => ({
+      items: [
+        {
+          label: intl.formatMessage({ defaultMessage: '我的资料' }),
+        },
+        {
+          label: intl.formatMessage({ defaultMessage: '我的创作中心' }),
+          disabled: !gid,
+          onClick: () => {
+            if (!gid) return
+            navigate(
+              generatePath(GROUP_DETAIL_PATH, {
+                id: Xid.fromValue(gid).toString(),
+              })
+            )
+          },
+        },
+        {
+          label: intl.formatMessage({ defaultMessage: '我的收藏' }),
+        },
+        {
+          label: intl.formatMessage({ defaultMessage: '我的订阅' }),
+        },
+      ],
+    }),
+    [gid, intl, navigate]
+  )
 
   return (
     <ErrorBoundary FallbackComponent={Fallback} onError={onError}>
@@ -93,7 +131,7 @@ function Layout() {
             overflow: hidden;
           `}
         >
-          <Header {...headerProps} />
+          <Header {...headerProps} userMenu={userMenu} />
           <div
             css={css`
               flex: 1;
@@ -196,7 +234,18 @@ export default function App() {
     <FetcherConfigProvider value={fetcherConfig}>
       <LoggerProvider handler={loggingHandler}>
         <SWRConfig value={swrConfig}>
-          <UserProvider>
+          <AuthProvider
+            fallback={
+              <UserThemeProvider>
+                <Loading
+                  css={css`
+                    position: absolute;
+                    inset: 0;
+                  `}
+                />
+              </UserThemeProvider>
+            }
+          >
             <UserLocaleProvider>
               <UserThemeProvider>
                 <GlobalStyles />
@@ -204,7 +253,7 @@ export default function App() {
                 <LoggingUnhandledError />
               </UserThemeProvider>
             </UserLocaleProvider>
-          </UserProvider>
+          </AuthProvider>
         </SWRConfig>
       </LoggerProvider>
     </FetcherConfigProvider>
@@ -212,7 +261,7 @@ export default function App() {
 }
 
 function UserLocaleProvider(props: React.PropsWithChildren) {
-  const user = useUserAPI()?.user
+  const { user } = useAuth()
   const locale = user?.locale || window.navigator.language
   // TODO: load messages based on locale
   const [messages] = useState({})

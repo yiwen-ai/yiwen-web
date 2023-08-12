@@ -1,9 +1,9 @@
 import { joinURL, type URLSearchParamsInit } from '@yiwen-ai/util'
 import { compact } from 'lodash-es'
 import { createContext, useContext, useMemo } from 'react'
+import { useAuth } from './AuthContext'
 import { decode, encode } from './CBOR'
 import { useLogger, type Logger } from './logger'
-import { useUserAPI } from './UserContext'
 
 //#region fetcher config
 export interface FetcherConfig {
@@ -12,7 +12,7 @@ export interface FetcherConfig {
   AUTH_URL: string
 }
 
-const FetcherConfigContext = createContext<Partial<FetcherConfig>>({})
+const FetcherConfigContext = createContext<FetcherConfig | undefined>(undefined)
 
 export const FetcherConfigProvider = FetcherConfigContext.Provider
 
@@ -24,6 +24,14 @@ export function useFetcherConfig() {
 //#region request
 const CBOR_MIME_TYPE = 'application/cbor'
 const JSON_MIME_TYPE = 'application/json'
+
+export enum RequestMethod {
+  GET = 'GET',
+  POST = 'POST',
+  PUT = 'PUT',
+  PATCH = 'PATCH',
+  DELETE = 'DELETE',
+}
 
 export function createRequest(
   logger: Logger,
@@ -53,33 +61,34 @@ export function createRequest(
       return body as T
     } else {
       const error = createRequestError(status, body) ?? body
-      logger.error('fetch error', { url, status, error })
+      const requestId = resp.headers.get('X-Request-Id')
+      logger.error('fetch error', { url, status, error, requestId })
       throw error
     }
   }
   request.defaultOptions = Object.freeze(defaultOptions)
   request.get = <T>(path: string, params?: URLSearchParamsInit) => {
     return request<T>(path, params, {
-      method: 'GET',
+      method: RequestMethod.GET,
     })
   }
   request.post = <T>(path: string, body?: object) => {
     return request<T>(path, undefined, {
-      method: 'POST',
+      method: RequestMethod.POST,
       body: body ? encode(body) : null,
       headers: { 'Content-Type': CBOR_MIME_TYPE },
     })
   }
   request.put = <T>(path: string, body?: object) => {
     return request<T>(path, undefined, {
-      method: 'PUT',
+      method: RequestMethod.PUT,
       body: body ? encode(body) : null,
       headers: { 'Content-Type': CBOR_MIME_TYPE },
     })
   }
   request.patch = <T>(path: string, body?: object) => {
     return request<T>(path, undefined, {
-      method: 'PATCH',
+      method: RequestMethod.PATCH,
       body: body ? encode(body) : null,
       headers: { 'Content-Type': CBOR_MIME_TYPE },
     })
@@ -90,7 +99,7 @@ export function createRequest(
     body?: object
   ) => {
     return request<T>(path, params, {
-      method: 'DELETE',
+      method: RequestMethod.DELETE,
       body: body ? encode(body) : null,
       headers: { 'Content-Type': CBOR_MIME_TYPE },
     })
@@ -112,35 +121,22 @@ export function useRequest(baseURL: string, options: RequestInit) {
 
 //#region fetcher
 export function useFetcher(baseURL?: string) {
-  const { API_URL } = useFetcherConfig()
-  const accessToken = useUserAPI()?.accessToken
+  const config = useFetcherConfig()
+  const { accessToken } = useAuth()
   const logger = useLogger()
   return useMemo(() => {
+    const API_URL = baseURL ?? config?.API_URL
     if (!API_URL) {
       logger.debug('fetcher config is not ready', { config: { API_URL } })
-      throw new Error('fetcher config is not ready')
+      throw new ReferenceError('invalid fetcher config')
     }
-    return createRequest(logger, baseURL ?? API_URL, {
+    return createRequest(logger, API_URL, {
       credentials: 'include',
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     })
-  }, [API_URL, accessToken, baseURL, logger])
+  }, [accessToken, baseURL, config?.API_URL, logger])
 }
 //#endregion
-
-export function useAuthFetcher() {
-  const { AUTH_URL } = useFetcherConfig()
-  const logger = useLogger()
-  return useMemo(() => {
-    if (!AUTH_URL) {
-      logger.debug('fetcher config is not ready', { config: { AUTH_URL } })
-      return undefined
-    }
-    return createRequest(logger, AUTH_URL, {
-      credentials: 'include',
-    })
-  }, [AUTH_URL, logger])
-}
 
 //#region request error
 function createRequestError(status: number, body: unknown) {

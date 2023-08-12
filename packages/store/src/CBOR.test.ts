@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
 import { Xid } from 'xid-ts'
+import { type User } from './AuthContext'
 import { decode, encode } from './CBOR'
 import { type Group } from './useGroup'
-import { type User } from './useUser'
 
 test('CBOR', () => {
   const binary = new Uint8Array([

@@ -1,102 +1,149 @@
-import { useCallback, useRef, useState } from 'react'
-import { Observable } from 'rxjs'
-import symbolObservable from 'symbol-observable'
-import { ChannelMessageHelper, type ChannelMessage } from './ChannelMessage'
-import { useLogger } from './logger'
-import { useLayoutEffect } from './useIsomorphicLayoutEffect'
-import {
-  useSubscriptionManager,
-  type Unsubscribe,
-} from './useSubscriptionManager'
+import { nanoid } from 'nanoid'
+import { useEffect, useRef, useState } from 'react'
+import { Observable, concatMap, from, fromEvent, map, tap } from 'rxjs'
+import { Deferred } from './Deferred'
+import { isWindow } from './isWindow'
+import { waitUntilClosed } from './waitUntilClosed'
 
 type MessageEndpoint = Window | ServiceWorker | Worker
 
-const [CONNECT_MESSAGE, isConnectMessage] =
-  ChannelMessageHelper.create('$$CONNECT').freeze()
-
 export function useChannel(target: MessageEndpoint | null) {
-  const logger = useLogger()
   const [channel, setChannel] = useState<Channel | undefined>()
   const initialized = useRef(false)
 
-  useLayoutEffect(() => {
-    try {
-      if (!target || initialized.current) return
-      const channel = new MessageChannel()
-      target.postMessage(CONNECT_MESSAGE, {
-        transfer: [channel.port2],
-        targetOrigin: location.origin, // send to same origin only
-      })
-      setChannel(new Channel(channel.port1))
-      initialized.current = true
-    } catch (error) {
-      // TODO: handle error
-      logger.error('failed to create channel', { error })
+  useEffect(() => {
+    if (!target || initialized.current) return
+    initialized.current = true
+    const channel = new Channel(target)
+    setChannel(channel)
+    return () => {
+      channel.close()
+      initialized.current = false
     }
-  }, [logger, target])
-
-  useLayoutEffect(() => {
-    if (!channel) return
-    return () => channel.close()
-  }, [channel])
+  }, [target])
 
   return channel
 }
 
-class Channel {
-  constructor(private port: MessagePort) {}
+interface Unsubscribe {
+  (): void
+}
+
+export class Channel {
+  private unsubscribeList = new Set<Unsubscribe>()
+  private port = new Deferred<MessagePort>()
+  private handshake = {
+    SYN: createAction<{ id: string }>('$$SYN'),
+    ACK: createAction<{ id: string }>('$$ACK'),
+  }
+
+  constructor(endpoint: MessageEndpoint) {
+    const id = nanoid()
+    const channel = new MessageChannel()
+
+    endpoint.postMessage(this.handshake.SYN({ id }), {
+      transfer: [channel.port2],
+      targetOrigin: location.origin, // send to same origin only
+    })
+
+    const closeLocalChannel = () => {
+      channel.port1.close()
+      channel.port2.close()
+      this.unsubscribeList.delete(closeLocalChannel)
+    }
+    this.unsubscribeList.add(closeLocalChannel)
+
+    const onMessage = (ev: MessageEvent<Action | undefined>) => {
+      if (
+        ev.source === endpoint &&
+        ev.origin === location.origin // receive from same origin only
+      ) {
+        if (this.handshake.SYN.match(ev.data)) {
+          const port2 = ev.ports[0]
+          if (port2) {
+            endpoint.postMessage(this.handshake.ACK(ev.data.payload))
+            this.port.resolve(port2) // use remote port
+            removeMessageListener()
+            closeLocalChannel() // local channel is no longer needed
+            this.unsubscribeList.add(port2.close.bind(port2))
+          }
+        } else if (this.handshake.ACK.match(ev.data)) {
+          if (ev.data.payload.id === id) {
+            this.port.resolve(channel.port1) // remote endpoint is ready
+            removeMessageListener()
+          }
+        }
+      }
+    }
+
+    window.addEventListener('message', onMessage)
+    const removeMessageListener = () => {
+      window.removeEventListener('message', onMessage)
+      this.unsubscribeList.delete(removeMessageListener)
+    }
+    this.unsubscribeList.add(removeMessageListener)
+
+    // close channel when endpoint is closed
+    if (isWindow(endpoint)) {
+      const subscription = waitUntilClosed(endpoint).subscribe(
+        this.close.bind(this)
+      )
+      this.unsubscribeList.add(() => subscription.unsubscribe())
+    }
+  }
 
   close() {
-    this.port.close() // TODO: also remove all listeners
+    this.unsubscribeList.forEach((unsubscribe) => unsubscribe())
+    this.unsubscribeList.clear()
   }
 
-  send(message: ChannelMessage) {
-    // TODO: wait for port to be ready
-    this.port.postMessage(message)
+  async send(message: Action) {
+    const port = await this.port.promise
+    port.postMessage(message)
   }
 
-  subscribe<T = unknown>(
-    callback: (message: ChannelMessage<T>) => void
-  ): Unsubscribe {
-    const listener = (ev: MessageEvent) => callback(ev.data)
-    this.port.addEventListener('message', listener)
-    this.port.start()
-    return () => this.port.removeEventListener('message', listener)
-  }
-
-  [symbolObservable]<T = unknown>() {
-    return new Observable<ChannelMessage<T>>((observer) =>
-      this.subscribe(observer.next.bind(observer))
-    )
+  [Symbol.observable]() {
+    return new Observable<Action<unknown>>((observer) => {
+      const subscription = from(this.port.promise)
+        .pipe(
+          tap((port) => port.start()),
+          concatMap((port) => fromEvent<MessageEvent>(port, 'message')),
+          map((ev) => ev.data)
+        )
+        .subscribe(observer)
+      const onClose = observer.complete.bind(observer)
+      this.unsubscribeList.add(onClose)
+      return () => {
+        subscription.unsubscribe()
+        this.unsubscribeList.delete(onClose)
+      }
+    })
   }
 }
 
-export function useConnect() {
-  const subscriptionManager = useSubscriptionManager()
+interface Action<T = unknown> {
+  type: string
+  payload: T
+}
 
-  return useCallback(
-    (source: MessageEndpoint) => {
-      return new Promise<Channel>((resolve) => {
-        const onMessage = (ev: MessageEvent<ChannelMessage | undefined>) => {
-          if (
-            ev.source === source &&
-            ev.origin === location.origin && // receive from same origin only
-            isConnectMessage(ev.data)
-          ) {
-            const port2 = ev.ports[0]
-            if (!port2) return // TODO: handle error
-            const channel = new Channel(port2)
-            resolve(channel)
-            subscriptionManager.addUnsubscribe(() => channel.close())
-            unsubscribe()
-          }
-        }
-        window.addEventListener('message', onMessage)
-        const unsubscribe = subscriptionManager.addUnsubscribe(() =>
-          window.removeEventListener('message', onMessage)
-        )
-      })
-    },
-    [subscriptionManager]
-  )
+export function createAction<T = void>(type: string) {
+  const creator = (payload: T): Action<T> => ({
+    type,
+    payload,
+  })
+
+  creator.toString = () => `${type}`
+
+  creator.type = type
+
+  creator.match = (action: unknown): action is Action<T> => {
+    return (
+      typeof action === 'object' &&
+      action !== null &&
+      'type' in action &&
+      action.type === type
+    )
+  }
+
+  return creator
 }

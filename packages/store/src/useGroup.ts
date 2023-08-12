@@ -1,6 +1,6 @@
 import useSWR from 'swr'
+import { type User } from './AuthContext'
 import { useFetcher } from './useFetcher'
-import { type User } from './useUser'
 
 export interface Group {
   id: Uint8Array
@@ -28,7 +28,7 @@ export function useMyGroupList() {
   const fetcher = useFetcher()
   const { data, isLoading } = useSWR<{ result: Group[] }>(
     '/v1/group/list_my',
-    fetcher?.post ?? null
+    fetcher.post
   )
 
   return {

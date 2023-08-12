@@ -5,6 +5,7 @@ import {
   mergeAnchorProps,
   mergeClickProps,
   mergeForwardedRef,
+  useIsMounted,
   useRefCallback,
   type AnchorProps,
   type ModalRef,
@@ -17,7 +18,6 @@ import {
   type HTMLAttributes,
   type LiHTMLAttributes,
 } from 'react'
-import { useMountedState } from 'react-use'
 import { Icon } from './Icon'
 import { Popover, pickPopoverProps, type PopoverProps } from './Popover'
 
@@ -78,6 +78,7 @@ export interface MenuItemProps
   after?: JSX.Element
   label: string | JSX.Element
   description?: string | JSX.Element
+  danger?: boolean | undefined
   disabled?: boolean | undefined
   closeOnClick?: boolean | number | undefined
   children?: readonly MenuItemProps[] | JSX.Element | null | undefined
@@ -90,6 +91,7 @@ export const MenuItem = memo(
       after,
       label,
       description,
+      danger,
       disabled,
       closeOnClick = true,
       children,
@@ -99,7 +101,7 @@ export const MenuItem = memo(
   ) {
     const theme = useTheme()
     const menuRef = useContext(MenuContext)
-    const isMounted = useMountedState()
+    const isMounted = useIsMounted()
 
     const render = (
       { onClick, ...props }: LiHTMLAttributes<HTMLLIElement>,
@@ -163,6 +165,7 @@ export const MenuItem = memo(
             <span
               css={css`
                 flex: 1;
+                color: ${danger && theme.color.body.danger};
               `}
             >
               {label}

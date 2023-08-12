@@ -4,7 +4,7 @@ import {
   type CSSObject,
   type Theme,
 } from '@emotion/react'
-import { useUserAPI, type ColorScheme } from '@yiwen-ai/store'
+import { useAuth, type ColorScheme } from '@yiwen-ai/store'
 import { RGBA } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -60,6 +60,7 @@ declare module '@emotion/react' {
         background: string
         primary: string
         secondary: string
+        danger: string
       }
       divider: {
         primary: string
@@ -181,6 +182,7 @@ export const lightTheme: Theme = {
       background: palette.white,
       primary: palette.grayNormal,
       secondary: palette.grayLight,
+      danger: palette.orange,
     },
     divider: {
       primary: palette.grayLight0,
@@ -406,6 +408,7 @@ export const darkTheme: Theme = {
       background: palette.grayNormal,
       primary: palette.grayLight1,
       secondary: palette.grayLight0,
+      danger: palette.orange,
     },
     divider: {
       primary: palette.grayLight0,
@@ -598,7 +601,7 @@ export const useDarkMode = () => {
 }
 
 export function useUserTheme() {
-  const user = useUserAPI()?.user
+  const { user } = useAuth()
   const userTheme: ColorScheme = user?.theme ?? 'auto'
 
   const setUserTheme = useCallback((theme: ColorScheme) => {

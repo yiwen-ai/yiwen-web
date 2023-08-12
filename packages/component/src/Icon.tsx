@@ -1,4 +1,5 @@
 import { css } from '@emotion/react'
+import { useIsMounted } from '@yiwen-ai/util'
 import {
   forwardRef,
   memo,
@@ -7,7 +8,6 @@ import {
   type ComponentType,
   type SVGAttributes,
 } from 'react'
-import { usePromise } from 'react-use'
 import { useLogger } from './logger'
 
 const SVG_LIST = {
@@ -97,7 +97,7 @@ export const Icon = memo(
     ref: React.Ref<SVGSVGElement>
   ) {
     const logger = useLogger()
-    const mounted = usePromise()
+    const isMounted = useIsMounted()
     const width = typeof size === 'number' ? size : SizeDict[size]
     const [SVG = 'svg', setSVG] = useState<
       ComponentType<SVGAttributes<SVGSVGElement>> | undefined
@@ -113,13 +113,13 @@ export const Icon = memo(
       }
       ;(async () => {
         try {
-          const { ReactComponent } = await mounted(SVG_LIST[name]())
-          setSVG(() => ReactComponent)
+          const { ReactComponent } = await SVG_LIST[name]()
+          isMounted() && setSVG(() => ReactComponent)
         } catch (error) {
           logger.error('failed to load icon', { error })
         }
       })()
-    }, [SVG, logger, mounted, name])
+    }, [SVG, isMounted, logger, name])
 
     return (
       <SVG

@@ -4,14 +4,16 @@ import { Link } from 'react-router-dom'
 import { AccountManager } from './AccountManager'
 import { Brand } from './Brand'
 import { Logo } from './Logo'
+import { type MenuProps } from './Menu'
 
 export interface HeaderProps extends HTMLAttributes<HTMLElement> {
   brand?: boolean
+  userMenu?: MenuProps
 }
 
 export const Header = memo(
   forwardRef(function Header(
-    { brand, ...props }: HeaderProps,
+    { brand, userMenu, ...props }: HeaderProps,
     ref: React.Ref<HTMLElement>
   ) {
     return (
@@ -38,7 +40,7 @@ export const Header = memo(
           {brand && <Brand />}
         </Link>
         {props.children}
-        <AccountManager />
+        <AccountManager {...userMenu} />
       </header>
     )
   })

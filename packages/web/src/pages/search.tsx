@@ -5,16 +5,15 @@ import RecommendedAndFavorited, {
 } from '#/components/RecommendedAndFavorited'
 import { css, useTheme } from '@emotion/react'
 import { Avatar, Icon, Spinner, TextField } from '@yiwen-ai/component'
-import { useLayoutEffect, useRefCallback } from '@yiwen-ai/util'
+import { useIsMounted, useLayoutEffect, useRefCallback } from '@yiwen-ai/util'
 import { useCallback, useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { usePromise } from 'react-use'
 
 export default function Search() {
   const intl = useIntl()
   const theme = useTheme()
-  const mounted = usePromise()
+  const isMounted = useIsMounted()
   const [inputRef, setInputRef] = useRefCallback<HTMLInputElement>(null)
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -67,11 +66,11 @@ export default function Search() {
   useEffect(() => {
     if (!keyword) return
     setIsLoading(true)
-    mounted(new Promise((resolve) => setTimeout(resolve, 1000)))
+    new Promise((resolve) => setTimeout(resolve, 1000))
       .then(() => keyword) // TODO: integrate with search service
-      .then(() => setSearchItems((prev) => prev.slice(0)))
-      .finally(() => setIsLoading(false))
-  }, [keyword, mounted])
+      .then(() => isMounted() && setSearchItems((prev) => prev.slice(0)))
+      .finally(() => isMounted() && setIsLoading(false))
+  }, [isMounted, keyword])
 
   useLayoutEffect(() => {
     inputRef?.focus()

@@ -1,4 +1,6 @@
-export { ChannelMessageHelper } from './ChannelMessage'
+import 'symbol-observable'
+
+export { Deferred } from './Deferred'
 export { RGBA } from './RGBA'
 export { isArray } from './isArray'
 export { isWindow } from './isWindow'
@@ -14,12 +16,12 @@ export {
   toURLSearchParams,
   type URLSearchParamsInit,
 } from './toURLSearchParams'
-export { useChannel, useConnect } from './useChannel'
-export { useCheckWindowClosed } from './useCheckWindowClosed'
+export { Channel, createAction, useChannel } from './useChannel'
 export { mergeClickProps, useClick } from './useClick'
 export { useClickOutside } from './useClickOutside'
 export { useControlled } from './useControlled'
 export { useHover } from './useHover'
+export { useIsMounted } from './useIsMounted'
 export { useLayoutEffect } from './useIsomorphicLayoutEffect'
 export {
   mergeAnchorProps,
@@ -30,4 +32,4 @@ export {
   type ModalRef,
 } from './useModal'
 export { mergeForwardedRef, useRefCallback } from './useRefCallback'
-export { useSubscriptionManager } from './useSubscriptionManager'
+export { waitUntilClosed } from './waitUntilClosed'
