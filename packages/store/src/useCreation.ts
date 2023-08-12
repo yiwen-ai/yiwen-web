@@ -90,11 +90,6 @@ export function useCreationAPI() {
   const fetcher = useFetcher()
 
   return useMemo(() => {
-    if (!fetcher) {
-      // TODO: assert fetcher is ready
-      // logger.error('fetcher is not ready', { url: path })
-      return null
-    }
     return {
       get: async (query: QueryCreation) => {
         const item = await fetcher.get<CreationOutput>(path, {
@@ -130,7 +125,7 @@ export function useCreationAPI() {
 }
 
 export function useAddCreation() {
-  const create = useCreationAPI()?.create
+  const { create } = useCreationAPI()
 
   interface Draft extends Omit<CreateCreationInput, 'gid' | 'content'> {
     gid: Uint8Array | undefined
@@ -165,12 +160,10 @@ export function useAddCreation() {
     isSaving || !draft.title.trim() || !draft.content || !draft.gid
 
   const save = useCallback(async () => {
-    // TODO: assert create is ready
-    if (!create) throw new Error('create is not ready')
     try {
       setIsSaving(true)
       const draft = draftRef.current as SetNonNullable<Draft>
-      return create({
+      return await create({
         ...draft,
         gid: draft.gid,
         content: encode(draft.content),

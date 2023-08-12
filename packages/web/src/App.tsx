@@ -178,7 +178,7 @@ const router = createBrowserRouter(
       <Route path='/login/state' element={<LoginState />} />
     </Route>
   ),
-  { basename: import.meta.env.VITE_PUBLIC_PATH }
+  { basename: new URL(resolveURL(import.meta.env.VITE_PUBLIC_PATH)).pathname }
 )
 
 export default function App() {
