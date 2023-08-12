@@ -178,13 +178,13 @@ const router = createBrowserRouter(
       <Route path='/login/state' element={<LoginState />} />
     </Route>
   ),
-  { basename: import.meta.env.BASE_URL }
+  { basename: import.meta.env.VITE_PUBLIC_PATH }
 )
 
 export default function App() {
   const fetcherConfig = useMemo<FetcherConfig>(
     () => ({
-      PUBLIC_PATH: resolveURL(import.meta.env.BASE_URL),
+      PUBLIC_PATH: resolveURL(import.meta.env.VITE_PUBLIC_PATH),
       API_URL: resolveURL(import.meta.env.VITE_API_URL),
       AUTH_URL: resolveURL(import.meta.env.VITE_AUTH_URL),
     }),
