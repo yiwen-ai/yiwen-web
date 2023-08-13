@@ -92,6 +92,37 @@ export interface UpdateCreationStatusInput {
 
 const path = '/v1/creation'
 
+export function useCreation(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined
+) {
+  const request = useFetcher()
+
+  const getKey = useCallback(() => {
+    if (!_gid || !_cid) return null
+    interface Params extends Record<keyof QueryCreation, string | undefined> {}
+    const params: Params = { gid: _gid, id: _cid, fields: undefined }
+    return [path, params] as const
+  }, [_cid, _gid])
+
+  const {
+    data: { result: creation } = {},
+    error,
+    mutate,
+    isValidating: _isValidatingCreation,
+    isLoading: _isLoadingCreation,
+  } = useSWR(getKey, ([path, params]) =>
+    request.get<{ result: CreationOutput }>(path, params)
+  )
+
+  return {
+    creation,
+    error,
+    mutate,
+    isLoading: _isValidatingCreation || _isLoadingCreation,
+  } as const
+}
+
 export function useEditCreation(
   _gid: string | null | undefined,
   _cid: string | null | undefined
@@ -104,21 +135,11 @@ export function useEditCreation(
     isLoading: _isLoadingGroup,
   } = useMyGroupList()
 
-  const getKey = useCallback(() => {
-    if (!_gid || !_cid) return null
-    interface Params extends Record<keyof QueryCreation, string | undefined> {}
-    const params: Params = { gid: _gid, id: _cid, fields: undefined }
-    return [path, params] as const
-  }, [_cid, _gid])
-
   const {
-    data: { result: creation } = {},
+    creation,
     mutate,
-    isValidating: _isValidatingCreation,
     isLoading: _isLoadingCreation,
-  } = useSWR(getKey, ([path, params]) =>
-    request.get<{ result: CreationOutput }>(path, params)
-  )
+  } = useCreation(_gid, _cid)
   //#endregion
 
   //#region draft
@@ -169,11 +190,7 @@ export function useEditCreation(
   //#endregion
 
   //#region processing state
-  const isLoading =
-    _isLoadingGroup ||
-    _isValidatingCreation ||
-    _isLoadingCreation ||
-    !draft.__isReady
+  const isLoading = _isLoadingGroup || _isLoadingCreation || !draft.__isReady
 
   const [isSaving, setIsSaving] = useState(false)
 
