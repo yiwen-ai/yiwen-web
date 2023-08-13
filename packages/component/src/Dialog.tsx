@@ -15,8 +15,7 @@ import {
   useImperativeHandle,
   type HTMLAttributes,
 } from 'react'
-import { Button, type ButtonProps } from './Button'
-import { Icon } from './Icon'
+import { IconButton, type IconButtonProps } from './Button'
 import { Portal, type PortalProps } from './Portal'
 
 export interface DialogProps
@@ -121,10 +120,15 @@ export const DialogFoot = memo(function DialogFoot(
   )
 })
 
+export interface DialogCloseProps
+  extends Omit<IconButtonProps, 'iconName'>,
+    Partial<Pick<IconButtonProps, 'iconName'>> {}
+
 export const DialogClose = memo(function DialogClose({
+  iconName = 'closecircle2',
   onClick,
   ...props
-}: ButtonProps) {
+}: DialogCloseProps) {
   const theme = useTheme()
   const dialog = useContext(DialogContext)
   const handleClick = useCallback(
@@ -136,23 +140,21 @@ export const DialogClose = memo(function DialogClose({
   )
 
   return (
-    <Button
+    <IconButton
       data-dialog-close={true}
-      shape='circle'
+      iconName={iconName}
+      variant='contained'
+      size='medium'
       onClick={handleClick}
       {...props}
       css={css`
+        color: ${RGBA(theme.palette.grayLight, 0.4)};
         position: absolute;
         left: 100%;
         bottom: 100%;
         margin-left: 16px;
         margin-bottom: 16px;
       `}
-    >
-      <Icon
-        name='closecircle2'
-        css={{ color: RGBA(theme.palette.grayLight, 0.4) }}
-      />
-    </Button>
+    />
   )
 })

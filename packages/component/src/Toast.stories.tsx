@@ -68,7 +68,9 @@ function Push(toast: ToastProps) {
       `}
     >
       {render()}
-      <Button onClick={onClick}>Push</Button>
+      <Button color='primary' onClick={onClick}>
+        Push
+      </Button>
     </div>
   )
 }

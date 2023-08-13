@@ -1,5 +1,6 @@
 import { css, useTheme, type CSSObject, type Theme } from '@emotion/react'
 import { forwardRef, memo, useMemo, type ButtonHTMLAttributes } from 'react'
+import { Icon, type IconName, type IconProps } from './Icon'
 
 export type ButtonSize = 'small' | 'medium' | 'large'
 
@@ -37,21 +38,19 @@ export type ButtonVariant = 'contained' | 'outlined' | 'text'
 export type ButtonShape = 'square' | 'rounded' | 'circle'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  size?: ButtonSize
-  color?: ButtonColor
+  color: ButtonColor
   variant?: ButtonVariant
   shape?: ButtonShape
+  size?: ButtonSize
 }
 
 export const Button = memo(
   forwardRef(function Button(
     {
+      color,
+      variant = color === 'primary' ? 'contained' : 'outlined',
       shape = 'rounded',
-      size = shape === 'circle' ? 'small' : 'medium',
-      color = shape === 'circle' ? 'secondary' : 'primary',
-      variant = shape === 'circle' || color === 'primary'
-        ? 'contained'
-        : 'outlined',
+      size = 'medium',
       ...props
     }: ButtonProps,
     ref: React.Ref<HTMLButtonElement>
@@ -63,13 +62,8 @@ export const Button = memo(
         css.paddingLeft = css.paddingRight = 8
       }
       if (shape === 'circle') {
-        css.width = css.height = css.minHeight
-        css.minHeight = undefined
+        css.borderRadius = css.minWidth = css.minHeight
         css.paddingLeft = css.paddingRight = undefined
-        css.borderRadius = '50%'
-        css.display = 'inline-flex'
-        css.alignItems = 'center'
-        css.justifyContent = 'center'
       } else if (shape === 'square') {
         css.borderRadius = 0
       }
@@ -85,6 +79,7 @@ export const Button = memo(
         css={css`
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           gap: 4px;
           ${sizeCSS}
           border-style: solid;
@@ -107,6 +102,47 @@ export const Button = memo(
           }
         `}
       />
+    )
+  })
+)
+
+export interface IconButtonProps extends Omit<ButtonProps, 'color'> {
+  iconName: IconName
+  iconSize?: IconProps['size']
+  color?: ButtonProps['color']
+}
+
+export const IconButton = memo(
+  forwardRef(function IconButton(
+    {
+      iconName,
+      color = 'secondary',
+      variant = 'text',
+      shape = 'circle',
+      size = 'small',
+      iconSize = size,
+      ...props
+    }: IconButtonProps,
+    ref: React.Ref<HTMLButtonElement>
+  ) {
+    const theme = useTheme()
+
+    return (
+      <Button
+        color={color}
+        variant={variant}
+        shape={shape}
+        size={size}
+        {...props}
+        ref={ref}
+        css={{
+          minWidth: SizeDict[size](theme).minHeight,
+          paddingLeft: 0,
+          paddingRight: 0,
+        }}
+      >
+        <Icon name={iconName} size={iconSize} />
+      </Button>
     )
   })
 )

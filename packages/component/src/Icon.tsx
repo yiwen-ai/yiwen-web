@@ -69,11 +69,12 @@ export const IconNameList = Object.keys(SVG_LIST) as IconName[]
 
 export type IconName = keyof typeof SVG_LIST
 
-export type IconSize = 'small' | 'medium' | number
+export type IconSize = 'small' | 'medium' | 'large' | number
 
 const SizeDict: Record<IconSize, number> = {
   small: 16,
   medium: 24,
+  large: 32,
 }
 
 export interface IconProps extends SVGAttributes<SVGSVGElement> {

@@ -49,10 +49,8 @@ export const AccountManager = memo(function AccountManager({
   ) : (
     <AlertDialog
       anchor={(props) => (
-        <Button {...props}>
-          {intl.formatMessage({
-            defaultMessage: '登录',
-          })}
+        <Button color='primary' {...props}>
+          {intl.formatMessage({ defaultMessage: '登录' })}
         </Button>
       )}
     >

@@ -14,10 +14,12 @@ export { Avatar, type AvatarProps, type AvatarSize } from './Avatar'
 export { Brand, type BrandProps } from './Brand'
 export {
   Button,
+  IconButton,
   type ButtonColor,
   type ButtonProps,
   type ButtonSize,
   type ButtonVariant,
+  type IconButtonProps,
 } from './Button'
 export {
   Dialog,

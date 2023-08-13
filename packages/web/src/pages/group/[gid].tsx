@@ -145,7 +145,7 @@ export default function GroupDetail() {
               margin-left: auto;
             `}
           >
-            <Button variant='text'>
+            <Button color='primary' variant='text'>
               {intl.formatMessage({ defaultMessage: '创作内容' })}
             </Button>
           </Link>
@@ -264,9 +264,7 @@ function WithGroup({
             {(() => {
               const anchor = (props: AnchorProps) => (
                 <Button color='secondary' variant='text' {...props}>
-                  {intl.formatMessage({
-                    defaultMessage: '已归档的文章',
-                  })}
+                  {intl.formatMessage({ defaultMessage: '已归档的文章' })}
                 </Button>
               )
               switch (tab) {
@@ -424,7 +422,7 @@ function GroupPart({
             gap: 24px;
           `}
         >
-          <Button variant='outlined'>
+          <Button color='primary' variant='outlined'>
             {intl.formatMessage({ defaultMessage: '编辑简介' })}
           </Button>
           <Menu anchor={IconMoreAnchor} items={menuItems} />

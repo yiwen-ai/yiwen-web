@@ -107,6 +107,7 @@ export default function PublicationItem({
         )}
         {item.status === PublicationStatus.Approved && (
           <Button
+            color='primary'
             variant='outlined'
             size='small'
             disabled={disabled}

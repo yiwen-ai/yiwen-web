@@ -18,7 +18,11 @@ type Story = StoryObj<typeof AlertDialog>
 
 export const Default: Story = {
   args: {
-    anchor: (props) => <Button {...props}>Open Alert Dialog</Button>,
+    anchor: (props) => (
+      <Button color='primary' {...props}>
+        Open Alert Dialog
+      </Button>
+    ),
     children: (
       <>
         <AlertDialogHead>Head</AlertDialogHead>

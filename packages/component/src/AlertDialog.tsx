@@ -1,13 +1,13 @@
 import { css } from '@emotion/react'
 import { type ModalRef } from '@yiwen-ai/util'
 import { forwardRef, memo, type HTMLAttributes } from 'react'
-import { type ButtonProps } from './Button'
 import {
   Dialog,
   DialogBody,
   DialogClose,
   DialogFoot,
   DialogHead,
+  type DialogCloseProps,
   type DialogProps,
 } from './Dialog'
 
@@ -66,7 +66,7 @@ export const AlertDialogFoot = memo(function AlertDialogFoot(
 })
 
 export const AlertDialogClose = memo(function AlertDialogClose(
-  props: ButtonProps
+  props: DialogCloseProps
 ) {
   return (
     <DialogClose

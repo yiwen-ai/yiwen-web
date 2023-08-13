@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { Button } from './Button'
-import { Icon } from './Icon'
+import { Button, IconButton, type IconButtonProps } from './Button'
 
 const meta: Meta<typeof Button> = {
   component: Button,
@@ -32,9 +31,9 @@ export const Primary: Story = {
   },
   args: {
     children: 'Button',
-    size: 'medium',
     variant: 'contained',
     shape: 'rounded',
+    size: 'medium',
     disabled: false,
   },
 }
@@ -46,9 +45,9 @@ export const Secondary: Story = {
   },
   args: {
     children: 'Button',
-    size: 'medium',
     variant: 'outlined',
     shape: 'rounded',
+    size: 'medium',
     disabled: false,
   },
 }
@@ -60,23 +59,22 @@ export const TextButton: Story = {
   },
   args: {
     children: 'Text Button',
-    size: 'medium',
     color: 'primary',
     shape: 'rounded',
+    size: 'medium',
     disabled: false,
   },
 }
 
-export const IconButton: Story = {
-  render: (args) => <Button {...args} shape='circle' />,
-  argTypes: {
-    shape: { control: { disable: true } },
-  },
+export const BasicIconButton: Story = {
+  name: 'Icon Button',
+  render: (args) => <IconButton {...(args as IconButtonProps)} />,
   args: {
-    children: <Icon name='closecircle' />,
-    size: 'medium',
-    variant: 'contained',
+    iconName: 'closecircle',
     color: 'secondary',
+    variant: 'text',
+    shape: 'circle',
+    size: 'small',
     disabled: false,
-  },
+  } as IconButtonProps,
 }
