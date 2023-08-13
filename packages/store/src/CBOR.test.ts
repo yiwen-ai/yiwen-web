@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 import { Xid } from 'xid-ts'
-import { type User } from './AuthContext'
+import { type UserInfo } from './AuthContext'
 import { decode, encode } from './CBOR'
 import { type Group } from './useGroup'
 
@@ -45,7 +45,7 @@ test('CBOR', () => {
           'picture': 'https://cdn.yiwen.pub/dev/pic/UnaHmByZDTAEUqnLfk1NeQ',
           'status': 0,
           'kind': 0,
-        } as Omit<User, 'locale'> as User,
+        } as Omit<UserInfo, 'locale'> as UserInfo,
       },
     ],
   }

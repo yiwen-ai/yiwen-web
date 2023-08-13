@@ -1,12 +1,13 @@
 import { type JSONContent } from '@tiptap/core'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { omitBy } from 'lodash-es'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
-import { type SetNonNullable } from 'type-fest'
 import { Xid } from 'xid-ts'
-import { encode } from './CBOR'
+import { decode, encode } from './CBOR'
 import { type GIDPagination, type Page } from './common'
 import { useFetcher } from './useFetcher'
-import { useMyDefaultGroup } from './useGroup'
+import { useMyGroupList } from './useGroup'
 import { type CreatePublicationInput } from './usePublication'
 
 export enum CreationStatus {
@@ -25,17 +26,15 @@ export interface QueryCreation {
 
 export interface CreateCreationInput {
   gid: Uint8Array
-  language?: string
+  title: string
+  content: Uint8Array
+  language: string
   original_url?: string
   genre?: string[]
-  title: string
-  description?: string
   cover?: string
   keywords?: string[]
   labels?: string[]
   authors?: string[]
-  summary?: string
-  content: Uint8Array
   license?: string
 }
 
@@ -59,7 +58,7 @@ export interface CreationOutput {
   authors?: string[]
   reviewers?: Uint8Array[]
   summary?: string
-  content?: Uint8Array
+  content: Uint8Array
   license?: string
 }
 
@@ -68,13 +67,20 @@ export interface UpdateCreationInput {
   id: Uint8Array
   updated_at: number
   title?: string
-  description?: string
   cover?: string
   keywords?: string[]
   labels?: string[]
   authors?: string[]
   summary?: string
   license?: string
+}
+
+export interface UpdateCreationContentInput {
+  gid: Uint8Array
+  id: Uint8Array
+  updated_at: number
+  language: string
+  content: Uint8Array
 }
 
 export interface UpdateCreationStatusInput {
@@ -86,99 +92,170 @@ export interface UpdateCreationStatusInput {
 
 const path = '/v1/creation'
 
-export function useCreationAPI() {
-  const fetcher = useFetcher()
+export function useEditCreation(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined
+) {
+  const request = useFetcher()
 
-  return useMemo(() => {
-    return {
-      get: async (query: QueryCreation) => {
-        const item = await fetcher.get<CreationOutput>(path, {
-          gid: query.gid.toString(),
-          id: query.id.toString(),
-          fields: query.fields.join(','),
-        })
-        return item
-      },
-      list: async (query: GIDPagination) => {
-        const items = await fetcher.post<CreationOutput[]>(
-          `${path}/list`,
-          query
-        )
-        return items
-      },
-      create: async (input: CreateCreationInput) => {
-        const { result: item } = await fetcher.post<{
-          result: CreationOutput
-        }>(path, input)
-        return item
-      },
-      update: async (input: UpdateCreationInput) => {
-        const item = await fetcher.patch<CreationOutput>(path, input)
-        return item
-      },
-      delete: async () => {
-        await fetcher.delete(path)
-        return
-      },
-    }
-  }, [fetcher])
-}
+  //#region fetch group & creation
+  const {
+    defaultGroup: { id: defaultGroupId } = {},
+    isLoading: _isLoadingGroup,
+  } = useMyGroupList()
 
-export function useCreation(_gid: string | null, _id: string | null) {
-  const { create } = useCreationAPI()
+  const getKey = useCallback(() => {
+    if (!_gid || !_cid) return null
+    interface Params extends Record<keyof QueryCreation, string | undefined> {}
+    const params: Params = { gid: _gid, id: _cid, fields: undefined }
+    return [path, params] as const
+  }, [_cid, _gid])
 
+  const {
+    data: { result: creation } = {},
+    mutate,
+    isValidating: _isValidatingCreation,
+    isLoading: _isLoadingCreation,
+  } = useSWR(getKey, ([path, params]) =>
+    request.get<{ result: CreationOutput }>(path, params)
+  )
+  //#endregion
+
+  //#region draft
   interface Draft extends Omit<CreateCreationInput, 'gid' | 'content'> {
+    __isReady: boolean
     gid: Uint8Array | undefined
-    content: JSONContent | undefined
+    id: Uint8Array | undefined
+    updated_at: number | undefined
+    content: JSONContent | null
   }
 
-  const gid = useMyDefaultGroup()?.id
+  const [draft, setDraft] = useState<Draft>(() => ({
+    __isReady: false,
+    gid: _gid ? Xid.fromValue(_gid) : undefined,
+    id: _cid ? Xid.fromValue(_cid) : undefined,
+    updated_at: undefined,
+    language: 'eng',
+    title: '',
+    content: null,
+  }))
 
-  const initialDraft = useMemo<Draft>(
-    () => ({
-      gid,
-      title: '',
-      content: undefined,
-      language: 'eng',
-    }),
-    [gid]
-  )
-
-  const [draft, setDraft] = useState(initialDraft)
-  const draftRef = useRef(draft)
-  draftRef.current = draft
+  useEffect(() => {
+    if (_gid && _cid) {
+      if (creation) {
+        setDraft((prev) => ({
+          ...prev,
+          ...creation,
+          content: decode(creation.content),
+          __isReady: true,
+        }))
+      }
+    } else {
+      const gid = _gid ?? defaultGroupId
+      if (gid) {
+        setDraft((prev) => {
+          const prevGid = prev.gid && Xid.fromValue(prev.gid)
+          const nextGid = Xid.fromValue(gid)
+          if (prevGid?.equals(nextGid) && prev.__isReady) return prev
+          return { ...prev, gid: nextGid, __isReady: true }
+        })
+      }
+    }
+  }, [_cid, _gid, creation, defaultGroupId])
 
   const updateDraft = useCallback((draft: Partial<Draft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
   }, [])
+  //#endregion
 
-  useEffect(() => gid && updateDraft({ gid }), [gid, updateDraft])
+  //#region processing state
+  const isLoading =
+    _isLoadingGroup ||
+    _isValidatingCreation ||
+    _isLoadingCreation ||
+    !draft.__isReady
 
   const [isSaving, setIsSaving] = useState(false)
 
+  // TODO: validate draft.content
   const isDisabled =
-    isSaving || !draft.title.trim() || !draft.content || !draft.gid
+    isLoading || isSaving || !draft.gid || !draft.title.trim() || !draft.content
+  //#endregion
 
-  const save = useCallback(async () => {
+  //#region actions
+  const create = useCallback(async () => {
     try {
       setIsSaving(true)
-      const draft = draftRef.current as SetNonNullable<Draft>
-      return await create({
+      if (!draft.gid || !draft.title.trim() || !draft.content) {
+        throw new Error(
+          'group id, title and content are required to create a new creation'
+        )
+      }
+      const body: CreateCreationInput = {
         ...draft,
         gid: draft.gid,
+        title: draft.title.trim(),
         content: encode(draft.content),
-      })
+      }
+      const { result: item } = await request.post<{
+        result: CreationOutput
+      }>(path, body)
+      return item
     } finally {
       setIsSaving(false)
     }
-  }, [create])
+  }, [draft, request])
+
+  const update = useCallback(async () => {
+    try {
+      setIsSaving(true)
+      if (
+        !draft.gid ||
+        !draft.id ||
+        !draft.updated_at ||
+        !draft.title.trim() ||
+        !draft.content
+      ) {
+        throw new Error(
+          'group id, creation id, updated_at, title and content are required to update a creation'
+        )
+      }
+      const body: UpdateCreationContentInput = {
+        gid: draft.gid,
+        id: draft.id,
+        updated_at: draft.updated_at,
+        language: draft.language,
+        content: encode(draft.content),
+      }
+      const { result: item } = await request.put<{
+        result: CreationOutput
+      }>(`${path}/update_content`, body)
+      const body2: UpdateCreationInput = {
+        ...draft,
+        gid: item.gid,
+        id: item.id,
+        updated_at: item.updated_at,
+        title: draft.title.trim(),
+      }
+      const { result: item2 } = await request.patch<{ result: CreationOutput }>(
+        path,
+        omitBy(body2, (val) => val === undefined || val === null || val === '')
+      )
+      mutate({ result: item2 })
+      return item2
+    } finally {
+      setIsSaving(false)
+    }
+  }, [draft, mutate, request])
+  //#endregion
 
   return {
     draft,
     updateDraft,
+    isLoading,
     isDisabled,
     isSaving,
-    save,
+    save: _gid && _cid ? update : create,
   } as const
 }
 
@@ -223,7 +300,7 @@ export function useCreationList({ status, ...query }: GIDPagination) {
   const { data, error, mutate, isValidating, isLoading, setSize } =
     useSWRInfinite(
       getKey,
-      ([url, body]) => request.post<Page<CreationOutput>>(url, body),
+      ([path, body]) => request.post<Page<CreationOutput>>(path, body),
       {
         revalidateIfStale: true,
         revalidateOnMount: false,

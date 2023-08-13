@@ -1,4 +1,4 @@
-import { CREATION_EDIT_PATH } from '#/App'
+import { EDIT_CREATION_PATH } from '#/App'
 import { css, useTheme } from '@emotion/react'
 import {
   Button,
@@ -41,7 +41,7 @@ export default function CreationItem({
   )
   const handleEdit = useCallback(() => {
     navigate({
-      pathname: generatePath(CREATION_EDIT_PATH, {
+      pathname: generatePath(EDIT_CREATION_PATH, {
         cid: Xid.fromValue(item.id).toString(),
       }),
       search: new URLSearchParams({

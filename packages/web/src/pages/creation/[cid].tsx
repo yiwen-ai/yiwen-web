@@ -1,4 +1,6 @@
 import { GROUP_DETAIL_PATH, SetHeaderProps } from '#/App'
+import Loading from '#/components/Loading'
+import { GroupDetailTabKey } from '#/pages/group/[gid]'
 import { css, useTheme } from '@emotion/react'
 import { type Editor, type EditorOptions } from '@tiptap/core'
 import {
@@ -6,33 +8,35 @@ import {
   RichTextEditor,
   Select,
   Spinner,
-  TextField,
+  TextareaAutosize,
   useToast,
 } from '@yiwen-ai/component'
-import { toMessage, useCreation } from '@yiwen-ai/store'
+import { toMessage, useEditCreation } from '@yiwen-ai/store'
 import { useCallback, useRef } from 'react'
 import { useIntl } from 'react-intl'
-import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  generatePath,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom'
 import { Xid } from 'xid-ts'
-import { GroupDetailTabKey } from '../group/[gid]'
 
 const MAX_WIDTH = 800
 
 export default function EditCreation() {
   const intl = useIntl()
   const theme = useTheme()
-  const navigate = useNavigate()
-  const [params] = useSearchParams()
   const { push, render } = useToast()
+  const navigate = useNavigate()
+  const params = useParams<{ cid: string }>()
+  const [searchParams] = useSearchParams()
+  const { draft, updateDraft, isLoading, isDisabled, isSaving, save } =
+    useEditCreation(searchParams.get('gid'), params.cid)
   const editorRef = useRef<Editor>(null)
 
-  const { draft, updateDraft, isDisabled, isSaving, save } = useCreation(
-    params.get('gid'),
-    params.get('id')
-  )
-
   const handleTitleUpdate = useCallback(
-    (ev: React.ChangeEvent<HTMLInputElement>) => {
+    (ev: React.ChangeEvent<HTMLTextAreaElement>) => {
       updateDraft({ title: ev.currentTarget.value })
     },
     [updateDraft]
@@ -96,55 +100,58 @@ export default function EditCreation() {
           </Button>
         </div>
       </SetHeaderProps>
-      <div
-        css={css`
-          flex: 1;
-          overflow-y: auto;
-        `}
-      >
-        <div
-          css={css`
-            max-width: ${MAX_WIDTH}px;
-            margin: 100px auto;
-            padding: 24px;
-          `}
-        >
-          <TextField
-            size='large'
-            placeholder={intl.formatMessage({ defaultMessage: '标题' })}
-            value={draft.title}
-            onChange={handleTitleUpdate}
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <>
+          <div
             css={css`
-              height: 60px;
-              padding: 0;
-              border: none;
-              font-size: 42px;
-              font-weight: 600;
-              line-height: 60px;
+              flex: 1;
+              overflow-y: auto;
             `}
-          />
-          <RichTextEditor
-            ref={editorRef}
-            initialContent={''}
-            onUpdate={handleContentUpdate}
+          >
+            <div
+              css={css`
+                max-width: ${MAX_WIDTH}px;
+                margin: 100px auto;
+                padding: 24px;
+              `}
+            >
+              <TextareaAutosize
+                placeholder={intl.formatMessage({ defaultMessage: '标题' })}
+                value={draft.title}
+                onChange={handleTitleUpdate}
+                css={css`
+                  border: none;
+                  font-size: 42px;
+                  font-weight: 600;
+                  line-height: 60px;
+                `}
+              />
+              <RichTextEditor
+                ref={editorRef}
+                initialContent={draft.content}
+                onUpdate={handleContentUpdate}
+                css={css`
+                  margin: 24px 0;
+                `}
+              />
+            </div>
+          </div>
+          <div
             css={css`
-              margin: 24px 0;
+              border-top: 1px solid ${theme.color.divider.secondary};
             `}
-          />
-        </div>
-      </div>
-      <div
-        css={css`
-          border-top: 1px solid ${theme.color.divider.secondary};
-        `}
-      >
-        <ArticleSettings
-          css={css`
-            max-width: ${MAX_WIDTH}px;
-            margin: auto;
-          `}
-        />
-      </div>
+          >
+            <ArticleSettings
+              css={css`
+                max-width: ${MAX_WIDTH}px;
+                margin: auto;
+              `}
+            />
+          </div>
+        </>
+      )}
     </>
   )
 }

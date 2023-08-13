@@ -108,7 +108,7 @@ export function usePublicationList({ status, ...query }: GIDPagination) {
   const { data, error, mutate, isValidating, isLoading, setSize } =
     useSWRInfinite(
       getKey,
-      ([url, body]) => request.post<Page<PublicationOutput>>(url, body),
+      ([path, body]) => request.post<Page<PublicationOutput>>(path, body),
       {
         revalidateIfStale: true,
         revalidateOnMount: false,

@@ -45,7 +45,8 @@ export function GlobalStyles() {
           line-height: inherit;
         }
 
-        input {
+        input,
+        textarea {
           padding: 0;
         }
 

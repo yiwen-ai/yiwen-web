@@ -38,6 +38,7 @@ export { Select, SelectOption, type SelectProps } from './Select'
 export { Spinner, type SpinnerProps, type SpinnerSize } from './Spinner'
 export { Tab, TabList, TabPanel, TabSection } from './TabSection'
 export { TextField, type TextFieldProps, type TextFieldSize } from './TextField'
+export { TextareaAutosize } from './TextareaAutosize'
 export {
   StructuredTileButton,
   TileButton,

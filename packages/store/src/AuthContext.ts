@@ -35,7 +35,7 @@ export enum UserStatus {
 
 export type ColorScheme = 'light' | 'dark' | 'auto'
 
-export interface User {
+export interface UserInfo {
   cn: string
   name: string
   locale: string
@@ -68,7 +68,7 @@ class AuthAPI {
   }
 
   fetchUser(signal: AbortSignal | null) {
-    return this.request<User>('/userinfo', undefined, { signal })
+    return this.request<UserInfo>('/userinfo', undefined, { signal })
   }
 
   fetchAccessToken(signal: AbortSignal | null) {
@@ -130,7 +130,7 @@ class AuthAPI {
 
 interface State {
   isInitialized: boolean
-  user?: User
+  user?: UserInfo
   accessToken?: string | undefined
   refreshInterval?: number | undefined
   authorize: (provider: IdentityProvider) => void
