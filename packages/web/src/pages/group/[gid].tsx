@@ -33,14 +33,14 @@ import {
   buildPublicationKey,
   toMessage,
   useCreationList,
-  useMyDefaultGroup,
+  useMyGroupList,
   usePublicationList,
   type CreationOutput,
   type Group,
   type PublicationOutput,
 } from '@yiwen-ai/store'
 import { type AnchorProps } from '@yiwen-ai/util'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
 import {
   Link,
@@ -80,7 +80,7 @@ export default function GroupDetail() {
     },
     [setSearchParams]
   )
-  const group = useMyDefaultGroup() // TODO: get group by gid
+  const group = useMyGroupList().defaultGroup // TODO: get group by gid
 
   return (
     <>
@@ -302,6 +302,7 @@ function GroupPart({
     () => [
       {
         label: intl.formatMessage({ defaultMessage: '删除' }),
+        danger: true,
         onClick: handleDelete,
       },
       {
@@ -395,14 +396,20 @@ function PublicationPart({
     isLoading,
     hasMore,
     loadMore,
+    refresh,
     publishItem,
     archiveItem,
     isPublishing,
     isArchiving,
   } = list
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => loadMore(), [])
+  const isInitializedRef = useRef(false)
+  useEffect(() => {
+    if (!isInitializedRef.current) {
+      isInitializedRef.current = true
+      refresh()
+    }
+  }, [refresh])
 
   const onPublish = useCallback(
     async (item: PublicationOutput) => {
@@ -618,14 +625,20 @@ function CreationPart({
     isLoading,
     hasMore,
     loadMore,
+    refresh,
     releaseItem,
     archiveItem,
     isReleasing,
     isArchiving,
   } = list
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => loadMore(), [])
+  const isInitializedRef = useRef(false)
+  useEffect(() => {
+    if (!isInitializedRef.current) {
+      isInitializedRef.current = true
+      refresh()
+    }
+  }, [refresh])
 
   const onRelease = useCallback(
     async (item: CreationOutput) => {

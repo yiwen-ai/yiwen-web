@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import useSWR from 'swr'
-import { type User } from './AuthContext'
+import { type UserInfo } from './AuthContext'
+import { RoleLevel } from './common'
 import { useFetcher } from './useFetcher'
 
 export interface Group {
@@ -18,26 +20,28 @@ export interface Group {
   slogan?: string
   address?: string
   description?: Uint8Array
-  _role: number
+  _role: RoleLevel
   _priority: number
   uid?: Uint8Array
-  owner?: User
+  owner?: UserInfo
 }
 
 export function useMyGroupList() {
   const fetcher = useFetcher()
-  const { data, isLoading } = useSWR<{ result: Group[] }>(
+  const { data, error, isValidating, isLoading } = useSWR<{ result: Group[] }>(
     '/v1/group/list_my',
     fetcher.post
   )
 
-  return {
-    groupList: data?.result,
-    isLoading,
-  }
-}
+  const defaultGroup = useMemo(
+    () => data?.result.find((group) => group._role === RoleLevel.OWNER),
+    [data?.result]
+  )
 
-export function useMyDefaultGroup() {
-  const { groupList } = useMyGroupList()
-  return groupList?.[0]
+  return {
+    defaultGroup,
+    groupList: data?.result,
+    error,
+    isLoading: isValidating || isLoading,
+  }
 }

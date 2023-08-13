@@ -4,15 +4,13 @@ export {
   useAuth,
   type ColorScheme,
   type IdentityProvider,
-  type User,
 } from './AuthContext'
 export { decode, encode } from './CBOR'
 export {
   CreationStatus,
   buildCreationKey,
-  useCreation,
-  useCreationAPI,
   useCreationList,
+  useEditCreation,
   type CreateCreationInput,
   type CreationOutput,
   type QueryCreation,
@@ -25,7 +23,7 @@ export {
   toMessage,
   type FetcherConfig,
 } from './useFetcher'
-export { useMyDefaultGroup, useMyGroupList, type Group } from './useGroup'
+export { useMyGroupList, type Group } from './useGroup'
 export {
   PublicationStatus,
   buildPublicationKey,

@@ -13,7 +13,6 @@ import {
   AuthProvider,
   FetcherConfigProvider,
   useAuth,
-  useMyDefaultGroup,
   type FetcherConfig,
 } from '@yiwen-ai/store'
 import {
@@ -48,17 +47,16 @@ import {
   RouterProvider,
   createBrowserRouter,
   createRoutesFromElements,
-  generatePath,
   useNavigate,
 } from 'react-router-dom'
 import { SWRConfig, type SWRConfiguration } from 'swr'
-import { Xid } from 'xid-ts'
 import Loading from './components/Loading'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
-import EditCreation from './pages/creation/edit'
+import EditCreation from './pages/creation/[cid]'
 import GroupDetail from './pages/group/[gid]'
+import DefaultGroup from './pages/group/default'
 import LoginState from './pages/login/state'
 import PublicationShare from './pages/pub/[cid]'
 import Search from './pages/search'
@@ -90,7 +88,6 @@ function Layout() {
 
   const [headerProps, setHeaderProps] = useState<HeaderProps>({})
 
-  const gid = useMyDefaultGroup()?.id
   const userMenu = useMemo<MenuProps>(
     () => ({
       items: [
@@ -99,15 +96,7 @@ function Layout() {
         },
         {
           label: intl.formatMessage({ defaultMessage: '我的创作中心' }),
-          disabled: !gid,
-          onClick: () => {
-            if (!gid) return
-            navigate(
-              generatePath(GROUP_DETAIL_PATH, {
-                gid: Xid.fromValue(gid).toString(),
-              })
-            )
-          },
+          onClick: () => navigate(DEFAULT_GROUP_PATH),
         },
         {
           label: intl.formatMessage({ defaultMessage: '我的收藏' }),
@@ -117,7 +106,7 @@ function Layout() {
         },
       ],
     }),
-    [gid, intl, navigate]
+    [intl, navigate]
   )
 
   return (
@@ -163,8 +152,9 @@ export function SetHeaderProps(props: HeaderProps) {
 
 export const SEARCH_PATH = '/search'
 export const NEW_CREATION_PATH = '/creation/new'
-export const CREATION_EDIT_PATH = '/creation/:cid'
+export const EDIT_CREATION_PATH = '/creation/:cid'
 export const PUBLICATION_SHARE_PATH = '/pub/:cid'
+export const DEFAULT_GROUP_PATH = '/group/default'
 export const GROUP_DETAIL_PATH = '/group/:gid'
 export const PUBLICATION_DETAIL_PATH = '/group/:gid/publication/:cid'
 export const CREATION_DETAIL_PATH = '/group/:gid/creation/:cid'
@@ -176,8 +166,9 @@ const router = createBrowserRouter(
       <Route path='/' element={<Home />} />
       <Route path={SEARCH_PATH} element={<Search />} />
       <Route path={NEW_CREATION_PATH} element={<EditCreation />} />
-      <Route path={CREATION_EDIT_PATH} element={<EditCreation />} />
+      <Route path={EDIT_CREATION_PATH} element={<EditCreation />} />
       <Route path={PUBLICATION_SHARE_PATH} element={<PublicationShare />} />
+      <Route path={DEFAULT_GROUP_PATH} element={<DefaultGroup />} />
       <Route path={GROUP_DETAIL_PATH} element={<GroupDetail />} />
       <Route path={PUBLICATION_DETAIL_PATH} element={<GroupDetail />} />
       <Route path={CREATION_DETAIL_PATH} element={<GroupDetail />} />

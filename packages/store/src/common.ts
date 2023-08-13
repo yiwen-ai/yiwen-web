@@ -13,3 +13,9 @@ export interface Page<T> {
   next_page_token: Uint8Array | null
   result: readonly T[]
 }
+
+export enum RoleLevel {
+  OWNER = 2,
+  MEMBER = 1,
+  GUEST = 0,
+}
