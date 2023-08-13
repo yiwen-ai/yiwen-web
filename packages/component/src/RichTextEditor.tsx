@@ -2,6 +2,10 @@ import { css, useTheme } from '@emotion/react'
 import { UniqueID } from '@tiptap-pro/extension-unique-id'
 import { type Editor } from '@tiptap/core'
 import { Placeholder } from '@tiptap/extension-placeholder'
+import { Table } from '@tiptap/extension-table'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TableHeader } from '@tiptap/extension-table-header'
+import { TableRow } from '@tiptap/extension-table-row'
 import { EditorContent, useEditor, type EditorOptions } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import { nanoid } from 'nanoid'
@@ -26,6 +30,12 @@ export const RichTextEditor = memo(
         content: initialContent ?? props.content ?? '',
         extensions: [
           StarterKit,
+          Table.configure({
+            resizable: true,
+          }),
+          TableRow,
+          TableHeader,
+          TableCell,
           UniqueID.configure({
             attributeName: 'id',
             types: [
