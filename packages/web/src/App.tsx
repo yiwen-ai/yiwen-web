@@ -156,8 +156,7 @@ export const EDIT_CREATION_PATH = '/creation/:cid'
 export const PUBLICATION_SHARE_PATH = '/pub/:cid'
 export const DEFAULT_GROUP_PATH = '/group/default'
 export const GROUP_DETAIL_PATH = '/group/:gid'
-export const PUBLICATION_DETAIL_PATH = '/group/:gid/publication/:cid'
-export const CREATION_DETAIL_PATH = '/group/:gid/creation/:cid'
+export const GROUP_VIEW_PATH = '/group/:gid/view/:type/:cid'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -170,8 +169,7 @@ const router = createBrowserRouter(
       <Route path={PUBLICATION_SHARE_PATH} element={<PublicationShare />} />
       <Route path={DEFAULT_GROUP_PATH} element={<DefaultGroup />} />
       <Route path={GROUP_DETAIL_PATH} element={<GroupDetail />} />
-      <Route path={PUBLICATION_DETAIL_PATH} element={<GroupDetail />} />
-      <Route path={CREATION_DETAIL_PATH} element={<GroupDetail />} />
+      <Route path={GROUP_VIEW_PATH} element={<GroupDetail />} />
       <Route path='/login/state' element={<LoginState />} />
     </Route>
   ),

@@ -1,17 +1,19 @@
 import {
-  CREATION_DETAIL_PATH,
+  GROUP_DETAIL_PATH,
+  GROUP_VIEW_PATH,
   NEW_CREATION_PATH,
-  PUBLICATION_DETAIL_PATH,
   SetHeaderProps,
 } from '#/App'
 import CompactCreationItem from '#/components/CompactCreationItem'
 import CompactPublicationItem from '#/components/CompactPublicationItem'
+import { CreationDialog } from '#/components/CreationDialog'
 import CreationItem from '#/components/CreationItem'
 import { IconMoreAnchor } from '#/components/IconMoreAnchor'
 import LoadMore from '#/components/LoadMore'
 import Loading from '#/components/Loading'
 import MediumDialog from '#/components/MediumDialog'
 import Placeholder from '#/components/Placeholder'
+import { PublicationDialog } from '#/components/PublicationDialog'
 import PublicationItem from '#/components/PublicationItem'
 import { css, useTheme } from '@emotion/react'
 import {
@@ -57,10 +59,20 @@ export enum GroupDetailTabKey {
   Creation = 'creation',
 }
 
+enum GroupViewType {
+  Publication = 'publication',
+  Creation = 'creation',
+}
+
 export default function GroupDetail() {
   const intl = useIntl()
   const toast = useToast()
-  const params = useParams<{ gid: string; cid?: string }>()
+  const navigate = useNavigate()
+  const params = useParams<{
+    gid: string
+    cid?: string
+    type?: GroupViewType
+  }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const [tab, setTab] = useState(
     (searchParams.get('tab') as GroupDetailTabKey | null) ??
@@ -81,6 +93,25 @@ export default function GroupDetail() {
     [setSearchParams]
   )
   const group = useMyGroupList().defaultGroup // TODO: get group by gid
+
+  const publicationLanguage = searchParams.get('language')
+  const publicationVersion = searchParams.get('version')
+  const handlePublicationDialogClose = useCallback(() => {
+    const searchParams2 = new URLSearchParams(searchParams)
+    searchParams2.delete('language')
+    searchParams2.delete('version')
+    navigate({
+      pathname: generatePath(GROUP_DETAIL_PATH, { gid: params.gid || null }),
+      search: searchParams2.toString(),
+    })
+  }, [navigate, params.gid, searchParams])
+
+  const handleCreationDialogClose = useCallback(() => {
+    navigate({
+      pathname: generatePath(GROUP_DETAIL_PATH, { gid: params.gid || null }),
+      search: searchParams.toString(),
+    })
+  }, [navigate, params.gid, searchParams])
 
   return (
     <>
@@ -124,6 +155,28 @@ export default function GroupDetail() {
         <Loading />
       ) : (
         <WithGroup toast={toast} group={group} tab={tab} setTab={updateTab} />
+      )}
+      {params.gid &&
+        params.cid &&
+        params.type === GroupViewType.Publication &&
+        publicationLanguage &&
+        publicationVersion && (
+          <PublicationDialog
+            gid={params.gid}
+            cid={params.cid}
+            language={publicationLanguage}
+            version={publicationVersion}
+            defaultOpen={true}
+            onClose={handlePublicationDialogClose}
+          />
+        )}
+      {params.gid && params.cid && params.type === GroupViewType.Creation && (
+        <CreationDialog
+          gid={params.gid}
+          cid={params.cid}
+          defaultOpen={true}
+          onClose={handleCreationDialogClose}
+        />
       )}
     </>
   )
@@ -466,9 +519,10 @@ function PublicationPart({
       searchParams2.set('language', item.language)
       searchParams2.set('version', item.version.toString())
       navigate({
-        pathname: generatePath(PUBLICATION_DETAIL_PATH, {
+        pathname: generatePath(GROUP_VIEW_PATH, {
           gid: Xid.fromValue(item.gid).toString(),
           cid: Xid.fromValue(item.cid).toString(),
+          type: GroupViewType.Publication,
         }),
         search: searchParams2.toString(),
       })
@@ -692,9 +746,10 @@ function CreationPart({
   const handleClick = useCallback(
     (item: CreationOutput) => {
       navigate({
-        pathname: generatePath(CREATION_DETAIL_PATH, {
+        pathname: generatePath(GROUP_VIEW_PATH, {
           gid: Xid.fromValue(item.gid).toString(),
           cid: Xid.fromValue(item.id).toString(),
+          type: GroupViewType.Creation,
         }),
         search: searchParams.toString(),
       })
