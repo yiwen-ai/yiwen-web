@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { type GIDPagination, type Page } from './common'
@@ -62,6 +63,46 @@ export interface UpdatePublicationStatusInput {
 }
 
 const path = '/v1/publication'
+
+export function usePublication(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined,
+  _language: string | null | undefined,
+  _version: number | string | null | undefined
+) {
+  const request = useFetcher()
+
+  const getKey = useCallback(() => {
+    if (!_gid || !_cid || !_language || _version == null) return null
+    interface Params
+      extends Record<keyof QueryPublication, string | number | undefined> {}
+    const params: Params = {
+      gid: _gid,
+      cid: _cid,
+      language: _language,
+      version: _version,
+      fields: undefined,
+    }
+    return [path, params] as const
+  }, [_cid, _gid, _language, _version])
+
+  const {
+    data: { result: publication } = {},
+    error,
+    mutate,
+    isValidating: _isValidatingPublication,
+    isLoading: _isLoadingPublication,
+  } = useSWR(getKey, ([path, params]) =>
+    request.get<{ result: PublicationOutput }>(path, params)
+  )
+
+  return {
+    publication,
+    error,
+    mutate,
+    isLoading: _isValidatingPublication || _isLoadingPublication,
+  } as const
+}
 
 export function buildPublicationKey(item: PublicationOutput) {
   return [
