@@ -19,7 +19,11 @@ type Story = StoryObj<typeof Dialog>
 
 export const Default: Story = {
   args: {
-    anchor: (props) => <Button {...props}>Open Dialog</Button>,
+    anchor: (props) => (
+      <Button color='primary' {...props}>
+        Open Dialog
+      </Button>
+    ),
     children: (
       <>
         <DialogHead>Head</DialogHead>
@@ -45,7 +49,11 @@ export const Default: Story = {
 
 export const Nested: Story = {
   args: {
-    anchor: (props) => <Button {...props}>Open Dialog</Button>,
+    anchor: (props) => (
+      <Button color='primary' {...props}>
+        Open Dialog
+      </Button>
+    ),
     children: (
       <>
         <DialogHead>Head</DialogHead>
@@ -76,7 +84,7 @@ function NestedDialogBody({
       {level < maxLevel ? (
         <Dialog
           anchor={(props) => (
-            <Button {...props} variant='outlined'>
+            <Button {...props} color='primary' variant='outlined'>
               {`Open #${level + 1} Dialog`}
             </Button>
           )}

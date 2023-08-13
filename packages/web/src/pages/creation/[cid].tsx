@@ -86,7 +86,7 @@ export default function EditCreation() {
             justify-content: flex-end;
           `}
         >
-          <Button disabled={isDisabled} onClick={handleSave}>
+          <Button color='primary' disabled={isDisabled} onClick={handleSave}>
             {isSaving && (
               <Spinner
                 size='small'

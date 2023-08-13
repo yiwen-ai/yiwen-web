@@ -1,7 +1,7 @@
 import { css, useTheme } from '@emotion/react'
 import { RGBA } from '@yiwen-ai/util'
 import { forwardRef, memo, type HTMLAttributes } from 'react'
-import { Button } from './Button'
+import { IconButton } from './Button'
 import { Icon, type IconName } from './Icon'
 
 export type AlertType = 'success' | 'warning'
@@ -75,8 +75,9 @@ export const Alert = memo(
           )}
         </div>
         {onClose && (
-          <Button
-            shape='circle'
+          <IconButton
+            iconName='delete'
+            size='medium'
             onClick={onClose}
             css={css`
               color: ${RGBA(theme.palette.grayLight, 0.4)};
@@ -84,9 +85,7 @@ export const Alert = memo(
               top: 16px;
               right: 16px;
             `}
-          >
-            <Icon name='delete' size='small' />
-          </Button>
+          />
         )}
       </div>
     )

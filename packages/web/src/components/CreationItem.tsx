@@ -94,6 +94,7 @@ export default function CreationItem({
       >
         {item.status === CreationStatus.Draft ? (
           <Button
+            color='primary'
             variant='outlined'
             size='small'
             disabled={disabled}

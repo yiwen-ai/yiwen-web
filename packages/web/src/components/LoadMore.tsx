@@ -19,7 +19,7 @@ export default function LoadMore({
   const content = isLoading ? (
     <Spinner />
   ) : hasMore ? (
-    <Button variant='outlined' onClick={loadMore}>
+    <Button color='primary' variant='outlined' onClick={loadMore}>
       {intl.formatMessage({ defaultMessage: '加载更多' })}
     </Button>
   ) : null

@@ -70,7 +70,11 @@ export const Custom: Story = {
 
 export const Anchored: Story = {
   args: {
-    anchor: (props) => <Button {...props}>Open Menu</Button>,
+    anchor: (props) => (
+      <Button color='primary' {...props}>
+        Open Menu
+      </Button>
+    ),
     items: [
       { label: '添加为链接' },
       { label: '添加为书签' },
@@ -84,7 +88,11 @@ export const Anchored: Story = {
 
 export const Nested: Story = {
   args: {
-    anchor: (props) => <Button {...props}>Open Menu</Button>,
+    anchor: (props) => (
+      <Button color='primary' {...props}>
+        Open Menu
+      </Button>
+    ),
     children: <NestedMenu level={1} maxLevel={5} />,
   },
 }
