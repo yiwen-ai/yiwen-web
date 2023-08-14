@@ -1,12 +1,30 @@
 import { css, useTheme } from '@emotion/react'
+import { Details } from '@tiptap-pro/extension-details'
+import { DetailsContent } from '@tiptap-pro/extension-details-content'
+import { DetailsSummary } from '@tiptap-pro/extension-details-summary'
+import { Emoji } from '@tiptap-pro/extension-emoji'
+import { Mathematics } from '@tiptap-pro/extension-mathematics'
 import { UniqueID } from '@tiptap-pro/extension-unique-id'
-import { type Editor } from '@tiptap/core'
+import { type Editor, type Extensions } from '@tiptap/core'
+import { Color } from '@tiptap/extension-color'
+import { FontFamily } from '@tiptap/extension-font-family'
+import { Image } from '@tiptap/extension-image'
+import { Link } from '@tiptap/extension-link'
+import { Mention } from '@tiptap/extension-mention'
 import { Placeholder } from '@tiptap/extension-placeholder'
+import { Subscript } from '@tiptap/extension-subscript'
+import { Superscript } from '@tiptap/extension-superscript'
 import { Table } from '@tiptap/extension-table'
 import { TableCell } from '@tiptap/extension-table-cell'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { TableRow } from '@tiptap/extension-table-row'
+import { TaskItem } from '@tiptap/extension-task-item'
+import { TaskList } from '@tiptap/extension-task-list'
+import { TextAlign } from '@tiptap/extension-text-align'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Typography } from '@tiptap/extension-typography'
 import { Underline } from '@tiptap/extension-underline'
+import { Youtube } from '@tiptap/extension-youtube'
 import {
   BubbleMenu,
   EditorContent,
@@ -15,7 +33,7 @@ import {
 } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import { nanoid } from 'nanoid'
-import { forwardRef, memo, useImperativeHandle } from 'react'
+import { forwardRef, memo, useImperativeHandle, useMemo } from 'react'
 import { useIntl } from 'react-intl'
 import { IconButton, type IconButtonProps } from './Button'
 
@@ -26,62 +44,120 @@ export interface RichTextEditorProps extends Partial<EditorOptions> {
 
 export const RichTextEditor = memo(
   forwardRef(function RichTextEditor(
-    { className, initialContent, ...props }: RichTextEditorProps,
+    {
+      className,
+      initialContent,
+      content = null,
+      ...props
+    }: RichTextEditorProps,
     ref: React.Ref<Editor | null>
   ) {
     const intl = useIntl()
     const theme = useTheme()
+
+    const extensions = useMemo<Extensions>(
+      () => [
+        Color,
+        Details.configure({ persist: true }),
+        DetailsContent,
+        DetailsSummary,
+        Emoji.configure({ enableEmoticons: true }),
+        FontFamily,
+        Image,
+        Link.configure({
+          protocols: ['mailto'],
+          HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' },
+        }),
+        Mathematics,
+        Mention,
+        Placeholder.configure({
+          placeholder: intl.formatMessage({ defaultMessage: '直接输入内容' }),
+        }),
+        StarterKit,
+        Subscript,
+        Superscript,
+        Table.configure({ resizable: true }),
+        TableCell,
+        TableHeader,
+        TableRow,
+        TaskItem.configure({ nested: true }),
+        TaskList,
+        TextAlign,
+        TextStyle,
+        Typography,
+        Underline,
+        UniqueID.configure({
+          attributeName: 'id',
+          types: [
+            'blockquote',
+            'codeBlock',
+            'detailsContent',
+            'detailsSummary',
+            'heading',
+            'listItem',
+            'paragraph',
+            'tableCell',
+            'tableHeader',
+            'taskItem',
+          ],
+          generateID: () => nanoid(6), // TODO: avoid collision
+        }),
+        Youtube,
+      ],
+      [intl]
+    )
+
     const editor = useEditor(
-      {
-        ...props,
-        content: initialContent ?? props.content ?? '',
-        extensions: [
-          StarterKit,
-          Underline,
-          Table.configure({
-            resizable: true,
-          }),
-          TableRow,
-          TableHeader,
-          TableCell,
-          UniqueID.configure({
-            attributeName: 'id',
-            types: [
-              'blockquote',
-              'codeBlock',
-              'detailsContent',
-              'detailsSummary',
-              'heading',
-              'listItem',
-              'paragraph',
-              'tableCell',
-              'tableHeader',
-            ],
-            generateID: () => nanoid(6),
-          }),
-          Placeholder.configure({
-            placeholder: intl.formatMessage({ defaultMessage: '直接输入内容' }),
-          }),
-        ],
-      },
-      [
-        props.content,
-        props.autofocus,
-        props.editable,
-        props.editorProps,
-        props.parseOptions,
-        props.onBeforeCreate,
-        props.onCreate,
-        props.onUpdate,
-        props.onSelectionUpdate,
-        props.onTransaction,
-        props.onFocus,
-        props.onBlur,
-        props.onDestroy,
-      ]
+      { ...props, content: initialContent ?? content, extensions },
+      Object.values(props)
     )
 
     useImperativeHandle(ref, () => editor, [editor])
+
+    const bubbleMenuItems: BubbleMenuItemProps[] | null = editor && [
+      {
+        iconName: 'h1',
+        active: editor.isActive('heading', { level: 1 }),
+        onClick: () => {
+          editor.chain().focus().toggleHeading({ level: 1 }).run()
+        },
+      },
+      {
+        iconName: 'h2',
+        active: editor.isActive('heading', { level: 2 }),
+        onClick: () => {
+          editor.chain().focus().toggleHeading({ level: 2 }).run()
+        },
+      },
+      {
+        iconName: 'h3',
+        active: editor.isActive('heading', { level: 3 }),
+        onClick: () => {
+          editor.chain().focus().toggleHeading({ level: 3 }).run()
+        },
+      },
+      {
+        iconName: 'bold',
+        active: editor.isActive('bold'),
+        onClick: () => {
+          editor.chain().focus().toggleBold().run()
+        },
+      },
+      {
+        iconName: 'underline',
+        active: editor.isActive('underline'),
+        onClick: () => {
+          editor.chain().focus().toggleUnderline().run()
+        },
+      },
+      {
+        iconName: 'italic',
+        active: editor.isActive('italic'),
+        onClick: () => {
+          editor.chain().focus().toggleItalic().run()
+        },
+      },
+    ]
 
     return (
       <>
@@ -90,7 +166,9 @@ export const RichTextEditor = memo(
           editor={editor}
           css={css`
             .ProseMirror {
-              :focus {
+              ${theme.typography.body};
+
+              &:focus {
                 outline: none;
               }
 
@@ -110,6 +188,15 @@ export const RichTextEditor = memo(
                 font-size: 20px;
                 font-weight: 600;
                 line-height: 28px;
+              }
+
+              a {
+                display: inline-block;
+                cursor: pointer;
+                color: ${theme.color.link.normal};
+                :hover {
+                  color: ${theme.color.link.hover};
+                }
               }
 
               > * {
@@ -143,42 +230,15 @@ export const RichTextEditor = memo(
               border-radius: 12px;
             `}
           >
-            <BubbleMenuItem
-              iconName='h1'
-              active={editor.isActive('heading', { level: 1 })}
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 1 }).run()
-              }
-            />
-            <BubbleMenuItem
-              iconName='h2'
-              active={editor.isActive('heading', { level: 2 })}
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 2 }).run()
-              }
-            />
-            <BubbleMenuItem
-              iconName='h3'
-              active={editor.isActive('heading', { level: 3 })}
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 3 }).run()
-              }
-            />
-            <BubbleMenuItem
-              iconName='bold'
-              active={editor.isActive('bold')}
-              onClick={() => editor.chain().focus().toggleBold().run()}
-            />
-            <BubbleMenuItem
-              iconName='underline'
-              active={editor.isActive('underline')}
-              onClick={() => editor.chain().focus().toggleUnderline().run()}
-            />
-            <BubbleMenuItem
-              iconName='italic'
-              active={editor.isActive('italic')}
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-            />
+            {bubbleMenuItems?.map(({ iconName, active, onClick, ...props }) => (
+              <BubbleMenuItem
+                key={iconName}
+                iconName={iconName}
+                active={active}
+                onClick={onClick}
+                {...props}
+              />
+            ))}
           </BubbleMenu>
         )}
       </>
@@ -186,9 +246,13 @@ export const RichTextEditor = memo(
   })
 )
 
+interface BubbleMenuItemProps extends IconButtonProps {
+  active: boolean
+}
+
 const BubbleMenuItem = memo(
   forwardRef(function BubbleMenuItem(
-    { active, ...props }: IconButtonProps & { active: boolean },
+    { active, ...props }: BubbleMenuItemProps,
     ref: React.Ref<HTMLButtonElement>
   ) {
     const theme = useTheme()

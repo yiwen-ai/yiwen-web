@@ -145,7 +145,6 @@ declare module '@emotion/react' {
       h0: Typography
       h1: Typography
       h2: Typography
-      h3: Typography
       body: Typography
       bodyBold: Typography
       tooltip: Typography
@@ -364,15 +363,10 @@ export const lightTheme: Theme = {
     },
     h1: {
       fontSize: '28px',
-      fontWeight: 600,
-      lineHeight: '36px',
+      fontWeight: 400,
+      lineHeight: '40px',
     },
     h2: {
-      fontSize: '24px',
-      fontWeight: 400,
-      lineHeight: '32px',
-    },
-    h3: {
       fontSize: '20px',
       fontWeight: 400,
       lineHeight: '28px',

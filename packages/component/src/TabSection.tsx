@@ -135,7 +135,7 @@ export const Tab = memo(
         css={css`
           padding: 8px;
           border-radius: 8px;
-          ${theme.typography.h3}
+          ${theme.typography.h2}
           cursor: pointer;
           &[data-selected] {
             background: ${theme.color.tab.active.background};

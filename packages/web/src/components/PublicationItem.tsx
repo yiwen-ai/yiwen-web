@@ -68,7 +68,7 @@ export default function PublicationItem({
       <div
         css={css`
           ${textEllipsis}
-          ${theme.typography.h3}
+          ${theme.typography.h2}
         `}
       >
         {item.title}

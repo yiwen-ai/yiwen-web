@@ -382,7 +382,7 @@ function GroupPart({
           <h2
             css={css`
               margin-bottom: 12px;
-              ${theme.typography.h3}
+              ${theme.typography.h2}
             `}
           >
             {group.slogan}
