@@ -164,7 +164,7 @@ export default function Search() {
                 >
                   <div
                     css={css`
-                      ${theme.typography.h3}
+                      ${theme.typography.h2}
                       color: ${theme.palette.primaryNormal};
                     `}
                   >

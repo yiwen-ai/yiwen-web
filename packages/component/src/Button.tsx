@@ -129,6 +129,7 @@ export const IconButton = memo(
 
     return (
       <Button
+        aria-label={iconName}
         color={color}
         variant={variant}
         shape={shape}
