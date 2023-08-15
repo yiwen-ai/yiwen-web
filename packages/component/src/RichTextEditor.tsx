@@ -28,10 +28,12 @@ import { Youtube } from '@tiptap/extension-youtube'
 import {
   BubbleMenu,
   EditorContent,
+  FloatingMenu,
   useEditor,
   type EditorOptions,
 } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
+import { RGBA } from '@yiwen-ai/util'
 import { nanoid } from 'nanoid'
 import { forwardRef, memo, useImperativeHandle, useMemo } from 'react'
 import { useIntl } from 'react-intl'
@@ -159,6 +161,90 @@ export const RichTextEditor = memo(
       },
     ]
 
+    const floatingMenuItems: BubbleMenuItemProps[] | null = editor && [
+      {
+        iconName: 'h1',
+        active: editor.isActive('heading', { level: 1 }),
+        onClick: () => {
+          editor.chain().focus().toggleHeading({ level: 1 }).run()
+        },
+      },
+      {
+        iconName: 'h2',
+        active: editor.isActive('heading', { level: 2 }),
+        onClick: () => {
+          editor.chain().focus().toggleHeading({ level: 2 }).run()
+        },
+      },
+      {
+        iconName: 'h3',
+        active: editor.isActive('heading', { level: 3 }),
+        onClick: () => {
+          editor.chain().focus().toggleHeading({ level: 3 }).run()
+        },
+      },
+      {
+        iconName: 'bold',
+        active: editor.isActive('bold'),
+        onClick: () => {
+          editor.chain().focus().toggleBold().run()
+        },
+      },
+      {
+        iconName: 'underline',
+        active: editor.isActive('underline'),
+        onClick: () => {
+          editor.chain().focus().toggleUnderline().run()
+        },
+      },
+      {
+        iconName: 'italic',
+        active: editor.isActive('italic'),
+        onClick: () => {
+          editor.chain().focus().toggleItalic().run()
+        },
+      },
+      {
+        iconName: 'ul',
+        active: editor.isActive('bulletList'),
+        onClick: () => {
+          editor.chain().focus().toggleBulletList().run()
+        },
+      },
+      {
+        iconName: 'ol',
+        active: editor.isActive('orderedList'),
+        onClick: () => {
+          editor.chain().focus().toggleOrderedList().run()
+        },
+      },
+      {
+        iconName: 'quote',
+        active: editor.isActive('blockquote'),
+        onClick: () => {
+          editor.chain().focus().toggleBlockquote().run()
+        },
+      },
+      {
+        iconName: 'horizontal',
+        active: editor.isActive('horizontalRule'),
+        onClick: () => {
+          editor.chain().focus().setHorizontalRule().run()
+        },
+      },
+    ]
+
+    const menuCSS = css`
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 4px;
+      background: ${theme.color.menu.background};
+      border: 1px solid ${theme.color.menu.border};
+      border-radius: 12px;
+    `
+
     return (
       <>
         <EditorContent
@@ -206,7 +292,9 @@ export const RichTextEditor = memo(
                 }
               }
 
-              p.is-empty:first-of-type::before {
+              p.is-editor-empty::before,
+              p.is-empty:only-child::before,
+              style + p.is-empty:last-child::before {
                 color: ${theme.color.input.placeholder};
                 content: attr(data-placeholder);
                 float: left;
@@ -217,18 +305,33 @@ export const RichTextEditor = memo(
           `}
         />
         {editor && (
+          <FloatingMenu
+            editor={editor}
+            tippyOptions={{
+              maxWidth: '246px',
+              placement: 'bottom-start',
+              duration: 100,
+            }}
+            css={menuCSS}
+          >
+            {floatingMenuItems?.map(
+              ({ iconName, active, onClick, ...props }) => (
+                <BubbleMenuItem
+                  key={iconName}
+                  iconName={iconName}
+                  active={active}
+                  onClick={onClick}
+                  {...props}
+                />
+              )
+            )}
+          </FloatingMenu>
+        )}
+        {editor && (
           <BubbleMenu
             editor={editor}
-            css={css`
-              padding: 12px 16px;
-              display: flex;
-              flex-wrap: wrap;
-              align-items: center;
-              gap: 4px;
-              background: ${theme.color.menu.background};
-              border: 1px solid ${theme.color.menu.border};
-              border-radius: 12px;
-            `}
+            tippyOptions={{ maxWidth: '246px' }}
+            css={menuCSS}
           >
             {bubbleMenuItems?.map(({ iconName, active, onClick, ...props }) => (
               <BubbleMenuItem
@@ -269,7 +372,7 @@ const BubbleMenuItem = memo(
           border-radius: 8px;
           color: ${theme.color.body.primary} !important;
           &[data-active] {
-            background: ${theme.color.menu.item.hover.background};
+            background: ${RGBA(theme.color.link.hover, 0.4)};
           }
         `}
       />
