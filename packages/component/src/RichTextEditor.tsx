@@ -33,7 +33,6 @@ import {
   type EditorOptions,
 } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
-import { RGBA } from '@yiwen-ai/util'
 import { nanoid } from 'nanoid'
 import { forwardRef, memo, useImperativeHandle, useMemo } from 'react'
 import { useIntl } from 'react-intl'
@@ -75,7 +74,7 @@ export const RichTextEditor = memo(
         Placeholder.configure({
           placeholder: intl.formatMessage({ defaultMessage: '直接输入内容' }),
         }),
-        StarterKit,
+        StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
         Subscript,
         Superscript,
         Table.configure({ resizable: true }),
@@ -258,6 +257,18 @@ export const RichTextEditor = memo(
                 outline: none;
               }
 
+              > :first-child,
+              > style + * {
+                margin-top: 0;
+              }
+
+              > :not(style) {
+                margin-bottom: 0;
+                + * {
+                  margin-top: 20px;
+                }
+              }
+
               h1 {
                 font-size: 28px;
                 font-weight: 600;
@@ -276,19 +287,99 @@ export const RichTextEditor = memo(
                 line-height: 28px;
               }
 
+              * > p {
+                margin-top: unset;
+                margin-bottom: unset;
+              }
+
+              blockquote {
+                margin-left: 0;
+                margin-right: 0;
+                padding: 0 16px;
+                border-left: 2px solid ${theme.color.divider.primary};
+              }
+
+              pre {
+                padding: 20px 24px;
+                background: ${theme.color.codeBlock.background};
+              }
+
+              ul,
+              ol {
+                padding-left: 24px;
+              }
+
+              li {
+                padding-left: 4px;
+              }
+
+              > ul {
+                list-style-type: disc;
+                > li > ul {
+                  list-style-type: circle;
+                  > li > ul {
+                    list-style-type: square;
+                    > li > ul {
+                      list-style-type: disc;
+                      > li > ul {
+                        list-style-type: circle;
+                        > li > ul {
+                          list-style-type: square;
+                          > li > ul {
+                            list-style-type: disc;
+                            > li > ul {
+                              list-style-type: circle;
+                              > li > ul {
+                                list-style-type: square;
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+
+              > ol {
+                list-style-type: decimal;
+                > li > ol {
+                  list-style-type: lower-alpha;
+                  > li > ol {
+                    list-style-type: lower-roman;
+                    > li > ol {
+                      list-style-type: decimal;
+                      > li > ol {
+                        list-style-type: lower-alpha;
+                        > li > ol {
+                          list-style-type: lower-roman;
+                          > li > ol {
+                            list-style-type: decimal;
+                            > li > ol {
+                              list-style-type: lower-alpha;
+                              > li > ol {
+                                list-style-type: lower-roman;
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+
+              hr {
+                border: none;
+                border-top: 1px solid ${theme.color.divider.primary};
+              }
+
               a {
                 display: inline-block;
                 cursor: pointer;
                 color: ${theme.color.link.normal};
                 :hover {
                   color: ${theme.color.link.hover};
-                }
-              }
-
-              > * {
-                margin: unset;
-                + * {
-                  margin-top: 20px;
                 }
               }
 
@@ -372,7 +463,8 @@ const BubbleMenuItem = memo(
           border-radius: 8px;
           color: ${theme.color.body.primary} !important;
           &[data-active] {
-            background: ${RGBA(theme.color.link.hover, 0.4)};
+            background: ${theme.color.button.secondary.contained.hover
+              .background};
           }
         `}
       />

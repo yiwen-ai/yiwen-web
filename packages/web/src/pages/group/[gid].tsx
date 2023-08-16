@@ -252,7 +252,7 @@ function WithGroup({
             {intl.formatMessage({ defaultMessage: '发布' })}
           </Tab>
           <Tab value={GroupDetailTabKey.Creation}>
-            {intl.formatMessage({ defaultMessage: '原稿' })}
+            {intl.formatMessage({ defaultMessage: '文稿' })}
           </Tab>
           <div
             css={css`

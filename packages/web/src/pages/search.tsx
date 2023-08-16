@@ -152,6 +152,7 @@ export default function Search() {
             <ul
               css={css`
                 margin-top: -24px;
+                list-style: none;
               `}
             >
               {searchItems.map((item) => (

@@ -39,7 +39,7 @@ export default function PublicationItemStatus({
       case PublicationStatus.Published:
         return {
           label: intl.formatMessage({
-            defaultMessage: '已发布不支持编辑，编辑可前往原稿更新',
+            defaultMessage: '已发布不支持编辑，编辑可前往文稿更新',
           }),
           color: theme.palette.green,
         }

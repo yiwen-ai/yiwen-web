@@ -212,12 +212,13 @@ function ArticleList({
   const theme = useTheme()
 
   return (
-    <ol
+    <ul
       css={css`
         display: flex;
         align-items: flex-start;
         flex-wrap: wrap;
         gap: 12px 36px;
+        list-style: none;
       `}
     >
       {items.map((item, index) => (
@@ -249,7 +250,7 @@ function ArticleList({
           <span>{item.title}</span>
         </li>
       ))}
-    </ol>
+    </ul>
   )
 }
 

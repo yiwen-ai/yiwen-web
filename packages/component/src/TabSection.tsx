@@ -85,6 +85,7 @@ export const TabList = memo(
         css={css`
           display: flex;
           gap: 8px;
+          list-style: none;
         `}
       />
     )
