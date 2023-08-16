@@ -130,6 +130,9 @@ declare module '@emotion/react' {
           indicator: string
         }
       }
+      codeBlock: {
+        background: string
+      }
     }
     /**
      * font family
@@ -349,6 +352,9 @@ export const lightTheme: Theme = {
         text: palette.primaryNormal,
         indicator: palette.primaryNormal,
       },
+    },
+    codeBlock: {
+      background: palette.grayLight1,
     },
   },
   font: {
@@ -570,6 +576,9 @@ export const darkTheme: Theme = {
         text: palette.primaryNormal,
         indicator: palette.primaryNormal,
       },
+    },
+    codeBlock: {
+      background: palette.grayNormal1,
     },
   },
 }
