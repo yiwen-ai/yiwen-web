@@ -41,7 +41,15 @@ export const Menu = memo(
     const parentRef = useContext(MenuContext)
 
     const render = () => (
-      <ul role='menu' {...menuProps}>
+      <ul
+        role='menu'
+        {...menuProps}
+        css={css`
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        `}
+      >
         {items?.length
           ? items.map((item, index) => <MenuItem key={index} {...item} />)
           : menuProps.children}
@@ -57,7 +65,6 @@ export const Menu = memo(
         css={css`
           width: 208px;
           padding: 20px 12px;
-          box-sizing: border-box;
           border: 1px solid ${theme.color.menu.border};
           background: ${theme.color.menu.background};
         `}

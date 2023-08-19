@@ -25,5 +25,6 @@ jobs:
       - run: pnpm install
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npx eslint --ext .ts,.tsx packages/**
       - run: pnpm --recursive --parallel test
       - run: pnpm --recursive --parallel run build

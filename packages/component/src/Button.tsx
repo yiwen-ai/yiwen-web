@@ -20,7 +20,7 @@ const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
     paddingLeft: 24,
     paddingRight: 24,
     borderWidth: 1,
-    borderRadius: 16,
+    borderRadius: 12,
   }),
   large: () => ({
     minHeight: 48,
@@ -42,6 +42,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
   shape?: ButtonShape
   size?: ButtonSize
+  readOnly?: boolean
 }
 
 export const Button = memo(
@@ -51,6 +52,8 @@ export const Button = memo(
       variant = color === 'primary' ? 'contained' : 'outlined',
       shape = 'rounded',
       size = 'medium',
+      readOnly,
+      disabled,
       ...props
     }: ButtonProps,
     ref: React.Ref<HTMLButtonElement>
@@ -74,6 +77,8 @@ export const Button = memo(
     return (
       <button
         type='button'
+        data-readonly={readOnly ? '' : undefined}
+        disabled={disabled || readOnly}
         {...props}
         ref={ref}
         css={css`
@@ -83,11 +88,12 @@ export const Button = memo(
           gap: 4px;
           ${sizeCSS}
           border-style: solid;
-          border-color: ${colorCSS.border};
-          background-color: ${colorCSS.background};
-          color: ${colorCSS.text};
           white-space: nowrap;
-          cursor: ${props.disabled ? 'not-allowed' : 'pointer'};
+          cursor: ${disabled
+            ? 'not-allowed'
+            : readOnly
+            ? 'default'
+            : 'pointer'};
           :hover {
             border-color: ${colorCSS.hover.border};
             background-color: ${colorCSS.hover.background};
@@ -99,6 +105,12 @@ export const Button = memo(
             border-color: ${colorCSS.disabled.border};
             background-color: ${colorCSS.disabled.background};
             color: ${colorCSS.disabled.text};
+          }
+          &,
+          &[data-readonly] {
+            border-color: ${colorCSS.border};
+            background-color: ${colorCSS.background};
+            color: ${colorCSS.text};
           }
         `}
       />

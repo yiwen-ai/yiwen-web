@@ -4,7 +4,9 @@ import {
   flip,
   offset,
   shift,
+  size,
   useFloating,
+  type Middleware,
   type Placement,
 } from '@floating-ui/react-dom'
 import {
@@ -19,6 +21,7 @@ import {
   forwardRef,
   memo,
   useImperativeHandle,
+  useMemo,
   type HTMLAttributes,
 } from 'react'
 import { Portal, type PortalProps } from './Portal'
@@ -52,11 +55,35 @@ export const Popover = memo(
     const { refs, floatingStyles } = useFloating({
       placement: placement as Placement,
       open,
-      middleware: [offset(8), flip(), shift()],
+      middleware: useMemo<Middleware[]>(
+        () => [
+          offset({
+            mainAxis: 8,
+          }),
+          shift({
+            padding: 8,
+          }),
+          flip(),
+          size({
+            padding: 8,
+            apply: ({ availableWidth, availableHeight, elements }) => {
+              elements.floating.style.maxWidth = `${availableWidth}px`
+              elements.floating.style.maxHeight = `${availableHeight}px`
+            },
+          }),
+        ],
+        []
+      ),
       whileElementsMounted: autoUpdate,
     })
-    const setAnchorRef = mergeAnchorRef(refs.setReference)
-    const setFloatingRef = mergeFloatingRef(refs.setFloating)
+    const setAnchorRef = useMemo(
+      () => mergeAnchorRef(refs.setReference),
+      [mergeAnchorRef, refs.setReference]
+    )
+    const setFloatingRef = useMemo(
+      () => mergeFloatingRef(refs.setFloating),
+      [mergeFloatingRef, refs.setFloating]
+    )
 
     return (
       <>
@@ -72,9 +99,11 @@ export const Popover = memo(
               style={{ ...floatingStyles, ...floatingProps.style }}
               css={css`
                 padding: 24px;
+                box-sizing: border-box;
                 border-radius: 12px;
                 border: 1px solid ${theme.color.popover.border};
                 background: ${theme.color.popover.background};
+                overflow-y: auto;
                 z-index: 1;
               `}
             />

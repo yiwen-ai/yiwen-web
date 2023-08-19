@@ -56,9 +56,13 @@ export const Dialog = memo(
               css={css`
                 position: fixed;
                 inset: 0;
-                margin: 96px 80px 0;
+                width: 800px;
+                height: 620px;
+                max-width: calc(100% - 80px * 2);
+                max-height: calc(100% - 80px * 2);
+                margin: auto;
                 background: ${theme.color.dialog.background};
-                border-radius: 20px 20px 0 0;
+                border-radius: 20px;
                 border: none;
                 display: flex;
                 flex-direction: column;
@@ -143,17 +147,14 @@ export const DialogClose = memo(function DialogClose({
     <IconButton
       data-dialog-close={true}
       iconName={iconName}
-      variant='contained'
       size='medium'
       onClick={handleClick}
       {...props}
       css={css`
-        color: ${RGBA(theme.palette.grayLight, 0.4)};
         position: absolute;
-        left: 100%;
-        bottom: 100%;
-        margin-left: 16px;
-        margin-bottom: 16px;
+        top: 16px;
+        right: 16px;
+        color: ${RGBA(theme.palette.grayLight, 0.4)};
       `}
     />
   )

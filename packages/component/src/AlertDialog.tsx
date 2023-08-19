@@ -24,10 +24,8 @@ export const AlertDialog = memo(
         {...props}
         ref={ref}
         css={css`
-          width: 440px;
+          width: 444px;
           height: fit-content;
-          margin: auto;
-          border-radius: 20px;
         `}
       />
     )
@@ -68,15 +66,5 @@ export const AlertDialogFoot = memo(function AlertDialogFoot(
 export const AlertDialogClose = memo(function AlertDialogClose(
   props: DialogCloseProps
 ) {
-  return (
-    <DialogClose
-      {...props}
-      css={css`
-        inset: unset;
-        top: 16px;
-        right: 16px;
-        margin: unset;
-      `}
-    />
-  )
+  return <DialogClose {...props} />
 })

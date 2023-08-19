@@ -48,6 +48,7 @@ export const Toast = memo(
         ref={setRef}
         css={css`
           width: 444px;
+          max-width: 100%;
           box-sizing: border-box;
         `}
       />
@@ -67,6 +68,7 @@ export const ToastContainer = memo(function ToastContainer(
           position: fixed;
           top: 36px;
           left: 50%;
+          max-width: calc(100% - 16px * 2);
           display: flex;
           flex-direction: column;
           align-items: center;

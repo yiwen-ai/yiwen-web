@@ -4,11 +4,17 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
+import { useAuth } from './AuthContext'
 import { decode, encode } from './CBOR'
-import { type GIDPagination, type Page } from './common'
+import {
+  type GIDPagination,
+  type GroupInfo,
+  type Page,
+  type UserInfo,
+} from './common'
 import { useFetcher } from './useFetcher'
 import { useMyGroupList } from './useGroup'
-import { type CreatePublicationInput } from './usePublication'
+import { DEFAULT_MODEL, type CreatePublicationInput } from './usePublication'
 
 export enum CreationStatus {
   Deleted = -2,
@@ -51,7 +57,6 @@ export interface CreationOutput {
   original_url?: string
   genre?: string[]
   title?: string
-  description?: string
   cover?: string
   keywords?: string[]
   labels?: string[]
@@ -60,6 +65,8 @@ export interface CreationOutput {
   summary?: string
   content: Uint8Array
   license?: string
+  creator_info?: UserInfo
+  group_info?: GroupInfo
 }
 
 export interface UpdateCreationInput {
@@ -130,6 +137,8 @@ export function useEditCreation(
   const request = useFetcher()
 
   //#region fetch group & creation
+  const { locale } = useAuth().user ?? {}
+
   const {
     defaultGroup: { id: defaultGroupId } = {},
     isLoading: _isLoadingGroup,
@@ -143,22 +152,24 @@ export function useEditCreation(
   //#endregion
 
   //#region draft
-  interface Draft extends Omit<CreateCreationInput, 'gid' | 'content'> {
+  interface Draft {
     __isReady: boolean
     gid: Uint8Array | undefined
     id: Uint8Array | undefined
+    language: string | undefined
     updated_at: number | undefined
-    content: JSONContent | null
+    title: string
+    content: JSONContent | undefined
   }
 
   const [draft, setDraft] = useState<Draft>(() => ({
     __isReady: false,
     gid: _gid ? Xid.fromValue(_gid) : undefined,
     id: _cid ? Xid.fromValue(_cid) : undefined,
+    language: locale,
     updated_at: undefined,
-    language: 'eng',
     title: '',
-    content: null,
+    content: undefined,
   }))
 
   useEffect(() => {
@@ -196,28 +207,40 @@ export function useEditCreation(
 
   // TODO: validate draft.content
   const isDisabled =
-    isLoading || isSaving || !draft.gid || !draft.title.trim() || !draft.content
+    isLoading ||
+    isSaving ||
+    !draft.gid ||
+    !draft.language ||
+    !draft.title.trim() ||
+    !draft.content
   //#endregion
 
   //#region actions
   const create = useCallback(async () => {
     try {
       setIsSaving(true)
-      if (!draft.gid || !draft.title.trim() || !draft.content) {
+      if (
+        !draft.gid ||
+        !draft.language ||
+        !draft.title.trim() ||
+        !draft.content
+      ) {
         throw new Error(
-          'group id, title and content are required to create a new creation'
+          'group id, language, title and content are required to create a creation'
         )
       }
       const body: CreateCreationInput = {
         ...draft,
         gid: draft.gid,
+        language: draft.language,
         title: draft.title.trim(),
         content: encode(draft.content),
       }
-      const { result: item } = await request.post<{
-        result: CreationOutput
-      }>(path, body)
-      return item
+      const { result } = await request.post<{ result: CreationOutput }>(
+        path,
+        body
+      )
+      return result
     } finally {
       setIsSaving(false)
     }
@@ -229,19 +252,20 @@ export function useEditCreation(
       if (
         !draft.gid ||
         !draft.id ||
+        !draft.language ||
         !draft.updated_at ||
         !draft.title.trim() ||
         !draft.content
       ) {
         throw new Error(
-          'group id, creation id, updated_at, title and content are required to update a creation'
+          'group id, creation id, language, updated_at, title and content are required to update a creation'
         )
       }
       const body: UpdateCreationContentInput = {
         gid: draft.gid,
         id: draft.id,
-        updated_at: draft.updated_at,
         language: draft.language,
+        updated_at: draft.updated_at,
         content: encode(draft.content),
       }
       const { result: item } = await request.put<{
@@ -254,12 +278,12 @@ export function useEditCreation(
         updated_at: item.updated_at,
         title: draft.title.trim(),
       }
-      const { result: item2 } = await request.patch<{ result: CreationOutput }>(
+      const { result } = await request.patch<{ result: CreationOutput }>(
         path,
-        omitBy(body2, (val) => val === undefined || val === null || val === '')
+        omitBy(body2, (val) => val == null || val === '')
       )
-      mutate({ result: item2 })
-      return item2
+      mutate({ result })
+      return result
     } finally {
       setIsSaving(false)
     }
@@ -437,6 +461,7 @@ export function useCreationList({ status, ...query }: GIDPagination) {
           cid: item.id,
           language: item.language,
           version: item.version,
+          model: DEFAULT_MODEL,
         }
         await request.post<{
           result: CreationOutput

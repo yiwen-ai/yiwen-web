@@ -18,31 +18,13 @@ import {
   type Subscription,
 } from 'rxjs'
 import { useSWRConfig } from 'swr'
+import { type UserInfo } from './common'
 import { useLogger } from './logger'
 import {
   createRequest,
   useFetcherConfig,
   type FetcherConfig,
 } from './useFetcher'
-
-export enum UserStatus {
-  Disabled = -2,
-  Suspended = -1,
-  Normal = 0,
-  Verified = 1,
-  Protected = 2,
-}
-
-export type ColorScheme = 'light' | 'dark' | 'auto'
-
-export interface UserInfo {
-  cn: string
-  name: string
-  locale: string
-  picture: string
-  status: UserStatus
-  theme?: ColorScheme
-}
 
 interface AccessToken {
   sub: string
@@ -124,7 +106,7 @@ class AuthAPI {
   }
 
   logout() {
-    // TODO: implement logout
+    return this.request.post('/logout')
   }
 }
 
@@ -251,7 +233,27 @@ export function AuthProvider(
       subscriptionList.add(subscription)
     }
     const callback = authAPI.callback.bind(authAPI)
-    const logout = authAPI.logout.bind(authAPI)
+    const logout = () => {
+      const subscription = from(authAPI.logout())
+        .pipe(
+          concatMap(() => {
+            return new Observable<void>((observer) => {
+              const controller = new AbortController()
+              from(refresh(authAPI, controller.signal)).subscribe(observer)
+              return () => controller.abort()
+            })
+          }),
+          catchError((error) => {
+            // TODO: handle error
+            return EMPTY
+          }),
+          finalize(() => {
+            subscriptionList.delete(subscription)
+          })
+        )
+        .subscribe()
+      subscriptionList.add(subscription)
+    }
     setState((state) => ({ ...state, authorize, callback, logout }))
     return () => {
       subscriptionList.forEach((subscription) => subscription.unsubscribe())

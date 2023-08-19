@@ -1,4 +1,5 @@
-import { EDIT_CREATION_PATH } from '#/App'
+import { CREATION_EDIT_PATH } from '#/App'
+import { GroupDetailTabKey } from '#/pages/group/[gid]'
 import { css, useTheme } from '@emotion/react'
 import {
   Button,
@@ -36,16 +37,18 @@ export default function CreationItem({
   const theme = useTheme()
   const navigate = useNavigate()
   const disabled = isReleasing || isArchiving
+  const hasReleases = item.version >= 2
   const handleClickProps = useClick<HTMLAttributes<HTMLDivElement>>({}, () =>
     onClick(item)
   )
   const handleEdit = useCallback(() => {
     navigate({
-      pathname: generatePath(EDIT_CREATION_PATH, {
+      pathname: generatePath(CREATION_EDIT_PATH, {
         cid: Xid.fromValue(item.id).toString(),
       }),
       search: new URLSearchParams({
         gid: Xid.fromValue(item.gid).toString(),
+        type: GroupDetailTabKey.Creation,
       }).toString(),
     })
   }, [item.gid, item.id, navigate])
@@ -86,6 +89,7 @@ export default function CreationItem({
         role='none'
         {...mergeClickProps({}, stopPropagation)}
         css={css`
+          width: fit-content;
           margin-top: 12px;
           display: flex;
           align-items: center;
@@ -113,8 +117,16 @@ export default function CreationItem({
           disabled={disabled}
           onClick={handleEdit}
         >
-          <Icon name='edit' size='small' />
-          <span>{intl.formatMessage({ defaultMessage: '编辑' })}</span>
+          {hasReleases ? (
+            <Icon name='refresh' size='small' />
+          ) : (
+            <Icon name='edit' size='small' />
+          )}
+          <span>
+            {hasReleases
+              ? intl.formatMessage({ defaultMessage: '更新版本' })
+              : intl.formatMessage({ defaultMessage: '编辑' })}
+          </span>
         </Button>
         <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
           <MenuItem
