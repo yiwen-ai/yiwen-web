@@ -26,7 +26,7 @@ export const TextareaAutosize = memo(
           font-size: inherit;
           font-weight: inherit;
           line-height: inherit;
-          word-break: break-all;
+          overflow-wrap: break-word;
           ::placeholder {
             color: ${theme.color.input.placeholder};
           }

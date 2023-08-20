@@ -1,9 +1,22 @@
-import { useCallback, useMemo, useState } from 'react'
+import { type JSONContent } from '@tiptap/core'
+import { omitBy } from 'lodash-es'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { concatMap, interval } from 'rxjs'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
-import { type GIDPagination, type Page } from './common'
+import { useAuth } from './AuthContext'
+import { decode, encode } from './CBOR'
+import {
+  type GIDPagination,
+  type GroupInfo,
+  type Page,
+  type UserInfo,
+} from './common'
 import { useFetcher } from './useFetcher'
+import { useMyGroupList } from './useGroup'
+
+export const DEFAULT_MODEL = 'gpt3.5'
 
 export enum PublicationStatus {
   Deleted = -2,
@@ -23,7 +36,7 @@ export interface PublicationOutput {
   creator?: Uint8Array
   created_at: number
   updated_at: number
-  model?: string
+  model: string
   original_url?: string
   genre?: string[]
   title?: string
@@ -31,8 +44,10 @@ export interface PublicationOutput {
   keywords?: string[]
   authors?: string[]
   summary?: string
-  content?: Uint8Array
+  content: Uint8Array
   license?: string
+  creator_info?: UserInfo
+  group_info?: GroupInfo
 }
 
 export interface QueryPublication {
@@ -48,7 +63,7 @@ export interface CreatePublicationInput {
   cid: Uint8Array
   language: string
   version: number
-  model?: string
+  model: string
   to_gid?: Uint8Array
   to_language?: string
 }
@@ -60,6 +75,28 @@ export interface UpdatePublicationStatusInput {
   version: number
   updated_at: number
   status: number
+}
+
+export interface UpdatePublicationContentInput {
+  gid: Uint8Array
+  cid: Uint8Array
+  language: string
+  version: number
+  updated_at: number
+  content: Uint8Array
+}
+
+export interface UpdatePublicationInput {
+  gid: Uint8Array
+  cid: Uint8Array
+  language: string
+  version: number
+  updated_at: number
+  model?: string
+  title?: string
+  cover?: string
+  keywords?: string[]
+  summary?: string
 }
 
 const path = '/v1/publication'
@@ -96,11 +133,296 @@ export function usePublication(
     request.get<{ result: PublicationOutput }>(path, params)
   )
 
+  const [controller, setController] = useState<AbortController | undefined>()
+  useEffect(() => {
+    const controller = new AbortController()
+    setController(controller)
+    return () => controller.abort()
+  }, [])
+
+  const defaultGroupId = useMyGroupList().defaultGroup?.id
+
+  const [translatingLanguage, setTranslatingLanguage] = useState<
+    string | undefined
+  >()
+
+  const translate = useCallback(
+    async (language: string) => {
+      try {
+        setTranslatingLanguage(language)
+        if (!defaultGroupId || !publication) {
+          throw new Error('need to fetch publication before translating it')
+        }
+        const body: CreatePublicationInput = {
+          ...publication,
+          to_gid: defaultGroupId,
+          to_language: language,
+        }
+        const { job, result } = await request.post<{
+          job: string
+          result: PublicationOutput | null
+        }>(path, body)
+        if (result) return result
+        return new Promise<PublicationOutput>((resolve, reject) => {
+          const subscription = interval(1000)
+            .pipe(
+              concatMap(async () => {
+                const { result } = await request<{
+                  result: PublicationOutput | null
+                }>(
+                  `${path}/by_job`,
+                  { job },
+                  { signal: controller?.signal ?? null }
+                )
+                return result
+              })
+            )
+            .subscribe({
+              next: (result) => {
+                if (result) {
+                  subscription.unsubscribe()
+                  resolve(result)
+                }
+              },
+              error: (error) => {
+                reject(error)
+              },
+            })
+        })
+      } finally {
+        setTranslatingLanguage(undefined)
+      }
+    },
+    [controller?.signal, defaultGroupId, publication, request]
+  )
+
   return {
     publication,
     error,
     mutate,
     isLoading: _isValidatingPublication || _isLoadingPublication,
+    translatingLanguage,
+    translate,
+  } as const
+}
+
+export function useRelatedPublicationList(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined
+) {
+  const request = useFetcher()
+
+  const getKey = useCallback(() => {
+    if (!_gid || !_cid) return null
+    interface Params
+      extends Record<keyof QueryPublication, string | number | undefined> {}
+    const params: Params = {
+      gid: _gid,
+      cid: _cid,
+      language: undefined,
+      version: undefined,
+      fields: undefined,
+    }
+    return [`${path}/publish`, params] as const
+  }, [_cid, _gid])
+
+  const {
+    data: { result: publicationList } = {},
+    error,
+    mutate,
+    isValidating: _isValidatingPublicationList,
+    isLoading: _isLoadingPublicationList,
+  } = useSWR(getKey, ([path, params]) =>
+    request.get<{ result: PublicationOutput[] }>(path, params)
+  )
+
+  return {
+    publicationList,
+    error,
+    mutate,
+    isLoading: _isValidatingPublicationList || _isLoadingPublicationList,
+  } as const
+}
+
+export function useEditPublication(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined,
+  _language: string | null | undefined,
+  _version: number | string | null | undefined
+) {
+  const request = useFetcher()
+
+  //#region fetch group & publication
+  const { locale } = useAuth().user ?? {}
+
+  const {
+    defaultGroup: { id: defaultGroupId } = {},
+    isLoading: _isLoadingGroup,
+  } = useMyGroupList()
+
+  const {
+    publication,
+    mutate,
+    isLoading: _isLoadingPublication,
+  } = usePublication(_gid, _cid, _language, _version)
+  //#endregion
+
+  //#region draft
+  interface Draft {
+    __isReady: boolean
+    gid: Uint8Array | undefined
+    cid: Uint8Array | undefined
+    language: string | undefined
+    version: number | undefined
+    model: string
+    updated_at: number | undefined
+    title: string
+    content: JSONContent | undefined
+  }
+
+  const [draft, setDraft] = useState<Draft>(() => ({
+    __isReady: false,
+    gid: _gid ? Xid.fromValue(_gid) : undefined,
+    cid: _cid ? Xid.fromValue(_cid) : undefined,
+    language: locale,
+    version: undefined,
+    model: DEFAULT_MODEL,
+    updated_at: undefined,
+    title: '',
+    content: undefined,
+  }))
+
+  useEffect(() => {
+    if (_gid && _cid) {
+      if (publication) {
+        setDraft((prev) => ({
+          ...prev,
+          ...publication,
+          content: decode(publication.content),
+          __isReady: true,
+        }))
+      }
+    } else {
+      const gid = _gid ?? defaultGroupId
+      if (gid) {
+        setDraft((prev) => {
+          const prevGid = prev.gid && Xid.fromValue(prev.gid)
+          const nextGid = Xid.fromValue(gid)
+          if (prevGid?.equals(nextGid) && prev.__isReady) return prev
+          return { ...prev, gid: nextGid, __isReady: true }
+        })
+      }
+    }
+  }, [_cid, _gid, publication, defaultGroupId])
+
+  const updateDraft = useCallback((draft: Partial<Draft>) => {
+    setDraft((prev) => ({ ...prev, ...draft }))
+  }, [])
+  //#endregion
+
+  //#region processing state
+  const isLoading = _isLoadingGroup || _isLoadingPublication || !draft.__isReady
+
+  const [isSaving, setIsSaving] = useState(false)
+
+  // TODO: validate draft.content
+  const isDisabled =
+    isLoading ||
+    isSaving ||
+    !draft.gid ||
+    !draft.cid ||
+    !draft.language ||
+    draft.version === undefined ||
+    !draft.title.trim() ||
+    !draft.content
+  //#endregion
+
+  //#region actions
+  const create = useCallback(async () => {
+    try {
+      setIsSaving(true)
+      if (
+        !draft.gid ||
+        !draft.cid ||
+        !draft.language ||
+        draft.version === undefined
+      ) {
+        throw new Error(
+          'group id, creation id, language and version are required to create a publication'
+        )
+      }
+      const body: CreatePublicationInput = {
+        ...draft,
+        gid: draft.gid,
+        cid: draft.cid,
+        language: draft.language,
+        version: draft.version,
+      }
+      const { result } = await request.post<{ result: PublicationOutput }>(
+        path,
+        body
+      )
+      return result
+    } finally {
+      setIsSaving(false)
+    }
+  }, [draft, request])
+
+  const update = useCallback(async () => {
+    try {
+      setIsSaving(true)
+      if (
+        !draft.gid ||
+        !draft.cid ||
+        !draft.language ||
+        draft.version === undefined ||
+        !draft.updated_at ||
+        !draft.title.trim() ||
+        !draft.content
+      ) {
+        throw new Error(
+          'group id, creation id, language, version, updated_at, title and content are required to update a publication'
+        )
+      }
+      const body: UpdatePublicationContentInput = {
+        gid: draft.gid,
+        cid: draft.cid,
+        language: draft.language,
+        version: draft.version,
+        updated_at: draft.updated_at,
+        content: encode(draft.content),
+      }
+      const { result: item } = await request.put<{
+        result: PublicationOutput
+      }>(`${path}/update_content`, body)
+      const body2: UpdatePublicationInput = {
+        ...draft,
+        gid: item.gid,
+        cid: item.cid,
+        language: item.language,
+        version: item.version,
+        updated_at: item.updated_at,
+        title: draft.title.trim(),
+      }
+      const { result } = await request.patch<{ result: PublicationOutput }>(
+        path,
+        omitBy(body2, (val) => val == null || val === '')
+      )
+      mutate({ result })
+      return result
+    } finally {
+      setIsSaving(false)
+    }
+  }, [draft, mutate, request])
+  //#endregion
+
+  return {
+    draft,
+    updateDraft,
+    isLoading,
+    isDisabled,
+    isSaving,
+    save: _gid && _cid ? update : create,
   } as const
 }
 

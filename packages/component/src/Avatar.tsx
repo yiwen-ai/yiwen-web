@@ -46,6 +46,7 @@ export const Avatar = memo(
         css={css`
           display: inline-flex;
           align-items: center;
+          gap: 8px;
         `}
       >
         <img
@@ -59,15 +60,7 @@ export const Avatar = memo(
             background-size: contain;
           `}
         />
-        {name && (
-          <span
-            css={css`
-              margin-left: 8px;
-            `}
-          >
-            {name}
-          </span>
-        )}
+        {name && <span>{name}</span>}
       </div>
     )
   })

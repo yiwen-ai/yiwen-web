@@ -6,15 +6,17 @@ import {
 } from '#/App'
 import CompactCreationItem from '#/components/CompactCreationItem'
 import CompactPublicationItem from '#/components/CompactPublicationItem'
-import { CreationDialog } from '#/components/CreationDialog'
 import CreationItem from '#/components/CreationItem'
+import { CreationViewer } from '#/components/CreationViewer'
 import { IconMoreAnchor } from '#/components/IconMoreAnchor'
+import LargeDialog from '#/components/LargeDialog'
 import LoadMore from '#/components/LoadMore'
 import Loading from '#/components/Loading'
 import MediumDialog from '#/components/MediumDialog'
 import Placeholder from '#/components/Placeholder'
-import { PublicationDialog } from '#/components/PublicationDialog'
 import PublicationItem from '#/components/PublicationItem'
+import { PublicationViewer } from '#/components/PublicationViewer'
+import { MAX_WIDTH } from '#/shared'
 import { css, useTheme } from '@emotion/react'
 import {
   Avatar,
@@ -113,6 +115,23 @@ export default function GroupDetail() {
     })
   }, [navigate, params.gid, searchParams])
 
+  const handlePublicationClick = useCallback(
+    (item: PublicationOutput) => {
+      const searchParams2 = new URLSearchParams(searchParams)
+      searchParams2.set('language', item.language)
+      searchParams2.set('version', item.version.toString())
+      navigate({
+        pathname: generatePath(GROUP_VIEW_PATH, {
+          gid: Xid.fromValue(item.gid).toString(),
+          cid: Xid.fromValue(item.cid).toString(),
+          type: GroupViewType.Publication,
+        }),
+        search: searchParams2.toString(),
+      })
+    },
+    [navigate, searchParams]
+  )
+
   return (
     <>
       {toast.render()}
@@ -126,14 +145,7 @@ export default function GroupDetail() {
             gap: 40px;
           `}
         >
-          {group?.name && (
-            <span>
-              {intl.formatMessage(
-                { defaultMessage: '{name} 的创作群组' },
-                { name: group.name }
-              )}
-            </span>
-          )}
+          {group?.name && <span>{group.name}</span>}
           <Link
             to={{
               pathname: NEW_CREATION_PATH,
@@ -154,29 +166,36 @@ export default function GroupDetail() {
       {!group ? (
         <Loading />
       ) : (
-        <WithGroup toast={toast} group={group} tab={tab} setTab={updateTab} />
+        <WithGroup
+          toast={toast}
+          group={group}
+          tab={tab}
+          setTab={updateTab}
+          onPublicationClick={handlePublicationClick}
+        />
       )}
       {params.gid &&
         params.cid &&
         params.type === GroupViewType.Publication &&
         publicationLanguage &&
         publicationVersion && (
-          <PublicationDialog
-            gid={params.gid}
-            cid={params.cid}
-            language={publicationLanguage}
-            version={publicationVersion}
+          <LargeDialog
             defaultOpen={true}
             onClose={handlePublicationDialogClose}
-          />
+          >
+            <PublicationViewer
+              gid={params.gid}
+              cid={params.cid}
+              language={publicationLanguage}
+              version={publicationVersion}
+              onSwitch={handlePublicationClick}
+            />
+          </LargeDialog>
         )}
       {params.gid && params.cid && params.type === GroupViewType.Creation && (
-        <CreationDialog
-          gid={params.gid}
-          cid={params.cid}
-          defaultOpen={true}
-          onClose={handleCreationDialogClose}
-        />
+        <LargeDialog defaultOpen={true} onClose={handleCreationDialogClose}>
+          <CreationViewer gid={params.gid} cid={params.cid} />
+        </LargeDialog>
       )}
     </>
   )
@@ -187,11 +206,13 @@ function WithGroup({
   group,
   tab,
   setTab,
+  onPublicationClick,
 }: {
   toast: ToastAPI
   group: Group
   tab: GroupDetailTabKey
   setTab: (tab: GroupDetailTabKey) => void
+  onPublicationClick: (item: PublicationOutput) => void
 }) {
   const intl = useIntl()
 
@@ -238,7 +259,7 @@ function WithGroup({
         value={tab}
         onChange={setTab}
         css={css`
-          max-width: 800px;
+          max-width: ${MAX_WIDTH};
           margin: 0 auto;
           padding: 0 24px 40px;
         `}
@@ -307,6 +328,7 @@ function WithGroup({
             toast={toast}
             list={publicationList}
             onArchive={onArchivePublication}
+            onClick={onPublicationClick}
           />
         </TabPanel>
         <TabPanel value={GroupDetailTabKey.Creation}>
@@ -436,10 +458,12 @@ function PublicationPart({
   toast: { push },
   list,
   onArchive,
+  onClick,
 }: {
   toast: ToastAPI
   list: ReturnType<typeof usePublicationList>
   onArchive: (item: PublicationOutput) => void
+  onClick: (item: PublicationOutput) => void
 }) {
   const intl = useIntl()
   const {
@@ -509,25 +533,6 @@ function PublicationPart({
     [archiveItem, intl, onArchive, push]
   )
 
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const handleClick = useCallback(
-    (item: PublicationOutput) => {
-      const searchParams2 = new URLSearchParams(searchParams)
-      searchParams2.set('language', item.language)
-      searchParams2.set('version', item.version.toString())
-      navigate({
-        pathname: generatePath(GROUP_VIEW_PATH, {
-          gid: Xid.fromValue(item.gid).toString(),
-          cid: Xid.fromValue(item.cid).toString(),
-          type: GroupViewType.Publication,
-        }),
-        search: searchParams2.toString(),
-      })
-    },
-    [navigate, searchParams]
-  )
-
   return (
     <div
       css={css`
@@ -545,7 +550,7 @@ function PublicationPart({
             item={item}
             isPublishing={isPublishing(item)}
             isArchiving={isArchiving(item)}
-            onClick={handleClick}
+            onClick={onClick}
             onPublish={onPublish}
             onArchive={handleArchive}
           />

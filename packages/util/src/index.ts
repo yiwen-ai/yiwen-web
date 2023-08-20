@@ -3,6 +3,7 @@ import 'symbol-observable'
 export { Deferred } from './Deferred'
 export { RGBA } from './RGBA'
 export { isArray } from './isArray'
+export { isTruthy } from './isTruthy'
 export { isWindow } from './isWindow'
 export { joinURL, joinURLPath } from './joinURL'
 export {

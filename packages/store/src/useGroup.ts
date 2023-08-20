@@ -1,27 +1,25 @@
 import { useMemo } from 'react'
 import useSWR from 'swr'
-import { type UserInfo } from './AuthContext'
-import { RoleLevel } from './common'
+import { RoleLevel, type UserInfo } from './common'
 import { useFetcher } from './useFetcher'
 
 export interface Group {
   id: Uint8Array
   cn: string
   name: string
-  logo: string
-  website: string
-  status: number
-  kind: number
-  created_at: number
-  updated_at: number
+  logo?: string
+  website?: string
+  status?: number
+  kind?: number
+  created_at?: number
+  updated_at?: number
   email?: string
   legal_name?: string
   keywords?: string[]
   slogan?: string
   address?: string
-  description?: Uint8Array
-  _role: RoleLevel
-  _priority: number
+  _role?: RoleLevel
+  _priority?: number
   uid?: Uint8Array
   owner?: UserInfo
 }

@@ -7,15 +7,16 @@ import {
   useId,
   useMemo,
   type HTMLAttributes,
+  type LiHTMLAttributes,
 } from 'react'
-import { MenuItem, type MenuItemProps } from './Menu'
+import { Menu, MenuItem, type MenuItemProps } from './Menu'
 import { Popover, pickPopoverProps, type PopoverProps } from './Popover'
 import { TextField } from './TextField'
 
 export interface SelectProps<T>
   extends Omit<HTMLAttributes<HTMLUListElement>, 'defaultValue' | 'onChange'>,
     PopoverProps {
-  placeholder: string
+  placeholder?: string
   options?: readonly SelectOptionProps<T>[]
   defaultValue?: T
   value?: T
@@ -73,12 +74,20 @@ export const Select = memo(
         css={css`
           width: 208px;
           padding: 20px 12px;
-          box-sizing: border-box;
           border: 1px solid ${theme.color.menu.border};
           background: ${theme.color.menu.background};
         `}
       >
-        <ul role='listbox' id={id} {...selectProps}>
+        <ul
+          role='listbox'
+          id={id}
+          {...selectProps}
+          css={css`
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          `}
+        >
           {options?.length
             ? options.map(({ onSelect, ...option }, index) => (
                 <SelectOption
@@ -154,3 +163,49 @@ export const SelectOption = memo(
     )
   })
 )
+
+export interface SelectOptionGroupProps<T>
+  extends LiHTMLAttributes<HTMLLIElement> {
+  label: string | JSX.Element
+  options?: readonly SelectOptionProps<T>[] | undefined
+}
+
+export const SelectOptionGroup = memo(function SelectOptionGroup<T>({
+  label,
+  options,
+  ...props
+}: SelectOptionGroupProps<T>) {
+  const theme = useTheme()
+  const id = useId()
+
+  return (
+    <li
+      role='none'
+      {...props}
+      css={css`
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      `}
+    >
+      <div
+        id={id}
+        css={css`
+          padding: 4px 12px;
+          ${theme.typography.tooltip}
+          color: ${theme.color.menu.group.text};
+        `}
+      >
+        {label}
+      </div>
+      <Menu role='group' aria-labelledby={id}>
+        {options?.length
+          ? options.map((option, index) => (
+              <SelectOption key={index} {...option} />
+            ))
+          : props.children}
+      </Menu>
+    </li>
+  )
+})

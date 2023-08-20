@@ -116,6 +116,9 @@ declare module '@emotion/react' {
             background: string
           }
         }
+        group: {
+          text: string
+        }
       }
       tab: {
         background: string
@@ -338,6 +341,9 @@ export const lightTheme: Theme = {
         hover: {
           background: palette.grayLight1,
         },
+      },
+      group: {
+        text: palette.grayLight,
       },
     },
     tab: {
@@ -562,6 +568,9 @@ export const darkTheme: Theme = {
         hover: {
           background: palette.grayNormal1,
         },
+      },
+      group: {
+        text: palette.grayLight0,
       },
     },
     tab: {

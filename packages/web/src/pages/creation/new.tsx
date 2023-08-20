@@ -1,12 +1,11 @@
 import CommonEditor from '#/components/CommonEditor'
 import { GroupDetailTabKey } from '#/pages/group/[gid]'
 import { useEditCreation } from '@yiwen-ai/store'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 
-export default function CreationEdit() {
-  const params = useParams<{ cid: string }>()
+export default function NewCreation() {
   const [searchParams] = useSearchParams()
-  const store = useEditCreation(searchParams.get('gid'), params.cid)
+  const store = useEditCreation(searchParams.get('gid'), undefined)
 
   return <CommonEditor type={GroupDetailTabKey.Creation} store={store} />
 }

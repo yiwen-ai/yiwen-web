@@ -1,4 +1,5 @@
-import { EDIT_CREATION_PATH } from '#/App'
+import { PUBLICATION_EDIT_PATH } from '#/App'
+import { GroupDetailTabKey } from '#/pages/group/[gid]'
 import { css, useTheme } from '@emotion/react'
 import {
   Button,
@@ -41,14 +42,17 @@ export default function PublicationItem({
   )
   const handleEdit = useCallback(() => {
     navigate({
-      pathname: generatePath(EDIT_CREATION_PATH, {
+      pathname: generatePath(PUBLICATION_EDIT_PATH, {
         cid: Xid.fromValue(item.cid).toString(),
       }),
       search: new URLSearchParams({
         gid: Xid.fromValue(item.gid).toString(),
+        language: item.language,
+        version: item.version.toString(),
+        type: GroupDetailTabKey.Publication,
       }).toString(),
     })
-  }, [item.cid, item.gid, navigate])
+  }, [item.cid, item.gid, item.language, item.version, navigate])
   const handlePublish = useCallback(() => onPublish(item), [item, onPublish])
   const handleArchive = useCallback(() => onArchive(item), [item, onArchive])
 
@@ -86,6 +90,7 @@ export default function PublicationItem({
         role='none'
         {...mergeClickProps({}, stopPropagation)}
         css={css`
+          width: fit-content;
           margin-top: 12px;
           display: flex;
           align-items: center;
@@ -102,7 +107,7 @@ export default function PublicationItem({
             onClick={handleEdit}
           >
             <Icon name='edit' size='small' />
-            <span>{intl.formatMessage({ defaultMessage: '编辑' })}</span>
+            <span>{intl.formatMessage({ defaultMessage: '修订' })}</span>
           </Button>
         )}
         {item.status === PublicationStatus.Approved && (

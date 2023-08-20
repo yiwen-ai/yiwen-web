@@ -10,6 +10,7 @@ export interface FetcherConfig {
   PUBLIC_PATH: string
   API_URL: string
   AUTH_URL: string
+  SHARE_URL: string
 }
 
 const FetcherConfigContext = createContext<FetcherConfig | undefined>(undefined)
@@ -158,14 +159,18 @@ export class RequestError extends Error {
     super(message)
     this.name = name
   }
+
+  toString() {
+    return compact([
+      compact([this.status, this.name]).join(' '),
+      this.message,
+    ]).join('\n')
+  }
 }
 
 export function toMessage(error: unknown) {
   if (error instanceof RequestError) {
-    return compact([
-      compact([error.status, error.name]).join(' '),
-      error.message,
-    ]).join('\n')
+    return error.toString()
   }
   if (typeof error === 'string') {
     return error

@@ -54,11 +54,13 @@ import Loading from './components/Loading'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
-import EditCreation from './pages/creation/[cid]'
+import CreationEdit from './pages/creation/[cid]'
+import NewCreation from './pages/creation/new'
 import GroupDetail from './pages/group/[gid]'
 import DefaultGroup from './pages/group/default'
 import LoginState from './pages/login/state'
 import PublicationShare from './pages/pub/[cid]'
+import PublicationEdit from './pages/publication/[cid]'
 import Search from './pages/search'
 
 function Fallback(props: FallbackProps) {
@@ -152,25 +154,27 @@ export function SetHeaderProps(props: HeaderProps) {
 
 export const SEARCH_PATH = '/search'
 export const NEW_CREATION_PATH = '/creation/new'
-export const EDIT_CREATION_PATH = '/creation/:cid'
+export const CREATION_EDIT_PATH = '/creation/:cid'
+export const PUBLICATION_EDIT_PATH = '/publication/:cid'
 export const PUBLICATION_SHARE_PATH = '/pub/:cid'
 export const DEFAULT_GROUP_PATH = '/group/default'
 export const GROUP_DETAIL_PATH = '/group/:gid'
-export const GROUP_VIEW_PATH = '/group/:gid/view/:type/:cid'
+export const GROUP_VIEW_PATH = '/group/:gid/:type/:cid'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<Layout />}>
       <Route path='*' element={<NotFound />} />
       <Route path='/' element={<Home />} />
+      <Route path='/login/state' element={<LoginState />} />
       <Route path={SEARCH_PATH} element={<Search />} />
-      <Route path={NEW_CREATION_PATH} element={<EditCreation />} />
-      <Route path={EDIT_CREATION_PATH} element={<EditCreation />} />
+      <Route path={NEW_CREATION_PATH} element={<NewCreation />} />
+      <Route path={CREATION_EDIT_PATH} element={<CreationEdit />} />
+      <Route path={PUBLICATION_EDIT_PATH} element={<PublicationEdit />} />
       <Route path={PUBLICATION_SHARE_PATH} element={<PublicationShare />} />
       <Route path={DEFAULT_GROUP_PATH} element={<DefaultGroup />} />
       <Route path={GROUP_DETAIL_PATH} element={<GroupDetail />} />
       <Route path={GROUP_VIEW_PATH} element={<GroupDetail />} />
-      <Route path='/login/state' element={<LoginState />} />
     </Route>
   ),
   { basename: new URL(resolveURL(import.meta.env.VITE_PUBLIC_PATH)).pathname }
@@ -182,6 +186,7 @@ export default function App() {
       PUBLIC_PATH: resolveURL(import.meta.env.VITE_PUBLIC_PATH),
       API_URL: resolveURL(import.meta.env.VITE_API_URL),
       AUTH_URL: resolveURL(import.meta.env.VITE_AUTH_URL),
+      SHARE_URL: resolveURL(import.meta.env.VITE_SHARE_URL),
     }),
     []
   )

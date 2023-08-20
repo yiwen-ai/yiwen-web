@@ -89,8 +89,10 @@ function NestedDialogBody({
             </Button>
           )}
           css={css`
-            margin: calc(100px + ${level * 40}px) calc(80px + ${level * 40}px);
-            border-radius: 20px;
+            width: calc(min(800px, 100%) - 80px * 2 - 60px * ${level});
+            height: calc(min(620px, 100%) - 80px * 2 - 60px * ${level});
+            max-width: unset;
+            max-height: unset;
           `}
         >
           <DialogHead>{`#${level + 1} Dialog`}</DialogHead>

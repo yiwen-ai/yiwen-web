@@ -40,13 +40,15 @@ import { IconButton, type IconButtonProps } from './Button'
 
 export interface RichTextEditorProps extends Partial<EditorOptions> {
   className?: string
-  initialContent?: EditorOptions['content']
+  placeholder?: string
+  initialContent?: EditorOptions['content'] | undefined
 }
 
 export const RichTextEditor = memo(
   forwardRef(function RichTextEditor(
     {
       className,
+      placeholder,
       initialContent,
       content = null,
       ...props
@@ -72,7 +74,9 @@ export const RichTextEditor = memo(
         Mathematics,
         Mention,
         Placeholder.configure({
-          placeholder: intl.formatMessage({ defaultMessage: '直接输入内容' }),
+          placeholder:
+            placeholder ??
+            intl.formatMessage({ defaultMessage: '输入内容开始创作' }),
         }),
         StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
         Subscript,
@@ -105,7 +109,7 @@ export const RichTextEditor = memo(
         }),
         Youtube,
       ],
-      [intl]
+      [intl, placeholder]
     )
 
     const editor = useEditor(
@@ -250,23 +254,23 @@ export const RichTextEditor = memo(
           className={className}
           editor={editor}
           css={css`
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+
             .ProseMirror {
+              flex: 1;
               ${theme.typography.body};
 
               &:focus {
                 outline: none;
               }
 
-              > :first-child,
-              > style + * {
-                margin-top: 0;
-              }
-
-              > :not(style) {
+              > * {
                 margin-bottom: 0;
-                + * {
-                  margin-top: 20px;
-                }
+              }
+              > * + * {
+                margin-top: 20px;
               }
 
               h1 {
