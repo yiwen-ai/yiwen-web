@@ -170,6 +170,7 @@ function ProviderItem({
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 8px;
         border-radius: 12px;
         border: 1px solid ${theme.palette.grayLight0};
         background: ${theme.color.body.background};
@@ -183,7 +184,6 @@ function ProviderItem({
     >
       <div
         css={css`
-          margin-right: 8px;
           width: 20px;
           height: 20px;
           display: flex;

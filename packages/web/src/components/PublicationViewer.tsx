@@ -1,6 +1,5 @@
-import { BREAKPOINT, MAX_WIDTH, generatePublicationShareLink } from '#/shared'
+import { BREAKPOINT, generatePublicationShareLink } from '#/shared'
 import { css } from '@emotion/react'
-import { type JSONContent } from '@tiptap/core'
 import {
   AlertDialog,
   AlertDialogBody,
@@ -9,16 +8,13 @@ import {
   IconButton,
   Menu,
   MenuItem,
-  RichTextEditor,
   Select,
   SelectOption,
   SelectOptionGroup,
   Spinner,
-  useTheme,
   useToast,
 } from '@yiwen-ai/component'
 import {
-  decode,
   toMessage,
   useFetcherConfig,
   useLanguageList,
@@ -27,11 +23,11 @@ import {
   type PublicationOutput,
 } from '@yiwen-ai/store'
 import { isTruthy } from '@yiwen-ai/util'
-import { groupBy, without } from 'lodash-es'
+import { compact, groupBy, uniq, without } from 'lodash-es'
 import { useCallback, useMemo, type HTMLAttributes } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
-import { CreatedBy } from './CreatedBy'
+import CommonViewer from './CommonViewer'
 import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
 
@@ -52,7 +48,6 @@ export function PublicationViewer({
   ...props
 }: PublicationViewerProps) {
   const intl = useIntl()
-  const theme = useTheme()
   const { render, push } = useToast()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const isNarrow = width <= BREAKPOINT.small
@@ -60,15 +55,12 @@ export function PublicationViewer({
   //#region publication
   const { publication, error, isLoading, translatingLanguage, translate } =
     usePublication(gid, cid, _language, _version)
-  const content = useMemo(
-    () => publication?.content && (decode(publication.content) as JSONContent),
-    [publication?.content]
-  )
   //#endregion
 
   //#region language
-  const language = publication?.language ?? _language
+  const currentLanguageCode = publication?.language ?? _language
   const version = publication?.version ?? _version
+  const originalLanguageCode = publication?.from_language
 
   const { languageList: _languageList, preferredLanguageCodeList } =
     useLanguageList()
@@ -94,27 +86,43 @@ export function PublicationViewer({
   }, [_languageList, relatedPublicationList, version])
 
   const currentLanguage = useMemo(() => {
-    return languageList?.find(({ code }) => code === language)
-  }, [language, languageList])
+    return languageList?.find(({ code }) => code === currentLanguageCode)
+  }, [currentLanguageCode, languageList])
+
+  const originalLanguage = useMemo(() => {
+    return originalLanguageCode
+      ? languageList?.find(({ code }) => code === originalLanguageCode)
+      : undefined
+  }, [languageList, originalLanguageCode])
 
   const [translatedLanguageList, pendingLanguageList] = useMemo(() => {
     if (!languageList) return []
     const dict = groupBy(
-      languageList.filter(({ code }) => code !== language),
+      originalLanguageCode
+        ? languageList.filter(({ code }) => code !== originalLanguageCode)
+        : languageList,
       ({ publication }) => !!publication
     )
     return [dict['true'] ?? [], dict['false'] ?? []]
-  }, [language, languageList])
+  }, [languageList, originalLanguageCode])
 
   const preferredLanguageList = useMemo(() => {
     return (
       languageList &&
-      without(preferredLanguageCodeList, language)
+      without(
+        uniq(compact([originalLanguageCode, ...preferredLanguageCodeList])),
+        currentLanguageCode
+      )
         .map((code) => languageList.find(({ code: _code }) => _code === code))
         .filter(isTruthy)
         .slice(0, 1) // show only one preferred language
     )
-  }, [language, languageList, preferredLanguageCodeList])
+  }, [
+    currentLanguageCode,
+    languageList,
+    originalLanguageCode,
+    preferredLanguageCodeList,
+  ])
 
   const translatingLanguageName = useMemo(() => {
     return (
@@ -200,7 +208,7 @@ export function PublicationViewer({
               size={isNarrow ? 'small' : 'large'}
               disabled={true}
             >
-              {currentLanguage?.name ?? language}
+              {currentLanguage?.name ?? currentLanguageCode}
             </Button>
             {preferredLanguageList?.map(({ code, name, publication }) => (
               <Button
@@ -220,9 +228,6 @@ export function PublicationViewer({
                     color='secondary'
                     size={isNarrow ? 'small' : 'large'}
                     {...props}
-                    css={css`
-                      gap: 12px;
-                    `}
                   >
                     <Icon
                       name='translate3'
@@ -234,13 +239,13 @@ export function PublicationViewer({
                   </Button>
                 )}
               >
-                {currentLanguage && (
+                {originalLanguage && (
                   <SelectOption
                     label={intl.formatMessage(
                       { defaultMessage: '{name}（创作语言）' },
-                      { name: currentLanguage.name }
+                      { name: originalLanguage.name }
                     )}
-                    value={currentLanguage.code}
+                    value={originalLanguage.code}
                   />
                 )}
                 {translatedLanguageList.length > 0 && (
@@ -337,51 +342,7 @@ export function PublicationViewer({
               </Menu>
             </div>
           </div>
-          <div
-            css={css`
-              max-width: ${MAX_WIDTH};
-              margin: 0 auto;
-              padding: 0 80px;
-              ${isNarrow &&
-              css`
-                padding: 0 16px;
-              `}
-            `}
-          >
-            <div
-              css={css`
-                ${theme.typography.h1}
-                overflow-wrap: break-word;
-                ${isNarrow &&
-                css`
-                  ${theme.typography.h2}
-                `}
-              `}
-            >
-              {publication.title}
-            </div>
-            <CreatedBy
-              item={publication}
-              css={css`
-                margin-top: 16px;
-              `}
-            />
-            {content && (
-              <RichTextEditor
-                editable={false}
-                initialContent={content}
-                css={css`
-                  margin-top: 32px;
-                  margin-bottom: 48px;
-                  ${isNarrow &&
-                  css`
-                    margin-top: 20px;
-                    margin-bottom: 24px;
-                  `}
-                `}
-              />
-            )}
-          </div>
+          <CommonViewer item={publication} isNarrow={isNarrow} />
         </>
       ) : null}
       {translatingLanguage && (

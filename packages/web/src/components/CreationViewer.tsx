@@ -1,49 +1,49 @@
+import { BREAKPOINT } from '#/shared'
 import { css } from '@emotion/react'
-import { type JSONContent } from '@tiptap/core'
-import { RichTextEditor, useTheme } from '@yiwen-ai/component'
-import { decode, useCreation } from '@yiwen-ai/store'
-import { useMemo } from 'react'
+import { useCreation } from '@yiwen-ai/store'
+import { type HTMLAttributes } from 'react'
+import { useResizeDetector } from 'react-resize-detector'
+import CommonViewer from './CommonViewer'
 import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
 
-export interface CreationViewerProps {
-  className?: string
+export interface CreationViewerProps extends HTMLAttributes<HTMLDivElement> {
   gid: string
   cid: string
 }
 
-export function CreationViewer({ className, ...props }: CreationViewerProps) {
-  const theme = useTheme()
+export function CreationViewer({ gid, cid, ...props }: CreationViewerProps) {
+  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
+  const isNarrow = width <= BREAKPOINT.small
 
-  const { creation, error, isLoading } = useCreation(props.gid, props.cid)
-  const content = useMemo(
-    () => creation?.content && (decode(creation.content) as JSONContent),
-    [creation?.content]
-  )
+  //#region creation
+  const { creation, error, isLoading } = useCreation(gid, cid)
+  //#endregion
 
-  return isLoading ? (
-    <Loading />
-  ) : error ? (
-    <ErrorPlaceholder error={error} />
-  ) : creation ? (
-    <div className={className}>
-      <div
-        css={css`
-          ${theme.typography.h1}
-          overflow-wrap: break-word;
+  return (
+    <div
+      {...props}
+      ref={ref}
+      css={css`
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 60px 0;
+        ${isNarrow &&
+        css`
+          padding: 20px 0;
         `}
-      >
-        {creation.title}
-      </div>
-      {content && (
-        <RichTextEditor
-          editable={false}
-          initialContent={content}
-          css={css`
-            margin-top: 32px;
-          `}
-        />
-      )}
+      `}
+    >
+      {isLoading ? (
+        <Loading />
+      ) : error ? (
+        <ErrorPlaceholder error={error} />
+      ) : creation ? (
+        <>
+          <CommonViewer item={creation} isNarrow={isNarrow} />
+        </>
+      ) : null}
     </div>
-  ) : null
+  )
 }

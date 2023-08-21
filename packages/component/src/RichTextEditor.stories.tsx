@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { RichTextEditor } from './RichTextEditor'
+import { generateJSON } from '@tiptap/core'
+import { RichTextEditor, getExtensions } from './RichTextEditor'
 
 const meta: Meta<typeof RichTextEditor> = {
   component: RichTextEditor,
@@ -37,6 +38,6 @@ const html = `
 
 export const Basic: Story = {
   args: {
-    initialContent: html,
+    initialContent: generateJSON(html, getExtensions()),
   },
 }

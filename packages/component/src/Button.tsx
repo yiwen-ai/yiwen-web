@@ -9,6 +9,7 @@ const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
     minHeight: 24,
     paddingLeft: 16,
     paddingRight: 16,
+    gap: 4,
     borderWidth: 1,
     borderRadius: 10,
     fontSize: theme.typography.tooltip.fontSize,
@@ -19,6 +20,7 @@ const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
     minHeight: 32,
     paddingLeft: 24,
     paddingRight: 24,
+    gap: 8,
     borderWidth: 1,
     borderRadius: 12,
   }),
@@ -26,6 +28,7 @@ const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
     minHeight: 48,
     paddingLeft: 36,
     paddingRight: 36,
+    gap: 12,
     borderWidth: 2,
     borderRadius: 20,
   }),
@@ -85,7 +88,6 @@ export const Button = memo(
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 4px;
           ${sizeCSS}
           border-style: solid;
           white-space: nowrap;

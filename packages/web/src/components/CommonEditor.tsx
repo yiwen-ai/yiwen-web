@@ -1,9 +1,9 @@
-import { GROUP_DETAIL_PATH, SetHeaderProps } from '#/App'
+import { GROUP_VIEW_PATH, SetHeaderProps } from '#/App'
 import Loading from '#/components/Loading'
-import { type GroupDetailTabKey } from '#/pages/group/[gid]'
+import { GroupDetailTabKey } from '#/pages/group/[gid]'
 import { MAX_WIDTH } from '#/shared'
 import { css, useTheme } from '@emotion/react'
-import { type Editor, type EditorOptions } from '@tiptap/core'
+import { type Editor, type JSONContent } from '@tiptap/core'
 import {
   Button,
   RichTextEditor,
@@ -14,6 +14,8 @@ import {
 } from '@yiwen-ai/component'
 import {
   toMessage,
+  type CreationOutput,
+  type PublicationOutput,
   type useEditCreation,
   type useEditPublication,
 } from '@yiwen-ai/store'
@@ -36,7 +38,7 @@ export default function CommonEditor({
   const { draft, updateDraft, isLoading, isDisabled, isSaving, save } = store
   const editorRef = useRef<Editor>(null)
 
-  const handleTitleUpdate = useCallback(
+  const handleTitleChange = useCallback(
     (ev: React.ChangeEvent<HTMLTextAreaElement>) => {
       updateDraft({ title: ev.currentTarget.value })
     },
@@ -53,27 +55,38 @@ export default function CommonEditor({
     []
   )
 
-  const handleContentUpdate = useCallback<EditorOptions['onUpdate']>(
-    ({ editor }) => {
-      updateDraft({ content: editor.getJSON() })
-    },
+  const handleContentChange = useCallback(
+    (content: JSONContent) => updateDraft({ content }),
     [updateDraft]
   )
 
   const handleSave = useCallback(async () => {
     try {
-      const { gid } = await save()
+      const item = await save()
+      const gid = item.gid
+      let cid: Uint8Array
+      const searchParams = new URLSearchParams({ tab: type })
+      switch (type) {
+        case GroupDetailTabKey.Creation:
+          cid = (item as CreationOutput).id
+          break
+        case GroupDetailTabKey.Publication:
+          cid = (item as PublicationOutput).cid
+          searchParams.set('language', item.language)
+          searchParams.set('version', item.version.toString())
+          break
+      }
       push({
         type: 'success',
         message: intl.formatMessage({ defaultMessage: '保存成功' }),
       })
       navigate({
-        pathname: generatePath(GROUP_DETAIL_PATH, {
+        pathname: generatePath(GROUP_VIEW_PATH, {
           gid: Xid.fromValue(gid).toString(),
+          cid: Xid.fromValue(cid).toString(),
+          type,
         }),
-        search: new URLSearchParams({
-          tab: type,
-        }).toString(),
+        search: searchParams.toString(),
       })
     } catch (error) {
       push({
@@ -101,7 +114,6 @@ export default function CommonEditor({
               <Spinner
                 size='small'
                 css={css`
-                  margin-right: 8px;
                   color: inherit;
                 `}
               />
@@ -117,52 +129,56 @@ export default function CommonEditor({
           <div
             css={css`
               flex: 1;
-              max-width: ${MAX_WIDTH};
-              margin: 0 auto;
               padding: 0 24px;
               display: flex;
               flex-direction: column;
+              align-items: center;
               overflow-y: auto;
             `}
           >
-            <TextareaAutosize
-              placeholder={intl.formatMessage({ defaultMessage: '标题' })}
-              value={draft.title}
-              onChange={handleTitleUpdate}
-              onKeyDown={handleTitleKeyDown}
+            <div
               css={css`
-                margin-top: 100px;
-                border: none;
-                font-size: 42px;
-                font-weight: 600;
-                line-height: 60px;
+                flex: 1;
+                width: 100%;
+                max-width: ${MAX_WIDTH};
+                display: flex;
+                flex-direction: column;
               `}
-            />
-            <RichTextEditor
-              ref={editorRef}
-              initialContent={draft.content}
-              editable={!isSaving}
-              onUpdate={handleContentUpdate}
-              css={css`
-                margin: 24px 0;
-
-                .ProseMirror {
-                  padding-bottom: 100px;
-                }
-              `}
-            />
+            >
+              <TextareaAutosize
+                placeholder={intl.formatMessage({ defaultMessage: '标题' })}
+                value={draft.title}
+                onChange={handleTitleChange}
+                onKeyDown={handleTitleKeyDown}
+                css={css`
+                  padding-top: 100px;
+                  border: none;
+                  font-size: 42px;
+                  font-weight: 600;
+                  line-height: 60px;
+                `}
+              />
+              <RichTextEditor
+                ref={editorRef}
+                editable={!isSaving}
+                initialContent={draft.content}
+                onChange={handleContentChange}
+                css={css`
+                  .ProseMirror {
+                    padding-top: 24px;
+                    padding-bottom: 100px;
+                  }
+                `}
+              />
+            </div>
           </div>
           <div
             css={css`
+              padding: 0 24px;
               border-top: 1px solid ${theme.color.divider.secondary};
             `}
           >
-            <ArticleSettings
-              css={css`
-                max-width: ${MAX_WIDTH};
-                margin: auto;
-              `}
-            />
+            <ArticleSettings />
           </div>
         </>
       )}
@@ -178,7 +194,9 @@ function ArticleSettings(props: React.HTMLAttributes<HTMLDivElement>) {
     <div
       {...props}
       css={css`
-        padding: 16px 24px;
+        max-width: ${MAX_WIDTH};
+        margin: auto;
+        padding: 16px 0;
         display: flex;
         flex-direction: column;
         gap: 16px;
