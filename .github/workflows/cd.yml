@@ -24,7 +24,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: deploy to testing environment
         run: |
-          curl https://gosspublic.alicdn.com/ossutil/install.sh | bash
+          sudo -v ; curl https://gosspublic.alicdn.com/ossutil/install.sh | sudo bash
           ossutil --version
           pnpm --filter web run build --mode=testing --base=https://cdn.yiwen.pub/dev/web
           ossutil cp ./packages/web/dist/ oss://yiwenai/dev/web/ -r -u -e ${{ secrets.ALIYUN_OSS_ENDPOINT }} -i ${{ secrets.ALIYUN_ACCESS_KEY_ID }} -k ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
