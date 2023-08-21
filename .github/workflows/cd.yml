@@ -22,9 +22,14 @@ jobs:
       - run: pnpm install
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: pnpm --recursive --parallel run extract
+      - run: pnpm --filter web run build --mode=testing --base=https://cdn.yiwen.pub/dev/web
+      - uses: aliyun/aliyun-cli-action@v1.0.0
+        with:
+          access-key-id: ${{ secrets.ALIYUN_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
+          region: ${{ secrets.ALIYUN_REGION }}
+      - run: aliyun oss cp ./packages/web/dist/ oss://yiwenai/dev/web/ -r -u
       # TODO
       # 0. convert the extracted files to the format (CBOR) of the Translation Management System (our own API)
       # 1. upload the extracted files to the Translation Management System (our own API)
       # 2. download the translated files from the Translation Management System (our own API)
-      # 3. build the packages with the translated files and deploy them to the CDN
