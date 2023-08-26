@@ -1,3 +1,5 @@
+import { BREAKPOINT } from '#/shared'
+import { css } from '@emotion/react'
 import {
   Dialog,
   DialogBody,
@@ -16,7 +18,16 @@ export default function MediumDialog({
   ...props
 }: MediumDialogProps) {
   return (
-    <Dialog {...props}>
+    <Dialog
+      {...props}
+      css={css`
+        @media (max-width: ${BREAKPOINT.small}px) {
+          max-width: 100%;
+          min-height: 100%;
+          border-radius: unset;
+        }
+      `}
+    >
       <DialogHead>{title}</DialogHead>
       <DialogBody>{children}</DialogBody>
       <DialogClose />

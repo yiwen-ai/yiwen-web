@@ -55,13 +55,13 @@ import Loading from './components/Loading'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
-import CreationEdit from './pages/creation/[cid]'
+import EditCreation from './pages/creation/[cid]'
 import NewCreation from './pages/creation/new'
 import GroupDetail from './pages/group/[gid]'
 import DefaultGroup from './pages/group/default'
 import LoginState from './pages/login/state'
-import PublicationShare from './pages/pub/[cid]'
-import PublicationEdit from './pages/publication/[cid]'
+import SharePublication from './pages/pub/[cid]'
+import EditPublication from './pages/publication/[cid]'
 import Search from './pages/search'
 import { BREAKPOINT } from './shared'
 
@@ -203,12 +203,11 @@ export function SetHeaderProps(props: HeaderProps) {
 
 export const SEARCH_PATH = '/search'
 export const NEW_CREATION_PATH = '/creation/new'
-export const CREATION_EDIT_PATH = '/creation/:cid'
-export const PUBLICATION_EDIT_PATH = '/publication/:cid'
-export const PUBLICATION_SHARE_PATH = '/pub/:cid'
+export const EDIT_CREATION_PATH = '/creation/:cid'
+export const EDIT_PUBLICATION_PATH = '/publication/:cid'
+export const SHARE_PUBLICATION_PATH = '/pub/:cid'
 export const DEFAULT_GROUP_PATH = '/group/default'
 export const GROUP_DETAIL_PATH = '/group/:gid'
-export const GROUP_VIEW_PATH = '/group/:gid/:type/:cid'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -218,12 +217,11 @@ const router = createBrowserRouter(
       <Route path='/login/state' element={<LoginState />} />
       <Route path={SEARCH_PATH} element={<Search />} />
       <Route path={NEW_CREATION_PATH} element={<NewCreation />} />
-      <Route path={CREATION_EDIT_PATH} element={<CreationEdit />} />
-      <Route path={PUBLICATION_EDIT_PATH} element={<PublicationEdit />} />
-      <Route path={PUBLICATION_SHARE_PATH} element={<PublicationShare />} />
+      <Route path={EDIT_CREATION_PATH} element={<EditCreation />} />
+      <Route path={EDIT_PUBLICATION_PATH} element={<EditPublication />} />
+      <Route path={SHARE_PUBLICATION_PATH} element={<SharePublication />} />
       <Route path={DEFAULT_GROUP_PATH} element={<DefaultGroup />} />
       <Route path={GROUP_DETAIL_PATH} element={<GroupDetail />} />
-      <Route path={GROUP_VIEW_PATH} element={<GroupDetail />} />
     </Route>
   ),
   { basename: new URL(resolveURL(import.meta.env.VITE_PUBLIC_PATH)).pathname }

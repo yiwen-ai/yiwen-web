@@ -28,6 +28,10 @@ export default function LargeDialog({
         margin: 96px 80px 0;
         border-bottom-left-radius: unset;
         border-bottom-right-radius: unset;
+        @media (max-width: ${BREAKPOINT.small}px) {
+          margin-top: 0;
+          border-radius: unset;
+        }
         @media (max-width: ${BREAKPOINT.medium}px) {
           max-width: 800px;
           margin-left: auto;

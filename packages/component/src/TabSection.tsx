@@ -130,7 +130,7 @@ export const Tab = memo(
         data-selected={selected ? '' : undefined}
         aria-disabled={disabled}
         data-disabled={disabled ? '' : undefined}
-        tabIndex={-1}
+        tabIndex={0}
         {...props}
         ref={ref}
         css={css`
@@ -141,18 +141,6 @@ export const Tab = memo(
           &[data-selected] {
             background: ${theme.color.tab.active.background};
             color: ${theme.color.tab.active.text};
-            position: relative;
-            ::after {
-              content: '';
-              position: absolute;
-              bottom: 2px;
-              left: 50%;
-              transform: translateX(-50%);
-              width: 6px;
-              height: 6px;
-              border-radius: 50%;
-              background: ${theme.color.tab.active.indicator};
-            }
           }
           :hover {
             background: ${theme.color.tab.hover.background};

@@ -1,5 +1,5 @@
-import { PUBLICATION_EDIT_PATH } from '#/App'
-import { GroupDetailTabKey } from '#/pages/group/[gid]'
+import { EDIT_PUBLICATION_PATH } from '#/App'
+import { GroupViewType } from '#/store/useGroupDetail'
 import { css, useTheme } from '@emotion/react'
 import {
   Button,
@@ -42,14 +42,14 @@ export default function PublicationItem({
   )
   const handleEdit = useCallback(() => {
     navigate({
-      pathname: generatePath(PUBLICATION_EDIT_PATH, {
+      pathname: generatePath(EDIT_PUBLICATION_PATH, {
         cid: Xid.fromValue(item.cid).toString(),
       }),
       search: new URLSearchParams({
         gid: Xid.fromValue(item.gid).toString(),
         language: item.language,
         version: item.version.toString(),
-        type: GroupDetailTabKey.Publication,
+        type: GroupViewType.Publication,
       }).toString(),
     })
   }, [item.cid, item.gid, item.language, item.version, navigate])

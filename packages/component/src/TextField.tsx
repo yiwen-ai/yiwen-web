@@ -20,10 +20,10 @@ const SizeDict: Record<TextFieldSize, CSSObject> = {
     gap: 8,
   },
   large: {
-    height: 54,
-    paddingLeft: 20,
-    paddingRight: 20,
-    borderRadius: 14,
+    height: 36,
+    paddingLeft: 16,
+    paddingRight: 16,
+    borderRadius: 8,
     gap: 12,
   },
 }
@@ -91,6 +91,7 @@ export const TextField = memo(
         css={css`
           ${sizeCSS}
           display: inline-flex;
+          align-items: center;
           border: 1px solid ${theme.color.input.border};
           box-sizing: border-box;
           cursor: ${props.disabled
@@ -111,6 +112,7 @@ export const TextField = memo(
         ) : before ? (
           <div
             css={css`
+              align-self: stretch;
               display: flex;
               align-items: center;
             `}
@@ -126,6 +128,7 @@ export const TextField = memo(
           ref={ref}
           css={css`
             flex: 1;
+            max-width: 100%;
             border: none;
             outline: none;
             background: none;
@@ -144,6 +147,7 @@ export const TextField = memo(
         ) : after ? (
           <div
             css={css`
+              align-self: stretch;
               display: flex;
               align-items: center;
             `}
