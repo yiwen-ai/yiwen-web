@@ -5,7 +5,13 @@ import { DetailsSummary } from '@tiptap-pro/extension-details-summary'
 import { Emoji } from '@tiptap-pro/extension-emoji'
 import { Mathematics } from '@tiptap-pro/extension-mathematics'
 import { UniqueID } from '@tiptap-pro/extension-unique-id'
-import { type Editor, type Extensions } from '@tiptap/core'
+import {
+  type Editor,
+  type EditorOptions,
+  type Extensions,
+  type FocusPosition,
+  type JSONContent,
+} from '@tiptap/core'
 import { Color } from '@tiptap/extension-color'
 import { FontFamily } from '@tiptap/extension-font-family'
 import { Image } from '@tiptap/extension-image'
@@ -30,18 +36,74 @@ import {
   EditorContent,
   FloatingMenu,
   useEditor,
-  type EditorOptions,
 } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import { nanoid } from 'nanoid'
-import { forwardRef, memo, useImperativeHandle, useMemo } from 'react'
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+} from 'react'
 import { useIntl } from 'react-intl'
 import { IconButton, type IconButtonProps } from './Button'
 
-export interface RichTextEditorProps extends Partial<EditorOptions> {
+// eslint-disable-next-line react-refresh/only-export-components
+export const getExtensions = (): Extensions => [
+  Color,
+  Details.configure({ persist: true }),
+  DetailsContent,
+  DetailsSummary,
+  Emoji.configure({ enableEmoticons: true }),
+  FontFamily,
+  Image,
+  Link.configure({
+    protocols: ['mailto'],
+    HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' },
+  }),
+  Mathematics,
+  Mention,
+  StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
+  Subscript,
+  Superscript,
+  Table.configure({ resizable: true }),
+  TableCell,
+  TableHeader,
+  TableRow,
+  TaskItem.configure({ nested: true }),
+  TaskList,
+  TextAlign,
+  TextStyle,
+  Typography,
+  Underline,
+  UniqueID.configure({
+    attributeName: 'id',
+    types: [
+      'blockquote',
+      'codeBlock',
+      'detailsContent',
+      'detailsSummary',
+      'heading',
+      'listItem',
+      'paragraph',
+      'tableCell',
+      'tableHeader',
+      'taskItem',
+    ],
+    generateID: () => nanoid(6), // TODO: avoid collision
+  }),
+  Youtube,
+]
+
+export interface RichTextEditorProps {
   className?: string
+  editable?: boolean
+  autofocus?: FocusPosition
   placeholder?: string
-  initialContent?: EditorOptions['content'] | undefined
+  initialContent?: JSONContent | null | undefined
+  content?: JSONContent | null | undefined
+  onChange?: (content: JSONContent) => void
 }
 
 export const RichTextEditor = memo(
@@ -49,8 +111,9 @@ export const RichTextEditor = memo(
     {
       className,
       placeholder,
-      initialContent,
-      content = null,
+      initialContent = null,
+      content,
+      onChange,
       ...props
     }: RichTextEditorProps,
     ref: React.Ref<Editor | null>
@@ -58,67 +121,34 @@ export const RichTextEditor = memo(
     const intl = useIntl()
     const theme = useTheme()
 
-    const extensions = useMemo<Extensions>(
+    const extensions = useMemo(
       () => [
-        Color,
-        Details.configure({ persist: true }),
-        DetailsContent,
-        DetailsSummary,
-        Emoji.configure({ enableEmoticons: true }),
-        FontFamily,
-        Image,
-        Link.configure({
-          protocols: ['mailto'],
-          HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' },
-        }),
-        Mathematics,
-        Mention,
+        ...getExtensions(),
         Placeholder.configure({
           placeholder:
             placeholder ??
             intl.formatMessage({ defaultMessage: '输入内容开始创作' }),
         }),
-        StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
-        Subscript,
-        Superscript,
-        Table.configure({ resizable: true }),
-        TableCell,
-        TableHeader,
-        TableRow,
-        TaskItem.configure({ nested: true }),
-        TaskList,
-        TextAlign,
-        TextStyle,
-        Typography,
-        Underline,
-        UniqueID.configure({
-          attributeName: 'id',
-          types: [
-            'blockquote',
-            'codeBlock',
-            'detailsContent',
-            'detailsSummary',
-            'heading',
-            'listItem',
-            'paragraph',
-            'tableCell',
-            'tableHeader',
-            'taskItem',
-          ],
-          generateID: () => nanoid(6), // TODO: avoid collision
-        }),
-        Youtube,
       ],
       [intl, placeholder]
     )
 
-    const editor = useEditor(
-      { ...props, content: initialContent ?? content, extensions },
-      Object.values(props)
+    const onUpdate = useCallback<EditorOptions['onUpdate']>(
+      ({ editor }) => onChange?.(editor.getJSON()),
+      [onChange]
     )
+
+    // TODO: update options when props change
+    const editor = useEditor({
+      ...props,
+      content: content ?? initialContent,
+      extensions,
+      onUpdate,
+    })
 
     useImperativeHandle(ref, () => editor, [editor])
 
+    //#region bubble menu & floating menu
     const bubbleMenuItems: BubbleMenuItemProps[] | null = editor && [
       {
         iconName: 'h1',
@@ -236,6 +266,7 @@ export const RichTextEditor = memo(
         },
       },
     ]
+    //#endregion
 
     const menuCSS = css`
       padding: 12px 16px;
@@ -267,6 +298,7 @@ export const RichTextEditor = memo(
               }
 
               > * {
+                margin-top: 0;
                 margin-bottom: 0;
               }
               > * + * {

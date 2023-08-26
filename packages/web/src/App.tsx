@@ -1,5 +1,6 @@
-import { css } from '@emotion/react'
+import { css, useTheme } from '@emotion/react'
 import {
+  Button,
   DEFAULT_LOCALE,
   GlobalStyles,
   Header,
@@ -62,16 +63,47 @@ import LoginState from './pages/login/state'
 import PublicationShare from './pages/pub/[cid]'
 import PublicationEdit from './pages/publication/[cid]'
 import Search from './pages/search'
+import { BREAKPOINT } from './shared'
 
-function Fallback(props: FallbackProps) {
+function Fallback({
+  onRefresh,
+  ...props
+}: FallbackProps & {
+  onRefresh: () => void
+}) {
   const intl = useIntl()
+  const theme = useTheme()
 
   // TODO: show a better fallback UI
   // TODO: add a button to refresh the page
   return (
-    <div>
+    <div
+      css={css`
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 80px;
+        @media (max-width: ${BREAKPOINT.small}px) {
+          padding-left: 40px;
+          padding-right: 40px;
+        }
+      `}
+    >
       <h1>{intl.formatMessage({ defaultMessage: '出错了，请稍后再试' })}</h1>
-      <pre>{props.error.message}</pre>
+      <pre
+        css={css`
+          margin: 40px 0;
+          ${theme.typography.tooltip}
+          color: ${theme.color.body.secondary};
+          white-space: pre-wrap;
+          word-break: break-all;
+        `}
+      >
+        <code>{props.error.message}</code>
+      </pre>
+      <Button color='secondary' onClick={onRefresh}>
+        {intl.formatMessage({ defaultMessage: '刷新' })}
+      </Button>
     </div>
   )
 }
@@ -81,13 +113,25 @@ function Layout() {
   const intl = useIntl()
   const navigate = useNavigate()
 
+  //#region error boundary
+  const [key, setKey] = useState(0)
+
+  const renderFallback = useCallback(
+    (props: FallbackProps) => (
+      <Fallback {...props} onRefresh={() => setKey((key) => key + 1)} />
+    ),
+    []
+  )
+
   const onError = useCallback<NonNullable<ErrorBoundaryProps['onError']>>(
     (error, { componentStack }) => {
       logger.fatal('component error', { error, stack: componentStack })
     },
     [logger]
   )
+  //#endregion
 
+  //#region header
   const [headerProps, setHeaderProps] = useState<HeaderProps>({})
 
   const userMenu = useMemo<MenuProps>(
@@ -110,32 +154,37 @@ function Layout() {
     }),
     [intl, navigate]
   )
+  //#endregion
 
   return (
-    <ErrorBoundary FallbackComponent={Fallback} onError={onError}>
-      <SetHeaderPropsContext.Provider value={setHeaderProps}>
-        <main
+    <SetHeaderPropsContext.Provider value={setHeaderProps}>
+      <main
+        css={css`
+          height: 100vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        `}
+      >
+        <Header {...headerProps} userMenu={userMenu} />
+        <div
           css={css`
-            height: 100vh;
+            flex: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            overflow-y: auto;
           `}
         >
-          <Header {...headerProps} userMenu={userMenu} />
-          <div
-            css={css`
-              flex: 1;
-              display: flex;
-              flex-direction: column;
-              overflow-y: auto;
-            `}
+          <ErrorBoundary
+            key={key}
+            fallbackRender={renderFallback}
+            onError={onError}
           >
             <Outlet />
-          </div>
-        </main>
-      </SetHeaderPropsContext.Provider>
-    </ErrorBoundary>
+          </ErrorBoundary>
+        </div>
+      </main>
+    </SetHeaderPropsContext.Provider>
   )
 }
 

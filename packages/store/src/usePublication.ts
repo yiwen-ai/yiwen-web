@@ -1,7 +1,8 @@
 import { type JSONContent } from '@tiptap/core'
+import { isTruthy } from '@yiwen-ai/util'
 import { omitBy } from 'lodash-es'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { concatMap, interval } from 'rxjs'
+import { concatMap, filter, interval, lastValueFrom, take } from 'rxjs'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
@@ -38,6 +39,7 @@ export interface PublicationOutput {
   updated_at: number
   model: string
   original_url?: string
+  from_language?: string
   genre?: string[]
   title?: string
   cover?: string
@@ -163,32 +165,22 @@ export function usePublication(
           result: PublicationOutput | null
         }>(path, body)
         if (result) return result
-        return new Promise<PublicationOutput>((resolve, reject) => {
-          const subscription = interval(1000)
-            .pipe(
-              concatMap(async () => {
-                const { result } = await request<{
-                  result: PublicationOutput | null
-                }>(
-                  `${path}/by_job`,
-                  { job },
-                  { signal: controller?.signal ?? null }
-                )
-                return result
-              })
-            )
-            .subscribe({
-              next: (result) => {
-                if (result) {
-                  subscription.unsubscribe()
-                  resolve(result)
-                }
-              },
-              error: (error) => {
-                reject(error)
-              },
-            })
-        })
+        return lastValueFrom(
+          interval(1000).pipe(
+            concatMap(async () => {
+              const { result } = await request<{
+                result: PublicationOutput | null
+              }>(
+                `${path}/by_job`,
+                { job },
+                { signal: controller?.signal ?? null }
+              )
+              return result
+            }),
+            filter(isTruthy),
+            take(1)
+          )
+        )
       } finally {
         setTranslatingLanguage(undefined)
       }
