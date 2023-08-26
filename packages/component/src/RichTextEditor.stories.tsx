@@ -23,6 +23,10 @@ const html = `
 <h2 data-id="h7sDAY">格式化</h2>
 <blockquote data-id="_iizfz">
   <p data-id="xvebC4">block quote</p>
+  <p data-id="zkHt_x">
+    The axis that runs along the alignment of the floating element. Represents
+    the skidding between the floating element and the reference element.
+  </p>
   <p data-id="zkHt_t">line2</p>
 </blockquote>
 <ul>
@@ -39,5 +43,6 @@ const html = `
 export const Basic: Story = {
   args: {
     initialContent: generateJSON(html, getExtensions()),
+    onChange: () => {},
   },
 }

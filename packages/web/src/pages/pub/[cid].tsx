@@ -49,6 +49,7 @@ export default function PublicationShare() {
       />
       {gid && cid && language && version ? (
         <PublicationViewer
+          responsive={true}
           gid={gid}
           cid={cid}
           language={language}

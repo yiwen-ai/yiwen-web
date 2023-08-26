@@ -184,6 +184,7 @@ export default function GroupDetail() {
             onClose={handlePublicationDialogClose}
           >
             <PublicationViewer
+              responsive={false}
               gid={params.gid}
               cid={params.cid}
               language={publicationLanguage}

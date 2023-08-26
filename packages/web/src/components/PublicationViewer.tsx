@@ -12,6 +12,7 @@ import {
   SelectOption,
   SelectOptionGroup,
   Spinner,
+  textEllipsis,
   useToast,
 } from '@yiwen-ai/component'
 import {
@@ -32,6 +33,7 @@ import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
 
 export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
+  responsive: boolean
   gid: string
   cid: string
   language: string
@@ -40,6 +42,7 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export function PublicationViewer({
+  responsive,
   gid,
   cid,
   language: _language,
@@ -50,7 +53,7 @@ export function PublicationViewer({
   const intl = useIntl()
   const { render, push } = useToast()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
-  const isNarrow = width <= BREAKPOINT.small
+  const isNarrow = responsive && width <= BREAKPOINT.small
 
   //#region publication
   const { publication, error, isLoading, translatingLanguage, translate } =
@@ -135,20 +138,29 @@ export function PublicationViewer({
   //#region share
   const config = useFetcherConfig()
   const handleCopyShareLink = useCallback(async () => {
-    if (!config) return
-    const link = generatePublicationShareLink(
-      config,
-      gid,
-      cid,
-      _language,
-      _version
-    )
-    await navigator.clipboard.writeText(link)
-    push({
-      type: 'success',
-      message: intl.formatMessage({ defaultMessage: '链接已复制' }),
-      description: link,
-    })
+    try {
+      const { SHARE_URL } = config ?? {}
+      if (!SHARE_URL) throw new Error('missing SHARE_URL in config')
+      const link = generatePublicationShareLink(
+        SHARE_URL,
+        gid,
+        cid,
+        _language,
+        _version
+      )
+      await navigator.clipboard.writeText(link)
+      push({
+        type: 'success',
+        message: intl.formatMessage({ defaultMessage: '链接已复制' }),
+        description: link,
+      })
+    } catch (error) {
+      push({
+        type: 'warning',
+        message: intl.formatMessage({ defaultMessage: '分享失败' }),
+        description: toMessage(error),
+      })
+    }
   }, [_language, _version, cid, config, gid, intl, push])
   //#endregion
 
@@ -233,9 +245,11 @@ export function PublicationViewer({
                       name='translate3'
                       size={isNarrow ? 'small' : 'medium'}
                     />
-                    {isNarrow
-                      ? null
-                      : intl.formatMessage({ defaultMessage: '更多语言翻译' })}
+                    {isNarrow ? null : (
+                      <span css={textEllipsis}>
+                        {intl.formatMessage({ defaultMessage: '更多语言翻译' })}
+                      </span>
+                    )}
                   </Button>
                 )}
               >

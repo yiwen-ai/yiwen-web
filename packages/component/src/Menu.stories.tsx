@@ -88,6 +88,9 @@ export const Anchored: Story = {
 
 export const Nested: Story = {
   args: {
+    onShow: () => {},
+    onClose: () => {},
+    onToggle: () => {},
     anchor: (props) => (
       <Button color='primary' {...props}>
         Open Menu
@@ -106,6 +109,12 @@ function NestedMenu({
 }): JSX.Element {
   return (
     <>
+      <MenuItem
+        before={<Icon size='small' />}
+        label={`#${level} Menu`}
+        disabled={true}
+        style={{ fontWeight: 600, opacity: 'unset' }}
+      />
       <MenuItem before={<Icon name='edit' size='small' />} label='添加为链接' />
       <MenuItem
         before={<Icon name='edit' size='small' />}
