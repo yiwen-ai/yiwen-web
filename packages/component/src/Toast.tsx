@@ -8,7 +8,6 @@ import {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type HTMLAttributes,
 } from 'react'
@@ -56,8 +55,10 @@ export const Toast = memo(
   })
 )
 
+export interface ToastContainerProps extends HTMLAttributes<HTMLDivElement> {}
+
 export const ToastContainer = memo(function ToastContainer(
-  props: HTMLAttributes<HTMLDivElement>
+  props: ToastContainerProps
 ) {
   return (
     <Portal>
@@ -81,53 +82,48 @@ export const ToastContainer = memo(function ToastContainer(
   )
 })
 
-interface Close {
-  (): void
-}
-
 export interface ToastAPI {
-  push(toast: Readonly<ToastProps>): Close
-  render(): JSX.Element | null
+  pushToast(toast: Readonly<ToastProps>): () => void
+  renderToastContainer(props?: ToastContainerProps): JSX.Element | null
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
-  const [list, setList] = useState<readonly Readonly<ToastProps>[]>([])
-  const map = useRef(new Map<Readonly<ToastProps>, string>())
+  interface KeyedToastProps extends ToastProps {
+    key: string
+  }
 
-  const close = useCallback((toast: Readonly<ToastProps>) => {
-    setList((list) => without(list, toast))
-    map.current.delete(toast)
+  const [list, setList] = useState<readonly Readonly<KeyedToastProps>[]>([])
+
+  const pushToast = useCallback<ToastAPI['pushToast']>((toast) => {
+    const item: Readonly<KeyedToastProps> = {
+      ...toast,
+      key: nanoid(6),
+      onClose: () => {
+        toast.onClose?.()
+        closeToast()
+      },
+    }
+    setList((list) => list.concat(item))
+    const closeToast = () => setList((list) => without(list, item))
+    return closeToast
   }, [])
 
-  const push = useCallback(
-    (toast: Readonly<ToastProps>): Close => {
-      const toast2: ToastProps = { ...toast }
-      toast2.onClose = () => {
-        toast.onClose?.()
-        close(toast2)
-      }
-      setList((list) => list.concat(toast2))
-      map.current.set(toast2, nanoid(6))
-      return () => close(toast2)
+  const renderToastContainer = useCallback<ToastAPI['renderToastContainer']>(
+    (props) => {
+      return list.length > 0 ? (
+        <ToastContainer {...props}>
+          {list.map(({ key, ...item }) => (
+            <Toast key={key} data-toast-id={key} {...item} />
+          ))}
+        </ToastContainer>
+      ) : null
     },
-    [close]
+    [list]
   )
 
-  const render = useCallback(() => {
-    if (list.length === 0) return null
-    return (
-      <ToastContainer>
-        {list.map((item, index) => (
-          <Toast
-            key={map.current.get(item) ?? index}
-            data-toast-id={map.current.get(item)}
-            {...item}
-          />
-        ))}
-      </ToastContainer>
-    )
-  }, [list])
-
-  return useMemo<ToastAPI>(() => ({ push, render }), [push, render])
+  return useMemo<ToastAPI>(
+    () => ({ pushToast, renderToastContainer }),
+    [pushToast, renderToastContainer]
+  )
 }

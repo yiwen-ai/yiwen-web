@@ -1,13 +1,10 @@
 import { type JSONContent } from '@tiptap/core'
-import { isTruthy } from '@yiwen-ai/util'
 import { omitBy } from 'lodash-es'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { concatMap, filter, interval, lastValueFrom, take } from 'rxjs'
-import useSWR from 'swr'
+import useSWR, { type SWRConfiguration } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
-import { useAuth } from './AuthContext'
-import { decode, encode } from './CBOR'
+import { encode } from './CBOR'
 import {
   type GIDPagination,
   type GroupInfo,
@@ -15,7 +12,6 @@ import {
   type UserInfo,
 } from './common'
 import { useFetcher } from './useFetcher'
-import { useMyGroupList } from './useGroup'
 
 export const DEFAULT_MODEL = 'gpt3.5'
 
@@ -41,7 +37,7 @@ export interface PublicationOutput {
   original_url?: string
   from_language?: string
   genre?: string[]
-  title?: string
+  title: string
   cover?: string
   keywords?: string[]
   authors?: string[]
@@ -101,238 +97,67 @@ export interface UpdatePublicationInput {
   summary?: string
 }
 
+export interface PublicationDraft {
+  __isReady: boolean
+  gid: Uint8Array | undefined
+  cid: Uint8Array | undefined
+  language: string | undefined
+  version: number | undefined
+  model: string
+  updated_at: number | undefined
+  title: string
+  content: JSONContent | undefined
+}
+
 const path = '/v1/publication'
 
-export function usePublication(
-  _gid: string | null | undefined,
-  _cid: string | null | undefined,
-  _language: string | null | undefined,
-  _version: number | string | null | undefined
-) {
+export function usePublicationAPI() {
   const request = useFetcher()
 
-  const getKey = useCallback(() => {
-    if (!_gid || !_cid || !_language || _version == null) return null
-    interface Params
-      extends Record<keyof QueryPublication, string | number | undefined> {}
-    const params: Params = {
-      gid: _gid,
-      cid: _cid,
-      language: _language,
-      version: _version,
-      fields: undefined,
-    }
-    return [path, params] as const
-  }, [_cid, _gid, _language, _version])
-
-  const {
-    data: { result: publication } = {},
-    error,
-    mutate,
-    isValidating: _isValidatingPublication,
-    isLoading: _isLoadingPublication,
-  } = useSWR(getKey, ([path, params]) =>
-    request.get<{ result: PublicationOutput }>(path, params)
-  )
-
-  const [controller, setController] = useState<AbortController | undefined>()
-  useEffect(() => {
-    const controller = new AbortController()
-    setController(controller)
-    return () => controller.abort()
-  }, [])
-
-  const defaultGroupId = useMyGroupList().defaultGroup?.id
-
-  const [translatingLanguage, setTranslatingLanguage] = useState<
-    string | undefined
-  >()
-
-  const translate = useCallback(
-    async (language: string) => {
-      try {
-        setTranslatingLanguage(language)
-        if (!defaultGroupId || !publication) {
-          throw new Error('need to fetch publication before translating it')
-        }
-        const body: CreatePublicationInput = {
-          ...publication,
-          to_gid: defaultGroupId,
-          to_language: language,
-        }
-        const { job, result } = await request.post<{
-          job: string
-          result: PublicationOutput | null
-        }>(path, body)
-        if (result) return result
-        return lastValueFrom(
-          interval(1000).pipe(
-            concatMap(async () => {
-              const { result } = await request<{
-                result: PublicationOutput | null
-              }>(
-                `${path}/by_job`,
-                { job },
-                { signal: controller?.signal ?? null }
-              )
-              return result
-            }),
-            filter(isTruthy),
-            take(1)
-          )
-        )
-      } finally {
-        setTranslatingLanguage(undefined)
-      }
+  const readPublication = useCallback(
+    (params: Record<keyof QueryPublication, string | number | null>) => {
+      return request.get<{ result: PublicationOutput }>(path, params)
     },
-    [controller?.signal, defaultGroupId, publication, request]
+    [request]
   )
 
-  return {
-    publication,
-    error,
-    mutate,
-    isLoading: _isValidatingPublication || _isLoadingPublication,
-    translatingLanguage,
-    translate,
-  } as const
-}
-
-export function useRelatedPublicationList(
-  _gid: string | null | undefined,
-  _cid: string | null | undefined
-) {
-  const request = useFetcher()
-
-  const getKey = useCallback(() => {
-    if (!_gid || !_cid) return null
-    interface Params
-      extends Record<keyof QueryPublication, string | number | undefined> {}
-    const params: Params = {
-      gid: _gid,
-      cid: _cid,
-      language: undefined,
-      version: undefined,
-      fields: undefined,
-    }
-    return [`${path}/publish`, params] as const
-  }, [_cid, _gid])
-
-  const {
-    data: { result: publicationList } = {},
-    error,
-    mutate,
-    isValidating: _isValidatingPublicationList,
-    isLoading: _isLoadingPublicationList,
-  } = useSWR(getKey, ([path, params]) =>
-    request.get<{ result: PublicationOutput[] }>(path, params)
+  const readPublicationList = useCallback(
+    (params: { gid: string; page_token: Uint8Array | null | undefined }) => {
+      const body: GIDPagination = {
+        gid: Xid.fromValue(params.gid),
+        page_token: params.page_token,
+      }
+      return request.post<Page<PublicationOutput>>(`${path}/list`, body)
+    },
+    [request]
   )
 
-  return {
-    publicationList,
-    error,
-    mutate,
-    isLoading: _isValidatingPublicationList || _isLoadingPublicationList,
-  } as const
-}
-
-export function useEditPublication(
-  _gid: string | null | undefined,
-  _cid: string | null | undefined,
-  _language: string | null | undefined,
-  _version: number | string | null | undefined
-) {
-  const request = useFetcher()
-
-  //#region fetch group & publication
-  const { locale } = useAuth().user ?? {}
-
-  const {
-    defaultGroup: { id: defaultGroupId } = {},
-    isLoading: _isLoadingGroup,
-  } = useMyGroupList()
-
-  const {
-    publication,
-    mutate,
-    isLoading: _isLoadingPublication,
-  } = usePublication(_gid, _cid, _language, _version)
-  //#endregion
-
-  //#region draft
-  interface Draft {
-    __isReady: boolean
-    gid: Uint8Array | undefined
-    cid: Uint8Array | undefined
-    language: string | undefined
-    version: number | undefined
-    model: string
-    updated_at: number | undefined
-    title: string
-    content: JSONContent | undefined
-  }
-
-  const [draft, setDraft] = useState<Draft>(() => ({
-    __isReady: false,
-    gid: _gid ? Xid.fromValue(_gid) : undefined,
-    cid: _cid ? Xid.fromValue(_cid) : undefined,
-    language: locale,
-    version: undefined,
-    model: DEFAULT_MODEL,
-    updated_at: undefined,
-    title: '',
-    content: undefined,
-  }))
-
-  useEffect(() => {
-    if (_gid && _cid) {
-      if (publication) {
-        setDraft((prev) => ({
-          ...prev,
-          ...publication,
-          content: decode(publication.content),
-          __isReady: true,
-        }))
+  const readArchivedPublicationList = useCallback(
+    (params: { gid: string; page_token: Uint8Array | null | undefined }) => {
+      const body: GIDPagination = {
+        gid: Xid.fromValue(params.gid),
+        page_token: params.page_token,
       }
-    } else {
-      const gid = _gid ?? defaultGroupId
-      if (gid) {
-        setDraft((prev) => {
-          const prevGid = prev.gid && Xid.fromValue(prev.gid)
-          const nextGid = Xid.fromValue(gid)
-          if (prevGid?.equals(nextGid) && prev.__isReady) return prev
-          return { ...prev, gid: nextGid, __isReady: true }
-        })
-      }
-    }
-  }, [_cid, _gid, publication, defaultGroupId])
+      return request.post<Page<PublicationOutput>>(
+        `${path}/list_archived`,
+        body
+      )
+    },
+    [request]
+  )
 
-  const updateDraft = useCallback((draft: Partial<Draft>) => {
-    setDraft((prev) => ({ ...prev, ...draft }))
-  }, [])
-  //#endregion
+  const readTranslatedPublicationList = useCallback(
+    (params: Record<keyof QueryPublication, string | number | null>) => {
+      return request.get<{ result: PublicationOutput[] }>(
+        `${path}/publish`,
+        params
+      )
+    },
+    [request]
+  )
 
-  //#region processing state
-  const isLoading = _isLoadingGroup || _isLoadingPublication || !draft.__isReady
-
-  const [isSaving, setIsSaving] = useState(false)
-
-  // TODO: validate draft.content
-  const isDisabled =
-    isLoading ||
-    isSaving ||
-    !draft.gid ||
-    !draft.cid ||
-    !draft.language ||
-    draft.version === undefined ||
-    !draft.title.trim() ||
-    !draft.content
-  //#endregion
-
-  //#region actions
-  const create = useCallback(async () => {
-    try {
-      setIsSaving(true)
+  const createPublication = useCallback(
+    async (draft: PublicationDraft) => {
       if (
         !draft.gid ||
         !draft.cid ||
@@ -355,14 +180,12 @@ export function useEditPublication(
         body
       )
       return result
-    } finally {
-      setIsSaving(false)
-    }
-  }, [draft, request])
+    },
+    [request]
+  )
 
-  const update = useCallback(async () => {
-    try {
-      setIsSaving(true)
+  const updatePublication = useCallback(
+    async (draft: PublicationDraft) => {
       if (
         !draft.gid ||
         !draft.cid ||
@@ -376,7 +199,7 @@ export function useEditPublication(
           'group id, creation id, language, version, updated_at, title and content are required to update a publication'
         )
       }
-      const body: UpdatePublicationContentInput = {
+      const body1: UpdatePublicationContentInput = {
         gid: draft.gid,
         cid: draft.cid,
         language: draft.language,
@@ -384,41 +207,245 @@ export function useEditPublication(
         updated_at: draft.updated_at,
         content: encode(draft.content),
       }
-      const { result: item } = await request.put<{
+      const { result: result1 } = await request.put<{
         result: PublicationOutput
-      }>(`${path}/update_content`, body)
+      }>(`${path}/update_content`, body1)
       const body2: UpdatePublicationInput = {
         ...draft,
-        gid: item.gid,
-        cid: item.cid,
-        language: item.language,
-        version: item.version,
-        updated_at: item.updated_at,
+        gid: result1.gid,
+        cid: result1.cid,
+        language: result1.language,
+        version: result1.version,
+        updated_at: result1.updated_at,
         title: draft.title.trim(),
       }
       const { result } = await request.patch<{ result: PublicationOutput }>(
         path,
         omitBy(body2, (val) => val == null || val === '')
       )
-      mutate({ result })
       return result
-    } finally {
-      setIsSaving(false)
-    }
-  }, [draft, mutate, request])
-  //#endregion
+    },
+    [request]
+  )
+
+  const deletePublication = useCallback(
+    (
+      gid: Uint8Array | string,
+      cid: Uint8Array | string,
+      language: string,
+      version: number | string
+    ) => {
+      return request.delete(path, {
+        gid: Xid.fromValue(gid).toString(),
+        cid: Xid.fromValue(cid).toString(),
+        language,
+        version,
+      })
+    },
+    [request]
+  )
+
+  const publishPublication = useCallback(
+    (body: UpdatePublicationStatusInput) => {
+      return request.patch<{ result: PublicationOutput }>(
+        `${path}/publish`,
+        body
+      )
+    },
+    [request]
+  )
+
+  const archivePublication = useCallback(
+    (body: UpdatePublicationStatusInput) => {
+      return request.patch<{ result: PublicationOutput }>(
+        `${path}/archive`,
+        body
+      )
+    },
+    [request]
+  )
+
+  const restorePublication = useCallback(
+    (body: UpdatePublicationStatusInput) => {
+      return request.patch<{ result: PublicationOutput }>(
+        `${path}/redraft`,
+        body
+      )
+    },
+    [request]
+  )
 
   return {
-    draft,
-    updateDraft,
-    isLoading,
-    isDisabled,
-    isSaving,
-    save: _gid && _cid ? update : create,
+    readPublication,
+    readPublicationList,
+    readArchivedPublicationList,
+    readTranslatedPublicationList,
+    createPublication,
+    updatePublication,
+    deletePublication,
+    publishPublication,
+    archivePublication,
+    restorePublication,
   } as const
 }
 
-export function buildPublicationKey(item: PublicationOutput) {
+export function usePublication(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined,
+  _language: string | null | undefined,
+  _version: number | string | null | undefined
+) {
+  const { readPublication } = usePublicationAPI()
+
+  const getKey = useCallback(() => {
+    if (!_gid || !_cid || !_language || _version == null) return null
+    const params: Record<keyof QueryPublication, string | number | null> = {
+      gid: _gid,
+      cid: _cid,
+      language: _language,
+      version: _version,
+      fields: null,
+    }
+    return [path, params] as const
+  }, [_cid, _gid, _language, _version])
+
+  const {
+    data: { result: publication } = {},
+    error,
+    mutate,
+    isValidating,
+    isLoading,
+  } = useSWR(getKey, ([path, params]) => readPublication(params), {
+    revalidateOnMount: false,
+  } as SWRConfiguration)
+
+  const refresh = useCallback(
+    async () => getKey() && (await mutate())?.result,
+    [getKey, mutate]
+  )
+
+  return {
+    publication,
+    error,
+    isLoading: isValidating || isLoading,
+    refresh,
+  } as const
+}
+
+export function useTranslatePublication(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined,
+  _language: string | null | undefined,
+  _version: number | string | null | undefined
+) {
+  const request = useFetcher()
+
+  const readPublicationByJob = useReadPublicationByJob()
+
+  const translate = useCallback(
+    async (gid: Uint8Array | undefined, language: string | undefined) => {
+      if (
+        !_gid ||
+        !_cid ||
+        !_language ||
+        _version == null ||
+        !gid ||
+        !language
+      ) {
+        throw new Error(
+          'group id, creation id, language, version, target group id and target language are required to translate a publication'
+        )
+      }
+      const body: CreatePublicationInput = {
+        gid: Xid.fromValue(_gid),
+        cid: Xid.fromValue(_cid),
+        language: _language,
+        version: Number(_version),
+        model: DEFAULT_MODEL,
+        to_gid: gid,
+        to_language: language,
+      }
+      const { job, result } = await request.post<{
+        job: string
+        result: PublicationOutput | null
+      }>(path, body)
+      return result ?? readPublicationByJob(job)
+    },
+    [_cid, _gid, _language, _version, readPublicationByJob, request]
+  )
+
+  return translate
+}
+
+export function useTranslatedPublicationList(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined
+) {
+  const { readTranslatedPublicationList } = usePublicationAPI()
+
+  const getKey = useCallback(() => {
+    if (!_gid || !_cid) return null
+    const params: Record<keyof QueryPublication, string | number | null> = {
+      gid: _gid,
+      cid: _cid,
+      language: null,
+      version: null,
+      fields: null,
+    }
+    return [`${path}/publish`, params] as const
+  }, [_cid, _gid])
+
+  const { data, error, mutate, isValidating, isLoading } = useSWR(
+    getKey,
+    ([path, params]) => readTranslatedPublicationList(params),
+    { revalidateOnMount: false } as SWRConfiguration
+  )
+
+  const refresh = useCallback(
+    async () => getKey() && (await mutate())?.result,
+    [getKey, mutate]
+  )
+
+  return {
+    publicationList: data?.result,
+    error,
+    isLoading: isValidating || isLoading,
+    refresh,
+  } as const
+}
+
+export function useReadPublicationByJob() {
+  const request = useFetcher()
+
+  const [controller, setController] = useState<AbortController | undefined>()
+
+  useEffect(() => {
+    const controller = new AbortController()
+    setController(controller)
+    return () => controller.abort()
+  }, [])
+
+  return useCallback(
+    async function poll(
+      job: string,
+      signal = controller?.signal ?? null
+    ): Promise<PublicationOutput> {
+      const { result } = await request<{ result: PublicationOutput | null }>(
+        `${path}/by_job`,
+        { job },
+        { signal }
+      )
+      if (result) return result
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      return poll(job, signal)
+    },
+    [controller?.signal, request]
+  )
+}
+
+export function buildPublicationKey(
+  item: Pick<PublicationOutput, 'gid' | 'cid' | 'language' | 'version'>
+) {
   return [
     Xid.fromValue(item.gid).toString(),
     Xid.fromValue(item.cid).toString(),
@@ -427,47 +454,54 @@ export function buildPublicationKey(item: PublicationOutput) {
   ].join(':')
 }
 
-function isSamePublication(a: PublicationOutput, b: PublicationOutput) {
-  return (
-    Xid.fromValue(a.gid).equals(Xid.fromValue(b.gid)) &&
-    Xid.fromValue(a.cid).equals(Xid.fromValue(b.cid)) &&
-    a.language === b.language &&
-    a.version === b.version
-  )
+export function isSamePublication(
+  a: Pick<PublicationOutput, 'gid' | 'cid' | 'language' | 'version'>,
+  b: Pick<PublicationOutput, 'gid' | 'cid' | 'language' | 'version'>
+) {
+  return buildPublicationKey(a) === buildPublicationKey(b)
 }
 
-export function usePublicationList({ status, ...query }: GIDPagination) {
-  const request = useFetcher()
+export function usePublicationList(
+  _gid: string | null | undefined,
+  _status: PublicationStatus.Archived | null | undefined
+) {
+  const {
+    readPublicationList,
+    readArchivedPublicationList,
+    publishPublication,
+    archivePublication,
+    restorePublication,
+    deletePublication,
+  } = usePublicationAPI()
 
   const getKey = useCallback(
-    (
-      index: number,
-      previousPageData: Page<PublicationOutput> | null
-    ): [string, GIDPagination] | null => {
-      if (previousPageData && !previousPageData.next_page_token) return null
+    (_: unknown, prevPage: Page<PublicationOutput> | null) => {
+      if (!_gid) return null
+      if (prevPage && !prevPage.next_page_token) return null
+
+      const params = {
+        gid: _gid,
+        page_token: prevPage?.next_page_token,
+      }
 
       return [
-        status === PublicationStatus.Archived
+        _status === PublicationStatus.Archived
           ? `${path}/list_archived`
           : `${path}/list`,
-        {
-          ...query,
-          page_token: previousPageData?.next_page_token,
-        },
-      ]
+        params,
+      ] as const
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(query), status]
+    [_gid, _status]
   )
 
   const { data, error, mutate, isValidating, isLoading, setSize } =
     useSWRInfinite(
       getKey,
-      ([path, body]) => request.post<Page<PublicationOutput>>(path, body),
-      {
-        revalidateIfStale: true,
-        revalidateOnMount: false,
-      }
+      ([path, params]) =>
+        path === '/v1/publication/list_archived'
+          ? readArchivedPublicationList(params)
+          : readPublicationList(params),
+      { revalidateOnMount: false }
     )
 
   //#region processing state
@@ -490,6 +524,7 @@ export function usePublicationList({ status, ...query }: GIDPagination) {
     },
     []
   )
+
   const setArchiving = useCallback(
     (item: PublicationOutput, isArchiving: boolean) => {
       setState((prev) => ({
@@ -502,6 +537,7 @@ export function usePublicationList({ status, ...query }: GIDPagination) {
     },
     []
   )
+
   const setRestoring = useCallback(
     (item: PublicationOutput, isRestoring: boolean) => {
       setState((prev) => ({
@@ -514,6 +550,7 @@ export function usePublicationList({ status, ...query }: GIDPagination) {
     },
     []
   )
+
   const setPublishing = useCallback(
     (item: PublicationOutput, isPublishing: boolean) => {
       setState((prev) => ({
@@ -533,18 +570,21 @@ export function usePublicationList({ status, ...query }: GIDPagination) {
     },
     [state.isDeleting]
   )
+
   const isArchiving = useCallback(
     (item: PublicationOutput) => {
       return state.isArchiving[buildPublicationKey(item)] ?? false
     },
     [state.isArchiving]
   )
+
   const isRestoring = useCallback(
     (item: PublicationOutput) => {
       return state.isRestoring[buildPublicationKey(item)] ?? false
     },
     [state.isRestoring]
   )
+
   const isPublishing = useCallback(
     (item: PublicationOutput) => {
       return state.isPublishing[buildPublicationKey(item)] ?? false
@@ -560,17 +600,16 @@ export function usePublicationList({ status, ...query }: GIDPagination) {
   }, [data])
 
   const hasMore = useMemo(() => {
-    if (!data) return true
+    if (!data) return false
     return !!data[data.length - 1]?.next_page_token
   }, [data])
 
-  const loadMore = useCallback(() => {
-    if (isValidating || isLoading || !hasMore) return
-    if (items.length === 0) mutate()
-    else setSize((size) => size + 1)
-  }, [hasMore, isLoading, isValidating, items.length, mutate, setSize])
+  const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
 
-  const refresh = useCallback(() => mutate(), [mutate])
+  const refresh = useCallback(
+    async () => getKey(0, null) && (await mutate()),
+    [getKey, mutate]
+  )
   //#endregion
 
   //#region actions
@@ -578,45 +617,46 @@ export function usePublicationList({ status, ...query }: GIDPagination) {
     async (item: PublicationOutput) => {
       try {
         setPublishing(item, true)
-        const body: UpdatePublicationStatusInput = {
+        const { result } = await publishPublication({
           gid: item.gid,
           cid: item.cid,
           language: item.language,
           version: item.version,
           updated_at: item.updated_at,
           status: PublicationStatus.Published,
-        }
-        await request.patch<{
-          result: PublicationOutput
-        }>(`${path}/publish`, body)
-        mutate()
+        })
+        mutate((prev) =>
+          prev?.map((page): typeof page => ({
+            ...page,
+            result: page.result.map((item) =>
+              isSamePublication(item, result) ? result : item
+            ),
+          }))
+        )
       } finally {
         setPublishing(item, false)
       }
     },
-    [request, mutate, setPublishing]
+    [mutate, publishPublication, setPublishing]
   )
 
   const archiveItem = useCallback(
     async (item: PublicationOutput) => {
       try {
         setArchiving(item, true)
-        const body: UpdatePublicationStatusInput = {
+        const { result } = await archivePublication({
           gid: item.gid,
           cid: item.cid,
           language: item.language,
           version: item.version,
           updated_at: item.updated_at,
           status: PublicationStatus.Archived,
-        }
-        await request.patch<{
-          result: PublicationOutput
-        }>(`${path}/archive`, body)
+        })
         mutate((prev) =>
           prev?.map((page): typeof page => ({
             ...page,
             result: page.result.filter(
-              (_item) => !isSamePublication(_item, item)
+              (item) => !isSamePublication(item, result)
             ),
           }))
         )
@@ -624,29 +664,26 @@ export function usePublicationList({ status, ...query }: GIDPagination) {
         setArchiving(item, false)
       }
     },
-    [request, mutate, setArchiving]
+    [archivePublication, mutate, setArchiving]
   )
 
   const restoreItem = useCallback(
     async (item: PublicationOutput) => {
       try {
         setRestoring(item, true)
-        const body: UpdatePublicationStatusInput = {
+        const { result } = await restorePublication({
           gid: item.gid,
           cid: item.cid,
           language: item.language,
           version: item.version,
           updated_at: item.updated_at,
           status: PublicationStatus.Review,
-        }
-        await request.patch<{
-          result: PublicationOutput
-        }>(`${path}/redraft`, body)
+        })
         mutate((prev) =>
           prev?.map((page): typeof page => ({
             ...page,
             result: page.result.filter(
-              (_item) => !isSamePublication(_item, item)
+              (item) => !isSamePublication(item, result)
             ),
           }))
         )
@@ -654,19 +691,14 @@ export function usePublicationList({ status, ...query }: GIDPagination) {
         setRestoring(item, false)
       }
     },
-    [request, mutate, setRestoring]
+    [mutate, restorePublication, setRestoring]
   )
 
   const deleteItem = useCallback(
     async (item: PublicationOutput) => {
       try {
         setDeleting(item, true)
-        await request.delete(path, {
-          gid: Xid.fromValue(item.gid).toString(),
-          cid: Xid.fromValue(item.cid).toString(),
-          language: item.language,
-          version: item.version,
-        })
+        await deletePublication(item.gid, item.cid, item.language, item.version)
         mutate((prev) =>
           prev?.map((page): typeof page => ({
             ...page,
@@ -679,21 +711,21 @@ export function usePublicationList({ status, ...query }: GIDPagination) {
         setDeleting(item, false)
       }
     },
-    [request, mutate, setDeleting]
+    [deletePublication, mutate, setDeleting]
   )
   //#endregion
 
   return {
-    items,
-    error,
-    hasMore,
     isLoading: isValidating || isLoading,
+    error,
+    items,
+    hasMore,
+    loadMore,
+    refresh,
     isDeleting,
     isArchiving,
     isRestoring,
     isPublishing,
-    loadMore,
-    refresh,
     publishItem,
     archiveItem,
     restoreItem,

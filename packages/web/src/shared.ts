@@ -1,7 +1,7 @@
-import { type FetcherConfig } from '@yiwen-ai/store'
 import { joinURL } from '@yiwen-ai/util'
 import { generatePath } from 'react-router-dom'
-import { PUBLICATION_SHARE_PATH } from './App'
+import { Xid } from 'xid-ts'
+import { SHARE_PUBLICATION_PATH } from './App'
 
 export const MAX_WIDTH = '800px'
 
@@ -12,17 +12,19 @@ export const BREAKPOINT = {
 } as const
 
 export function generatePublicationShareLink(
-  config: FetcherConfig,
-  gid: string,
-  cid: string,
+  SHARE_URL: string,
+  gid: Uint8Array | string,
+  cid: Uint8Array | string,
   language: string,
   version: number | string
 ) {
   return joinURL(
-    config.SHARE_URL,
-    generatePath(PUBLICATION_SHARE_PATH, { cid }),
+    SHARE_URL,
+    generatePath(SHARE_PUBLICATION_PATH, {
+      cid: Xid.fromValue(cid).toString(),
+    }),
     {
-      gid,
+      gid: Xid.fromValue(gid).toString(),
       language,
       version,
     }

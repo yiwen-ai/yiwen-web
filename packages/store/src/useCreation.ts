@@ -1,11 +1,10 @@
 import { type JSONContent } from '@tiptap/core'
 import { omitBy } from 'lodash-es'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import useSWR from 'swr'
+import { useCallback, useMemo, useState } from 'react'
+import useSWR, { type SWRConfiguration } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
-import { useAuth } from './AuthContext'
-import { decode, encode } from './CBOR'
+import { encode } from './CBOR'
 import {
   type GIDPagination,
   type GroupInfo,
@@ -13,8 +12,12 @@ import {
   type UserInfo,
 } from './common'
 import { useFetcher } from './useFetcher'
-import { useMyGroupList } from './useGroup'
-import { DEFAULT_MODEL, type CreatePublicationInput } from './usePublication'
+import {
+  DEFAULT_MODEL,
+  useReadPublicationByJob,
+  type CreatePublicationInput,
+  type PublicationOutput,
+} from './usePublication'
 
 export enum CreationStatus {
   Deleted = -2,
@@ -97,128 +100,53 @@ export interface UpdateCreationStatusInput {
   status: CreationStatus
 }
 
-const path = '/v1/creation'
-
-export function useCreation(
-  _gid: string | null | undefined,
-  _cid: string | null | undefined
-) {
-  const request = useFetcher()
-
-  const getKey = useCallback(() => {
-    if (!_gid || !_cid) return null
-    interface Params extends Record<keyof QueryCreation, string | undefined> {}
-    const params: Params = { gid: _gid, id: _cid, fields: undefined }
-    return [path, params] as const
-  }, [_cid, _gid])
-
-  const {
-    data: { result: creation } = {},
-    error,
-    mutate,
-    isValidating: _isValidatingCreation,
-    isLoading: _isLoadingCreation,
-  } = useSWR(getKey, ([path, params]) =>
-    request.get<{ result: CreationOutput }>(path, params)
-  )
-
-  return {
-    creation,
-    error,
-    mutate,
-    isLoading: _isValidatingCreation || _isLoadingCreation,
-  } as const
+export interface CreationDraft {
+  __isReady: boolean
+  gid: Uint8Array | undefined
+  id: Uint8Array | undefined
+  language: string | undefined
+  updated_at: number | undefined
+  title: string
+  content: JSONContent | undefined
 }
 
-export function useEditCreation(
-  _gid: string | null | undefined,
-  _cid: string | null | undefined
-) {
+const path = '/v1/creation'
+
+export function useCreationAPI() {
   const request = useFetcher()
+  const readPublicationByJob = useReadPublicationByJob()
 
-  //#region fetch group & creation
-  const { locale } = useAuth().user ?? {}
+  const readCreation = useCallback(
+    (params: Record<keyof QueryCreation, string | undefined>) => {
+      return request.get<{ result: CreationOutput }>(path, params)
+    },
+    [request]
+  )
 
-  const {
-    defaultGroup: { id: defaultGroupId } = {},
-    isLoading: _isLoadingGroup,
-  } = useMyGroupList()
-
-  const {
-    creation,
-    mutate,
-    isLoading: _isLoadingCreation,
-  } = useCreation(_gid, _cid)
-  //#endregion
-
-  //#region draft
-  interface Draft {
-    __isReady: boolean
-    gid: Uint8Array | undefined
-    id: Uint8Array | undefined
-    language: string | undefined
-    updated_at: number | undefined
-    title: string
-    content: JSONContent | undefined
-  }
-
-  const [draft, setDraft] = useState<Draft>(() => ({
-    __isReady: false,
-    gid: _gid ? Xid.fromValue(_gid) : undefined,
-    id: _cid ? Xid.fromValue(_cid) : undefined,
-    language: locale,
-    updated_at: undefined,
-    title: '',
-    content: undefined,
-  }))
-
-  useEffect(() => {
-    if (_gid && _cid) {
-      if (creation) {
-        setDraft((prev) => ({
-          ...prev,
-          ...creation,
-          content: decode(creation.content),
-          __isReady: true,
-        }))
+  const readCreationList = useCallback(
+    (params: { gid: string; page_token: Uint8Array | null | undefined }) => {
+      const body: GIDPagination = {
+        gid: Xid.fromValue(params.gid),
+        page_token: params.page_token,
       }
-    } else {
-      const gid = _gid ?? defaultGroupId
-      if (gid) {
-        setDraft((prev) => {
-          const prevGid = prev.gid && Xid.fromValue(prev.gid)
-          const nextGid = Xid.fromValue(gid)
-          if (prevGid?.equals(nextGid) && prev.__isReady) return prev
-          return { ...prev, gid: nextGid, __isReady: true }
-        })
+      return request.post<Page<CreationOutput>>(`${path}/list`, body)
+    },
+    [request]
+  )
+
+  const readArchivedCreationList = useCallback(
+    (params: { gid: string; page_token: Uint8Array | null | undefined }) => {
+      const body: GIDPagination = {
+        gid: Xid.fromValue(params.gid),
+        page_token: params.page_token,
       }
-    }
-  }, [_cid, _gid, creation, defaultGroupId])
+      return request.post<Page<CreationOutput>>(`${path}/list_archived`, body)
+    },
+    [request]
+  )
 
-  const updateDraft = useCallback((draft: Partial<Draft>) => {
-    setDraft((prev) => ({ ...prev, ...draft }))
-  }, [])
-  //#endregion
-
-  //#region processing state
-  const isLoading = _isLoadingGroup || _isLoadingCreation || !draft.__isReady
-
-  const [isSaving, setIsSaving] = useState(false)
-
-  // TODO: validate draft.content
-  const isDisabled =
-    isLoading ||
-    isSaving ||
-    !draft.gid ||
-    !draft.language ||
-    !draft.title.trim() ||
-    !draft.content
-  //#endregion
-
-  //#region actions
-  const create = useCallback(async () => {
-    try {
-      setIsSaving(true)
+  const createCreation = useCallback(
+    async (draft: CreationDraft) => {
       if (
         !draft.gid ||
         !draft.language ||
@@ -241,14 +169,12 @@ export function useEditCreation(
         body
       )
       return result
-    } finally {
-      setIsSaving(false)
-    }
-  }, [draft, request])
+    },
+    [request]
+  )
 
-  const update = useCallback(async () => {
-    try {
-      setIsSaving(true)
+  const updateCreation = useCallback(
+    async (draft: CreationDraft) => {
       if (
         !draft.gid ||
         !draft.id ||
@@ -261,42 +187,117 @@ export function useEditCreation(
           'group id, creation id, language, updated_at, title and content are required to update a creation'
         )
       }
-      const body: UpdateCreationContentInput = {
+      const body1: UpdateCreationContentInput = {
         gid: draft.gid,
         id: draft.id,
         language: draft.language,
         updated_at: draft.updated_at,
         content: encode(draft.content),
       }
-      const { result: item } = await request.put<{
-        result: CreationOutput
-      }>(`${path}/update_content`, body)
+      const { result: result1 } = await request.put<{ result: CreationOutput }>(
+        `${path}/update_content`,
+        body1
+      )
       const body2: UpdateCreationInput = {
         ...draft,
-        gid: item.gid,
-        id: item.id,
-        updated_at: item.updated_at,
+        gid: result1.gid,
+        id: result1.id,
+        updated_at: result1.updated_at,
         title: draft.title.trim(),
       }
       const { result } = await request.patch<{ result: CreationOutput }>(
         path,
         omitBy(body2, (val) => val == null || val === '')
       )
-      mutate({ result })
       return result
-    } finally {
-      setIsSaving(false)
-    }
-  }, [draft, mutate, request])
-  //#endregion
+    },
+    [request]
+  )
+
+  const deleteCreation = useCallback(
+    (gid: Uint8Array | string, id: Uint8Array | string) => {
+      return request.delete(path, {
+        gid: Xid.fromValue(gid).toString(),
+        id: Xid.fromValue(id).toString(),
+      })
+    },
+    [request]
+  )
+
+  const releaseCreation = useCallback(
+    async (body: CreatePublicationInput) => {
+      const { job, result } = await request.post<{
+        job: string
+        result: PublicationOutput | null
+      }>(`${path}/release`, body)
+      return { job, result: result ?? (await readPublicationByJob(job)) }
+    },
+    [readPublicationByJob, request]
+  )
+
+  const archiveCreation = useCallback(
+    (body: UpdateCreationStatusInput) => {
+      return request.patch<{ result: CreationOutput }>(`${path}/archive`, body)
+    },
+    [request]
+  )
+
+  const restoreCreation = useCallback(
+    (body: UpdateCreationStatusInput) => {
+      return request.patch<{ result: CreationOutput }>(`${path}/redraft`, body)
+    },
+    [request]
+  )
 
   return {
-    draft,
-    updateDraft,
+    readCreation,
+    readCreationList,
+    readArchivedCreationList,
+    createCreation,
+    updateCreation,
+    deleteCreation,
+    releaseCreation,
+    archiveCreation,
+    restoreCreation,
+  } as const
+}
+
+export function useCreation(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined
+) {
+  const { readCreation } = useCreationAPI()
+
+  const getKey = useCallback(() => {
+    if (!_gid || !_cid) return null
+    const params: Record<keyof QueryCreation, string | undefined> = {
+      gid: _gid,
+      id: _cid,
+      fields: undefined,
+    }
+    return [path, params] as const
+  }, [_cid, _gid])
+
+  const {
+    data: { result: creation } = {},
+    error,
+    mutate,
+    isValidating,
     isLoading,
-    isDisabled,
-    isSaving,
-    save: _gid && _cid ? update : create,
+  } = useSWR(getKey, ([path, params]) => readCreation(params), {
+    revalidateOnMount: false,
+  } as SWRConfiguration)
+
+  const refresh = useCallback(
+    async () => getKey() && (await mutate())?.result,
+    [getKey, mutate]
+  )
+
+  return {
+    creation,
+    error,
+    isLoading: isValidating || isLoading,
+    refresh,
   } as const
 }
 
@@ -314,38 +315,48 @@ function isSameCreation(a: CreationOutput, b: CreationOutput) {
   )
 }
 
-export function useCreationList({ status, ...query }: GIDPagination) {
-  const request = useFetcher()
+export function useCreationList(
+  _gid: string | null | undefined,
+  _status: CreationStatus.Archived | null | undefined
+) {
+  const {
+    readCreation,
+    readCreationList,
+    readArchivedCreationList,
+    releaseCreation,
+    archiveCreation,
+    restoreCreation,
+    deleteCreation,
+  } = useCreationAPI()
 
   const getKey = useCallback(
-    (
-      index: number,
-      previousPageData: Page<CreationOutput> | null
-    ): [string, GIDPagination] | null => {
-      if (previousPageData && !previousPageData.next_page_token) return null
+    (_: unknown, prevPage: Page<CreationOutput> | null) => {
+      if (!_gid) return null
+      if (prevPage && !prevPage.next_page_token) return null
+
+      const params = {
+        gid: _gid,
+        page_token: prevPage?.next_page_token,
+      }
 
       return [
-        status === CreationStatus.Archived
+        _status === CreationStatus.Archived
           ? `${path}/list_archived`
           : `${path}/list`,
-        {
-          ...query,
-          page_token: previousPageData?.next_page_token,
-        },
-      ]
+        params,
+      ] as const
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(query), status]
+    [_gid, _status]
   )
 
   const { data, error, mutate, isValidating, isLoading, setSize } =
     useSWRInfinite(
       getKey,
-      ([path, body]) => request.post<Page<CreationOutput>>(path, body),
-      {
-        revalidateIfStale: true,
-        revalidateOnMount: false,
-      }
+      ([path, params]) =>
+        path === '/v1/creation/list_archived'
+          ? readArchivedCreationList(params)
+          : readCreationList(params),
+      { revalidateOnMount: false }
     )
 
   //#region processing state
@@ -368,6 +379,7 @@ export function useCreationList({ status, ...query }: GIDPagination) {
     },
     []
   )
+
   const setArchiving = useCallback(
     (item: CreationOutput, isArchiving: boolean) => {
       setState((prev) => ({
@@ -380,6 +392,7 @@ export function useCreationList({ status, ...query }: GIDPagination) {
     },
     []
   )
+
   const setRestoring = useCallback(
     (item: CreationOutput, isRestoring: boolean) => {
       setState((prev) => ({
@@ -392,6 +405,7 @@ export function useCreationList({ status, ...query }: GIDPagination) {
     },
     []
   )
+
   const setReleasing = useCallback(
     (item: CreationOutput, isReleasing: boolean) => {
       setState((prev) => ({
@@ -411,18 +425,21 @@ export function useCreationList({ status, ...query }: GIDPagination) {
     },
     [state.isDeleting]
   )
+
   const isArchiving = useCallback(
     (item: CreationOutput) => {
       return state.isArchiving[buildCreationKey(item)] ?? false
     },
     [state.isArchiving]
   )
+
   const isRestoring = useCallback(
     (item: CreationOutput) => {
       return state.isRestoring[buildCreationKey(item)] ?? false
     },
     [state.isRestoring]
   )
+
   const isReleasing = useCallback(
     (item: CreationOutput) => {
       return state.isReleasing[buildCreationKey(item)] ?? false
@@ -438,17 +455,16 @@ export function useCreationList({ status, ...query }: GIDPagination) {
   }, [data])
 
   const hasMore = useMemo(() => {
-    if (!data) return true
+    if (!data) return false
     return !!data[data.length - 1]?.next_page_token
   }, [data])
 
-  const loadMore = useCallback(() => {
-    if (isValidating || isLoading || !hasMore) return
-    if (items.length === 0) mutate()
-    else setSize((size) => size + 1)
-  }, [hasMore, isLoading, isValidating, items.length, mutate, setSize])
+  const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
 
-  const refresh = useCallback(() => mutate(), [mutate])
+  const refresh = useCallback(
+    async () => getKey(0, null) && (await mutate()),
+    [getKey, mutate]
+  )
   //#endregion
 
   //#region actions
@@ -456,84 +472,84 @@ export function useCreationList({ status, ...query }: GIDPagination) {
     async (item: CreationOutput) => {
       try {
         setReleasing(item, true)
-        const body: CreatePublicationInput = {
+        await releaseCreation({
           gid: item.gid,
           cid: item.id,
           language: item.language,
           version: item.version,
           model: DEFAULT_MODEL,
-        }
-        await request.post<{
-          result: CreationOutput
-        }>(`${path}/release`, body)
-        mutate()
+        })
+        const { result } = await readCreation({
+          gid: Xid.fromValue(item.gid).toString(),
+          id: Xid.fromValue(item.id).toString(),
+          fields: undefined,
+        })
+        mutate((prev) =>
+          prev?.map((page): typeof page => ({
+            ...page,
+            result: page.result.map((item) =>
+              isSameCreation(item, result) ? result : item
+            ),
+          }))
+        )
       } finally {
         setReleasing(item, false)
       }
     },
-    [request, mutate, setReleasing]
+    [mutate, readCreation, releaseCreation, setReleasing]
   )
 
   const archiveItem = useCallback(
     async (item: CreationOutput) => {
       try {
         setArchiving(item, true)
-        const body: UpdateCreationStatusInput = {
+        const { result } = await archiveCreation({
           gid: item.gid,
           id: item.id,
           updated_at: item.updated_at,
           status: CreationStatus.Archived,
-        }
-        await request.patch<{
-          result: CreationOutput
-        }>(`${path}/archive`, body)
+        })
         mutate((prev) =>
           prev?.map((page): typeof page => ({
             ...page,
-            result: page.result.filter((_item) => !isSameCreation(_item, item)),
+            result: page.result.filter((item) => !isSameCreation(item, result)),
           }))
         )
       } finally {
         setArchiving(item, false)
       }
     },
-    [request, mutate, setArchiving]
+    [archiveCreation, mutate, setArchiving]
   )
 
   const restoreItem = useCallback(
     async (item: CreationOutput) => {
       try {
         setRestoring(item, true)
-        const body: UpdateCreationStatusInput = {
+        const { result } = await restoreCreation({
           gid: item.gid,
           id: item.id,
           updated_at: item.updated_at,
           status: CreationStatus.Draft,
-        }
-        await request.patch<{
-          result: CreationOutput
-        }>(`${path}/redraft`, body)
+        })
         mutate((prev) =>
           prev?.map((page): typeof page => ({
             ...page,
-            result: page.result.filter((_item) => !isSameCreation(_item, item)),
+            result: page.result.filter((item) => !isSameCreation(item, result)),
           }))
         )
       } finally {
         setRestoring(item, false)
       }
     },
-    [request, mutate, setRestoring]
+    [mutate, restoreCreation, setRestoring]
   )
 
   const deleteItem = useCallback(
     async (item: CreationOutput) => {
       try {
         setDeleting(item, true)
-        await request.delete(path, {
-          gid: Xid.fromValue(item.gid).toString(),
-          id: Xid.fromValue(item.id).toString(),
-        })
+        await deleteCreation(item.gid, item.id)
         mutate((prev) =>
           prev?.map((page): typeof page => ({
             ...page,
@@ -544,21 +560,21 @@ export function useCreationList({ status, ...query }: GIDPagination) {
         setDeleting(item, false)
       }
     },
-    [request, mutate, setDeleting]
+    [deleteCreation, mutate, setDeleting]
   )
   //#endregion
 
   return {
-    items,
-    error,
-    hasMore,
     isLoading: isValidating || isLoading,
+    error,
+    items,
+    hasMore,
+    loadMore,
+    refresh,
     isDeleting,
     isArchiving,
     isRestoring,
     isReleasing,
-    loadMore,
-    refresh,
     releaseItem,
     archiveItem,
     restoreItem,

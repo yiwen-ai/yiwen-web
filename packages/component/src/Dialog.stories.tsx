@@ -49,6 +49,9 @@ export const Default: Story = {
 
 export const Nested: Story = {
   args: {
+    onShow: () => {},
+    onClose: () => {},
+    onToggle: () => {},
     anchor: (props) => (
       <Button color='primary' {...props}>
         Open Dialog
@@ -97,10 +100,11 @@ function NestedDialogBody({
         >
           <DialogHead>{`#${level + 1} Dialog`}</DialogHead>
           <NestedDialogBody level={level + 1} maxLevel={maxLevel} />
+          <DialogHead>{`#${level + 1} Foot`}</DialogHead>
           <DialogClose />
         </Dialog>
       ) : (
-        <div>{`#${level} Dialog`}</div>
+        <div>{`#${level} Body`}</div>
       )}
     </DialogBody>
   )

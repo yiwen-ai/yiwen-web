@@ -1,74 +1,54 @@
-import { PUBLICATION_SHARE_PATH, SetHeaderProps } from '#/App'
-import ErrorPlaceholder from '#/components/ErrorPlaceholder'
-import { PublicationViewer } from '#/components/PublicationViewer'
+import { SetHeaderProps } from '#/App'
+import PublicationViewer from '#/components/PublicationViewer'
+import { useSharePublication } from '#/store/useSharePublication'
 import { css } from '@emotion/react'
-import { RequestError, type PublicationOutput } from '@yiwen-ai/store'
+import { useToast } from '@yiwen-ai/component'
 import { useCallback } from 'react'
-import { useIntl } from 'react-intl'
-import {
-  generatePath,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
-export default function PublicationShare() {
-  const intl = useIntl()
+export default function SharePublication() {
   const params = useParams<{ cid: string }>()
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { renderToastContainer, pushToast } = useToast()
 
-  const gid = searchParams.get('gid')
-  const cid = params.cid
-  const language = searchParams.get('language')
-  const version = searchParams.get('version')
+  const {
+    publicationViewer: { onTranslate, ...publicationViewer },
+  } = useSharePublication(
+    pushToast,
+    searchParams.get('gid'),
+    params.cid,
+    searchParams.get('language'),
+    searchParams.get('version')
+  )
 
-  const handleSwitch = useCallback(
-    (publication: PublicationOutput) => {
-      const searchParams2 = new URLSearchParams(searchParams)
-      searchParams2.set('gid', Xid.fromValue(publication.gid).toString())
-      searchParams2.set('language', publication.language)
-      searchParams2.set('version', publication.version.toString())
-      navigate({
-        pathname: generatePath(PUBLICATION_SHARE_PATH, {
-          cid: Xid.fromValue(publication.cid).toString(),
-        }),
-        search: searchParams2.toString(),
-      })
+  const handleTranslate = useCallback(
+    async (language: string) => {
+      const publication = await onTranslate(language)
+      if (publication) {
+        setSearchParams({
+          gid: Xid.fromValue(publication.gid).toString(),
+          language: publication.language,
+          version: publication.version.toString(),
+        })
+      }
     },
-    [navigate, searchParams]
+    [onTranslate, setSearchParams]
   )
 
   return (
     <>
+      {renderToastContainer()}
       <SetHeaderProps
         css={css`
           display: none;
         `}
       />
-      {gid && cid && language && version ? (
-        <PublicationViewer
-          gid={gid}
-          cid={cid}
-          language={language}
-          version={version}
-          onSwitch={handleSwitch}
-        />
-      ) : (
-        <ErrorPlaceholder
-          error={
-            new RequestError(
-              404,
-              'Not Found',
-              intl.formatMessage({
-                defaultMessage:
-                  'Missing required parameters: gid, cid, language, version',
-              })
-            )
-          }
-        />
-      )}
+      <PublicationViewer
+        responsive={true}
+        onTranslate={handleTranslate}
+        {...publicationViewer}
+      />
     </>
   )
 }

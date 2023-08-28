@@ -109,12 +109,7 @@ export const Icon = memo(
 
     useEffect(() => {
       if (typeof SVG === 'function') return
-      if (!name) {
-        logger.warn('failed to load icon', {
-          error: new ReferenceError('name is required'),
-        })
-        return
-      }
+      if (!name) return
       ;(async () => {
         try {
           const { ReactComponent } = await SVG_LIST[name]()

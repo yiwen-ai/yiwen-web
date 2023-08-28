@@ -36,6 +36,8 @@ import {
   EditorContent,
   FloatingMenu,
   useEditor,
+  type BubbleMenuProps,
+  type FloatingMenuProps,
 } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import { nanoid } from 'nanoid'
@@ -121,17 +123,15 @@ export const RichTextEditor = memo(
     const intl = useIntl()
     const theme = useTheme()
 
-    const extensions = useMemo(
-      () => [
-        ...getExtensions(),
+    const extensions = useMemo(() => {
+      return getExtensions().concat(
         Placeholder.configure({
           placeholder:
             placeholder ??
             intl.formatMessage({ defaultMessage: '输入内容开始创作' }),
-        }),
-      ],
-      [intl, placeholder]
-    )
+        })
+      )
+    }, [intl, placeholder])
 
     const onUpdate = useCallback<EditorOptions['onUpdate']>(
       ({ editor }) => onChange?.(editor.getJSON()),
@@ -193,6 +193,13 @@ export const RichTextEditor = memo(
         },
       },
     ]
+
+    const bubbleMenuOptions = useMemo(
+      (): NonNullable<BubbleMenuProps['tippyOptions']> => ({
+        maxWidth: '246px',
+      }),
+      []
+    )
 
     const floatingMenuItems: BubbleMenuItemProps[] | null = editor && [
       {
@@ -266,6 +273,15 @@ export const RichTextEditor = memo(
         },
       },
     ]
+
+    const floatingMenuOptions = useMemo(
+      (): NonNullable<FloatingMenuProps['tippyOptions']> => ({
+        maxWidth: '246px',
+        placement: 'bottom-start',
+        duration: 100,
+      }),
+      []
+    )
     //#endregion
 
     const menuCSS = css`
@@ -279,200 +295,192 @@ export const RichTextEditor = memo(
       border-radius: 12px;
     `
 
-    return (
-      <>
-        <EditorContent
-          className={className}
-          editor={editor}
-          css={css`
+    return editor ? (
+      <EditorContent
+        className={className}
+        editor={editor}
+        css={css`
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+
+          .ProseMirror {
             flex: 1;
-            display: flex;
-            flex-direction: column;
+            ${theme.typography.body};
 
-            .ProseMirror {
-              flex: 1;
-              ${theme.typography.body};
+            &:focus {
+              outline: none;
+            }
 
-              &:focus {
-                outline: none;
-              }
-
-              > * {
-                margin-top: 0;
-                margin-bottom: 0;
-              }
-              > * + * {
+            > * {
+              margin-top: 0;
+              margin-bottom: 0;
+              + * {
                 margin-top: 20px;
               }
+            }
 
-              h1 {
-                font-size: 28px;
-                font-weight: 600;
-                line-height: 36px;
-              }
-
-              h2 {
-                font-size: 24px;
-                font-weight: 600;
-                line-height: 32px;
-              }
-
-              h3 {
-                font-size: 20px;
-                font-weight: 600;
-                line-height: 28px;
-              }
-
-              * > p {
-                margin-top: unset;
-                margin-bottom: unset;
-              }
-
-              blockquote {
-                margin-left: 0;
-                margin-right: 0;
-                padding: 0 16px;
-                border-left: 2px solid ${theme.color.divider.primary};
-              }
-
-              pre {
-                padding: 20px 24px;
-                background: ${theme.color.codeBlock.background};
-              }
-
-              ul,
-              ol {
-                padding-left: 24px;
-              }
-
-              li {
-                padding-left: 4px;
-              }
-
-              > ul {
-                list-style-type: disc;
-                > li > ul {
-                  list-style-type: circle;
-                  > li > ul {
-                    list-style-type: square;
-                    > li > ul {
-                      list-style-type: disc;
-                      > li > ul {
-                        list-style-type: circle;
-                        > li > ul {
-                          list-style-type: square;
-                          > li > ul {
-                            list-style-type: disc;
-                            > li > ul {
-                              list-style-type: circle;
-                              > li > ul {
-                                list-style-type: square;
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-
-              > ol {
-                list-style-type: decimal;
-                > li > ol {
-                  list-style-type: lower-alpha;
-                  > li > ol {
-                    list-style-type: lower-roman;
-                    > li > ol {
-                      list-style-type: decimal;
-                      > li > ol {
-                        list-style-type: lower-alpha;
-                        > li > ol {
-                          list-style-type: lower-roman;
-                          > li > ol {
-                            list-style-type: decimal;
-                            > li > ol {
-                              list-style-type: lower-alpha;
-                              > li > ol {
-                                list-style-type: lower-roman;
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-
-              hr {
-                border: none;
-                border-top: 1px solid ${theme.color.divider.primary};
-              }
-
-              a {
-                display: inline-block;
-                cursor: pointer;
-                color: ${theme.color.link.normal};
-                :hover {
-                  color: ${theme.color.link.hover};
-                }
-              }
-
-              p.is-editor-empty::before,
-              p.is-empty:only-child::before,
-              style + p.is-empty:last-child::before {
-                color: ${theme.color.input.placeholder};
-                content: attr(data-placeholder);
-                float: left;
-                height: 0;
-                pointer-events: none;
+            * > p {
+              margin-top: 0;
+              margin-bottom: 0;
+              + p {
+                margin-top: 20px;
               }
             }
-          `}
-        />
-        {editor && (
-          <FloatingMenu
-            editor={editor}
-            tippyOptions={{
-              maxWidth: '246px',
-              placement: 'bottom-start',
-              duration: 100,
-            }}
-            css={menuCSS}
-          >
-            {floatingMenuItems?.map(
-              ({ iconName, active, onClick, ...props }) => (
-                <BubbleMenuItem
-                  key={iconName}
-                  iconName={iconName}
-                  active={active}
-                  onClick={onClick}
-                  {...props}
-                />
-              )
-            )}
-          </FloatingMenu>
-        )}
-        {editor && (
-          <BubbleMenu
-            editor={editor}
-            tippyOptions={{ maxWidth: '246px' }}
-            css={menuCSS}
-          >
-            {bubbleMenuItems?.map(({ iconName, active, onClick, ...props }) => (
-              <BubbleMenuItem
-                key={iconName}
-                iconName={iconName}
-                active={active}
-                onClick={onClick}
-                {...props}
-              />
-            ))}
-          </BubbleMenu>
-        )}
-      </>
-    )
+
+            h1 {
+              font-size: 28px;
+              font-weight: 600;
+              line-height: 36px;
+            }
+
+            h2 {
+              font-size: 24px;
+              font-weight: 600;
+              line-height: 32px;
+            }
+
+            h3 {
+              font-size: 20px;
+              font-weight: 600;
+              line-height: 28px;
+            }
+
+            blockquote {
+              margin-left: 0;
+              margin-right: 0;
+              padding: 0 16px;
+              border-left: 2px solid ${theme.color.divider.primary};
+            }
+
+            pre {
+              padding: 20px 24px;
+              background: ${theme.color.codeBlock.background};
+            }
+
+            ul,
+            ol {
+              padding-left: 24px;
+            }
+
+            li {
+              padding-left: 4px;
+            }
+
+            > ul {
+              list-style-type: disc;
+              > li > ul {
+                list-style-type: circle;
+                > li > ul {
+                  list-style-type: square;
+                  > li > ul {
+                    list-style-type: disc;
+                    > li > ul {
+                      list-style-type: circle;
+                      > li > ul {
+                        list-style-type: square;
+                        > li > ul {
+                          list-style-type: disc;
+                          > li > ul {
+                            list-style-type: circle;
+                            > li > ul {
+                              list-style-type: square;
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            > ol {
+              list-style-type: decimal;
+              > li > ol {
+                list-style-type: lower-alpha;
+                > li > ol {
+                  list-style-type: lower-roman;
+                  > li > ol {
+                    list-style-type: decimal;
+                    > li > ol {
+                      list-style-type: lower-alpha;
+                      > li > ol {
+                        list-style-type: lower-roman;
+                        > li > ol {
+                          list-style-type: decimal;
+                          > li > ol {
+                            list-style-type: lower-alpha;
+                            > li > ol {
+                              list-style-type: lower-roman;
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            hr {
+              border: none;
+              border-top: 1px solid ${theme.color.divider.primary};
+            }
+
+            a {
+              display: inline-block;
+              cursor: pointer;
+              color: ${theme.color.link.normal};
+              :hover {
+                color: ${theme.color.link.hover};
+              }
+            }
+
+            p.is-editor-empty::before,
+            p.is-empty:only-child::before,
+            style + p.is-empty:last-child::before {
+              color: ${theme.color.input.placeholder};
+              content: attr(data-placeholder);
+              float: left;
+              height: 0;
+              pointer-events: none;
+            }
+          }
+        `}
+      >
+        <FloatingMenu
+          editor={editor}
+          tippyOptions={floatingMenuOptions}
+          css={menuCSS}
+        >
+          {floatingMenuItems?.map(({ iconName, active, onClick, ...props }) => (
+            <BubbleMenuItem
+              key={iconName}
+              iconName={iconName}
+              active={active}
+              onClick={onClick}
+              {...props}
+            />
+          ))}
+        </FloatingMenu>
+        <BubbleMenu
+          editor={editor}
+          tippyOptions={bubbleMenuOptions}
+          css={menuCSS}
+        >
+          {bubbleMenuItems?.map(({ iconName, active, onClick, ...props }) => (
+            <BubbleMenuItem
+              key={iconName}
+              iconName={iconName}
+              active={active}
+              onClick={onClick}
+              {...props}
+            />
+          ))}
+        </BubbleMenu>
+      </EditorContent>
+    ) : null
   })
 )
 

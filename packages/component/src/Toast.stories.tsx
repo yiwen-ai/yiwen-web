@@ -40,9 +40,9 @@ export const Persistent: Story = {
 }
 
 function Push(toast: ToastProps) {
-  const { push, render } = useToast()
+  const { renderToastContainer, pushToast } = useToast()
   const onClick = () => {
-    push({
+    pushToast({
       ...toast,
       description: (
         <>
@@ -67,7 +67,7 @@ function Push(toast: ToastProps) {
         justify-content: center;
       `}
     >
-      {render()}
+      {renderToastContainer()}
       <Button color='primary' onClick={onClick}>
         Push
       </Button>

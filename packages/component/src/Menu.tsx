@@ -87,6 +87,7 @@ export interface MenuItemProps
   description?: string | JSX.Element
   danger?: boolean | undefined
   disabled?: boolean | undefined
+  readOnly?: boolean | undefined
   closeOnClick?: boolean | number | undefined
   children?: readonly MenuItemProps[] | JSX.Element | null | undefined
 }
@@ -100,6 +101,7 @@ export const MenuItem = memo(
       description,
       danger,
       disabled,
+      readOnly,
       closeOnClick = true,
       children,
       ...props
@@ -116,12 +118,14 @@ export const MenuItem = memo(
     ) => (
       <li
         role='menuitem'
-        aria-disabled={disabled}
+        aria-disabled={disabled || readOnly}
         data-disabled={disabled ? '' : undefined}
-        {...mergeClickProps(
-          props,
-          (ev) => !disabled && onClick?.(ev as React.MouseEvent<HTMLLIElement>)
-        )}
+        data-readonly={readOnly ? '' : undefined}
+        {...mergeClickProps(props, (ev) => {
+          !disabled &&
+            !readOnly &&
+            onClick?.(ev as React.MouseEvent<HTMLLIElement>)
+        })}
         ref={ref}
         css={css`
           min-height: 36px;
@@ -131,14 +135,21 @@ export const MenuItem = memo(
           align-items: flex-start;
           gap: 8px;
           border-radius: 8px;
+          cursor: pointer;
+          :hover {
+            background: ${theme.color.menu.item.hover.background};
+          }
+          &[data-readonly] {
+            cursor: default;
+            :hover {
+              background: unset;
+            }
+          }
           &[data-disabled] {
             opacity: 0.5;
             cursor: not-allowed;
-          }
-          :not([data-disabled]) {
-            cursor: pointer;
             :hover {
-              background: ${theme.color.menu.item.hover.background};
+              background: unset;
             }
           }
         `}

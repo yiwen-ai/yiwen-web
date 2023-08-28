@@ -48,7 +48,7 @@ module.exports = {
         alphabetize: { order: 'ignore' },
       },
     ],
-    'no-console': 'error',
+    'no-console': 'warn',
     'no-restricted-imports': [
       'error',
       {

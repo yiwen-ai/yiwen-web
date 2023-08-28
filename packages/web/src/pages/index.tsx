@@ -62,8 +62,13 @@ export default function Home() {
           })}
           onSearch={onSearch}
           css={css`
+            height: 54px;
             margin-top: 16px;
+            padding-left: 20px;
+            padding-right: 20px;
+            border-radius: 14px;
             display: flex;
+            gap: 12px;
           `}
         />
       </div>

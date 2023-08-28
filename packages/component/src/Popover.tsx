@@ -60,14 +60,17 @@ export const Popover = memo(
           offset({
             mainAxis: 8,
           }),
+          flip({
+            fallbackAxisSideDirection: 'end',
+            fallbackPlacements: ['bottom', 'top'],
+          }),
           shift({
             padding: 8,
           }),
-          flip(),
           size({
             padding: 8,
             apply: ({ availableWidth, availableHeight, elements }) => {
-              elements.floating.style.maxWidth = `${availableWidth}px`
+              // elements.floating.style.maxWidth = `${availableWidth}px`
               elements.floating.style.maxHeight = `${availableHeight}px`
             },
           }),

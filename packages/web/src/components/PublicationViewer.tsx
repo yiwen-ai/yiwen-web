@@ -1,5 +1,5 @@
-import { BREAKPOINT, generatePublicationShareLink } from '#/shared'
-import { css } from '@emotion/react'
+import { BREAKPOINT } from '#/shared'
+import { css, useTheme } from '@emotion/react'
 import {
   AlertDialog,
   AlertDialogBody,
@@ -8,23 +8,21 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  QRCode,
   Select,
   SelectOption,
   SelectOptionGroup,
   Spinner,
-  useToast,
+  TextField,
+  textEllipsis,
 } from '@yiwen-ai/component'
 import {
-  toMessage,
-  useFetcherConfig,
-  useLanguageList,
-  usePublication,
-  useRelatedPublicationList,
+  PublicationStatus,
+  type Language,
   type PublicationOutput,
 } from '@yiwen-ai/store'
-import { isTruthy } from '@yiwen-ai/util'
-import { compact, groupBy, uniq, without } from 'lodash-es'
-import { useCallback, useMemo, type HTMLAttributes } from 'react'
+import { escapeRegExp } from 'lodash-es'
+import { useCallback, useMemo, useState, type HTMLAttributes } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
 import CommonViewer from './CommonViewer'
@@ -32,141 +30,83 @@ import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
 
 export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
-  gid: string
-  cid: string
-  language: string
-  version: number | string
-  onSwitch: (publication: PublicationOutput) => void
+  responsive: boolean
+  isLoading: boolean
+  error: unknown
+  publication: PublicationOutput | undefined
+  preferredLanguage: Language | undefined
+  currentLanguage: Language | undefined
+  originalLanguage: Language | undefined
+  translatedLanguageList: Language[] | undefined
+  pendingLanguageList: Language[] | undefined
+  translatingLanguage: Language | undefined
+  onTranslate: (language: string) => void
+  shareLink: string | undefined
+  onShare: () => void
+  isFavorite: boolean
+  isAddingFavorite: boolean
+  isRemovingFavorite: boolean
+  onAddFavorite: () => void
+  onRemoveFavorite: () => void
 }
 
-export function PublicationViewer({
-  gid,
-  cid,
-  language: _language,
-  version: _version,
-  onSwitch,
+export default function PublicationViewer({
+  responsive,
+  isLoading,
+  error,
+  publication,
+  preferredLanguage,
+  currentLanguage,
+  originalLanguage,
+  translatedLanguageList: _translatedLanguageList,
+  pendingLanguageList: _pendingLanguageList,
+  translatingLanguage,
+  onTranslate,
+  shareLink,
+  onShare,
+  isFavorite,
+  isAddingFavorite,
+  isRemovingFavorite,
+  onAddFavorite,
+  onRemoveFavorite,
   ...props
 }: PublicationViewerProps) {
   const intl = useIntl()
-  const { render, push } = useToast()
+  const theme = useTheme()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
-  const isNarrow = width <= BREAKPOINT.small
+  const isNarrow = responsive && width <= BREAKPOINT.small
 
-  //#region publication
-  const { publication, error, isLoading, translatingLanguage, translate } =
-    usePublication(gid, cid, _language, _version)
-  //#endregion
-
-  //#region language
-  const currentLanguageCode = publication?.language ?? _language
-  const version = publication?.version ?? _version
-  const originalLanguageCode = publication?.from_language
-
-  const { languageList: _languageList, preferredLanguageCodeList } =
-    useLanguageList()
-  const { publicationList: relatedPublicationList } = useRelatedPublicationList(
-    gid,
-    cid
+  const [keyword, setKeyword] = useState('')
+  const keywordRE = useMemo(
+    () => new RegExp(escapeRegExp(keyword), 'i'),
+    [keyword]
   )
-
-  const languageList = useMemo(() => {
-    return (
-      relatedPublicationList &&
-      _languageList?.map(([code, displayName, name]) => ({
-        code,
-        name,
-        displayName,
-        publication: relatedPublicationList.find(
-          ({ language: _language, version: _version }) => {
-            return _language === code && _version === version
-          }
-        ),
-      }))
-    )
-  }, [_languageList, relatedPublicationList, version])
-
-  const currentLanguage = useMemo(() => {
-    return languageList?.find(({ code }) => code === currentLanguageCode)
-  }, [currentLanguageCode, languageList])
-
-  const originalLanguage = useMemo(() => {
-    return originalLanguageCode
-      ? languageList?.find(({ code }) => code === originalLanguageCode)
-      : undefined
-  }, [languageList, originalLanguageCode])
-
-  const [translatedLanguageList, pendingLanguageList] = useMemo(() => {
-    if (!languageList) return []
-    const dict = groupBy(
-      originalLanguageCode
-        ? languageList.filter(({ code }) => code !== originalLanguageCode)
-        : languageList,
-      ({ publication }) => !!publication
-    )
-    return [dict['true'] ?? [], dict['false'] ?? []]
-  }, [languageList, originalLanguageCode])
-
-  const preferredLanguageList = useMemo(() => {
-    return (
-      languageList &&
-      without(
-        uniq(compact([originalLanguageCode, ...preferredLanguageCodeList])),
-        currentLanguageCode
-      )
-        .map((code) => languageList.find(({ code: _code }) => _code === code))
-        .filter(isTruthy)
-        .slice(0, 1) // show only one preferred language
-    )
-  }, [
-    currentLanguageCode,
-    languageList,
-    originalLanguageCode,
-    preferredLanguageCodeList,
-  ])
-
-  const translatingLanguageName = useMemo(() => {
-    return (
-      languageList?.find(({ code }) => code === translatingLanguage)?.name ??
-      translatingLanguage
-    )
-  }, [languageList, translatingLanguage])
-  //#endregion
-
-  //#region share
-  const config = useFetcherConfig()
-  const handleCopyShareLink = useCallback(async () => {
-    if (!config) return
-    const link = generatePublicationShareLink(
-      config,
-      gid,
-      cid,
-      _language,
-      _version
-    )
-    await navigator.clipboard.writeText(link)
-    push({
-      type: 'success',
-      message: intl.formatMessage({ defaultMessage: '链接已复制' }),
-      description: link,
-    })
-  }, [_language, _version, cid, config, gid, intl, push])
-  //#endregion
-
-  const handleSelectLanguage = useCallback(
-    async (code: string, publication: PublicationOutput | null | undefined) => {
-      try {
-        if (!publication) publication = await translate(code)
-        onSwitch(publication)
-      } catch (error) {
-        push({
-          type: 'warning',
-          message: intl.formatMessage({ defaultMessage: '翻译失败' }),
-          description: toMessage(error),
-        })
-      }
+  const handleKeywordChange = useCallback(
+    (ev: React.ChangeEvent<HTMLInputElement>) => {
+      setKeyword(ev.currentTarget.value)
     },
-    [intl, onSwitch, push, translate]
+    []
   )
+
+  const translatedLanguageList = useMemo(() => {
+    return _translatedLanguageList?.filter((item) => {
+      return (
+        keywordRE.test(item.code) ||
+        keywordRE.test(item.name) ||
+        keywordRE.test(item.nativeName)
+      )
+    })
+  }, [_translatedLanguageList, keywordRE])
+
+  const pendingLanguageList = useMemo(() => {
+    return _pendingLanguageList?.filter((item) => {
+      return (
+        keywordRE.test(item.code) ||
+        keywordRE.test(item.name) ||
+        keywordRE.test(item.nativeName)
+      )
+    })
+  }, [_pendingLanguageList, keywordRE])
 
   return (
     <div
@@ -178,7 +118,6 @@ export function PublicationViewer({
         flex-direction: column;
       `}
     >
-      {render()}
       {isLoading ? (
         <Loading />
       ) : error ? (
@@ -208,44 +147,78 @@ export function PublicationViewer({
               size={isNarrow ? 'small' : 'large'}
               disabled={true}
             >
-              {currentLanguage?.name ?? currentLanguageCode}
+              {currentLanguage?.nativeName ?? publication.language}
             </Button>
-            {preferredLanguageList?.map(({ code, name, publication }) => (
+            {preferredLanguage && (
               <Button
-                key={code}
                 color='primary'
                 variant='outlined'
                 size={isNarrow ? 'small' : 'large'}
-                onClick={() => handleSelectLanguage(code, publication)}
+                onClick={() => onTranslate(preferredLanguage.code)}
               >
-                {name}
+                {preferredLanguage.nativeName}
               </Button>
-            ))}
+            )}
             {translatedLanguageList && pendingLanguageList && (
               <Select
                 anchor={(props) => (
                   <Button
                     color='secondary'
                     size={isNarrow ? 'small' : 'large'}
+                    disabled={!!translatingLanguage}
                     {...props}
                   >
-                    <Icon
-                      name='translate3'
-                      size={isNarrow ? 'small' : 'medium'}
-                    />
-                    {isNarrow
-                      ? null
-                      : intl.formatMessage({ defaultMessage: '更多语言翻译' })}
+                    {translatingLanguage ? (
+                      <Spinner size={isNarrow ? 'small' : 'medium'} />
+                    ) : (
+                      <Icon
+                        name='translate3'
+                        size={isNarrow ? 'small' : 'medium'}
+                      />
+                    )}
+                    {isNarrow ? null : (
+                      <span css={textEllipsis}>
+                        {intl.formatMessage({ defaultMessage: '更多语言翻译' })}
+                      </span>
+                    )}
                   </Button>
                 )}
               >
+                <li
+                  role='none'
+                  css={css`
+                    list-style: none;
+                    padding: 4px 8px;
+                  `}
+                >
+                  {intl.formatMessage({
+                    defaultMessage: '已翻译可直接查看，未翻译可立即翻译并查看',
+                  })}
+                </li>
+                <li
+                  role='none'
+                  css={css`
+                    display: flex;
+                    flex-direction: column;
+                  `}
+                >
+                  <TextField
+                    size='large'
+                    placeholder={intl.formatMessage({
+                      defaultMessage: '搜索语言',
+                    })}
+                    value={keyword}
+                    onChange={handleKeywordChange}
+                  />
+                </li>
                 {originalLanguage && (
                   <SelectOption
                     label={intl.formatMessage(
                       { defaultMessage: '{name}（创作语言）' },
-                      { name: originalLanguage.name }
+                      { name: originalLanguage.nativeName }
                     )}
                     value={originalLanguage.code}
+                    onSelect={() => onTranslate(originalLanguage.code)}
                   />
                 )}
                 {translatedLanguageList.length > 0 && (
@@ -255,11 +228,9 @@ export function PublicationViewer({
                     {translatedLanguageList.map((item) => (
                       <SelectOption
                         key={item.code}
-                        label={item.name}
+                        label={item.nativeName}
                         value={item.code}
-                        onSelect={() =>
-                          handleSelectLanguage(item.code, item.publication)
-                        }
+                        onSelect={() => onTranslate(item.code)}
                       />
                     ))}
                   </SelectOptionGroup>
@@ -271,11 +242,9 @@ export function PublicationViewer({
                     {pendingLanguageList.map((item) => (
                       <SelectOption
                         key={item.code}
-                        label={item.name}
+                        label={item.nativeName}
                         value={item.code}
-                        onSelect={() =>
-                          handleSelectLanguage(item.code, item.publication)
-                        }
+                        onSelect={() => onTranslate(item.code)}
                       />
                     ))}
                   </SelectOptionGroup>
@@ -301,52 +270,83 @@ export function PublicationViewer({
                 </Button>
               )}
               {isNarrow ? (
-                <IconButton iconName='heart3' />
+                <IconButton
+                  iconName='heart3'
+                  color={isFavorite ? 'primary' : 'secondary'}
+                  disabled={isAddingFavorite || isRemovingFavorite}
+                  onClick={isFavorite ? onRemoveFavorite : onAddFavorite}
+                />
               ) : (
-                <Button color='secondary'>
-                  <Icon name='heart' size='small' />
-                  {intl.formatMessage({ defaultMessage: '收藏' })}
+                <Button
+                  color={isFavorite ? 'primary' : 'secondary'}
+                  variant='outlined'
+                  disabled={isAddingFavorite || isRemovingFavorite}
+                  onClick={isFavorite ? onRemoveFavorite : onAddFavorite}
+                >
+                  {isAddingFavorite || isRemovingFavorite ? (
+                    <Spinner size='small' />
+                  ) : (
+                    <Icon name='heart' size='small' />
+                  )}
+                  {isFavorite
+                    ? intl.formatMessage({ defaultMessage: '已收藏' })
+                    : intl.formatMessage({ defaultMessage: '收藏' })}
                 </Button>
               )}
-              <Menu
-                anchor={(props) =>
-                  isNarrow ? (
-                    <IconButton iconName='directright2' {...props} />
-                  ) : (
-                    <Button color='secondary' {...props}>
-                      <Icon name='directright' size='small' />
-                      {intl.formatMessage({ defaultMessage: '分享' })}
-                    </Button>
-                  )
-                }
-              >
-                <MenuItem
-                  label={intl.formatMessage({ defaultMessage: '复制链接' })}
-                  onClick={handleCopyShareLink}
-                />
-                <MenuItem
-                  label={
-                    <span
-                      css={css`
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                      `}
-                    >
-                      {intl.formatMessage({ defaultMessage: '分享到微信' })}
-                      <Icon name='wechat' size='small' />
-                    </span>
+              {publication.status === PublicationStatus.Published &&
+              shareLink ? (
+                <Menu
+                  anchor={(props) =>
+                    isNarrow ? (
+                      <IconButton iconName='directright2' {...props} />
+                    ) : (
+                      <Button color='secondary' {...props}>
+                        <Icon name='directright' size='small' />
+                        {intl.formatMessage({ defaultMessage: '分享' })}
+                      </Button>
+                    )
                   }
-                  onClick={() => {}}
-                />
-              </Menu>
+                >
+                  <MenuItem
+                    label={intl.formatMessage({ defaultMessage: '复制链接' })}
+                    onClick={onShare}
+                  />
+                  <MenuItem
+                    label={
+                      <span
+                        css={css`
+                          display: flex;
+                          align-items: center;
+                          gap: 8px;
+                        `}
+                      >
+                        {intl.formatMessage({ defaultMessage: '分享到微信' })}
+                        <Icon name='wechat' size='small' />
+                      </span>
+                    }
+                    description={
+                      <QRCode
+                        value={shareLink}
+                        css={css`
+                          width: 80px;
+                          padding: 2px;
+                          box-sizing: border-box;
+                          border-radius: 2px;
+                          background: ${theme.color.menu.item.hover.background};
+                        `}
+                      />
+                    }
+                    readOnly={true}
+                  />
+                </Menu>
+              ) : null}
             </div>
           </div>
           <CommonViewer item={publication} isNarrow={isNarrow} />
         </>
       ) : null}
       {translatingLanguage && (
-        <AlertDialog defaultOpen={true}>
+        <AlertDialog open={true}>
           <AlertDialogBody
             css={css`
               padding: 48px 56px;
@@ -364,7 +364,7 @@ export function PublicationViewer({
                     '「{language}」正在翻译，请稍后，翻译好后可在你的发布列表里进行修改和提交。',
                 },
                 {
-                  language: translatingLanguageName,
+                  language: translatingLanguage.nativeName,
                 }
               )}
             </div>

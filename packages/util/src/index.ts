@@ -15,6 +15,7 @@ export {
 export { resolveURL } from './resolveURL'
 export { stopPropagation } from './stopPropagation'
 export {
+  mergeURLSearchParams,
   toURLSearchParams,
   type URLSearchParamsInit,
 } from './toURLSearchParams'

@@ -1,6 +1,7 @@
 import { css, useTheme, type CSSObject, type Theme } from '@emotion/react'
 import { forwardRef, memo, useMemo, type ButtonHTMLAttributes } from 'react'
 import { Icon, type IconName, type IconProps } from './Icon'
+import { textEllipsis } from './common'
 
 export type ButtonSize = 'small' | 'medium' | 'large'
 
@@ -90,7 +91,7 @@ export const Button = memo(
           justify-content: center;
           ${sizeCSS}
           border-style: solid;
-          white-space: nowrap;
+          ${textEllipsis}
           cursor: ${disabled
             ? 'not-allowed'
             : readOnly
