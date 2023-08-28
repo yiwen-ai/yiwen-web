@@ -86,14 +86,14 @@ export function usePublicationViewer(
     undefined as Language | undefined
   )
 
-  const _translate = useTranslatePublication(
+  const translate = useTranslatePublication(
     _gid,
     _cid,
     publication?.from_language,
     _version
   )
 
-  const translate = useCallback(
+  const onTranslate = useCallback(
     async (language: string) => {
       let publication = translatedPublicationList?.find((publication) => {
         return (
@@ -105,9 +105,15 @@ export function usePublicationViewer(
           setTranslatingLanguage(
             languageList?.find(({ code }) => code === language)
           )
-          publication = await _translate(defaultGroupId, language)
+          publication = await translate(defaultGroupId, language)
           refreshTranslatedPublicationList().catch(() => {
             // ignore
+          })
+        } catch (error) {
+          pushToast({
+            type: 'warning',
+            message: intl.formatMessage({ defaultMessage: '翻译失败' }),
+            description: toMessage(error),
           })
         } finally {
           setTranslatingLanguage(undefined)
@@ -118,9 +124,11 @@ export function usePublicationViewer(
     [
       _version,
       defaultGroupId,
+      intl,
       languageList,
+      pushToast,
       refreshTranslatedPublicationList,
-      _translate,
+      translate,
       translatedPublicationList,
     ]
   )
@@ -141,7 +149,7 @@ export function usePublicationViewer(
     )
   }, [SHARE_URL, _cid, _gid, _language, _version])
 
-  const copyShareLink = useCallback(async () => {
+  const onShare = useCallback(async () => {
     try {
       if (!shareLink) {
         throw new Error(
@@ -180,13 +188,15 @@ export function usePublicationViewer(
     [_isRemovingFavorite, publication]
   )
 
-  const addFavorite = useCallback(async () => {
-    if (publication) await _addFavorite(publication)
-  }, [_addFavorite, publication])
+  const onAddFavorite = useCallback(
+    () => publication && _addFavorite(publication),
+    [_addFavorite, publication]
+  )
 
-  const removeFavorite = useCallback(async () => {
-    if (publication) await _removeFavorite(publication)
-  }, [_removeFavorite, publication])
+  const onRemoveFavorite = useCallback(
+    () => publication && _removeFavorite(publication),
+    [_removeFavorite, publication]
+  )
   //#endregion
 
   return {
@@ -200,13 +210,13 @@ export function usePublicationViewer(
     translatedLanguageList,
     pendingLanguageList,
     translatingLanguage,
-    translate,
+    onTranslate,
     shareLink,
-    copyShareLink,
+    onShare,
     isFavorite,
     isAddingFavorite,
     isRemovingFavorite,
-    addFavorite,
-    removeFavorite,
+    onAddFavorite,
+    onRemoveFavorite,
   } as const
 }

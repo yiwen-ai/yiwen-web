@@ -3,23 +3,23 @@ import { Button, Spinner } from '@yiwen-ai/component'
 import { useIntl } from 'react-intl'
 
 interface LoadMoreProps extends React.HTMLAttributes<HTMLDivElement> {
-  isLoading: boolean
+  isLoadingMore: boolean
   hasMore: boolean
-  loadMore: React.MouseEventHandler<HTMLButtonElement>
+  onLoadMore: React.MouseEventHandler<HTMLButtonElement>
 }
 
 export default function LoadMore({
-  isLoading,
+  isLoadingMore,
   hasMore,
-  loadMore,
+  onLoadMore,
   ...props
 }: LoadMoreProps) {
   const intl = useIntl()
 
-  const content = isLoading ? (
+  const content = isLoadingMore ? (
     <Spinner />
   ) : hasMore ? (
-    <Button color='primary' variant='outlined' onClick={loadMore}>
+    <Button color='primary' variant='outlined' onClick={onLoadMore}>
       {intl.formatMessage({ defaultMessage: '加载更多' })}
     </Button>
   ) : null

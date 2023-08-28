@@ -2,7 +2,7 @@ import { type CreationStatus } from './useCreation'
 import { type PublicationStatus } from './usePublication'
 
 export interface Pagination {
-  page_token?: Uint8Array
+  page_token?: Uint8Array | null | undefined
   page_size?: number
   status?: number
   fields?: string[]

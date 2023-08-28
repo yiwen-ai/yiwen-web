@@ -40,9 +40,9 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   translatedLanguageList: Language[] | undefined
   pendingLanguageList: Language[] | undefined
   translatingLanguage: Language | undefined
-  onTranslate: (language: string) => Promise<void>
+  onTranslate: (language: string) => void
   shareLink: string | undefined
-  onCopyShareLink: () => void
+  onShare: () => void
   isFavorite: boolean
   isAddingFavorite: boolean
   isRemovingFavorite: boolean
@@ -63,7 +63,7 @@ export default function PublicationViewer({
   translatingLanguage,
   onTranslate,
   shareLink,
-  onCopyShareLink,
+  onShare,
   isFavorite,
   isAddingFavorite,
   isRemovingFavorite,
@@ -309,7 +309,7 @@ export default function PublicationViewer({
                 >
                   <MenuItem
                     label={intl.formatMessage({ defaultMessage: '复制链接' })}
-                    onClick={onCopyShareLink}
+                    onClick={onShare}
                   />
                   <MenuItem
                     label={

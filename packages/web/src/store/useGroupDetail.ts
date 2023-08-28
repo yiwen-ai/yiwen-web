@@ -50,14 +50,8 @@ export function useGroupDetail(
   const [type, setType] = useState(_type ?? GroupViewType.Publication)
 
   //#region publication viewer & creation viewer
-  const {
-    refresh: refreshPublication,
-    translate: _translatePublication,
-    copyShareLink: onCopyPublicationShareLink,
-    addFavorite: onAddPublicationFavorite,
-    removeFavorite: onRemovePublicationFavorite,
-    ...publicationViewer
-  } = usePublicationViewer(pushToast, _gid, _cid, _language, _version)
+  const { refresh: refreshPublication, ...publicationViewer } =
+    usePublicationViewer(pushToast, _gid, _cid, _language, _version)
 
   const { refresh: refreshCreation, ...creationViewer } = useCreationViewer(
     _gid,
@@ -71,22 +65,6 @@ export function useGroupDetail(
   useEffect(() => {
     if (type === GroupViewType.Creation) refreshCreation()
   }, [refreshCreation, type])
-
-  const translatePublication = useCallback(
-    async (language: string) => {
-      try {
-        return await _translatePublication(language)
-      } catch (error) {
-        pushToast({
-          type: 'warning',
-          message: intl.formatMessage({ defaultMessage: '翻译失败' }),
-          description: toMessage(error),
-        })
-        throw error
-      }
-    },
-    [_translatePublication, intl, pushToast]
-  )
   //#endregion
 
   //#region publication list & creation list
@@ -128,7 +106,7 @@ export function useGroupDetail(
   //#endregion
 
   //#region actions
-  const onPublishPublication = useCallback(
+  const onPublicationPublish = useCallback(
     async (item: PublicationOutput) => {
       try {
         await publishPublication(item)
@@ -162,7 +140,7 @@ export function useGroupDetail(
     ]
   )
 
-  const onArchivePublication = useCallback(
+  const onPublicationArchive = useCallback(
     async (item: PublicationOutput) => {
       try {
         await archivePublication(item)
@@ -185,7 +163,7 @@ export function useGroupDetail(
     [archivePublication, intl, pushToast]
   )
 
-  const onRestorePublication = useCallback(
+  const onPublicationRestore = useCallback(
     async (item: PublicationOutput) => {
       try {
         await restorePublication(item)
@@ -209,7 +187,7 @@ export function useGroupDetail(
     [intl, pushToast, refreshPublicationList, restorePublication]
   )
 
-  const onDeletePublication = useCallback(
+  const onPublicationDelete = useCallback(
     async (item: PublicationOutput) => {
       try {
         await deletePublication(item)
@@ -236,7 +214,7 @@ export function useGroupDetail(
     refreshArchivedPublicationList()
   }, [refreshArchivedPublicationList])
 
-  const onReleaseCreation = useCallback(
+  const onCreationRelease = useCallback(
     async (item: CreationOutput) => {
       try {
         await releaseCreation(item)
@@ -260,7 +238,7 @@ export function useGroupDetail(
     [intl, pushToast, refreshPublicationList, releaseCreation]
   )
 
-  const onArchiveCreation = useCallback(
+  const onCreationArchive = useCallback(
     async (item: CreationOutput) => {
       try {
         await archiveCreation(item)
@@ -283,7 +261,7 @@ export function useGroupDetail(
     [archiveCreation, intl, pushToast]
   )
 
-  const onRestoreCreation = useCallback(
+  const onCreationRestore = useCallback(
     async (item: CreationOutput) => {
       try {
         await restoreCreation(item)
@@ -307,7 +285,7 @@ export function useGroupDetail(
     [intl, pushToast, refreshCreationList, restoreCreation]
   )
 
-  const onDeleteCreation = useCallback(
+  const onCreationDelete = useCallback(
     async (item: CreationOutput) => {
       try {
         await deleteCreation(item)
@@ -345,22 +323,18 @@ export function useGroupDetail(
     publicationViewer,
     publicationList,
     archivedPublicationList,
-    translatePublication,
-    onCopyPublicationShareLink,
-    onAddPublicationFavorite,
-    onRemovePublicationFavorite,
-    onPublishPublication,
-    onArchivePublication,
-    onRestorePublication,
-    onDeletePublication,
+    onPublicationPublish,
+    onPublicationArchive,
+    onPublicationRestore,
+    onPublicationDelete,
     onArchivedPublicationDialogShow,
     creationViewer,
     creationList,
     archivedCreationList,
-    onReleaseCreation,
-    onArchiveCreation,
-    onRestoreCreation,
-    onDeleteCreation,
+    onCreationRelease,
+    onCreationArchive,
+    onCreationRestore,
+    onCreationDelete,
     onArchivedCreationDialogShow,
   } as const
 }

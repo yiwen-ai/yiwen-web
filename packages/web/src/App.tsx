@@ -55,6 +55,7 @@ import Loading from './components/Loading'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
+import Collection from './pages/collection'
 import EditCreation from './pages/creation/[cid]'
 import NewCreation from './pages/creation/new'
 import GroupDetail from './pages/group/[gid]'
@@ -146,6 +147,7 @@ function Layout() {
         },
         {
           label: intl.formatMessage({ defaultMessage: '我的收藏' }),
+          onClick: () => navigate(COLLECTION_PATH),
         },
         {
           label: intl.formatMessage({ defaultMessage: '我的订阅' }),
@@ -202,6 +204,7 @@ export function SetHeaderProps(props: HeaderProps) {
 }
 
 export const SEARCH_PATH = '/search'
+export const COLLECTION_PATH = '/collection'
 export const NEW_CREATION_PATH = '/creation/new'
 export const EDIT_CREATION_PATH = '/creation/:cid'
 export const EDIT_PUBLICATION_PATH = '/publication/:cid'
@@ -216,6 +219,7 @@ const router = createBrowserRouter(
       <Route path='/' element={<Home />} />
       <Route path='/login/state' element={<LoginState />} />
       <Route path={SEARCH_PATH} element={<Search />} />
+      <Route path={COLLECTION_PATH} element={<Collection />} />
       <Route path={NEW_CREATION_PATH} element={<NewCreation />} />
       <Route path={EDIT_CREATION_PATH} element={<EditCreation />} />
       <Route path={EDIT_PUBLICATION_PATH} element={<EditPublication />} />

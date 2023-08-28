@@ -67,25 +67,24 @@ export default function GroupDetail() {
     groupStatistic,
     type,
     switchType,
-    publicationViewer,
+    publicationViewer: {
+      onTranslate: onPublicationTranslate,
+      ...publicationViewer
+    },
     publicationList,
     archivedPublicationList,
-    translatePublication,
-    onCopyPublicationShareLink,
-    onAddPublicationFavorite,
-    onRemovePublicationFavorite,
-    onPublishPublication,
-    onArchivePublication,
-    onRestorePublication,
-    onDeletePublication,
+    onPublicationPublish,
+    onPublicationArchive,
+    onPublicationRestore,
+    onPublicationDelete,
     onArchivedPublicationDialogShow,
     creationViewer,
     creationList,
     archivedCreationList,
-    onReleaseCreation,
-    onArchiveCreation,
-    onRestoreCreation,
-    onDeleteCreation,
+    onCreationRelease,
+    onCreationArchive,
+    onCreationRestore,
+    onCreationDelete,
     onArchivedCreationDialogShow,
   } = useGroupDetail(pushToast, _gid, _cid, _language, _version, _type)
 
@@ -118,7 +117,7 @@ export default function GroupDetail() {
     })
   }, [_gid, navigate])
 
-  const handleClickPublication = useCallback(
+  const handlePublicationClick = useCallback(
     (item: PublicationOutput) => {
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
@@ -135,7 +134,7 @@ export default function GroupDetail() {
     [navigate]
   )
 
-  const handleClickCreation = useCallback(
+  const handleCreationClick = useCallback(
     (item: CreationOutput) => {
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
@@ -150,10 +149,10 @@ export default function GroupDetail() {
     [navigate]
   )
 
-  const handleTranslatePublication = useCallback(
+  const handlePublicationTranslate = useCallback(
     async (language: string) => {
-      try {
-        const publication = await translatePublication(language)
+      const publication = await onPublicationTranslate(language)
+      if (publication) {
         navigate({
           pathname: generatePath(GROUP_DETAIL_PATH, {
             gid: Xid.fromValue(publication.gid).toString(),
@@ -165,11 +164,9 @@ export default function GroupDetail() {
             type: GroupViewType.Publication,
           }).toString(),
         })
-      } catch (error) {
-        // ignore
       }
     },
-    [navigate, translatePublication]
+    [navigate, onPublicationTranslate]
   )
 
   return (
@@ -259,8 +256,8 @@ export default function GroupDetail() {
                           >
                             <ArchivedPublicationPart
                               {...archivedPublicationList}
-                              onRestore={onRestorePublication}
-                              onDelete={onDeletePublication}
+                              onRestore={onPublicationRestore}
+                              onDelete={onPublicationDelete}
                             />
                           </MediumDialog>
                         )
@@ -275,8 +272,8 @@ export default function GroupDetail() {
                           >
                             <ArchivedCreationPart
                               {...archivedCreationList}
-                              onRestore={onRestoreCreation}
-                              onDelete={onDeleteCreation}
+                              onRestore={onCreationRestore}
+                              onDelete={onCreationDelete}
                             />
                           </MediumDialog>
                         )
@@ -287,17 +284,17 @@ export default function GroupDetail() {
               <TabPanel value={GroupViewType.Publication}>
                 <PublicationPart
                   {...publicationList}
-                  onPublish={onPublishPublication}
-                  onArchive={onArchivePublication}
-                  onClick={handleClickPublication}
+                  onPublish={onPublicationPublish}
+                  onArchive={onPublicationArchive}
+                  onClick={handlePublicationClick}
                 />
               </TabPanel>
               <TabPanel value={GroupViewType.Creation}>
                 <CreationPart
                   {...creationList}
-                  onRelease={onReleaseCreation}
-                  onArchive={onArchiveCreation}
-                  onClick={handleClickCreation}
+                  onRelease={onCreationRelease}
+                  onArchive={onCreationArchive}
+                  onClick={handleCreationClick}
                 />
               </TabPanel>
             </TabSection>
@@ -315,11 +312,8 @@ export default function GroupDetail() {
           >
             <PublicationViewer
               responsive={true}
+              onTranslate={handlePublicationTranslate}
               {...publicationViewer}
-              onTranslate={handleTranslatePublication}
-              onCopyShareLink={onCopyPublicationShareLink}
-              onAddFavorite={onAddPublicationFavorite}
-              onRemoveFavorite={onRemovePublicationFavorite}
             />
           </LargeDialog>
         )}
@@ -494,9 +488,9 @@ function PublicationPart({
             />
           ))}
           <LoadMore
-            isLoading={isLoading}
+            isLoadingMore={isLoading}
             hasMore={hasMore}
-            loadMore={loadMore}
+            onLoadMore={loadMore}
           />
         </>
       )}
@@ -551,9 +545,9 @@ function ArchivedPublicationPart({
             />
           ))}
           <LoadMore
-            isLoading={isLoading}
+            isLoadingMore={isLoading}
             hasMore={hasMore}
-            loadMore={loadMore}
+            onLoadMore={loadMore}
             css={css`
               margin-bottom: -24px;
             `}
@@ -613,9 +607,9 @@ function CreationPart({
             />
           ))}
           <LoadMore
-            isLoading={isLoading}
+            isLoadingMore={isLoading}
             hasMore={hasMore}
-            loadMore={loadMore}
+            onLoadMore={loadMore}
           />
         </>
       )}
@@ -670,9 +664,9 @@ function ArchivedCreationPart({
             />
           ))}
           <LoadMore
-            isLoading={isLoading}
+            isLoadingMore={isLoading}
             hasMore={hasMore}
-            loadMore={loadMore}
+            onLoadMore={loadMore}
             css={css`
               margin-bottom: -24px;
             `}

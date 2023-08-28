@@ -22,8 +22,10 @@ export default function MediumDialog({
       {...props}
       css={css`
         @media (max-width: ${BREAKPOINT.small}px) {
-          max-width: 100%;
-          min-height: 100%;
+          width: unset;
+          height: unset;
+          max-width: unset;
+          max-height: unset;
           border-radius: unset;
         }
       `}

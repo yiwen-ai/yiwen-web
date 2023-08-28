@@ -8,6 +8,7 @@ export {
 } from './common'
 export {
   useCollectionAPI,
+  useCollectionList,
   useCreationCollectionList,
   type CollectionOutput,
 } from './useCollection'

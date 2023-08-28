@@ -1,6 +1,7 @@
 import { without } from 'lodash-es'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
+import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { type GroupInfo, type Page, type Pagination } from './common'
 import { useFetcher } from './useFetcher'
@@ -186,6 +187,7 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
           next_page_token: null,
           result: (prev?.result ?? []).concat(result),
         }))
+        return result
       } finally {
         setAdding(item, false)
       }
@@ -223,6 +225,102 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
     isAdding,
     isRemoving,
     add,
+    remove,
+  } as const
+}
+
+export function useCollectionList() {
+  const { readCollectionList, removeCollection } = useCollectionAPI()
+
+  const getKey = useCallback(
+    (_: unknown, prevPage: Page<CollectionOutput> | null) => {
+      if (prevPage && !prevPage.next_page_token) return null
+      const body: Pagination = {
+        page_size: 100,
+        page_token: prevPage?.next_page_token,
+      }
+      return [`${path}/list`, body] as const
+    },
+    []
+  )
+
+  const { data, error, mutate, isValidating, isLoading, setSize } =
+    useSWRInfinite(getKey, ([, body]) => readCollectionList(body), {
+      revalidateOnMount: false,
+    })
+
+  const items = useMemo(() => {
+    if (!data) return []
+    return data.flatMap((page) => page.result)
+  }, [data])
+
+  const hasMore = useMemo(() => {
+    if (!data) return false
+    return !!data[data.length - 1]?.next_page_token
+  }, [data])
+
+  const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
+
+  const refresh = useCallback(
+    async () => getKey(0, null) && (await mutate()),
+    [getKey, mutate]
+  )
+
+  const [state, setState] = useState({
+    isRemoving: {} as Record<string, boolean>,
+  })
+
+  const setRemoving = useCallback(
+    (item: CollectionOutput, isRemoving: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        isRemoving: {
+          ...prev.isRemoving,
+          [buildPublicationKey(item)]: isRemoving,
+        },
+      }))
+    },
+    []
+  )
+
+  const isRemoving = useCallback(
+    (item: CollectionOutput) => {
+      return state.isRemoving[buildPublicationKey(item)] ?? false
+    },
+    [state.isRemoving]
+  )
+
+  const remove = useCallback(
+    async (item: CollectionOutput) => {
+      try {
+        setRemoving(item, true)
+        await removeCollection({
+          id: Xid.fromValue(item.id).toString(),
+          fields: undefined,
+        })
+        mutate((prev) =>
+          prev?.map((page): typeof page => ({
+            ...page,
+            result: without(page.result, item),
+          }))
+        )
+      } finally {
+        setRemoving(item, false)
+      }
+    },
+    [mutate, removeCollection, setRemoving]
+  )
+
+  return {
+    isLoading,
+    error,
+    items,
+    isLoadingMore: isValidating,
+    hasMore,
+    loadMore,
+    refresh,
+    mutate,
+    isRemoving,
     remove,
   } as const
 }
