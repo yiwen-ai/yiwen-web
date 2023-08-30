@@ -1,27 +1,28 @@
 import {
+  decode,
   useAuth,
+  useCreation,
   useCreationAPI,
-  useMyGroupList,
   type CreationDraft,
 } from '@yiwen-ai/store'
 import { useCallback, useEffect, useState } from 'react'
 import { Xid } from 'xid-ts'
 
-export function useNewCreation(_gid: string | null | undefined) {
-  const { createCreation } = useCreationAPI()
+export function useEditCreationPage(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined
+) {
+  const { updateCreation } = useCreationAPI()
 
   //#region draft
   const { locale } = useAuth().user ?? {}
 
-  const {
-    defaultGroup: { id: defaultGroupId } = {},
-    isLoading: _isLoadingGroup,
-  } = useMyGroupList()
+  const { refresh } = useCreation(_gid, _cid)
 
   const [draft, setDraft] = useState<CreationDraft>(() => ({
     __isReady: false,
     gid: _gid ? Xid.fromValue(_gid) : undefined,
-    id: undefined,
+    id: _cid ? Xid.fromValue(_cid) : undefined,
     language: locale,
     updated_at: undefined,
     title: '',
@@ -29,23 +30,30 @@ export function useNewCreation(_gid: string | null | undefined) {
   }))
 
   useEffect(() => {
-    const gid = _gid ?? defaultGroupId
-    if (gid) {
-      setDraft((prev) => {
-        const prevGid = prev.gid && Xid.fromValue(prev.gid)
-        const nextGid = Xid.fromValue(gid)
-        if (prevGid?.equals(nextGid) && prev.__isReady) return prev
-        return { ...prev, gid: nextGid, __isReady: true }
+    let aborted = false
+    refresh()
+      .then((creation) => {
+        if (!aborted && creation) {
+          setDraft((prev) => ({
+            ...prev,
+            ...creation,
+            content: decode(creation.content),
+            __isReady: true,
+          }))
+        }
       })
+      .catch(() => {})
+    return () => {
+      aborted = true
     }
-  }, [_gid, defaultGroupId])
+  }, [refresh])
 
   const updateDraft = useCallback((draft: Partial<CreationDraft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
   }, [])
   //#endregion
 
-  const isLoading = _isLoadingGroup || !draft.__isReady
+  const isLoading = !draft.__isReady
 
   const [isSaving, setIsSaving] = useState(false)
 
@@ -54,6 +62,7 @@ export function useNewCreation(_gid: string | null | undefined) {
     isLoading ||
     isSaving ||
     !draft.gid ||
+    !draft.id ||
     !draft.language ||
     !draft.title.trim() ||
     !draft.content
@@ -61,11 +70,11 @@ export function useNewCreation(_gid: string | null | undefined) {
   const save = useCallback(async () => {
     try {
       setIsSaving(true)
-      return await createCreation(draft)
+      return await updateCreation(draft)
     } finally {
       setIsSaving(false)
     }
-  }, [createCreation, draft])
+  }, [draft, updateCreation])
 
   return {
     draft,

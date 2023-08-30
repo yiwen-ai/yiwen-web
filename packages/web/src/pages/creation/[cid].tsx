@@ -1,8 +1,8 @@
 import { GROUP_DETAIL_PATH } from '#/App'
 import CommonEditor from '#/components/CommonEditor'
 import SaveHeader from '#/components/SaveHeader'
-import { useEditCreation } from '#/store/useEditCreation'
-import { GroupViewType } from '#/store/useGroupDetail'
+import { useEditCreationPage } from '#/store/useEditCreationPage'
+import { GroupViewType } from '#/store/useGroupDetailPage'
 import { useCallback } from 'react'
 import {
   generatePath,
@@ -12,13 +12,13 @@ import {
 } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
-export default function EditCreation() {
+export default function EditCreationPage() {
   const params = useParams<{ cid: string }>()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
   const { draft, updateDraft, isLoading, isDisabled, isSaving, save } =
-    useEditCreation(searchParams.get('gid'), params.cid)
+    useEditCreationPage(searchParams.get('gid'), params.cid)
 
   const onSave = useCallback(async () => {
     const item = await save()

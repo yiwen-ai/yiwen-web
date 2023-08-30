@@ -1,6 +1,6 @@
 import Loading from '#/components/Loading'
 import { MAX_WIDTH } from '#/shared'
-import { type GroupViewType } from '#/store/useGroupDetail'
+import { type GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import { type Editor, type JSONContent } from '@tiptap/core'
 import { RichTextEditor, Select, TextareaAutosize } from '@yiwen-ai/component'

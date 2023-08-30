@@ -1,5 +1,5 @@
 import { EDIT_CREATION_PATH } from '#/App'
-import { GroupViewType } from '#/store/useGroupDetail'
+import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
   Button,

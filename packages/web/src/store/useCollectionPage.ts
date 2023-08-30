@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Xid } from 'xid-ts'
 import { usePublicationViewer } from './usePublicationViewer'
 
-export function useCollection(pushToast: ToastAPI['pushToast']) {
+export function useCollectionPage(pushToast: ToastAPI['pushToast']) {
   const { refresh, mutate, remove, ...collectionList } = useCollectionList()
 
   useEffect(() => {

@@ -1,8 +1,8 @@
 import { GROUP_DETAIL_PATH } from '#/App'
 import CommonEditor from '#/components/CommonEditor'
 import SaveHeader from '#/components/SaveHeader'
-import { useEditPublication } from '#/store/useEditPublication'
-import { GroupViewType } from '#/store/useGroupDetail'
+import { useEditPublicationPage } from '#/store/useEditPublicationPage'
+import { GroupViewType } from '#/store/useGroupDetailPage'
 import { useCallback } from 'react'
 import {
   generatePath,
@@ -12,13 +12,13 @@ import {
 } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
-export default function EditPublication() {
+export default function EditPublicationPage() {
   const params = useParams<{ cid: string }>()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
   const { draft, updateDraft, isLoading, isDisabled, isSaving, save } =
-    useEditPublication(
+    useEditPublicationPage(
       searchParams.get('gid'),
       params.cid,
       searchParams.get('language'),

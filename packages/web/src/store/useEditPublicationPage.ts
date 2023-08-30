@@ -1,29 +1,34 @@
 import {
+  DEFAULT_MODEL,
   decode,
   useAuth,
-  useCreation,
-  useCreationAPI,
-  type CreationDraft,
+  usePublication,
+  usePublicationAPI,
+  type PublicationDraft,
 } from '@yiwen-ai/store'
 import { useCallback, useEffect, useState } from 'react'
 import { Xid } from 'xid-ts'
 
-export function useEditCreation(
+export function useEditPublicationPage(
   _gid: string | null | undefined,
-  _cid: string | null | undefined
+  _cid: string | null | undefined,
+  _language: string | null | undefined,
+  _version: number | string | null | undefined
 ) {
-  const { updateCreation } = useCreationAPI()
+  const { updatePublication } = usePublicationAPI()
 
   //#region draft
   const { locale } = useAuth().user ?? {}
 
-  const { isLoading: _isLoadingCreation, refresh } = useCreation(_gid, _cid)
+  const { refresh } = usePublication(_gid, _cid, _language, _version)
 
-  const [draft, setDraft] = useState<CreationDraft>(() => ({
+  const [draft, setDraft] = useState<PublicationDraft>(() => ({
     __isReady: false,
     gid: _gid ? Xid.fromValue(_gid) : undefined,
-    id: _cid ? Xid.fromValue(_cid) : undefined,
+    cid: _cid ? Xid.fromValue(_cid) : undefined,
     language: locale,
+    version: undefined,
+    model: DEFAULT_MODEL,
     updated_at: undefined,
     title: '',
     content: undefined,
@@ -32,12 +37,12 @@ export function useEditCreation(
   useEffect(() => {
     let aborted = false
     refresh()
-      .then((creation) => {
-        if (!aborted && creation) {
+      .then((publication) => {
+        if (!aborted && publication) {
           setDraft((prev) => ({
             ...prev,
-            ...creation,
-            content: decode(creation.content),
+            ...publication,
+            content: decode(publication.content),
             __isReady: true,
           }))
         }
@@ -48,12 +53,12 @@ export function useEditCreation(
     }
   }, [refresh])
 
-  const updateDraft = useCallback((draft: Partial<CreationDraft>) => {
+  const updateDraft = useCallback((draft: Partial<PublicationDraft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
   }, [])
   //#endregion
 
-  const isLoading = _isLoadingCreation || !draft.__isReady
+  const isLoading = !draft.__isReady
 
   const [isSaving, setIsSaving] = useState(false)
 
@@ -62,19 +67,20 @@ export function useEditCreation(
     isLoading ||
     isSaving ||
     !draft.gid ||
-    !draft.id ||
+    !draft.cid ||
     !draft.language ||
+    draft.version === undefined ||
     !draft.title.trim() ||
     !draft.content
 
   const save = useCallback(async () => {
     try {
       setIsSaving(true)
-      return await updateCreation(draft)
+      return await updatePublication(draft)
     } finally {
       setIsSaving(false)
     }
-  }, [draft, updateCreation])
+  }, [draft, updatePublication])
 
   return {
     draft,

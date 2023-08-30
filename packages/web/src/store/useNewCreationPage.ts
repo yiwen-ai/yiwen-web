@@ -1,39 +1,25 @@
 import {
-  DEFAULT_MODEL,
-  decode,
   useAuth,
-  usePublication,
-  usePublicationAPI,
-  type PublicationDraft,
+  useCreationAPI,
+  useMyGroupList,
+  type CreationDraft,
 } from '@yiwen-ai/store'
 import { useCallback, useEffect, useState } from 'react'
 import { Xid } from 'xid-ts'
 
-export function useEditPublication(
-  _gid: string | null | undefined,
-  _cid: string | null | undefined,
-  _language: string | null | undefined,
-  _version: number | string | null | undefined
-) {
-  const { updatePublication } = usePublicationAPI()
+export function useNewCreationPage(_gid: string | null | undefined) {
+  const { createCreation } = useCreationAPI()
 
   //#region draft
   const { locale } = useAuth().user ?? {}
 
-  const { isLoading: _isLoadingPublication, refresh } = usePublication(
-    _gid,
-    _cid,
-    _language,
-    _version
-  )
+  const { refreshDefaultGroup } = useMyGroupList()
 
-  const [draft, setDraft] = useState<PublicationDraft>(() => ({
+  const [draft, setDraft] = useState<CreationDraft>(() => ({
     __isReady: false,
     gid: _gid ? Xid.fromValue(_gid) : undefined,
-    cid: _cid ? Xid.fromValue(_cid) : undefined,
+    id: undefined,
     language: locale,
-    version: undefined,
-    model: DEFAULT_MODEL,
     updated_at: undefined,
     title: '',
     content: undefined,
@@ -41,13 +27,12 @@ export function useEditPublication(
 
   useEffect(() => {
     let aborted = false
-    refresh()
-      .then((publication) => {
-        if (!aborted && publication) {
+    Promise.resolve(_gid || refreshDefaultGroup().then((group) => group?.id))
+      .then((gid) => {
+        if (!aborted && gid) {
           setDraft((prev) => ({
             ...prev,
-            ...publication,
-            content: decode(publication.content),
+            gid: Xid.fromValue(gid),
             __isReady: true,
           }))
         }
@@ -56,14 +41,14 @@ export function useEditPublication(
     return () => {
       aborted = true
     }
-  }, [refresh])
+  }, [_gid, refreshDefaultGroup])
 
-  const updateDraft = useCallback((draft: Partial<PublicationDraft>) => {
+  const updateDraft = useCallback((draft: Partial<CreationDraft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
   }, [])
   //#endregion
 
-  const isLoading = _isLoadingPublication || !draft.__isReady
+  const isLoading = !draft.__isReady
 
   const [isSaving, setIsSaving] = useState(false)
 
@@ -72,20 +57,18 @@ export function useEditPublication(
     isLoading ||
     isSaving ||
     !draft.gid ||
-    !draft.cid ||
     !draft.language ||
-    draft.version === undefined ||
     !draft.title.trim() ||
     !draft.content
 
   const save = useCallback(async () => {
     try {
       setIsSaving(true)
-      return await updatePublication(draft)
+      return await createCreation(draft)
     } finally {
       setIsSaving(false)
     }
-  }, [draft, updatePublication])
+  }, [createCreation, draft])
 
   return {
     draft,

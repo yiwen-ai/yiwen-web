@@ -6,9 +6,17 @@ import { useEffect } from 'react'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
-export default function DefaultGroup() {
-  const { defaultGroup, error, isLoading } = useMyGroupList()
-  const gid = defaultGroup?.id
+export default function DefaultGroupPage() {
+  const {
+    isLoading,
+    error,
+    defaultGroup: { id: gid } = {},
+    refreshDefaultGroup,
+  } = useMyGroupList()
+
+  useEffect(() => {
+    refreshDefaultGroup().catch(() => {})
+  }, [refreshDefaultGroup])
 
   return isLoading ? (
     <Loading />

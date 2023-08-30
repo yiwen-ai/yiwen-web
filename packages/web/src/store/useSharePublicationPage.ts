@@ -2,7 +2,7 @@ import { type ToastAPI } from '@yiwen-ai/component'
 import { useEffect } from 'react'
 import { usePublicationViewer } from './usePublicationViewer'
 
-export function useSharePublication(
+export function useSharePublicationPage(
   pushToast: ToastAPI['pushToast'],
   _gid: string | null | undefined,
   _cid: string | null | undefined,
