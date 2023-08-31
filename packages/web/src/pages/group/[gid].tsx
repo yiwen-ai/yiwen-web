@@ -13,7 +13,7 @@ import Placeholder from '#/components/Placeholder'
 import PublicationItem from '#/components/PublicationItem'
 import PublicationViewer from '#/components/PublicationViewer'
 import { MAX_WIDTH } from '#/shared'
-import { GroupViewType, useGroupDetail } from '#/store/useGroupDetail'
+import { GroupViewType, useGroupDetailPage } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
   Avatar,
@@ -47,7 +47,7 @@ import {
 } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
-export default function GroupDetail() {
+export default function GroupDetailPage() {
   const intl = useIntl()
   const { renderToastContainer, pushToast } = useToast()
   const params = useParams<{ gid: string }>()
@@ -86,7 +86,7 @@ export default function GroupDetail() {
     onCreationRestore,
     onCreationDelete,
     onArchivedCreationDialogShow,
-  } = useGroupDetail(pushToast, _gid, _cid, _language, _version, _type)
+  } = useGroupDetailPage(pushToast, _gid, _cid, _language, _version, _type)
 
   const handleSwitchType = useCallback(
     (type: GroupViewType) => {

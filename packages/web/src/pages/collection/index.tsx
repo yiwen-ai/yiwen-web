@@ -5,16 +5,24 @@ import LoadMore from '#/components/LoadMore'
 import Loading from '#/components/Loading'
 import Placeholder from '#/components/Placeholder'
 import PublicationViewer from '#/components/PublicationViewer'
-import { useCollection } from '#/store/useCollection'
+import { BREAKPOINT } from '#/shared'
+import { useCollectionPage } from '#/store/useCollectionPage'
 import { css, useTheme } from '@emotion/react'
-import { Icon, Menu, MenuItem, Spinner, useToast } from '@yiwen-ai/component'
+import {
+  Icon,
+  Menu,
+  MenuItem,
+  Spinner,
+  textEllipsis,
+  useToast,
+} from '@yiwen-ai/component'
 import { type CollectionOutput } from '@yiwen-ai/store'
 import { stopPropagation } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import { Xid } from 'xid-ts'
 
-export default function Collection() {
+export default function CollectionPage() {
   const { renderToastContainer, pushToast } = useToast()
 
   const {
@@ -30,7 +38,7 @@ export default function Collection() {
     publicationViewer,
     publicationViewerOpen,
     onPublicationViewerClose,
-  } = useCollection(pushToast)
+  } = useCollectionPage(pushToast)
 
   return (
     <>
@@ -38,6 +46,9 @@ export default function Collection() {
       <div
         css={css`
           padding: 60px 100px;
+          @media (max-width: ${BREAKPOINT.small}px) {
+            padding: 24px;
+          }
         `}
       >
         {isLoading ? (
@@ -127,6 +138,7 @@ function CollectionItem({
       <div
         css={css`
           ${theme.typography.h2}
+          ${textEllipsis}
         `}
       >
         {item.title}

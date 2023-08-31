@@ -44,17 +44,20 @@ export function usePublicationViewer(
     remove: _removeFavorite,
   } = useCreationCollectionList(_cid)
   const { languageList } = useLanguageList()
-  const defaultGroupId = useMyGroupList().defaultGroup?.id
+  const { defaultGroup: { id: defaultGroupId } = {}, refreshDefaultGroup } =
+    useMyGroupList()
 
   const refresh = useCallback(async () => {
     const [publication] = await Promise.all([
       refreshPublication(),
       refreshTranslatedPublicationList(),
       refreshCollectionList(),
+      refreshDefaultGroup(),
     ])
     return publication
   }, [
     refreshCollectionList,
+    refreshDefaultGroup,
     refreshPublication,
     refreshTranslatedPublicationList,
   ])

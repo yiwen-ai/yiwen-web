@@ -1,18 +1,18 @@
 import { GROUP_DETAIL_PATH } from '#/App'
 import CommonEditor from '#/components/CommonEditor'
 import SaveHeader from '#/components/SaveHeader'
-import { GroupViewType } from '#/store/useGroupDetail'
-import { useNewCreation } from '#/store/useNewCreation'
+import { GroupViewType } from '#/store/useGroupDetailPage'
+import { useNewCreationPage } from '#/store/useNewCreationPage'
 import { useCallback } from 'react'
 import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
-export default function NewCreation() {
+export default function NewCreationPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
   const { draft, updateDraft, isLoading, isDisabled, isSaving, save } =
-    useNewCreation(searchParams.get('gid'))
+    useNewCreationPage(searchParams.get('gid'))
 
   const onSave = useCallback(async () => {
     const item = await save()

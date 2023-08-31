@@ -1,20 +1,20 @@
 import { SetHeaderProps } from '#/App'
 import PublicationViewer from '#/components/PublicationViewer'
-import { useSharePublication } from '#/store/useSharePublication'
+import { useSharePublicationPage } from '#/store/useSharePublicationPage'
 import { css } from '@emotion/react'
 import { useToast } from '@yiwen-ai/component'
 import { useCallback } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
-export default function SharePublication() {
+export default function SharePublicationPage() {
   const params = useParams<{ cid: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const { renderToastContainer, pushToast } = useToast()
 
   const {
     publicationViewer: { onTranslate, ...publicationViewer },
-  } = useSharePublication(
+  } = useSharePublicationPage(
     pushToast,
     searchParams.get('gid'),
     params.cid,

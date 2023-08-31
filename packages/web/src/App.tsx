@@ -55,15 +55,15 @@ import Loading from './components/Loading'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
-import Collection from './pages/collection'
-import EditCreation from './pages/creation/[cid]'
-import NewCreation from './pages/creation/new'
-import GroupDetail from './pages/group/[gid]'
-import DefaultGroup from './pages/group/default'
-import LoginState from './pages/login/state'
-import SharePublication from './pages/pub/[cid]'
-import EditPublication from './pages/publication/[cid]'
-import Search from './pages/search'
+import CollectionPage from './pages/collection'
+import EditCreationPage from './pages/creation/[cid]'
+import NewCreationPage from './pages/creation/new'
+import GroupDetailPage from './pages/group/[gid]'
+import DefaultGroupPage from './pages/group/default'
+import LoginStatePage from './pages/login/state'
+import SharePublicationPage from './pages/pub/[cid]'
+import EditPublicationPage from './pages/publication/[cid]'
+import SearchPage from './pages/search'
 import { BREAKPOINT } from './shared'
 
 function Fallback({
@@ -217,15 +217,15 @@ const router = createBrowserRouter(
     <Route element={<Layout />}>
       <Route path='*' element={<NotFound />} />
       <Route path='/' element={<Home />} />
-      <Route path='/login/state' element={<LoginState />} />
-      <Route path={SEARCH_PATH} element={<Search />} />
-      <Route path={COLLECTION_PATH} element={<Collection />} />
-      <Route path={NEW_CREATION_PATH} element={<NewCreation />} />
-      <Route path={EDIT_CREATION_PATH} element={<EditCreation />} />
-      <Route path={EDIT_PUBLICATION_PATH} element={<EditPublication />} />
-      <Route path={SHARE_PUBLICATION_PATH} element={<SharePublication />} />
-      <Route path={DEFAULT_GROUP_PATH} element={<DefaultGroup />} />
-      <Route path={GROUP_DETAIL_PATH} element={<GroupDetail />} />
+      <Route path='/login/state' element={<LoginStatePage />} />
+      <Route path={SEARCH_PATH} element={<SearchPage />} />
+      <Route path={COLLECTION_PATH} element={<CollectionPage />} />
+      <Route path={NEW_CREATION_PATH} element={<NewCreationPage />} />
+      <Route path={EDIT_CREATION_PATH} element={<EditCreationPage />} />
+      <Route path={EDIT_PUBLICATION_PATH} element={<EditPublicationPage />} />
+      <Route path={SHARE_PUBLICATION_PATH} element={<SharePublicationPage />} />
+      <Route path={DEFAULT_GROUP_PATH} element={<DefaultGroupPage />} />
+      <Route path={GROUP_DETAIL_PATH} element={<GroupDetailPage />} />
     </Route>
   ),
   { basename: new URL(resolveURL(import.meta.env.VITE_PUBLIC_PATH)).pathname }

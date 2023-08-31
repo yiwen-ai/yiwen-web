@@ -21,7 +21,7 @@ export enum GroupViewType {
   Creation = 'creation',
 }
 
-export function useGroupDetail(
+export function useGroupDetailPage(
   pushToast: ToastAPI['pushToast'],
   _gid: string | null | undefined,
   _cid: string | null | undefined,

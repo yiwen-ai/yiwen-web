@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import { useIntl } from 'react-intl'
 import { useSearchParams } from 'react-router-dom'
 
-export default function LoginState() {
+export default function LoginStatePage() {
   const intl = useIntl()
   const theme = useTheme()
   const auth = useAuth()

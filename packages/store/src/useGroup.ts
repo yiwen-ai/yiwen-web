@@ -57,9 +57,14 @@ export function useGroupAPI() {
     [request]
   )
 
+  const readMyGroupList = useCallback(() => {
+    return request.post<{ result: Group[] }>(`${path}/list_my`)
+  }, [request])
+
   return {
     readGroupInfo,
     readGroupStatistic,
+    readMyGroupList,
   } as const
 }
 
@@ -128,11 +133,16 @@ export function useGroup(_gid: string | null | undefined) {
 }
 
 export function useMyGroupList() {
-  const request = useFetcher()
+  const { readMyGroupList } = useGroupAPI()
 
-  const { data, error, isValidating, isLoading } = useSWR(
-    '/v1/group/list_my',
-    (path) => request.post<{ result: Group[] }>(path)
+  const getKey = useCallback(() => {
+    return [`${path}/list_my`] as const
+  }, [])
+
+  const { data, error, mutate, isValidating, isLoading } = useSWR(
+    getKey,
+    ([_]) => readMyGroupList(),
+    { revalidateOnMount: false } as SWRConfiguration
   )
 
   const defaultGroup = useMemo(
@@ -140,10 +150,23 @@ export function useMyGroupList() {
     [data?.result]
   )
 
+  const refresh = useCallback(
+    async () => getKey() && (await mutate()),
+    [getKey, mutate]
+  )
+
+  const refreshDefaultGroup = useCallback(async () => {
+    return (await refresh())?.result.find(
+      (group) => group._role === RoleLevel.OWNER
+    )
+  }, [refresh])
+
   return {
-    defaultGroup,
-    groupList: data?.result,
-    error,
     isLoading: isValidating || isLoading,
+    error,
+    groupList: data?.result,
+    defaultGroup,
+    refresh,
+    refreshDefaultGroup,
   }
 }
