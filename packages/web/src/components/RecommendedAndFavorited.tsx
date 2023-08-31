@@ -278,6 +278,7 @@ function TabItem({
         display: flex;
         align-items: center;
         gap: 8px;
+        color: inherit;
         cursor: ${onClick ? 'pointer' : undefined};
       `}
     >
