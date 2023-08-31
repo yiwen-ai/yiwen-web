@@ -1,4 +1,4 @@
-import { SetHeaderProps } from '#/App'
+import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import LargeDialog from '#/components/LargeDialog'
 import LinkToCreatePage from '#/components/LinkToCreatePage'
@@ -12,7 +12,9 @@ import { useSearchPage } from '#/store/useSearchPage'
 import { css, useTheme } from '@emotion/react'
 import {
   Avatar,
+  Button,
   Icon,
+  IconButton,
   TextField,
   textEllipsis,
   useToast,
@@ -21,11 +23,12 @@ import { buildPublicationKey, type SearchDocument } from '@yiwen-ai/store'
 import { useLayoutEffect, useRefCallback } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+
+const MAX_WIDTH = 680
 
 export default function SearchPage() {
   const intl = useIntl()
-  const theme = useTheme()
   const [searchParams, setSearchParams] = useSearchParams()
   const { renderToastContainer, pushToast } = useToast()
 
@@ -34,6 +37,7 @@ export default function SearchPage() {
     error,
     data,
     keyword,
+    setKeyword,
     onSearch,
     onView,
     publicationViewer,
@@ -41,12 +45,22 @@ export default function SearchPage() {
     onPublicationViewerClose,
   } = useSearchPage(pushToast, searchParams.get('q')?.trim() ?? '')
 
+  const handleChange = useCallback(
+    (ev: React.ChangeEvent<HTMLInputElement>) => {
+      setKeyword(ev.currentTarget.value)
+    },
+    [setKeyword]
+  )
+
+  const handleClear = useCallback(() => {
+    setKeyword('')
+  }, [setKeyword])
+
   const handleSearch = useCallback(
     (keyword: string) => {
-      const q = keyword.trim()
-      if (!q) return
+      keyword = keyword.trim()
       onSearch(keyword)
-      setSearchParams({ q })
+      setSearchParams({ q: keyword })
     },
     [onSearch, setSearchParams]
   )
@@ -57,49 +71,27 @@ export default function SearchPage() {
   return (
     <>
       {renderToastContainer()}
-      <SetHeaderProps
-        brand={true}
-        css={css`
-          box-shadow: ${theme.effect.divider};
-        `}
-      >
+      <SetHeaderProps brand={true}>
         <div
           css={css`
             flex: 1;
-            align-self: stretch;
-            margin: 0 40px;
+            margin: 0 36px;
             display: flex;
-            ::before {
-              content: '';
-              margin: 12px 20px 12px 0;
-              border-right: 1px solid ${theme.color.divider.primary};
-            }
+            justify-content: flex-end;
           `}
         >
-          <TextField
-            size='large'
-            before={<Icon name='search' />}
-            placeholder={intl.formatMessage({
-              defaultMessage: '搜索 yiwen.ai 的内容',
-            })}
-            defaultValue={keyword}
-            onSearch={handleSearch}
-            ref={setInputRef}
-            css={css`
-              flex: 1;
-              height: unset;
-              padding: 0;
-              border: 0;
-              border-radius: 0;
-              gap: 12px;
-            `}
-          />
+          <Link to={NEW_CREATION_PATH}>
+            <Button color='primary' variant='text'>
+              {intl.formatMessage({ defaultMessage: '创作内容' })}
+            </Button>
+          </Link>
         </div>
       </SetHeaderProps>
       <div
         css={css`
-          margin: 0 auto;
+          flex: 1;
           padding: 80px;
+          overflow-y: auto;
           display: flex;
           flex-wrap: wrap;
           align-items: flex-start;
@@ -153,6 +145,45 @@ export default function SearchPage() {
             `}
           />
         </div>
+      </div>
+      <div
+        css={css`
+          padding: 44px 80px;
+        `}
+      >
+        <TextField
+          size='large'
+          before={<Icon name='search' />}
+          after={() => (
+            <div
+              css={css`
+                display: flex;
+                align-items: center;
+                gap: 24px;
+              `}
+            >
+              {keyword.length > 0 ? (
+                <IconButton iconName='closecircle2' onClick={handleClear} />
+              ) : null}
+              <IconButton iconName='upload' />
+              <IconButton iconName='link2' />
+            </div>
+          )}
+          placeholder={intl.formatMessage({
+            defaultMessage: '搜索 yiwen.ai 的内容',
+          })}
+          value={keyword}
+          onChange={handleChange}
+          onSearch={handleSearch}
+          ref={setInputRef}
+          css={css`
+            width: 100%;
+            max-width: ${MAX_WIDTH}px;
+            height: 48px;
+            gap: 12px;
+            border-radius: 20px;
+          `}
+        />
       </div>
       {publicationViewerOpen && (
         <LargeDialog defaultOpen={true} onClose={onPublicationViewerClose}>

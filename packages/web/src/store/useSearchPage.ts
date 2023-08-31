@@ -5,8 +5,7 @@ import {
   type PublicationOutput,
   type SearchDocument,
 } from '@yiwen-ai/store'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useDebounce } from 'use-debounce'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Xid } from 'xid-ts'
 import { usePublicationViewer } from './usePublicationViewer'
 
@@ -14,25 +13,43 @@ export function useSearchPage(
   pushToast: ToastAPI['pushToast'],
   defaultKeyword = ''
 ) {
-  const [keyword, onSearch] = useState(defaultKeyword)
-  const [debouncedKeyword] = useDebounce(keyword.trim(), 500)
+  const [keyword, setKeyword] = useState(defaultKeyword)
 
   const { search } = useSearchAPI()
   const params = useMemo<Parameters<typeof search>[0]>(
     () => ({
-      q: debouncedKeyword,
+      q: defaultKeyword.trim(),
       language: undefined,
       gid: undefined,
     }),
-    [debouncedKeyword]
+    [defaultKeyword]
   )
   const { isLoading, error, data, refresh } = useSearch(params)
 
+  const controllerRef = useRef<AbortController | null>(null)
+
+  const onSearch = useCallback(
+    (keyword: string) => {
+      controllerRef.current?.abort()
+      const controller = (controllerRef.current = new AbortController())
+      refresh(
+        search(
+          {
+            q: keyword.trim(),
+            language: undefined,
+            gid: undefined,
+          },
+          controller.signal
+        )
+      ).catch(() => {})
+    },
+    [refresh, search]
+  )
+
   useEffect(() => {
-    const controller = new AbortController()
-    refresh(search(params, controller.signal)).catch(() => {})
-    return () => controller.abort()
-  }, [params, refresh, search])
+    onSearch(defaultKeyword)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const [currentDocument, setCurrentDocument] = useState<
     SearchDocument | PublicationOutput | undefined
@@ -80,6 +97,7 @@ export function useSearchPage(
     error,
     data,
     keyword,
+    setKeyword,
     onSearch,
     onView,
     publicationViewer: {
