@@ -1,7 +1,6 @@
-import { compact, groupBy, uniq, without } from 'lodash-es'
+import { groupBy } from 'lodash-es'
 import { useCallback, useMemo } from 'react'
 import useSWR from 'swr'
-import { useAuth } from './AuthContext'
 import { useFetcher } from './useFetcher'
 
 export interface Language {
@@ -38,24 +37,6 @@ export function useLanguageProcessor(
   originalLanguageCode: string | null | undefined,
   translatedLanguageCodeList: string[] | undefined
 ) {
-  const locale = useAuth().user?.locale
-
-  const preferredLanguageCode = useMemo(() => {
-    return uniq(
-      compact(
-        without(
-          [originalLanguageCode, locale, 'eng', 'zho'],
-          currentLanguageCode
-        )
-      )
-    )[0]
-  }, [currentLanguageCode, locale, originalLanguageCode])
-
-  const isPreferred = useCallback(
-    (lang: Language) => lang.code === preferredLanguageCode,
-    [preferredLanguageCode]
-  )
-
   const isCurrent = useCallback(
     (lang: Language) => lang.code === currentLanguageCode,
     [currentLanguageCode]
@@ -69,11 +50,6 @@ export function useLanguageProcessor(
   const isTranslated = useCallback(
     (lang: Language) => translatedLanguageCodeList?.includes(lang.code),
     [translatedLanguageCodeList]
-  )
-
-  const preferredLanguage = useMemo(
-    () => languageList?.find(isPreferred),
-    [isPreferred, languageList]
   )
 
   const currentLanguage = useMemo(
@@ -96,7 +72,6 @@ export function useLanguageProcessor(
   }, [isOriginal, isTranslated, languageList])
 
   return {
-    preferredLanguage,
     currentLanguage,
     originalLanguage,
     translatedLanguageList,

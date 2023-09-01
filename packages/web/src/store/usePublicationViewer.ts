@@ -12,6 +12,7 @@ import {
   useTranslatedPublicationList,
   type Language,
 } from '@yiwen-ai/store'
+import { uniq } from 'lodash-es'
 import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 
@@ -65,13 +66,13 @@ export function usePublicationViewer(
 
   //#region language
   const translatedLanguageCodeList = useMemo(() => {
-    return translatedPublicationList
-      ?.filter((publication) => publication.version === _version)
-      .map((publication) => publication.language)
-  }, [_version, translatedPublicationList])
+    if (!translatedPublicationList) return undefined
+    return uniq(
+      translatedPublicationList.map((publication) => publication.language)
+    )
+  }, [translatedPublicationList])
 
   const {
-    preferredLanguage,
     currentLanguage,
     originalLanguage,
     translatedLanguageList,
@@ -98,11 +99,15 @@ export function usePublicationViewer(
 
   const onTranslate = useCallback(
     async (language: string) => {
-      let publication = translatedPublicationList?.find((publication) => {
-        return (
-          publication.language === language && publication.version === _version
-        )
-      })
+      const version = Number(_version)
+      let publication = translatedPublicationList?.find(
+        (item) => item.language === language && item.version === version
+      )
+      if (!publication) {
+        publication = translatedPublicationList
+          ?.filter((item) => item.language === language)
+          .sort((a, b) => b.version - a.version)[0] // latest version
+      }
       if (!publication) {
         try {
           setTranslatingLanguage(
@@ -207,7 +212,6 @@ export function usePublicationViewer(
     error,
     publication,
     refresh,
-    preferredLanguage,
     currentLanguage,
     originalLanguage,
     translatedLanguageList,

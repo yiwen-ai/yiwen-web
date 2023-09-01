@@ -34,7 +34,6 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   isLoading: boolean
   error: unknown
   publication: PublicationOutput | undefined
-  preferredLanguage: Language | undefined
   currentLanguage: Language | undefined
   originalLanguage: Language | undefined
   translatedLanguageList: Language[] | undefined
@@ -55,7 +54,6 @@ export default function PublicationViewer({
   isLoading,
   error,
   publication,
-  preferredLanguage,
   currentLanguage,
   originalLanguage,
   translatedLanguageList: _translatedLanguageList,
@@ -142,21 +140,26 @@ export default function PublicationViewer({
             `}
           >
             <Button
+              title={intl.formatMessage({ defaultMessage: '创作语言' })}
               color='primary'
               variant='outlined'
               size={isNarrow ? 'small' : 'large'}
-              disabled={true}
+              disabled={!originalLanguage}
+              onClick={() =>
+                originalLanguage && onTranslate(originalLanguage.code)
+              }
             >
-              {currentLanguage?.nativeName ?? publication.language}
+              {originalLanguage?.nativeName ?? publication.from_language}
             </Button>
-            {preferredLanguage && (
+            {publication.language === publication.from_language ? null : (
               <Button
+                title={intl.formatMessage({ defaultMessage: '当前语言' })}
                 color='primary'
                 variant='outlined'
                 size={isNarrow ? 'small' : 'large'}
-                onClick={() => onTranslate(preferredLanguage.code)}
+                disabled={true}
               >
-                {preferredLanguage.nativeName}
+                {currentLanguage?.nativeName ?? publication.language}
               </Button>
             )}
             {translatedLanguageList && pendingLanguageList && (
