@@ -81,8 +81,8 @@ const MenuContext = createContext<ModalRef | null>(null)
 
 export interface MenuItemProps
   extends Omit<LiHTMLAttributes<HTMLLIElement>, 'children'> {
-  before?: JSX.Element
-  after?: JSX.Element
+  before?: JSX.Element | false | null | undefined
+  after?: JSX.Element | false | null | undefined
   label: string | JSX.Element
   description?: string | JSX.Element
   danger?: boolean | undefined

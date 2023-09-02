@@ -44,15 +44,16 @@ export {
   useLanguageList,
   useLanguageProcessor,
   type Language,
+  type UILanguageItem,
 } from './useLanguageList'
 export {
   DEFAULT_MODEL,
+  PublicationJobStatus,
   PublicationStatus,
   buildPublicationKey,
   usePublication,
   usePublicationAPI,
   usePublicationList,
-  useTranslatePublication,
   useTranslatedPublicationList,
   type PublicationDraft,
   type PublicationOutput,

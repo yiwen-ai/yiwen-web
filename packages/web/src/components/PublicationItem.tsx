@@ -1,5 +1,3 @@
-import { EDIT_PUBLICATION_PATH } from '#/App'
-import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
   Button,
@@ -13,46 +11,35 @@ import { PublicationStatus, type PublicationOutput } from '@yiwen-ai/store'
 import { mergeClickProps, stopPropagation, useClick } from '@yiwen-ai/util'
 import { useCallback, type HTMLAttributes } from 'react'
 import { useIntl } from 'react-intl'
-import { generatePath, useNavigate } from 'react-router-dom'
-import { Xid } from 'xid-ts'
 import { IconMoreAnchor } from './IconMoreAnchor'
 import PublicationItemStatus from './PublicationItemStatus'
 
 export default function PublicationItem({
   item,
   isPublishing,
+  isEditing,
   isArchiving,
   onClick,
   onPublish,
+  onEdit,
   onArchive,
 }: {
   item: PublicationOutput
   isPublishing: boolean
+  isEditing: boolean
   isArchiving: boolean
   onClick: (item: PublicationOutput) => void
   onPublish: (item: PublicationOutput) => void
+  onEdit: (item: PublicationOutput) => void
   onArchive: (item: PublicationOutput) => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
-  const navigate = useNavigate()
-  const disabled = isPublishing || isArchiving
+  const disabled = isPublishing || isEditing || isArchiving
   const handleClickProps = useClick<HTMLAttributes<HTMLDivElement>>({}, () =>
     onClick(item)
   )
-  const handleEdit = useCallback(() => {
-    navigate({
-      pathname: generatePath(EDIT_PUBLICATION_PATH, {
-        cid: Xid.fromValue(item.cid).toString(),
-      }),
-      search: new URLSearchParams({
-        gid: Xid.fromValue(item.gid).toString(),
-        language: item.language,
-        version: item.version.toString(),
-        type: GroupViewType.Publication,
-      }).toString(),
-    })
-  }, [item.cid, item.gid, item.language, item.version, navigate])
+  const handleEdit = useCallback(() => onEdit(item), [item, onEdit])
   const handlePublish = useCallback(() => onPublish(item), [item, onPublish])
   const handleArchive = useCallback(() => onArchive(item), [item, onArchive])
 
@@ -106,7 +93,11 @@ export default function PublicationItem({
             disabled={disabled}
             onClick={handleEdit}
           >
-            <Icon name='edit' size='small' />
+            {isEditing ? (
+              <Spinner size={12} />
+            ) : (
+              <Icon name='edit' size='small' />
+            )}
             <span>{intl.formatMessage({ defaultMessage: '修订' })}</span>
           </Button>
         )}

@@ -109,6 +109,22 @@ export interface PublicationDraft {
   content: JSONContent | undefined
 }
 
+export enum PublicationJobStatus {
+  Error = -1,
+  Processing = 0,
+  Done = 1,
+}
+
+export interface PublicationJob {
+  job: string
+  status: PublicationJobStatus
+  action: string
+  progress: number // 0 - 100
+  tokens: number
+  publication?: PublicationOutput
+  error?: string
+}
+
 const path = '/v1/publication'
 
 export function usePublicationAPI() {
@@ -151,6 +167,20 @@ export function usePublicationAPI() {
       return request.get<{ result: PublicationOutput[] }>(
         `${path}/publish`,
         params
+      )
+    },
+    [request]
+  )
+
+  const readProcessingPublicationList = useCallback(() => {
+    return request.get<{ result: PublicationJob[] }>(`${path}/list_job`)
+  }, [request])
+
+  const translatePublication = useCallback(
+    (body: CreatePublicationInput) => {
+      return request.post<{ job: string; result: PublicationOutput | null }>(
+        path,
+        body
       )
     },
     [request]
@@ -280,6 +310,8 @@ export function usePublicationAPI() {
     readPublicationList,
     readArchivedPublicationList,
     readTranslatedPublicationList,
+    readProcessingPublicationList,
+    translatePublication,
     createPublication,
     updatePublication,
     deletePublication,
@@ -320,30 +352,89 @@ export function usePublication(
   } as SWRConfiguration)
 
   const refresh = useCallback(
-    async () => getKey() && (await mutate())?.result,
+    async (data?: ReturnType<typeof readPublication>) => {
+      return getKey() && (await mutate(data, !data))?.result
+    },
     [getKey, mutate]
   )
 
   return {
-    publication,
-    error,
     isLoading: isValidating || isLoading,
+    error,
+    publication,
     refresh,
   } as const
 }
 
-export function useTranslatePublication(
+export function useTranslatedPublicationList(
   _gid: string | null | undefined,
   _cid: string | null | undefined,
   _language: string | null | undefined,
-  _version: number | string | null | undefined
+  _version: number | null | undefined
 ) {
-  const request = useFetcher()
-
+  const {
+    readTranslatedPublicationList,
+    readProcessingPublicationList,
+    translatePublication,
+  } = usePublicationAPI()
   const readPublicationByJob = useReadPublicationByJob()
 
+  const getTranslatedListKey = useCallback(() => {
+    if (!_gid || !_cid) return null
+    const params: Record<keyof QueryPublication, string | number | null> = {
+      gid: _gid,
+      cid: _cid,
+      language: null,
+      version: null,
+      fields: null,
+    }
+    return [`${path}/publish`, params] as const
+  }, [_cid, _gid])
+
+  const {
+    data: translatedList,
+    error: translatedListError,
+    mutate: mutateTranslatedList,
+    isValidating: isValidatingTranslatedList,
+    isLoading: isLoadingTranslatedList,
+  } = useSWR(
+    getTranslatedListKey,
+    ([path, params]) => readTranslatedPublicationList(params),
+    { revalidateOnMount: false } as SWRConfiguration
+  )
+
+  const refreshTranslatedList = useCallback(
+    async () => getTranslatedListKey() && (await mutateTranslatedList()),
+    [getTranslatedListKey, mutateTranslatedList]
+  )
+
+  const getProcessingListKey = useCallback(() => {
+    return [`${path}/list_job`, null] as const
+  }, [])
+
+  const {
+    data: processingList,
+    error: processingListError,
+    mutate: mutateProcessingList,
+    isValidating: isValidatingProcessingList,
+    isLoading: isLoadingProcessingList,
+  } = useSWR(
+    getProcessingListKey,
+    ([path]) => readProcessingPublicationList(),
+    { revalidateOnMount: false } as SWRConfiguration
+  )
+
+  const refreshProcessingList = useCallback(
+    async () => getProcessingListKey() && (await mutateProcessingList()),
+    [getProcessingListKey, mutateProcessingList]
+  )
+
   const translate = useCallback(
-    async (gid: Uint8Array | undefined, language: string | undefined) => {
+    async (
+      gid: Uint8Array | undefined,
+      language: string | undefined,
+      signal: AbortSignal
+    ) => {
       if (
         !_gid ||
         !_cid ||
@@ -356,61 +447,48 @@ export function useTranslatePublication(
           'group id, creation id, language, version, target group id and target language are required to translate a publication'
         )
       }
-      const body: CreatePublicationInput = {
+      const resp = await translatePublication({
         gid: Xid.fromValue(_gid),
         cid: Xid.fromValue(_cid),
         language: _language,
-        version: Number(_version),
+        version: _version,
         model: DEFAULT_MODEL,
         to_gid: gid,
         to_language: language,
+      })
+      let { result } = resp
+      if (!result) {
+        mutateProcessingList()
+        result = await readPublicationByJob(resp.job, signal)
       }
-      const { job, result } = await request.post<{
-        job: string
-        result: PublicationOutput | null
-      }>(path, body)
-      return result ?? readPublicationByJob(job)
+      mutateProcessingList()
+      mutateTranslatedList()
+      return result
     },
-    [_cid, _gid, _language, _version, readPublicationByJob, request]
-  )
-
-  return translate
-}
-
-export function useTranslatedPublicationList(
-  _gid: string | null | undefined,
-  _cid: string | null | undefined
-) {
-  const { readTranslatedPublicationList } = usePublicationAPI()
-
-  const getKey = useCallback(() => {
-    if (!_gid || !_cid) return null
-    const params: Record<keyof QueryPublication, string | number | null> = {
-      gid: _gid,
-      cid: _cid,
-      language: null,
-      version: null,
-      fields: null,
-    }
-    return [`${path}/publish`, params] as const
-  }, [_cid, _gid])
-
-  const { data, error, mutate, isValidating, isLoading } = useSWR(
-    getKey,
-    ([path, params]) => readTranslatedPublicationList(params),
-    { revalidateOnMount: false } as SWRConfiguration
-  )
-
-  const refresh = useCallback(
-    async () => getKey() && (await mutate())?.result,
-    [getKey, mutate]
+    [
+      _cid,
+      _gid,
+      _language,
+      _version,
+      mutateProcessingList,
+      mutateTranslatedList,
+      readPublicationByJob,
+      translatePublication,
+    ]
   )
 
   return {
-    publicationList: data?.result,
-    error,
-    isLoading: isValidating || isLoading,
-    refresh,
+    isLoadingTranslatedList:
+      isValidatingTranslatedList || isLoadingTranslatedList,
+    isLoadingProcessingList:
+      isValidatingProcessingList || isLoadingProcessingList,
+    translatedListError,
+    processingListError,
+    translatedList: translatedList?.result,
+    processingList: processingList?.result,
+    refreshTranslatedList,
+    refreshProcessingList,
+    translate,
   } as const
 }
 
@@ -430,11 +508,11 @@ export function useReadPublicationByJob() {
       job: string,
       signal = controller?.signal ?? null
     ): Promise<PublicationOutput> {
-      const { result } = await request<{ result: PublicationOutput | null }>(
-        `${path}/by_job`,
-        { job },
-        { signal }
-      )
+      const { result } = await request<{
+        job?: string
+        progress?: number
+        result: PublicationOutput | null
+      }>(`${path}/by_job`, { job }, { signal })
       if (result) return result
       await new Promise((resolve) => setTimeout(resolve, 1000))
       return poll(job, signal)

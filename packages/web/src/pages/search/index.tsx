@@ -40,9 +40,11 @@ export default function SearchPage() {
     setKeyword,
     onSearch,
     onView,
-    publicationViewer,
-    publicationViewerOpen,
-    onPublicationViewerClose,
+    publicationViewer: {
+      open: publicationViewerOpen,
+      close: onPublicationViewerClose,
+      ...publicationViewer
+    },
   } = useSearchPage(pushToast, searchParams.get('q')?.trim() ?? '')
 
   const handleChange = useCallback(

@@ -3,6 +3,7 @@ import { css, useTheme } from '@emotion/react'
 import {
   AlertDialog,
   AlertDialogBody,
+  AlertDialogClose,
   Button,
   Icon,
   IconButton,
@@ -20,6 +21,7 @@ import {
   PublicationStatus,
   type Language,
   type PublicationOutput,
+  type UILanguageItem,
 } from '@yiwen-ai/store'
 import { escapeRegExp } from 'lodash-es'
 import { useCallback, useMemo, useState, type HTMLAttributes } from 'react'
@@ -34,12 +36,13 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   isLoading: boolean
   error: unknown
   publication: PublicationOutput | undefined
-  currentLanguage: Language | undefined
-  originalLanguage: Language | undefined
-  translatedLanguageList: Language[] | undefined
-  pendingLanguageList: Language[] | undefined
-  translatingLanguage: Language | undefined
-  onTranslate: (language: string) => void
+  currentLanguage: UILanguageItem | undefined
+  originalLanguage: UILanguageItem | undefined
+  translatedLanguageList: UILanguageItem[] | undefined
+  pendingLanguageList: UILanguageItem[] | undefined
+  processingLanguage: Language | undefined
+  onTranslate: (language: UILanguageItem) => void
+  onProcessingDialogClose: () => void
   shareLink: string | undefined
   onShare: () => void
   isFavorite: boolean
@@ -58,8 +61,9 @@ export default function PublicationViewer({
   originalLanguage,
   translatedLanguageList: _translatedLanguageList,
   pendingLanguageList: _pendingLanguageList,
-  translatingLanguage,
+  processingLanguage,
   onTranslate,
+  onProcessingDialogClose,
   shareLink,
   onShare,
   isFavorite,
@@ -106,6 +110,14 @@ export default function PublicationViewer({
     })
   }, [_pendingLanguageList, keywordRE])
 
+  const isProcessing = useMemo(() => {
+    return Boolean(
+      !!processingLanguage ||
+        _translatedLanguageList?.some((item) => item.isProcessing) ||
+        _pendingLanguageList?.some((item) => item.isProcessing)
+    )
+  }, [_pendingLanguageList, _translatedLanguageList, processingLanguage])
+
   return (
     <div
       {...props}
@@ -144,14 +156,17 @@ export default function PublicationViewer({
               color='primary'
               variant='outlined'
               size={isNarrow ? 'small' : 'large'}
-              disabled={!originalLanguage}
-              onClick={() =>
-                originalLanguage && onTranslate(originalLanguage.code)
+              disabled={!originalLanguage || originalLanguage.isCurrent}
+              onClick={
+                originalLanguage
+                  ? () => onTranslate(originalLanguage)
+                  : undefined
               }
             >
+              {!originalLanguage && <Spinner size='small' />}
               {originalLanguage?.nativeName ?? publication.from_language}
             </Button>
-            {publication.language === publication.from_language ? null : (
+            {!currentLanguage || currentLanguage.isOriginal ? null : (
               <Button
                 title={intl.formatMessage({ defaultMessage: '当前语言' })}
                 color='primary'
@@ -159,7 +174,7 @@ export default function PublicationViewer({
                 size={isNarrow ? 'small' : 'large'}
                 disabled={true}
               >
-                {currentLanguage?.nativeName ?? publication.language}
+                {currentLanguage.nativeName}
               </Button>
             )}
             {translatedLanguageList && pendingLanguageList && (
@@ -168,10 +183,9 @@ export default function PublicationViewer({
                   <Button
                     color='secondary'
                     size={isNarrow ? 'small' : 'large'}
-                    disabled={!!translatingLanguage}
                     {...props}
                   >
-                    {translatingLanguage ? (
+                    {isProcessing ? (
                       <Spinner size={isNarrow ? 'small' : 'medium'} />
                     ) : (
                       <Icon
@@ -221,7 +235,7 @@ export default function PublicationViewer({
                       { name: originalLanguage.nativeName }
                     )}
                     value={originalLanguage.code}
-                    onSelect={() => onTranslate(originalLanguage.code)}
+                    onSelect={() => onTranslate(originalLanguage)}
                   />
                 )}
                 {translatedLanguageList.length > 0 && (
@@ -231,9 +245,10 @@ export default function PublicationViewer({
                     {translatedLanguageList.map((item) => (
                       <SelectOption
                         key={item.code}
+                        after={item.isProcessing && <Spinner size='small' />}
                         label={item.nativeName}
                         value={item.code}
-                        onSelect={() => onTranslate(item.code)}
+                        onSelect={() => onTranslate(item)}
                       />
                     ))}
                   </SelectOptionGroup>
@@ -245,9 +260,11 @@ export default function PublicationViewer({
                     {pendingLanguageList.map((item) => (
                       <SelectOption
                         key={item.code}
+                        after={item.isProcessing && <Spinner size='small' />}
                         label={item.nativeName}
                         value={item.code}
-                        onSelect={() => onTranslate(item.code)}
+                        disabled={item.isProcessing}
+                        onSelect={() => onTranslate(item)}
                       />
                     ))}
                   </SelectOptionGroup>
@@ -348,8 +365,8 @@ export default function PublicationViewer({
           <CommonViewer item={publication} isNarrow={isNarrow} />
         </>
       ) : null}
-      {translatingLanguage && (
-        <AlertDialog open={true}>
+      {processingLanguage && (
+        <AlertDialog defaultOpen={true} onClose={onProcessingDialogClose}>
           <AlertDialogBody
             css={css`
               padding: 48px 56px;
@@ -367,11 +384,12 @@ export default function PublicationViewer({
                     '「{language}」正在翻译，请稍后，翻译好后可在你的发布列表里进行修改和提交。',
                 },
                 {
-                  language: translatingLanguage.nativeName,
+                  language: processingLanguage.nativeName,
                 }
               )}
             </div>
           </AlertDialogBody>
+          <AlertDialogClose />
         </AlertDialog>
       )}
     </div>

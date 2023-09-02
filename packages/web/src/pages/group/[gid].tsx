@@ -68,7 +68,8 @@ export default function GroupDetailPage() {
     type,
     switchType,
     publicationViewer: {
-      onTranslate: onPublicationTranslate,
+      open: publicationViewerOpen,
+      close: onPublicationViewerClose,
       ...publicationViewer
     },
     publicationList,
@@ -76,14 +77,20 @@ export default function GroupDetailPage() {
     onPublicationPublish,
     onPublicationArchive,
     onPublicationRestore,
+    onPublicationEdit,
     onPublicationDelete,
     onArchivedPublicationDialogShow,
-    creationViewer,
+    creationViewer: {
+      open: creationViewerOpen,
+      close: onCreationViewerClose,
+      ...creationViewer
+    },
     creationList,
     archivedCreationList,
     onCreationRelease,
     onCreationArchive,
     onCreationRestore,
+    onCreationEdit,
     onCreationDelete,
     onArchivedCreationDialogShow,
   } = useGroupDetailPage(pushToast, _gid, _cid, _language, _version, _type)
@@ -100,22 +107,24 @@ export default function GroupDetailPage() {
   )
 
   const handlePublicationDialogClose = useCallback(() => {
+    onPublicationViewerClose()
     navigate({
       pathname: generatePath(GROUP_DETAIL_PATH, { gid: _gid }),
       search: new URLSearchParams({
         type: GroupViewType.Publication,
       }).toString(),
     })
-  }, [_gid, navigate])
+  }, [_gid, navigate, onPublicationViewerClose])
 
   const handleCreationDialogClose = useCallback(() => {
+    onCreationViewerClose()
     navigate({
       pathname: generatePath(GROUP_DETAIL_PATH, { gid: _gid }),
       search: new URLSearchParams({
         type: GroupViewType.Creation,
       }).toString(),
     })
-  }, [_gid, navigate])
+  }, [_gid, navigate, onCreationViewerClose])
 
   const handlePublicationClick = useCallback(
     (item: PublicationOutput) => {
@@ -147,26 +156,6 @@ export default function GroupDetailPage() {
       })
     },
     [navigate]
-  )
-
-  const handlePublicationTranslate = useCallback(
-    async (language: string) => {
-      const publication = await onPublicationTranslate(language)
-      if (publication) {
-        navigate({
-          pathname: generatePath(GROUP_DETAIL_PATH, {
-            gid: Xid.fromValue(publication.gid).toString(),
-          }),
-          search: new URLSearchParams({
-            cid: Xid.fromValue(publication.cid).toString(),
-            language: publication.language,
-            version: publication.version.toString(),
-            type: GroupViewType.Publication,
-          }).toString(),
-        })
-      }
-    },
-    [navigate, onPublicationTranslate]
   )
 
   return (
@@ -285,6 +274,7 @@ export default function GroupDetailPage() {
                 <PublicationPart
                   {...publicationList}
                   onPublish={onPublicationPublish}
+                  onEdit={onPublicationEdit}
                   onArchive={onPublicationArchive}
                   onClick={handlePublicationClick}
                 />
@@ -292,6 +282,7 @@ export default function GroupDetailPage() {
               <TabPanel value={GroupViewType.Creation}>
                 <CreationPart
                   {...creationList}
+                  onEdit={onCreationEdit}
                   onRelease={onCreationRelease}
                   onArchive={onCreationArchive}
                   onClick={handleCreationClick}
@@ -301,23 +292,12 @@ export default function GroupDetailPage() {
           </div>
         </>
       ) : null}
-      {_gid &&
-        _cid &&
-        _language &&
-        _version &&
-        _type === GroupViewType.Publication && (
-          <LargeDialog
-            defaultOpen={true}
-            onClose={handlePublicationDialogClose}
-          >
-            <PublicationViewer
-              responsive={true}
-              onTranslate={handlePublicationTranslate}
-              {...publicationViewer}
-            />
-          </LargeDialog>
-        )}
-      {_gid && _cid && _type === GroupViewType.Creation && (
+      {publicationViewerOpen && (
+        <LargeDialog defaultOpen={true} onClose={handlePublicationDialogClose}>
+          <PublicationViewer responsive={true} {...publicationViewer} />
+        </LargeDialog>
+      )}
+      {creationViewerOpen && (
         <LargeDialog defaultOpen={true} onClose={handleCreationDialogClose}>
           <CreationViewer responsive={true} {...creationViewer} />
         </LargeDialog>
@@ -446,8 +426,10 @@ function PublicationPart({
   hasMore,
   loadMore,
   isPublishing,
+  isEditing,
   isArchiving,
   onPublish,
+  onEdit,
   onArchive,
   onClick,
 }: {
@@ -457,8 +439,10 @@ function PublicationPart({
   hasMore: boolean
   loadMore: () => void
   isPublishing: (item: PublicationOutput) => boolean
+  isEditing: (item: PublicationOutput) => boolean
   isArchiving: (item: PublicationOutput) => boolean
   onPublish: (item: PublicationOutput) => void
+  onEdit: (item: PublicationOutput) => void
   onArchive: (item: PublicationOutput) => void
   onClick: (item: PublicationOutput) => void
 }) {
@@ -481,9 +465,11 @@ function PublicationPart({
               key={buildPublicationKey(item)}
               item={item}
               isPublishing={isPublishing(item)}
+              isEditing={isEditing(item)}
               isArchiving={isArchiving(item)}
               onClick={onClick}
               onPublish={onPublish}
+              onEdit={onEdit}
               onArchive={onArchive}
             />
           ))}
@@ -564,8 +550,10 @@ function CreationPart({
   items,
   hasMore,
   loadMore,
+  isEditing,
   isReleasing,
   isArchiving,
+  onEdit,
   onRelease,
   onArchive,
   onClick,
@@ -575,8 +563,10 @@ function CreationPart({
   items: CreationOutput[]
   hasMore: boolean
   loadMore: () => void
+  isEditing: (item: CreationOutput) => boolean
   isReleasing: (item: CreationOutput) => boolean
   isArchiving: (item: CreationOutput) => boolean
+  onEdit: (item: CreationOutput) => void
   onRelease: (item: CreationOutput) => void
   onArchive: (item: CreationOutput) => void
   onClick: (item: CreationOutput) => void
@@ -599,9 +589,11 @@ function CreationPart({
             <CreationItem
               key={buildCreationKey(item)}
               item={item}
+              isEditing={isEditing(item)}
               isReleasing={isReleasing(item)}
               isArchiving={isArchiving(item)}
               onClick={onClick}
+              onEdit={onEdit}
               onRelease={onRelease}
               onArchive={onArchive}
             />
