@@ -1,3 +1,8 @@
+import {
+  EDIT_CREATION_PATH,
+  EDIT_PUBLICATION_PATH,
+  GROUP_DETAIL_PATH,
+} from '#/App'
 import { generatePublicationShareLink } from '#/shared'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
@@ -10,9 +15,12 @@ import {
   usePublicationList,
   type CreationOutput,
   type PublicationOutput,
+  type UILanguageItem,
 } from '@yiwen-ai/store'
 import { useCallback, useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
+import { generatePath, useNavigate } from 'react-router-dom'
+import { Xid } from 'xid-ts'
 import { useCreationViewer } from './useCreationViewer'
 import { usePublicationViewer } from './usePublicationViewer'
 
@@ -26,10 +34,11 @@ export function useGroupDetailPage(
   _gid: string | null | undefined,
   _cid: string | null | undefined,
   _language: string | null | undefined,
-  _version: number | string | null | undefined,
+  _version: string | null | undefined,
   _type: GroupViewType | null | undefined
 ) {
   const intl = useIntl()
+  const navigate = useNavigate()
   const config = useFetcherConfig()
 
   //#region group info & statistic
@@ -50,21 +59,36 @@ export function useGroupDetailPage(
   const [type, setType] = useState(_type ?? GroupViewType.Publication)
 
   //#region publication viewer & creation viewer
-  const { refresh: refreshPublication, ...publicationViewer } =
-    usePublicationViewer(pushToast, _gid, _cid, _language, _version)
+  const {
+    show: showPublicationViewer,
+    refresh: refreshPublicationViewer,
+    onTranslate,
+    ...publicationViewer
+  } = usePublicationViewer(pushToast)
 
-  const { refresh: refreshCreation, ...creationViewer } = useCreationViewer(
-    _gid,
-    _cid
-  )
+  const {
+    show: showCreationViewer,
+    refresh: refreshCreationViewer,
+    ...creationViewer
+  } = useCreationViewer()
 
   useEffect(() => {
-    if (type === GroupViewType.Publication) refreshPublication()
-  }, [refreshPublication, type])
+    if (
+      type === GroupViewType.Publication &&
+      _gid &&
+      _cid &&
+      _language &&
+      _version != null
+    ) {
+      showPublicationViewer(_gid, _cid, _language, _version)
+    }
+  }, [_cid, _gid, _language, _version, showPublicationViewer, type])
 
   useEffect(() => {
-    if (type === GroupViewType.Creation) refreshCreation()
-  }, [refreshCreation, type])
+    if (type === GroupViewType.Creation && _gid && _cid) {
+      showCreationViewer(_gid, _cid)
+    }
+  }, [_cid, _gid, showCreationViewer, type])
   //#endregion
 
   //#region publication list & creation list
@@ -106,6 +130,25 @@ export function useGroupDetailPage(
   //#endregion
 
   //#region actions
+  const onPublicationTranslate = useCallback(
+    async (language: UILanguageItem) => {
+      const publication = await onTranslate(language)
+      if (!publication) return
+      navigate({
+        pathname: generatePath(GROUP_DETAIL_PATH, {
+          gid: Xid.fromValue(publication.gid).toString(),
+        }),
+        search: new URLSearchParams({
+          cid: Xid.fromValue(publication.cid).toString(),
+          language: publication.language,
+          version: publication.version.toString(),
+          type: GroupViewType.Publication,
+        }).toString(),
+      })
+    },
+    [navigate, onTranslate]
+  )
+
   const onPublicationPublish = useCallback(
     async (item: PublicationOutput) => {
       try {
@@ -185,6 +228,34 @@ export function useGroupDetailPage(
       }
     },
     [intl, pushToast, refreshPublicationList, restorePublication]
+  )
+
+  const onPublicationEdit = useCallback(
+    async (item: PublicationOutput) => {
+      try {
+        if (item.status !== PublicationStatus.Review) {
+          await restorePublication(item)
+        }
+        navigate({
+          pathname: generatePath(EDIT_PUBLICATION_PATH, {
+            cid: Xid.fromValue(item.cid).toString(),
+          }),
+          search: new URLSearchParams({
+            gid: Xid.fromValue(item.gid).toString(),
+            language: item.language,
+            version: item.version.toString(),
+            type: GroupViewType.Publication,
+          }).toString(),
+        })
+      } catch (error) {
+        pushToast({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '修订失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [intl, navigate, pushToast, restorePublication]
   )
 
   const onPublicationDelete = useCallback(
@@ -285,6 +356,32 @@ export function useGroupDetailPage(
     [intl, pushToast, refreshCreationList, restoreCreation]
   )
 
+  const onCreationEdit = useCallback(
+    async (item: CreationOutput) => {
+      try {
+        if (item.status !== CreationStatus.Draft) {
+          await restoreCreation(item)
+        }
+        navigate({
+          pathname: generatePath(EDIT_CREATION_PATH, {
+            cid: Xid.fromValue(item.id).toString(),
+          }),
+          search: new URLSearchParams({
+            gid: Xid.fromValue(item.gid).toString(),
+            type: GroupViewType.Creation,
+          }).toString(),
+        })
+      } catch (error) {
+        pushToast({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '更新版本失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [intl, navigate, pushToast, restoreCreation]
+  )
+
   const onCreationDelete = useCallback(
     async (item: CreationOutput) => {
       try {
@@ -320,20 +417,31 @@ export function useGroupDetailPage(
     groupStatistic,
     type,
     switchType: setType,
-    publicationViewer,
-    publicationList,
+    publicationViewer: {
+      ...publicationViewer,
+      onTranslate: onPublicationTranslate,
+    },
+    publicationList: {
+      ...publicationList,
+      isEditing: publicationList.isRestoring,
+    },
     archivedPublicationList,
     onPublicationPublish,
     onPublicationArchive,
     onPublicationRestore,
+    onPublicationEdit,
     onPublicationDelete,
     onArchivedPublicationDialogShow,
     creationViewer,
-    creationList,
+    creationList: {
+      ...creationList,
+      isEditing: creationList.isRestoring,
+    },
     archivedCreationList,
     onCreationRelease,
     onCreationArchive,
     onCreationRestore,
+    onCreationEdit,
     onCreationDelete,
     onArchivedCreationDialogShow,
   } as const

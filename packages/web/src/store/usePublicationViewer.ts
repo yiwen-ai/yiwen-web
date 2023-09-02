@@ -1,6 +1,7 @@
 import { generatePublicationShareLink } from '#/shared'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
+  PublicationJobStatus,
   toMessage,
   useCreationCollectionList,
   useFetcherConfig,
@@ -8,34 +9,53 @@ import {
   useLanguageProcessor,
   useMyGroupList,
   usePublication,
-  useTranslatePublication,
   useTranslatedPublicationList,
   type Language,
+  type UILanguageItem,
 } from '@yiwen-ai/store'
+import { isTruthy } from '@yiwen-ai/util'
 import { uniq } from 'lodash-es'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
+import { Xid } from 'xid-ts'
 
-export function usePublicationViewer(
-  pushToast: ToastAPI['pushToast'],
-  _gid: string | null | undefined,
-  _cid: string | null | undefined,
-  _language: string | null | undefined,
-  _version: number | string | null | undefined
-) {
+interface Params {
+  open: boolean
+  _gid: string | null | undefined
+  _cid: string | null | undefined
+  _language: string | null | undefined
+  _version: number | null | undefined
+}
+
+export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
+
+  const [{ open, _gid, _cid, _language, _version }, setParams] =
+    useState<Params>({
+      open: false,
+      _gid: undefined,
+      _cid: undefined,
+      _language: undefined,
+      _version: undefined,
+    })
 
   //#region fetch
   const {
-    publication,
-    error,
     isLoading,
+    error,
+    publication,
     refresh: refreshPublication,
   } = usePublication(_gid, _cid, _language, _version)
+  const originalLanguageCode = publication?.from_language
+
   const {
-    publicationList: translatedPublicationList,
-    refresh: refreshTranslatedPublicationList,
-  } = useTranslatedPublicationList(_gid, _cid)
+    translatedList,
+    processingList,
+    refreshTranslatedList,
+    refreshProcessingList,
+    translate,
+  } = useTranslatedPublicationList(_gid, _cid, originalLanguageCode, _version)
+
   const {
     refresh: refreshCollectionList,
     isAdded: _isFavorite,
@@ -44,102 +64,153 @@ export function usePublicationViewer(
     add: _addFavorite,
     remove: _removeFavorite,
   } = useCreationCollectionList(_cid)
+
   const { languageList } = useLanguageList()
-  const { defaultGroup: { id: defaultGroupId } = {}, refreshDefaultGroup } =
-    useMyGroupList()
 
-  const refresh = useCallback(async () => {
-    const [publication] = await Promise.all([
-      refreshPublication(),
-      refreshTranslatedPublicationList(),
-      refreshCollectionList(),
-      refreshDefaultGroup(),
-    ])
-    return publication
-  }, [
-    refreshCollectionList,
-    refreshDefaultGroup,
-    refreshPublication,
-    refreshTranslatedPublicationList,
-  ])
-  //#endregion
-
-  //#region language
   const translatedLanguageCodeList = useMemo(() => {
-    if (!translatedPublicationList) return undefined
+    if (!translatedList) return undefined
+    return uniq(translatedList.map((item) => item.language))
+  }, [translatedList])
+
+  const processingLanguageCodeList = useMemo(() => {
+    if (!_cid || !processingList) return undefined
+    const cid = Xid.fromValue(_cid)
     return uniq(
-      translatedPublicationList.map((publication) => publication.language)
+      processingList
+        .filter((item) => item.status === PublicationJobStatus.Processing)
+        .map((item) => item.publication)
+        .filter(isTruthy)
+        .filter((item) => cid.equals(Xid.fromValue(item.cid)))
+        .map((item) => item.language)
     )
-  }, [translatedPublicationList])
+  }, [_cid, processingList])
 
   const {
-    currentLanguage,
     originalLanguage,
+    currentLanguage,
     translatedLanguageList,
     pendingLanguageList,
   } = useLanguageProcessor(
     languageList,
-    _language,
-    publication?.from_language,
-    translatedLanguageCodeList
+    originalLanguageCode, // original language
+    _language, // current language
+    translatedLanguageCodeList,
+    processingLanguageCodeList
   )
+
+  const show = useCallback(
+    (
+      _gid: Uint8Array | string | null | undefined,
+      _cid: Uint8Array | string | null | undefined,
+      _language: string | null | undefined,
+      _version: number | string | null | undefined
+    ) => {
+      setParams({
+        open: true,
+        _gid: _gid != null ? Xid.fromValue(_gid).toString() : undefined,
+        _cid: _cid != null ? Xid.fromValue(_cid).toString() : undefined,
+        _language,
+        _version: _version != null ? Number(_version) : undefined,
+      })
+    },
+    []
+  )
+
+  const close = useCallback(() => {
+    setParams({
+      open: false,
+      _gid: undefined,
+      _cid: undefined,
+      _language: undefined,
+      _version: undefined,
+    })
+  }, [])
+
+  const refresh = useCallback(async () => {
+    const [publication] = await Promise.all([
+      refreshPublication(),
+      refreshTranslatedList(),
+      refreshProcessingList(),
+      refreshCollectionList(),
+    ])
+    return publication
+  }, [
+    refreshCollectionList,
+    refreshProcessingList,
+    refreshPublication,
+    refreshTranslatedList,
+  ])
+
+  useEffect(() => {
+    open && refresh()
+  }, [open, refresh])
   //#endregion
 
   //#region translate
-  const [translatingLanguage, setTranslatingLanguage] = useState(
+  const [processingLanguage, setProcessingLanguage] = useState(
     undefined as Language | undefined
   )
 
-  const translate = useTranslatePublication(
-    _gid,
-    _cid,
-    publication?.from_language,
-    _version
-  )
+  const processingControllerRef = useRef<AbortController | undefined>()
+
+  const { refreshDefaultGroup } = useMyGroupList()
 
   const onTranslate = useCallback(
-    async (language: string) => {
-      const version = Number(_version)
-      let publication = translatedPublicationList?.find(
-        (item) => item.language === language && item.version === version
+    async (lang: UILanguageItem) => {
+      const language = lang.code
+      let publication = translatedList?.find(
+        (item) => item.language === language && item.version === _version
       )
       if (!publication) {
-        publication = translatedPublicationList
+        publication = translatedList
           ?.filter((item) => item.language === language)
           .sort((a, b) => b.version - a.version)[0] // latest version
       }
       if (!publication) {
+        const controller = new AbortController()
+        processingControllerRef.current?.abort()
+        processingControllerRef.current = controller
         try {
-          setTranslatingLanguage(
-            languageList?.find(({ code }) => code === language)
+          setProcessingLanguage(lang)
+          const gid = (await refreshDefaultGroup())?.id
+          publication = await translate(gid, language, controller.signal)
+          show(
+            publication.gid,
+            publication.cid,
+            publication.language,
+            publication.version
           )
-          publication = await translate(defaultGroupId, language)
-          refreshTranslatedPublicationList().catch(() => {
-            // ignore
-          })
         } catch (error) {
-          pushToast({
-            type: 'warning',
-            message: intl.formatMessage({ defaultMessage: '翻译失败' }),
-            description: toMessage(error),
-          })
+          if (!controller.signal.aborted) {
+            pushToast({
+              type: 'warning',
+              message: intl.formatMessage({ defaultMessage: '翻译失败' }),
+              description: toMessage(error),
+            })
+          }
         } finally {
-          setTranslatingLanguage(undefined)
+          if (!controller.signal.aborted) {
+            setProcessingLanguage(undefined)
+          }
         }
       }
       return publication
     },
     [
       _version,
-      defaultGroupId,
       intl,
-      languageList,
       pushToast,
-      refreshTranslatedPublicationList,
+      refreshDefaultGroup,
+      show,
       translate,
-      translatedPublicationList,
+      translatedList,
     ]
   )
+
+  const onProcessingDialogClose = useCallback(() => {
+    setProcessingLanguage(undefined)
+    processingControllerRef.current?.abort()
+  }, [])
   //#endregion
 
   //#region share
@@ -211,13 +282,17 @@ export function usePublicationViewer(
     isLoading,
     error,
     publication,
+    open,
+    show,
+    close,
     refresh,
     currentLanguage,
     originalLanguage,
     translatedLanguageList,
     pendingLanguageList,
-    translatingLanguage,
+    processingLanguage,
     onTranslate,
+    onProcessingDialogClose,
     shareLink,
     onShare,
     isFavorite,

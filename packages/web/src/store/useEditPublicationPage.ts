@@ -13,7 +13,7 @@ export function useEditPublicationPage(
   _gid: string | null | undefined,
   _cid: string | null | undefined,
   _language: string | null | undefined,
-  _version: number | string | null | undefined
+  _version: string | null | undefined
 ) {
   const { updatePublication } = usePublicationAPI()
 

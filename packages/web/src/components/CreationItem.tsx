@@ -1,5 +1,3 @@
-import { EDIT_CREATION_PATH } from '#/App'
-import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
   Button,
@@ -13,45 +11,36 @@ import { CreationStatus, type CreationOutput } from '@yiwen-ai/store'
 import { mergeClickProps, stopPropagation, useClick } from '@yiwen-ai/util'
 import { useCallback, type HTMLAttributes } from 'react'
 import { useIntl } from 'react-intl'
-import { generatePath, useNavigate } from 'react-router-dom'
-import { Xid } from 'xid-ts'
 import CreationItemStatus from './CreationItemStatus'
 import { IconMoreAnchor } from './IconMoreAnchor'
 
 export default function CreationItem({
   item,
+  isEditing,
   isReleasing,
   isArchiving,
   onClick,
+  onEdit,
   onRelease,
   onArchive,
 }: {
   item: CreationOutput
+  isEditing: boolean
   isReleasing: boolean
   isArchiving: boolean
   onClick: (item: CreationOutput) => void
+  onEdit: (item: CreationOutput) => void
   onRelease: (item: CreationOutput) => void
   onArchive: (item: CreationOutput) => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
-  const navigate = useNavigate()
-  const disabled = isReleasing || isArchiving
+  const disabled = isEditing || isReleasing || isArchiving
   const hasReleases = item.version >= 2
   const handleClickProps = useClick<HTMLAttributes<HTMLDivElement>>({}, () =>
     onClick(item)
   )
-  const handleEdit = useCallback(() => {
-    navigate({
-      pathname: generatePath(EDIT_CREATION_PATH, {
-        cid: Xid.fromValue(item.id).toString(),
-      }),
-      search: new URLSearchParams({
-        gid: Xid.fromValue(item.gid).toString(),
-        type: GroupViewType.Creation,
-      }).toString(),
-    })
-  }, [item.gid, item.id, navigate])
+  const handleEdit = useCallback(() => onEdit(item), [item, onEdit])
   const handleRelease = useCallback(() => onRelease(item), [item, onRelease])
   const handleArchive = useCallback(() => onArchive(item), [item, onArchive])
 
@@ -117,7 +106,9 @@ export default function CreationItem({
           disabled={disabled}
           onClick={handleEdit}
         >
-          {hasReleases ? (
+          {isEditing ? (
+            <Spinner size={12} />
+          ) : hasReleases ? (
             <Icon name='refresh' size='small' />
           ) : (
             <Icon name='edit' size='small' />

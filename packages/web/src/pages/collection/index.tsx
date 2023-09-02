@@ -35,9 +35,11 @@ export default function CollectionPage() {
     isRemoving,
     onView,
     onRemove,
-    publicationViewer,
-    publicationViewerOpen,
-    onPublicationViewerClose,
+    publicationViewer: {
+      open: publicationViewerOpen,
+      close: onPublicationViewerClose,
+      ...publicationViewer
+    },
   } = useCollectionPage(pushToast)
 
   return (
