@@ -128,7 +128,7 @@ export const TextField = memo(
           ref={ref}
           css={css`
             flex: 1;
-            max-width: 100%;
+            width: 100%;
             border: none;
             outline: none;
             background: none;

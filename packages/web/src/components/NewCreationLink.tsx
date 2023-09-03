@@ -4,7 +4,7 @@ import { StructuredTileButton } from '@yiwen-ai/component'
 import { useIntl } from 'react-intl'
 import { Link, type LinkProps } from 'react-router-dom'
 
-export default function LinkToCreatePage(props: Omit<LinkProps, 'to'>) {
+export default function NewCreationLink(props: Omit<LinkProps, 'to'>) {
   const intl = useIntl()
 
   return (

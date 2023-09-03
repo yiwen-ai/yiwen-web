@@ -1,5 +1,5 @@
 import Loading from '#/components/Loading'
-import { MAX_WIDTH } from '#/shared'
+import { BREAKPOINT, MAX_WIDTH } from '#/shared'
 import { type GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import { type Editor, type JSONContent } from '@tiptap/core'
@@ -7,6 +7,7 @@ import { RichTextEditor, Select, TextareaAutosize } from '@yiwen-ai/component'
 import { type CreationDraft, type PublicationDraft } from '@yiwen-ai/store'
 import { useCallback, useRef } from 'react'
 import { useIntl } from 'react-intl'
+import { useResizeDetector } from 'react-resize-detector'
 
 export default function CommonEditor({
   type,
@@ -24,6 +25,8 @@ export default function CommonEditor({
   const intl = useIntl()
   const theme = useTheme()
   const editorRef = useRef<Editor>(null)
+  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
+  const isNarrow = width <= BREAKPOINT.small
 
   const handleTitleChange = useCallback(
     (ev: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -52,6 +55,7 @@ export default function CommonEditor({
   ) : (
     <>
       <div
+        ref={ref}
         css={css`
           flex: 1;
           padding: 0 24px;
@@ -81,6 +85,10 @@ export default function CommonEditor({
               font-size: 42px;
               font-weight: 600;
               line-height: 60px;
+              ${isNarrow &&
+              css`
+                padding-top: 24px;
+              `}
             `}
           />
           <RichTextEditor
@@ -92,6 +100,10 @@ export default function CommonEditor({
               .ProseMirror {
                 padding-top: 24px;
                 padding-bottom: 100px;
+                ${isNarrow &&
+                css`
+                  padding-bottom: 24px;
+                `}
               }
             `}
           />

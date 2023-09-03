@@ -11,7 +11,7 @@ import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import { IconMoreAnchor } from './IconMoreAnchor'
 
-export default function CompactCreationItem({
+export default function CreationCompactItem({
   item,
   isRestoring,
   isDeleting,

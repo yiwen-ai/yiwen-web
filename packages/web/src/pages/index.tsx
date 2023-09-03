@@ -1,95 +1,183 @@
-import { SEARCH_PATH } from '#/App'
-import LinkToCreatePage from '#/components/LinkToCreatePage'
-import RecommendedAndFavorited from '#/components/RecommendedAndFavorited'
+import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
+import CollectionSection from '#/components/CollectionSection'
+import LargeDialog from '#/components/LargeDialog'
+import PublicationViewer from '#/components/PublicationViewer'
+import { BREAKPOINT } from '#/shared'
+import { useHomePage } from '#/store/useHomePage'
 import { css, useTheme } from '@emotion/react'
-import { Brand, Icon, TextField } from '@yiwen-ai/component'
-import { useCallback } from 'react'
+import {
+  Brand,
+  Button,
+  Icon,
+  TextField,
+  TileButton,
+  useToast,
+} from '@yiwen-ai/component'
 import { useIntl } from 'react-intl'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+
+const LIMIT = 6
 
 export default function Home() {
   const intl = useIntl()
   const theme = useTheme()
-  const navigate = useNavigate()
+  const { renderToastContainer, pushToast } = useToast()
 
-  const onSearch = useCallback(
-    (keyword: string) => {
-      keyword = keyword.trim()
-      if (!keyword) return
-      navigate({
-        pathname: SEARCH_PATH,
-        search: new URLSearchParams({ q: keyword }).toString(),
-      })
+  const {
+    onSearch,
+    onView,
+    publicationViewer: {
+      open: publicationViewerOpen,
+      close: onPublicationViewerClose,
+      ...publicationViewer
     },
-    [navigate]
-  )
+    collectionList,
+  } = useHomePage(pushToast)
 
   return (
-    <div
-      css={css`
-        max-width: 856px;
-        margin: 120px auto;
-        padding: 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 32px;
-      `}
-    >
-      <div>
-        <Brand
-          size='large'
-          css={css`
-            padding: 0 20px;
-          `}
-        />
+    <>
+      {renderToastContainer()}
+      <SetHeaderProps>
         <div
           css={css`
-            margin-top: 8px;
-            padding: 0 20px;
-            ${theme.typography.bodyBold}
-            color: ${theme.color.body.secondary};
+            flex: 1;
+            margin: 0 36px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 36px;
           `}
         >
-          {intl.formatMessage({
-            defaultMessage: '搜你想要的内容，用你想要的语言来阅读',
-          })}
+          <Link to={NEW_CREATION_PATH}>
+            <Button color='primary' variant='text'>
+              {intl.formatMessage({ defaultMessage: '创作内容' })}
+            </Button>
+          </Link>
         </div>
-        <TextField
-          size='large'
-          before={<Icon name='search' />}
-          placeholder={intl.formatMessage({
-            defaultMessage: '搜索 yiwen.ai 的内容',
-          })}
-          onSearch={onSearch}
-          css={css`
-            height: 54px;
-            margin-top: 16px;
-            padding-left: 20px;
-            padding-right: 20px;
-            border-radius: 14px;
-            display: flex;
-            gap: 12px;
-          `}
-        />
-      </div>
+      </SetHeaderProps>
       <div
         css={css`
+          width: 100%;
+          max-width: calc(820px + 24px * 2);
+          margin: 120px auto;
+          padding: 0 24px;
+          box-sizing: border-box;
           display: flex;
           flex-direction: column;
-          gap: 112px;
         `}
       >
-        <RecommendedAndFavorited
+        <div
           css={css`
-            padding: 0 20px;
+            padding: 0 32px;
           `}
-        />
-        <LinkToCreatePage
+        >
+          <Brand size='large' />
+          <div
+            css={css`
+              margin-top: 12px;
+              ${theme.typography.bodyBold}
+              color: ${theme.color.body.secondary};
+            `}
+          >
+            {intl.formatMessage({
+              defaultMessage: '搜你想要的内容，用你想要的语言来阅读',
+            })}
+          </div>
+          <div
+            css={css`
+              margin-top: 48px;
+            `}
+          >
+            <CollectionSection
+              isLoading={collectionList.isLoading}
+              items={collectionList.items.slice(0, LIMIT)}
+              onView={onView}
+            />
+          </div>
+        </div>
+        <div
           css={css`
-            align-self: center;
+            margin-top: 100px;
+            padding: 24px 36px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 24px 36px;
+            border-radius: 30px;
+            background: ${theme.color.button.tile.background};
           `}
-        />
+        >
+          <TextField
+            size='large'
+            before={<Icon name='search' />}
+            placeholder={intl.formatMessage({
+              defaultMessage: '搜索 yiwen.ai 的内容',
+            })}
+            onSearch={onSearch}
+            css={css`
+              flex: 1;
+              height: 48px;
+              padding: 0 20px;
+              border-radius: 20px;
+              background: ${theme.color.body.background};
+              @media (min-width: ${BREAKPOINT.small}px) {
+                :focus-within + a {
+                  display: none;
+                }
+              }
+            `}
+          />
+          <Link to={NEW_CREATION_PATH}>
+            <TileButton
+              css={css`
+                padding: unset;
+                border: unset;
+                gap: 16px;
+              `}
+            >
+              <div>
+                <div
+                  css={css`
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                  `}
+                >
+                  <span css={theme.typography.bodyBold}>
+                    {intl.formatMessage({
+                      defaultMessage: '我有内容，去创作',
+                    })}
+                  </span>
+                  <Icon name='lampon' size='small' />
+                </div>
+                <div
+                  css={css`
+                    ${theme.typography.tooltip}
+                    color: ${theme.color.body.secondary};
+                  `}
+                >
+                  {intl.formatMessage({
+                    defaultMessage:
+                      '获得语义检索分析，AI 以及众包翻译等更多权利',
+                  })}
+                </div>
+              </div>
+              <Icon
+                name='arrowcircleright'
+                css={css`
+                  opacity: 0.4;
+                `}
+              />
+            </TileButton>
+          </Link>
+        </div>
       </div>
-    </div>
+      {publicationViewerOpen && (
+        <LargeDialog defaultOpen={true} onClose={onPublicationViewerClose}>
+          <PublicationViewer responsive={true} {...publicationViewer} />
+        </LargeDialog>
+      )}
+    </>
   )
 }

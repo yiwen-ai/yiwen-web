@@ -1,6 +1,5 @@
 import { GROUP_DETAIL_PATH, NEW_CREATION_PATH, SetHeaderProps } from '#/App'
-import CompactCreationItem from '#/components/CompactCreationItem'
-import CompactPublicationItem from '#/components/CompactPublicationItem'
+import CreationCompactItem from '#/components/CreationCompactItem'
 import CreationItem from '#/components/CreationItem'
 import CreationViewer from '#/components/CreationViewer'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
@@ -10,6 +9,7 @@ import LoadMore from '#/components/LoadMore'
 import Loading from '#/components/Loading'
 import MediumDialog from '#/components/MediumDialog'
 import Placeholder from '#/components/Placeholder'
+import PublicationCompactItem from '#/components/PublicationCompactItem'
 import PublicationItem from '#/components/PublicationItem'
 import PublicationViewer from '#/components/PublicationViewer'
 import { MAX_WIDTH } from '#/shared'
@@ -474,8 +474,8 @@ function PublicationPart({
             />
           ))}
           <LoadMore
-            isLoadingMore={isLoading}
             hasMore={hasMore}
+            isLoadingMore={isLoading}
             onLoadMore={loadMore}
           />
         </>
@@ -517,11 +517,15 @@ function ArchivedPublicationPart({
       {!isLoading && error ? (
         <ErrorPlaceholder error={error} />
       ) : !isLoading && items.length === 0 ? (
-        <Placeholder />
+        <Placeholder
+          css={css`
+            margin: 12px;
+          `}
+        />
       ) : (
         <>
           {items.map((item) => (
-            <CompactPublicationItem
+            <PublicationCompactItem
               key={buildPublicationKey(item)}
               item={item}
               isRestoring={isRestoring(item)}
@@ -531,8 +535,8 @@ function ArchivedPublicationPart({
             />
           ))}
           <LoadMore
-            isLoadingMore={isLoading}
             hasMore={hasMore}
+            isLoadingMore={isLoading}
             onLoadMore={loadMore}
             css={css`
               margin-bottom: -24px;
@@ -599,8 +603,8 @@ function CreationPart({
             />
           ))}
           <LoadMore
-            isLoadingMore={isLoading}
             hasMore={hasMore}
+            isLoadingMore={isLoading}
             onLoadMore={loadMore}
           />
         </>
@@ -642,11 +646,15 @@ function ArchivedCreationPart({
       {!isLoading && error ? (
         <ErrorPlaceholder error={error} />
       ) : !isLoading && items.length === 0 ? (
-        <Placeholder />
+        <Placeholder
+          css={css`
+            margin: 12px;
+          `}
+        />
       ) : (
         <>
           {items.map((item) => (
-            <CompactCreationItem
+            <CreationCompactItem
               key={buildCreationKey(item)}
               item={item}
               isRestoring={isRestoring(item)}
@@ -656,8 +664,8 @@ function ArchivedCreationPart({
             />
           ))}
           <LoadMore
-            isLoadingMore={isLoading}
             hasMore={hasMore}
+            isLoadingMore={isLoading}
             onLoadMore={loadMore}
             css={css`
               margin-bottom: -24px;

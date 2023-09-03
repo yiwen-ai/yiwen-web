@@ -1,53 +1,25 @@
+import { SEARCH_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
-import {
-  useCollectionList,
-  useSearch,
-  type CollectionOutput,
-  type SearchDocument,
-  type SearchInput,
-} from '@yiwen-ai/store'
-import { toURLSearchParams } from '@yiwen-ai/util'
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { useDebounce } from 'use-debounce'
+import { useCollectionList, type CollectionOutput } from '@yiwen-ai/store'
+import { useCallback, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { usePublicationViewer } from './usePublicationViewer'
 
-export function useSearchPage(pushToast: ToastAPI['pushToast']) {
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  //#region params
-  const [keyword, setKeyword] = useState(searchParams.get('q')?.trim() ?? '')
-  const [debouncedKeyword] = useDebounce(keyword.trim(), 500)
-
-  const params = useMemo<Record<keyof SearchInput, string | null | undefined>>(
-    () => ({
-      q: debouncedKeyword,
-      language: undefined,
-      gid: undefined,
-    }),
-    [debouncedKeyword]
-  )
-  //#endregion
+export function useHomePage(pushToast: ToastAPI['pushToast']) {
+  const navigate = useNavigate()
 
   //#region search
-  const { isLoading, error, data, refresh } = useSearch(
-    params.q,
-    params.language,
-    params.gid
-  )
-
-  useEffect(() => {
-    refresh()
-  }, [refresh])
-
-  useEffect(() => {
-    setSearchParams(
-      toURLSearchParams({
-        ...params,
-        q: params.q || undefined,
+  const onSearch = useCallback(
+    (keyword: string) => {
+      keyword = keyword.trim()
+      if (!keyword) return
+      navigate({
+        pathname: SEARCH_PATH,
+        search: new URLSearchParams({ q: keyword }).toString(),
       })
-    )
-  }, [params, setSearchParams])
+    },
+    [navigate]
+  )
   //#endregion
 
   //#region publication viewer
@@ -60,7 +32,7 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   } = usePublicationViewer(pushToast)
 
   const onView = useCallback(
-    (item: SearchDocument | CollectionOutput) => {
+    (item: CollectionOutput) => {
       showPublicationViewer(item.gid, item.cid, item.language, item.version)
     },
     [showPublicationViewer]
@@ -90,11 +62,7 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   //#endregion
 
   return {
-    isLoading,
-    error,
-    data,
-    keyword,
-    setKeyword,
+    onSearch,
     onView,
     publicationViewer: {
       onAddFavorite: handlePublicationAddFavorite,

@@ -17,7 +17,7 @@ export default function DefaultGroupPage() {
   } = useMyGroupList()
 
   useEffect(() => {
-    refreshDefaultGroup().catch(() => {})
+    refreshDefaultGroup()
   }, [refreshDefaultGroup])
 
   return (

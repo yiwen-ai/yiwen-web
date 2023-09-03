@@ -29,8 +29,8 @@ export default function CollectionPage() {
     isLoading,
     error,
     items,
-    isLoadingMore,
     hasMore,
+    isLoadingMore,
     loadMore,
     isRemoving,
     onView,
@@ -71,8 +71,8 @@ export default function CollectionPage() {
               />
             ))}
             <LoadMore
-              isLoadingMore={isLoadingMore}
               hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
               onLoadMore={loadMore}
             />
           </>
