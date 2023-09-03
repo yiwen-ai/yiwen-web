@@ -17,7 +17,7 @@ export interface CollectionOutput {
   cid: Uint8Array
   language: string
   version: number
-  updated_at?: number
+  updated_at: number
   title?: string
   labels?: string[]
   group_info?: GroupInfo
