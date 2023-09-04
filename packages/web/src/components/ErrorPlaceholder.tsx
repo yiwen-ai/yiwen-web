@@ -56,21 +56,22 @@ export default function ErrorPlaceholder({
       <div
         css={css`
           margin-top: 24px;
+          ${theme.typography.h1}
         `}
       >
         {title}
       </div>
       {description && (
-        <div
+        <pre
           css={css`
-            margin-top: 12px;
-            ${theme.typography.tooltip}
+            margin-top: 20px;
             color: ${theme.color.body.secondary};
-            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            word-break: break-all;
           `}
         >
-          {description}
-        </div>
+          <code>{description}</code>
+        </pre>
       )}
       <Link
         to='/'

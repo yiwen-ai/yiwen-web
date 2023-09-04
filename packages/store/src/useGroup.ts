@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
-import { RoleLevel, type GroupInfo, type UserInfo } from './common'
+import { RoleLevel, type GroupInfo, type Page, type UserInfo } from './common'
 import { useFetcher } from './useFetcher'
 
 export interface Group {
@@ -61,10 +61,31 @@ export function useGroupAPI() {
     return request.post<{ result: Group[] }>(`${path}/list_my`)
   }, [request])
 
+  const readFollowedGroupList = useCallback(() => {
+    return request.post<Page<Group>>(`${path}/list_following`)
+  }, [request])
+
+  const followGroup = useCallback(
+    (body: QueryIdCn) => {
+      return request.patch<{ result: boolean }>(`${path}/follow`, body)
+    },
+    [request]
+  )
+
+  const unfollowGroup = useCallback(
+    (body: QueryIdCn) => {
+      return request.patch<{ result: boolean }>(`${path}/unfollow`, body)
+    },
+    [request]
+  )
+
   return {
     readGroupInfo,
     readGroupStatistic,
     readMyGroupList,
+    readFollowedGroupList,
+    followGroup,
+    unfollowGroup,
   } as const
 }
 

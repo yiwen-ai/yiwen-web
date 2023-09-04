@@ -17,8 +17,8 @@ export interface CollectionOutput {
   cid: Uint8Array
   language: string
   version: number
-  updated_at?: number
-  title?: string
+  updated_at: number
+  title: string
   labels?: string[]
   group_info?: GroupInfo
 }
@@ -315,11 +315,10 @@ export function useCollectionList() {
     isLoading,
     error,
     items,
-    isLoadingMore: isValidating,
     hasMore,
+    isLoadingMore: isValidating,
     loadMore,
     refresh,
-    mutate,
     isRemoving,
     remove,
   } as const

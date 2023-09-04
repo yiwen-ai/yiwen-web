@@ -3,14 +3,14 @@ import { Button, Spinner } from '@yiwen-ai/component'
 import { useIntl } from 'react-intl'
 
 interface LoadMoreProps extends React.HTMLAttributes<HTMLDivElement> {
-  isLoadingMore: boolean
   hasMore: boolean
+  isLoadingMore: boolean
   onLoadMore: React.MouseEventHandler<HTMLButtonElement>
 }
 
 export default function LoadMore({
-  isLoadingMore,
   hasMore,
+  isLoadingMore,
   onLoadMore,
   ...props
 }: LoadMoreProps) {

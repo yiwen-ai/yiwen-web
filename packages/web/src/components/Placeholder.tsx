@@ -1,22 +1,27 @@
-import { css, useTheme } from '@emotion/react'
+import src from '#/assets/placeholder.svg'
+import { css } from '@emotion/react'
+import { useId } from 'react'
 import { useIntl } from 'react-intl'
 
-export default function Placeholder() {
+export default function Placeholder(
+  props: React.HTMLAttributes<HTMLDivElement>
+) {
   const intl = useIntl()
-  const theme = useTheme()
+  const id = useId()
 
   return (
     <div
+      {...props}
       css={css`
-        height: 80px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        color: ${theme.color.body.secondary};
+        gap: 24px;
       `}
     >
-      {intl.formatMessage({ defaultMessage: '暂无数据，请稍后再试' })}
+      <img aria-labelledby={id} src={src} width={100} />
+      <span id={id}>{intl.formatMessage({ defaultMessage: '暂无内容' })}</span>
     </div>
   )
 }

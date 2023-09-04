@@ -29,8 +29,8 @@ export default function CollectionPage() {
     isLoading,
     error,
     items,
-    isLoadingMore,
     hasMore,
+    isLoadingMore,
     loadMore,
     isRemoving,
     onView,
@@ -71,8 +71,8 @@ export default function CollectionPage() {
               />
             ))}
             <LoadMore
-              isLoadingMore={isLoadingMore}
               hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
               onLoadMore={loadMore}
             />
           </>
@@ -126,10 +126,6 @@ function CollectionItem({
       onKeyDown={handleKeyDown}
       css={css`
         padding: 16px 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
         border-bottom: 1px solid ${theme.color.divider.primary};
         cursor: pointer;
         :hover {
@@ -139,37 +135,55 @@ function CollectionItem({
     >
       <div
         css={css`
-          ${theme.typography.h2}
-          ${textEllipsis}
-        `}
-      >
-        {item.title}
-      </div>
-      <div
-        role='none'
-        onClick={stopPropagation}
-        onKeyDown={stopPropagation}
-        css={css`
           display: flex;
           align-items: center;
-          color: ${theme.color.body.primary};
+          justify-content: space-between;
+          gap: 24px;
         `}
       >
-        <Menu anchor={IconMoreAnchor}>
-          <MenuItem
-            before={
-              isRemoving ? (
-                <Spinner size='small' />
-              ) : (
-                <Icon name='heart' size='small' />
-              )
-            }
-            label={intl.formatMessage({ defaultMessage: '取消收藏' })}
-            disabled={isRemoving}
-            onClick={handleRemove}
-            closeOnClick={false}
-          />
-        </Menu>
+        <div
+          css={css`
+            ${theme.typography.h2}
+            ${textEllipsis}
+          `}
+        >
+          {item.title}
+        </div>
+        <div
+          role='none'
+          onClick={stopPropagation}
+          onKeyDown={stopPropagation}
+          css={css`
+            display: flex;
+            align-items: center;
+            color: ${theme.color.body.primary};
+          `}
+        >
+          <Menu anchor={IconMoreAnchor}>
+            <MenuItem
+              before={
+                isRemoving ? (
+                  <Spinner size='small' />
+                ) : (
+                  <Icon name='heart' size='small' />
+                )
+              }
+              label={intl.formatMessage({ defaultMessage: '取消收藏' })}
+              disabled={isRemoving}
+              onClick={handleRemove}
+              closeOnClick={false}
+            />
+          </Menu>
+        </div>
+      </div>
+      <div
+        css={css`
+          margin-top: 4px;
+          color: ${theme.color.body.secondary};
+          ${theme.typography.tooltip}
+        `}
+      >
+        {new Date(item.updated_at).toLocaleDateString()}
       </div>
     </div>
   )

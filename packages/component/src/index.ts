@@ -21,6 +21,7 @@ export {
   type ButtonVariant,
   type IconButtonProps,
 } from './Button'
+export { Clickable } from './Clickable'
 export {
   Dialog,
   DialogBody,

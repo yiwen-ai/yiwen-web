@@ -4,11 +4,15 @@ import { useCallback, useEffect } from 'react'
 import { usePublicationViewer } from './usePublicationViewer'
 
 export function useCollectionPage(pushToast: ToastAPI['pushToast']) {
-  const { refresh, mutate, remove, ...collectionList } = useCollectionList()
+  const {
+    refresh: refreshCollectionList,
+    remove,
+    ...collectionList
+  } = useCollectionList()
 
   useEffect(() => {
-    refresh().catch(() => {})
-  }, [refresh])
+    refreshCollectionList()
+  }, [refreshCollectionList])
 
   const {
     show: showPublicationViewer,
@@ -32,13 +36,13 @@ export function useCollectionPage(pushToast: ToastAPI['pushToast']) {
 
   const handlePublicationAddFavorite = useCallback(async () => {
     await onPublicationAddFavorite()
-    refresh()
-  }, [onPublicationAddFavorite, refresh])
+    refreshCollectionList()
+  }, [onPublicationAddFavorite, refreshCollectionList])
 
   const handlePublicationRemoveFavorite = useCallback(async () => {
     await onPublicationRemoveFavorite()
-    refresh()
-  }, [onPublicationRemoveFavorite, refresh])
+    refreshCollectionList()
+  }, [onPublicationRemoveFavorite, refreshCollectionList])
 
   return {
     ...collectionList,

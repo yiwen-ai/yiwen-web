@@ -52,7 +52,8 @@ export function useGroupDetailPage(
   } = useGroup(_gid)
 
   useEffect(() => {
-    Promise.all([refreshGroupInfo(), refreshGroupStatistic()]).catch(() => {})
+    refreshGroupInfo()
+    refreshGroupStatistic()
   }, [refreshGroupInfo, refreshGroupStatistic])
   //#endregion
 

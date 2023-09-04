@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
+import { Xid } from 'xid-ts'
 import { type GroupInfo } from './common'
 import { RequestMethod, useFetcher } from './useFetcher'
 
@@ -32,10 +33,10 @@ export function useSearchAPI() {
 
   const search = useCallback(
     (
-      params: Record<keyof SearchInput, string | undefined>,
+      params: Record<keyof SearchInput, string | null | undefined>,
       signal: AbortSignal | null | undefined = null
     ) => {
-      return request<{ result: SearchOutput }>(`${path}`, params, {
+      return request<{ result: SearchOutput }>(path, params, {
         method: RequestMethod.GET,
         signal,
       })
@@ -49,24 +50,30 @@ export function useSearchAPI() {
 }
 
 export function useSearch(
-  params: Record<keyof SearchInput, string | undefined>
+  _keyword: string | null | undefined,
+  _language: string | null | undefined,
+  _gid: Uint8Array | string | null | undefined
 ) {
   const { search } = useSearchAPI()
 
   const getKey = useCallback(() => {
-    if (!params.q) return null
+    if (_keyword == null) return null
+    const params: Record<keyof SearchInput, string | null | undefined> = {
+      q: _keyword,
+      language: _language,
+      gid: _gid ? Xid.fromValue(_gid).toString() : undefined,
+    }
     return [path, params] as const
-  }, [params])
+  }, [_gid, _keyword, _language])
 
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
-    ([, params]) => search(params),
+    ([path, params]) => search(params),
     { revalidateOnMount: false } as SWRConfiguration
   )
 
   const refresh = useCallback(
-    async (data?: ReturnType<typeof search>) =>
-      getKey() && (await mutate(data, !data))?.result,
+    async () => getKey() && (await mutate())?.result,
     [getKey, mutate]
   )
 

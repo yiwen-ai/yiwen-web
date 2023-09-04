@@ -58,4 +58,9 @@ export {
   type PublicationDraft,
   type PublicationOutput,
 } from './usePublication'
-export { useSearch, useSearchAPI, type SearchDocument } from './useSearch'
+export {
+  useSearch,
+  useSearchAPI,
+  type SearchDocument,
+  type SearchInput,
+} from './useSearch'

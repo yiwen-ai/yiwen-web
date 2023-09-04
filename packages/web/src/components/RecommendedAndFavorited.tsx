@@ -3,7 +3,7 @@ import { Icon, Spinner, type IconName } from '@yiwen-ai/component'
 import { useIsMounted } from '@yiwen-ai/util'
 import { useCallback, useState, type HTMLAttributes } from 'react'
 import { useIntl } from 'react-intl'
-import useResizeObserver from 'use-resize-observer'
+import { useResizeDetector } from 'react-resize-detector'
 
 enum Tab {
   Recommended,
@@ -14,7 +14,7 @@ export default function RecommendedAndFavorited(
   props: HTMLAttributes<HTMLDivElement>
 ) {
   const intl = useIntl()
-  const { ref, width = 0 } = useResizeObserver<HTMLDivElement>()
+  const { ref, width = 0 } = useResizeDetector<HTMLDivElement>()
   const [tab, setTab] = useState(Tab.Recommended)
   const isMounted = useIsMounted()
   const [isLoading, setIsLoading] = useState(false)

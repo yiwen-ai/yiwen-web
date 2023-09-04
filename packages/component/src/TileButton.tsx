@@ -19,6 +19,8 @@ export const TileButton = memo(
         ref={ref}
         css={css`
           padding: 12px 24px;
+          display: flex;
+          align-items: center;
           text-align: left;
           border-radius: 12px;
           border: 1px solid ${colorCSS.border};
@@ -53,17 +55,23 @@ export const StructuredTileButton = memo(function StructuredTileButton({
   const theme = useTheme()
 
   return (
-    <TileButton {...props}>
+    <TileButton
+      {...props}
+      css={css`
+        flex-direction: column;
+        align-items: stretch;
+      `}
+    >
       <div
         css={css`
           display: flex;
-          align-items: ${description ? 'flex-start' : 'center'};
+          align-items: center;
           justify-content: space-between;
           gap: 24px;
         `}
       >
         <span css={theme.typography.bodyBold}>{text}</span>
-        <Icon name={icon} size='small' />
+        <Icon name={icon} size='medium' />
       </div>
       {description && (
         <div
