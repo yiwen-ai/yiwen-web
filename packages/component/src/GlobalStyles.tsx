@@ -35,10 +35,13 @@ export function GlobalStyles() {
 
         button {
           padding: 0;
+          display: inline-flex;
           border: none;
           background: none;
+          color: inherit;
           font-size: inherit;
           line-height: inherit;
+          cursor: pointer;
         }
 
         input,
