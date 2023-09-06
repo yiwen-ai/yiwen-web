@@ -118,6 +118,7 @@ export const MenuItem = memo(
     ) => (
       <li
         role='menuitem'
+        tabIndex={0}
         aria-disabled={disabled || readOnly}
         data-disabled={disabled ? '' : undefined}
         data-readonly={readOnly ? '' : undefined}

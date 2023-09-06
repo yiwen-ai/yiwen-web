@@ -10,6 +10,6 @@ export default defineConfig({
     react({ babel: { rootMode: 'upward', configFile: true } }),
     legacy(),
     checker({ typescript: true }),
-    svgr({ ref: true }),
+    svgr({ ref: true, titleProp: true }),
   ],
 })

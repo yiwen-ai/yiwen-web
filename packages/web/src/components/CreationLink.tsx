@@ -30,8 +30,10 @@ export default memo(
 
     const handleClick = useCallback(
       (ev: React.MouseEvent<HTMLAnchorElement>) => {
-        ev.preventDefault()
-        onClick?.(ev)
+        if (onClick) {
+          ev.preventDefault()
+          onClick(ev)
+        }
       },
       [onClick]
     )

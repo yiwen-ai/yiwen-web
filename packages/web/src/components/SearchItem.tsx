@@ -2,6 +2,7 @@ import { css, useTheme } from '@emotion/react'
 import { Avatar, textEllipsis } from '@yiwen-ai/component'
 import { type SearchDocument } from '@yiwen-ai/store'
 import { useCallback } from 'react'
+import PublicationLink from './PublicationLink'
 
 export default function SearchItem({
   item,
@@ -18,22 +19,15 @@ export default function SearchItem({
     onClick(item)
   }, [item, onClick])
 
-  const handleKeyDown = useCallback(
-    (ev: React.KeyboardEvent<HTMLDivElement>) => {
-      if (ev.key === 'Enter' || ev.key === ' ') {
-        onClick(item)
-      }
-    },
-    [item, onClick]
-  )
-
   return (
-    <div
-      role='link'
-      tabIndex={0}
+    <PublicationLink
+      gid={item.gid}
+      cid={item.cid}
+      language={item.language}
+      version={item.version}
       onClick={handleClick}
-      onKeyDown={handleKeyDown}
       css={css`
+        display: block;
         padding: 16px 0;
         border-bottom: 1px solid ${theme.color.divider.primary};
         cursor: pointer;
@@ -76,6 +70,6 @@ export default function SearchItem({
           </div>
         </div>
       )}
-    </div>
+    </PublicationLink>
   )
 }
