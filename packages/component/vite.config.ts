@@ -8,6 +8,6 @@ export default defineConfig({
   plugins: [
     react({ babel: { rootMode: 'upward', configFile: true } }),
     checker({ typescript: true }),
-    svgr({ ref: true }),
+    svgr({ ref: true, titleProp: true }),
   ],
 })

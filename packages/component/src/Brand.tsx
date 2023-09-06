@@ -29,7 +29,7 @@ export const Brand = memo(
     return (
       <SVG
         role='img'
-        aria-label={intl.formatMessage({ defaultMessage: '亿文' })}
+        title={intl.formatMessage({ defaultMessage: '亿文' })}
         {...props}
         ref={ref}
         css={css`

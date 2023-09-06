@@ -4,6 +4,7 @@ import LargeDialog from '#/components/LargeDialog'
 import LoadMore from '#/components/LoadMore'
 import Loading from '#/components/Loading'
 import Placeholder from '#/components/Placeholder'
+import PublicationLink from '#/components/PublicationLink'
 import PublicationViewer from '#/components/PublicationViewer'
 import { BREAKPOINT } from '#/shared'
 import { useCollectionPage } from '#/store/useCollectionPage'
@@ -17,7 +18,7 @@ import {
   useToast,
 } from '@yiwen-ai/component'
 import { type CollectionOutput } from '@yiwen-ai/store'
-import { stopPropagation } from '@yiwen-ai/util'
+import { preventDefaultStopPropagation } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import { Xid } from 'xid-ts'
@@ -105,26 +106,19 @@ function CollectionItem({
     onView(item)
   }, [item, onView])
 
-  const handleKeyDown = useCallback(
-    (ev: React.KeyboardEvent<HTMLDivElement>) => {
-      if (ev.key === 'Enter' || ev.key === ' ') {
-        onView(item)
-      }
-    },
-    [item, onView]
-  )
-
   const handleRemove = useCallback(() => {
     onRemove(item)
   }, [item, onRemove])
 
   return (
-    <div
-      role='link'
-      tabIndex={0}
+    <PublicationLink
+      gid={item.gid}
+      cid={item.cid}
+      language={item.language}
+      version={item.version}
       onClick={handleClick}
-      onKeyDown={handleKeyDown}
       css={css`
+        display: block;
         padding: 16px 0;
         border-bottom: 1px solid ${theme.color.divider.primary};
         cursor: pointer;
@@ -151,8 +145,7 @@ function CollectionItem({
         </div>
         <div
           role='none'
-          onClick={stopPropagation}
-          onKeyDown={stopPropagation}
+          onClick={preventDefaultStopPropagation}
           css={css`
             display: flex;
             align-items: center;
@@ -185,6 +178,6 @@ function CollectionItem({
       >
         {new Date(item.updated_at).toLocaleDateString()}
       </div>
-    </div>
+    </PublicationLink>
   )
 }

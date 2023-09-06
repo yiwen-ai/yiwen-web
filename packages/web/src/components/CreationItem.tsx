@@ -8,10 +8,11 @@ import {
   textEllipsis,
 } from '@yiwen-ai/component'
 import { CreationStatus, type CreationOutput } from '@yiwen-ai/store'
-import { mergeClickProps, stopPropagation, useClick } from '@yiwen-ai/util'
-import { useCallback, type HTMLAttributes } from 'react'
+import { preventDefaultStopPropagation } from '@yiwen-ai/util'
+import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import CreationItemStatus from './CreationItemStatus'
+import CreationLink from './CreationLink'
 import { IconMoreAnchor } from './IconMoreAnchor'
 
 export default function CreationItem({
@@ -37,17 +38,18 @@ export default function CreationItem({
   const theme = useTheme()
   const disabled = isEditing || isReleasing || isArchiving
   const hasReleases = item.version >= 2
-  const handleClickProps = useClick<HTMLAttributes<HTMLDivElement>>({}, () =>
-    onClick(item)
-  )
+  const handleClick = useCallback(() => onClick(item), [item, onClick])
   const handleEdit = useCallback(() => onEdit(item), [item, onEdit])
   const handleRelease = useCallback(() => onRelease(item), [item, onRelease])
   const handleArchive = useCallback(() => onArchive(item), [item, onArchive])
 
   return (
-    <div
-      {...handleClickProps}
+    <CreationLink
+      gid={item.gid}
+      cid={item.id}
+      onClick={handleClick}
       css={css`
+        display: block;
         padding: 32px 40px;
         border: 1px solid ${theme.color.divider.primary};
         border-radius: 12px;
@@ -76,7 +78,7 @@ export default function CreationItem({
       )}
       <div
         role='none'
-        {...mergeClickProps({}, stopPropagation)}
+        onClick={preventDefaultStopPropagation}
         css={css`
           width: fit-content;
           margin-top: 12px;
@@ -135,6 +137,6 @@ export default function CreationItem({
           />
         </Menu>
       </div>
-    </div>
+    </CreationLink>
   )
 }

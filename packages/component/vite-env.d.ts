@@ -2,6 +2,9 @@
 
 declare module '*.svg' {
   export const ReactComponent: React.FunctionComponent<
-    React.SVGProps<SVGSVGElement>
+    React.SVGProps<SVGSVGElement> & {
+      title?: string | undefined
+      titleId?: string | undefined
+    }
   >
 }

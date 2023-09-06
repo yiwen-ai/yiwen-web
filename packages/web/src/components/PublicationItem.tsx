@@ -8,11 +8,12 @@ import {
   textEllipsis,
 } from '@yiwen-ai/component'
 import { PublicationStatus, type PublicationOutput } from '@yiwen-ai/store'
-import { mergeClickProps, stopPropagation, useClick } from '@yiwen-ai/util'
-import { useCallback, type HTMLAttributes } from 'react'
+import { preventDefaultStopPropagation } from '@yiwen-ai/util'
+import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import { IconMoreAnchor } from './IconMoreAnchor'
 import PublicationItemStatus from './PublicationItemStatus'
+import PublicationLink from './PublicationLink'
 
 export default function PublicationItem({
   item,
@@ -36,17 +37,20 @@ export default function PublicationItem({
   const intl = useIntl()
   const theme = useTheme()
   const disabled = isPublishing || isEditing || isArchiving
-  const handleClickProps = useClick<HTMLAttributes<HTMLDivElement>>({}, () =>
-    onClick(item)
-  )
+  const handleClick = useCallback(() => onClick(item), [item, onClick])
   const handleEdit = useCallback(() => onEdit(item), [item, onEdit])
   const handlePublish = useCallback(() => onPublish(item), [item, onPublish])
   const handleArchive = useCallback(() => onArchive(item), [item, onArchive])
 
   return (
-    <div
-      {...handleClickProps}
+    <PublicationLink
+      gid={item.gid}
+      cid={item.cid}
+      language={item.language}
+      version={item.version}
+      onClick={handleClick}
       css={css`
+        display: block;
         padding: 32px 40px;
         border: 1px solid ${theme.color.divider.primary};
         border-radius: 12px;
@@ -75,7 +79,7 @@ export default function PublicationItem({
       )}
       <div
         role='none'
-        {...mergeClickProps({}, stopPropagation)}
+        onClick={preventDefaultStopPropagation}
         css={css`
           width: fit-content;
           margin-top: 12px;
@@ -129,6 +133,6 @@ export default function PublicationItem({
           />
         </Menu>
       </div>
-    </div>
+    </PublicationLink>
   )
 }

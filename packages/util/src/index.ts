@@ -13,7 +13,11 @@ export {
   type LoggingHandler,
 } from './logging'
 export { resolveURL } from './resolveURL'
-export { stopPropagation } from './stopPropagation'
+export {
+  preventDefault,
+  preventDefaultStopPropagation,
+  stopPropagation,
+} from './stopPropagation'
 export {
   mergeURLSearchParams,
   toURLSearchParams,
