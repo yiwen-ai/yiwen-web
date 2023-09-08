@@ -47,6 +47,9 @@ export function useGroupDetailPage(
     error,
     groupInfo,
     groupStatistic,
+    hasGroupReadPermission,
+    hasGroupWritePermission,
+    hasGroupAddCreationPermission,
     refreshGroupInfo,
     refreshGroupStatistic,
   } = useGroup(_gid)
@@ -66,12 +69,16 @@ export function useGroupDetailPage(
     onTranslate,
     ...publicationViewer
   } = usePublicationViewer(pushToast)
+  const { open: publicationViewerOpen, close: closePublicationViewer } =
+    publicationViewer
 
   const {
     show: showCreationViewer,
     refresh: refreshCreationViewer,
     ...creationViewer
   } = useCreationViewer()
+  const { open: creationViewerOpen, close: closeCreationViewer } =
+    creationViewer
 
   useEffect(() => {
     if (
@@ -82,14 +89,34 @@ export function useGroupDetailPage(
       _version != null
     ) {
       showPublicationViewer(_gid, _cid, _language, _version)
+    } else if (publicationViewerOpen) {
+      closePublicationViewer()
     }
-  }, [_cid, _gid, _language, _version, showPublicationViewer, type])
+  }, [
+    _cid,
+    _gid,
+    _language,
+    _version,
+    closePublicationViewer,
+    publicationViewerOpen,
+    showPublicationViewer,
+    type,
+  ])
 
   useEffect(() => {
     if (type === GroupViewType.Creation && _gid && _cid) {
       showCreationViewer(_gid, _cid)
+    } else if (creationViewerOpen) {
+      closeCreationViewer()
     }
-  }, [_cid, _gid, showCreationViewer, type])
+  }, [
+    _cid,
+    _gid,
+    closeCreationViewer,
+    creationViewerOpen,
+    showCreationViewer,
+    type,
+  ])
   //#endregion
 
   //#region publication list & creation list
@@ -416,6 +443,9 @@ export function useGroupDetailPage(
     error,
     groupInfo,
     groupStatistic,
+    hasGroupReadPermission,
+    hasGroupWritePermission,
+    hasGroupAddCreationPermission,
     type,
     switchType: setType,
     publicationViewer: {
@@ -423,10 +453,14 @@ export function useGroupDetailPage(
       onTranslate: onPublicationTranslate,
     },
     publicationList: {
-      ...publicationList,
+      hasGroupWritePermission,
       isEditing: publicationList.isRestoring,
+      ...publicationList,
     },
-    archivedPublicationList,
+    archivedPublicationList: {
+      hasGroupWritePermission,
+      ...archivedPublicationList,
+    },
     onPublicationPublish,
     onPublicationArchive,
     onPublicationRestore,
@@ -435,10 +469,14 @@ export function useGroupDetailPage(
     onArchivedPublicationDialogShow,
     creationViewer,
     creationList: {
-      ...creationList,
+      hasGroupWritePermission,
       isEditing: creationList.isRestoring,
+      ...creationList,
     },
-    archivedCreationList,
+    archivedCreationList: {
+      hasGroupWritePermission,
+      ...archivedCreationList,
+    },
     onCreationRelease,
     onCreationArchive,
     onCreationRestore,

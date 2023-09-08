@@ -13,12 +13,14 @@ import { IconMoreAnchor } from './IconMoreAnchor'
 
 export default function CreationCompactItem({
   item,
+  hasWritePermission,
   isRestoring,
   isDeleting,
   onRestore,
   onDelete,
 }: {
   item: CreationOutput
+  hasWritePermission: boolean
   isRestoring: boolean
   isDeleting: boolean
   onRestore: (item: CreationOutput) => void
@@ -46,35 +48,37 @@ export default function CreationCompactItem({
         `}
       >
         <div css={textEllipsis}>{item.title}</div>
-        <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
-          <MenuItem
-            before={
-              isRestoring ? (
-                <Spinner size={12} />
-              ) : (
-                <Icon name='recoveryconvert' size='small' />
-              )
-            }
-            label={intl.formatMessage({ defaultMessage: '恢复文章' })}
-            disabled={disabled}
-            onClick={handleRestore}
-            closeOnClick={3000}
-          />
-          <MenuItem
-            before={
-              isDeleting ? (
-                <Spinner size={12} />
-              ) : (
-                <Icon name='delete' size='small' />
-              )
-            }
-            label={intl.formatMessage({ defaultMessage: '彻底删除' })}
-            danger={true}
-            disabled={disabled}
-            onClick={handleDelete}
-            closeOnClick={3000}
-          />
-        </Menu>
+        {hasWritePermission && (
+          <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
+            <MenuItem
+              before={
+                isRestoring ? (
+                  <Spinner size={12} />
+                ) : (
+                  <Icon name='recoveryconvert' size='small' />
+                )
+              }
+              label={intl.formatMessage({ defaultMessage: '恢复文章' })}
+              disabled={disabled}
+              onClick={handleRestore}
+              closeOnClick={3000}
+            />
+            <MenuItem
+              before={
+                isDeleting ? (
+                  <Spinner size={12} />
+                ) : (
+                  <Icon name='delete' size='small' />
+                )
+              }
+              label={intl.formatMessage({ defaultMessage: '彻底删除' })}
+              danger={true}
+              disabled={disabled}
+              onClick={handleDelete}
+              closeOnClick={3000}
+            />
+          </Menu>
+        )}
       </div>
       <div
         css={css`

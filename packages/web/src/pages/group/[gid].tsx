@@ -19,12 +19,12 @@ import {
   Avatar,
   Button,
   Menu,
+  MenuItem,
   Tab,
   TabList,
   TabPanel,
   TabSection,
   useToast,
-  type MenuItemProps,
   type ToastAPI,
 } from '@yiwen-ai/component'
 import {
@@ -36,7 +36,7 @@ import {
   type PublicationOutput,
 } from '@yiwen-ai/store'
 import { joinURLPath, type AnchorProps } from '@yiwen-ai/util'
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import {
   Link,
@@ -65,6 +65,8 @@ export default function GroupDetailPage() {
     error,
     groupInfo,
     groupStatistic,
+    hasGroupReadPermission,
+    hasGroupAddCreationPermission,
     type,
     switchType,
     publicationViewer: {
@@ -179,7 +181,11 @@ export default function GroupDetailPage() {
             >
               {groupInfo.name && <span>{groupInfo.name}</span>}
               <Link
-                to={joinURLPath(NEW_CREATION_PATH, { gid: _gid })}
+                to={
+                  hasGroupAddCreationPermission
+                    ? joinURLPath(NEW_CREATION_PATH, { gid: _gid })
+                    : joinURLPath(NEW_CREATION_PATH, { gid: undefined })
+                }
                 css={css`
                   margin-left: auto;
                 `}
@@ -201,75 +207,80 @@ export default function GroupDetailPage() {
             `}
           >
             <TabSection
-              value={type}
+              value={hasGroupReadPermission ? type : GroupViewType.Publication}
               onChange={handleSwitchType}
               css={css`
                 max-width: ${MAX_WIDTH};
                 margin: 0 auto;
+                padding-top: ${hasGroupReadPermission ? undefined : '24px'};
                 padding-bottom: 24px;
               `}
             >
-              <TabList
-                css={css`
-                  padding: 16px 24px;
-                `}
-              >
-                <Tab value={GroupViewType.Publication}>
-                  {intl.formatMessage({ defaultMessage: '发布' })}
-                </Tab>
-                <Tab value={GroupViewType.Creation}>
-                  {intl.formatMessage({ defaultMessage: '文稿' })}
-                </Tab>
-                <div
+              {hasGroupReadPermission && (
+                <TabList
                   css={css`
-                    margin-left: auto;
-                    display: flex;
-                    align-items: center;
+                    padding: 16px 24px;
                   `}
                 >
-                  {(() => {
-                    const anchor = (props: AnchorProps) => (
-                      <Button color='secondary' variant='text' {...props}>
-                        {intl.formatMessage({ defaultMessage: '已归档的文章' })}
-                      </Button>
-                    )
-                    switch (type) {
-                      case GroupViewType.Publication:
-                        return (
-                          <MediumDialog
-                            anchor={anchor}
-                            title={intl.formatMessage({
-                              defaultMessage: '已归档的发布',
-                            })}
-                            onShow={onArchivedPublicationDialogShow}
-                          >
-                            <ArchivedPublicationPart
-                              {...archivedPublicationList}
-                              onRestore={onPublicationRestore}
-                              onDelete={onPublicationDelete}
-                            />
-                          </MediumDialog>
-                        )
-                      case GroupViewType.Creation:
-                        return (
-                          <MediumDialog
-                            anchor={anchor}
-                            title={intl.formatMessage({
-                              defaultMessage: '已归档的原稿',
-                            })}
-                            onShow={onArchivedCreationDialogShow}
-                          >
-                            <ArchivedCreationPart
-                              {...archivedCreationList}
-                              onRestore={onCreationRestore}
-                              onDelete={onCreationDelete}
-                            />
-                          </MediumDialog>
-                        )
-                    }
-                  })()}
-                </div>
-              </TabList>
+                  <Tab value={GroupViewType.Publication}>
+                    {intl.formatMessage({ defaultMessage: '发布' })}
+                  </Tab>
+                  <Tab value={GroupViewType.Creation}>
+                    {intl.formatMessage({ defaultMessage: '文稿' })}
+                  </Tab>
+                  <div
+                    css={css`
+                      margin-left: auto;
+                      display: flex;
+                      align-items: center;
+                    `}
+                  >
+                    {(() => {
+                      const anchor = (props: AnchorProps) => (
+                        <Button color='secondary' variant='text' {...props}>
+                          {intl.formatMessage({
+                            defaultMessage: '已归档的文章',
+                          })}
+                        </Button>
+                      )
+                      switch (type) {
+                        case GroupViewType.Publication:
+                          return (
+                            <MediumDialog
+                              anchor={anchor}
+                              title={intl.formatMessage({
+                                defaultMessage: '已归档的发布',
+                              })}
+                              onShow={onArchivedPublicationDialogShow}
+                            >
+                              <ArchivedPublicationPart
+                                {...archivedPublicationList}
+                                onRestore={onPublicationRestore}
+                                onDelete={onPublicationDelete}
+                              />
+                            </MediumDialog>
+                          )
+                        case GroupViewType.Creation:
+                          return (
+                            <MediumDialog
+                              anchor={anchor}
+                              title={intl.formatMessage({
+                                defaultMessage: '已归档的原稿',
+                              })}
+                              onShow={onArchivedCreationDialogShow}
+                            >
+                              <ArchivedCreationPart
+                                {...archivedCreationList}
+                                onRestore={onCreationRestore}
+                                onDelete={onCreationDelete}
+                              />
+                            </MediumDialog>
+                          )
+                      }
+                    })()}
+                  </div>
+                </TabList>
+              )}
               <TabPanel value={GroupViewType.Publication}>
                 <PublicationPart
                   {...publicationList}
@@ -328,6 +339,7 @@ function GroupPart({
       description: intl.formatMessage({ defaultMessage: '功能暂未实现' }),
     })
   }, [intl, pushToast])
+
   const handleSubscribe = useCallback(() => {
     // TODO
     pushToast({
@@ -336,20 +348,6 @@ function GroupPart({
       description: intl.formatMessage({ defaultMessage: '功能暂未实现' }),
     })
   }, [intl, pushToast])
-  const menuItems = useMemo<readonly MenuItemProps[]>(
-    () => [
-      {
-        label: intl.formatMessage({ defaultMessage: '删除' }),
-        danger: true,
-        onClick: handleDelete,
-      },
-      {
-        label: intl.formatMessage({ defaultMessage: '订阅' }),
-        onClick: handleSubscribe,
-      },
-    ],
-    [handleDelete, handleSubscribe, intl]
-  )
   //#endregion
 
   return (
@@ -409,10 +407,29 @@ function GroupPart({
             gap: 24px;
           `}
         >
-          <Button color='primary' variant='outlined'>
+          <Button
+            color='primary'
+            variant='outlined'
+            css={css`
+              display: none;
+            `}
+          >
             {intl.formatMessage({ defaultMessage: '编辑简介' })}
           </Button>
-          <Menu anchor={IconMoreAnchor} items={menuItems} />
+          <Menu anchor={IconMoreAnchor}>
+            <MenuItem
+              label={intl.formatMessage({ defaultMessage: '删除' })}
+              danger={true}
+              onClick={handleDelete}
+              css={css`
+                display: none;
+              `}
+            />
+            <MenuItem
+              label={intl.formatMessage({ defaultMessage: '订阅' })}
+              onClick={handleSubscribe}
+            />
+          </Menu>
         </div>
       </div>
     </div>
@@ -425,6 +442,7 @@ function PublicationPart({
   items,
   hasMore,
   loadMore,
+  hasGroupWritePermission,
   isPublishing,
   isEditing,
   isArchiving,
@@ -438,6 +456,7 @@ function PublicationPart({
   items: PublicationOutput[]
   hasMore: boolean
   loadMore: () => void
+  hasGroupWritePermission: boolean
   isPublishing: (item: PublicationOutput) => boolean
   isEditing: (item: PublicationOutput) => boolean
   isArchiving: (item: PublicationOutput) => boolean
@@ -464,6 +483,7 @@ function PublicationPart({
             <PublicationItem
               key={buildPublicationKey(item)}
               item={item}
+              hasWritePermission={hasGroupWritePermission}
               isPublishing={isPublishing(item)}
               isEditing={isEditing(item)}
               isArchiving={isArchiving(item)}
@@ -490,6 +510,7 @@ function ArchivedPublicationPart({
   items,
   hasMore,
   loadMore,
+  hasGroupWritePermission,
   isRestoring,
   isDeleting,
   onRestore,
@@ -500,6 +521,7 @@ function ArchivedPublicationPart({
   items: PublicationOutput[]
   hasMore: boolean
   loadMore: () => void
+  hasGroupWritePermission: boolean
   isRestoring: (item: PublicationOutput) => boolean
   isDeleting: (item: PublicationOutput) => boolean
   onRestore: (item: PublicationOutput) => void
@@ -528,6 +550,7 @@ function ArchivedPublicationPart({
             <PublicationCompactItem
               key={buildPublicationKey(item)}
               item={item}
+              hasWritePermission={hasGroupWritePermission}
               isRestoring={isRestoring(item)}
               isDeleting={isDeleting(item)}
               onRestore={onRestore}
@@ -554,6 +577,7 @@ function CreationPart({
   items,
   hasMore,
   loadMore,
+  hasGroupWritePermission,
   isEditing,
   isReleasing,
   isArchiving,
@@ -567,6 +591,7 @@ function CreationPart({
   items: CreationOutput[]
   hasMore: boolean
   loadMore: () => void
+  hasGroupWritePermission: boolean
   isEditing: (item: CreationOutput) => boolean
   isReleasing: (item: CreationOutput) => boolean
   isArchiving: (item: CreationOutput) => boolean
@@ -593,6 +618,7 @@ function CreationPart({
             <CreationItem
               key={buildCreationKey(item)}
               item={item}
+              hasWritePermission={hasGroupWritePermission}
               isEditing={isEditing(item)}
               isReleasing={isReleasing(item)}
               isArchiving={isArchiving(item)}
@@ -619,6 +645,7 @@ function ArchivedCreationPart({
   items,
   hasMore,
   loadMore,
+  hasGroupWritePermission,
   isRestoring,
   isDeleting,
   onRestore,
@@ -629,6 +656,7 @@ function ArchivedCreationPart({
   items: CreationOutput[]
   hasMore: boolean
   loadMore: () => void
+  hasGroupWritePermission: boolean
   isRestoring: (item: CreationOutput) => boolean
   isDeleting: (item: CreationOutput) => boolean
   onRestore: (item: CreationOutput) => void
@@ -657,6 +685,7 @@ function ArchivedCreationPart({
             <CreationCompactItem
               key={buildCreationKey(item)}
               item={item}
+              hasWritePermission={hasGroupWritePermission}
               isRestoring={isRestoring(item)}
               isDeleting={isDeleting(item)}
               onRestore={onRestore}

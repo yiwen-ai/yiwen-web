@@ -142,12 +142,22 @@ export function useGroup(_gid: string | null | undefined) {
     [getStatisticKey, mutateGroupStatistic]
   )
 
+  const _role = groupInfo?.result._role
+  const hasGroupReadPermission =
+    _role === RoleLevel.MEMBER || _role === RoleLevel.OWNER
+  const hasGroupWritePermission = _role === RoleLevel.OWNER
+  const hasGroupAddCreationPermission =
+    _role === RoleLevel.MEMBER || _role === RoleLevel.OWNER
+
   return {
     isLoading: isLoadingGroupInfo || isLoadingGroupStatistic,
     isValidating: isValidatingGroupInfo || isValidatingGroupStatistic,
     error: groupInfoError || groupStatisticError,
     groupInfo: groupInfo?.result,
     groupStatistic: groupStatistic?.result,
+    hasGroupReadPermission,
+    hasGroupWritePermission,
+    hasGroupAddCreationPermission,
     refreshGroupInfo,
     refreshGroupStatistic,
   } as const

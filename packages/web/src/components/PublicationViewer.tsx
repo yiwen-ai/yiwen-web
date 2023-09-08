@@ -1,4 +1,5 @@
 import { BREAKPOINT } from '#/shared'
+import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
   AlertDialog,
@@ -284,7 +285,12 @@ export default function PublicationViewer({
               `}
             >
               {isNarrow ? null : (
-                <Button color='secondary'>
+                <Button
+                  color='secondary'
+                  css={css`
+                    display: none;
+                  `}
+                >
                   <Icon name='compare' size='small' />
                   {intl.formatMessage({ defaultMessage: '对比原文' })}
                 </Button>
@@ -362,7 +368,11 @@ export default function PublicationViewer({
               ) : null}
             </div>
           </div>
-          <CommonViewer item={publication} isNarrow={isNarrow} />
+          <CommonViewer
+            type={GroupViewType.Publication}
+            item={publication}
+            isNarrow={isNarrow}
+          />
         </>
       ) : null}
       {processingLanguage && (

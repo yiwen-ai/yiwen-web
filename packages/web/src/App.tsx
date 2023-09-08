@@ -142,7 +142,7 @@ function Layout() {
           label: intl.formatMessage({ defaultMessage: '我的资料' }),
         },
         {
-          label: intl.formatMessage({ defaultMessage: '我的创作中心' }),
+          label: intl.formatMessage({ defaultMessage: '创作中心' }),
           onClick: () => navigate(DEFAULT_GROUP_PATH),
         },
         {

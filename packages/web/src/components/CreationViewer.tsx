@@ -1,4 +1,5 @@
 import { BREAKPOINT } from '#/shared'
+import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css } from '@emotion/react'
 import { Button } from '@yiwen-ai/component'
 import { type CreationOutput, type Language } from '@yiwen-ai/store'
@@ -69,7 +70,11 @@ export default function CreationViewer({
               {currentLanguage?.nativeName ?? creation.language}
             </Button>
           </div>
-          <CommonViewer item={creation} isNarrow={isNarrow} />
+          <CommonViewer
+            type={GroupViewType.Creation}
+            item={creation}
+            isNarrow={isNarrow}
+          />
         </>
       ) : null}
     </div>

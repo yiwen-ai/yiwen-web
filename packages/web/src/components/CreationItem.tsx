@@ -17,6 +17,7 @@ import { IconMoreAnchor } from './IconMoreAnchor'
 
 export default function CreationItem({
   item,
+  hasWritePermission,
   isEditing,
   isReleasing,
   isArchiving,
@@ -26,6 +27,7 @@ export default function CreationItem({
   onArchive,
 }: {
   item: CreationOutput
+  hasWritePermission: boolean
   isEditing: boolean
   isReleasing: boolean
   isArchiving: boolean
@@ -87,7 +89,7 @@ export default function CreationItem({
           gap: 24px;
         `}
       >
-        {item.status === CreationStatus.Draft ? (
+        {hasWritePermission && item.status === CreationStatus.Draft ? (
           <Button
             color='primary'
             variant='outlined'
@@ -101,41 +103,45 @@ export default function CreationItem({
         ) : (
           <CreationItemStatus status={item.status} />
         )}
-        <Button
-          color='secondary'
-          variant='text'
-          size='small'
-          disabled={disabled}
-          onClick={handleEdit}
-        >
-          {isEditing ? (
-            <Spinner size={12} />
-          ) : hasReleases ? (
-            <Icon name='refresh' size='small' />
-          ) : (
-            <Icon name='edit' size='small' />
-          )}
-          <span>
-            {hasReleases
-              ? intl.formatMessage({ defaultMessage: '更新版本' })
-              : intl.formatMessage({ defaultMessage: '编辑' })}
-          </span>
-        </Button>
-        <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
-          <MenuItem
-            before={
-              isArchiving ? (
-                <Spinner size={12} />
-              ) : (
-                <Icon name='archive' size='small' />
-              )
-            }
-            label={intl.formatMessage({ defaultMessage: '归档文章' })}
+        {hasWritePermission && (
+          <Button
+            color='secondary'
+            variant='text'
+            size='small'
             disabled={disabled}
-            onClick={handleArchive}
-            closeOnClick={3000}
-          />
-        </Menu>
+            onClick={handleEdit}
+          >
+            {isEditing ? (
+              <Spinner size={12} />
+            ) : hasReleases ? (
+              <Icon name='refresh' size='small' />
+            ) : (
+              <Icon name='edit' size='small' />
+            )}
+            <span>
+              {hasReleases
+                ? intl.formatMessage({ defaultMessage: '更新版本' })
+                : intl.formatMessage({ defaultMessage: '编辑' })}
+            </span>
+          </Button>
+        )}
+        {hasWritePermission && (
+          <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
+            <MenuItem
+              before={
+                isArchiving ? (
+                  <Spinner size={12} />
+                ) : (
+                  <Icon name='archive' size='small' />
+                )
+              }
+              label={intl.formatMessage({ defaultMessage: '归档文章' })}
+              disabled={disabled}
+              onClick={handleArchive}
+              closeOnClick={3000}
+            />
+          </Menu>
+        )}
       </div>
     </CreationLink>
   )
