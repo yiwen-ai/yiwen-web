@@ -17,6 +17,7 @@ import PublicationLink from './PublicationLink'
 
 export default function PublicationItem({
   item,
+  hasWritePermission,
   isPublishing,
   isEditing,
   isArchiving,
@@ -26,6 +27,7 @@ export default function PublicationItem({
   onArchive,
 }: {
   item: PublicationOutput
+  hasWritePermission: boolean
   isPublishing: boolean
   isEditing: boolean
   isArchiving: boolean
@@ -89,7 +91,7 @@ export default function PublicationItem({
         `}
       >
         <PublicationItemStatus status={item.status} />
-        {item.status === PublicationStatus.Review && (
+        {hasWritePermission && item.status === PublicationStatus.Review && (
           <Button
             color='secondary'
             variant='text'
@@ -105,7 +107,7 @@ export default function PublicationItem({
             <span>{intl.formatMessage({ defaultMessage: '修订' })}</span>
           </Button>
         )}
-        {item.status === PublicationStatus.Approved && (
+        {hasWritePermission && item.status === PublicationStatus.Approved && (
           <Button
             color='primary'
             variant='outlined'
@@ -117,21 +119,25 @@ export default function PublicationItem({
             <span>{intl.formatMessage({ defaultMessage: '公开发布' })}</span>
           </Button>
         )}
-        <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
-          <MenuItem
-            before={
-              isArchiving ? (
-                <Spinner size={12} />
-              ) : (
-                <Icon name='archive' size='small' />
-              )
-            }
-            label={intl.formatMessage({ defaultMessage: '归档文章' })}
-            disabled={disabled}
-            onClick={handleArchive}
-            closeOnClick={3000}
-          />
-        </Menu>
+        {hasWritePermission &&
+          (item.status === PublicationStatus.Review ||
+            item.status === PublicationStatus.Approved) && (
+            <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
+              <MenuItem
+                before={
+                  isArchiving ? (
+                    <Spinner size={12} />
+                  ) : (
+                    <Icon name='archive' size='small' />
+                  )
+                }
+                label={intl.formatMessage({ defaultMessage: '归档文章' })}
+                disabled={disabled}
+                onClick={handleArchive}
+                closeOnClick={3000}
+              />
+            </Menu>
+          )}
       </div>
     </PublicationLink>
   )

@@ -61,8 +61,8 @@ export function createRequest(
     if (status >= 200 && status < 300) {
       return body as T
     } else {
-      const error = createRequestError(status, body) ?? body
       const requestId = resp.headers.get('X-Request-Id')
+      const error = createRequestError(status, body, requestId) ?? body
       logger.error('fetch error', { url, status, error, requestId })
       throw error
     }
@@ -140,7 +140,11 @@ export function useFetcher(baseURL?: string) {
 //#endregion
 
 //#region request error
-function createRequestError(status: number, body: unknown) {
+function createRequestError(
+  status: number,
+  body: unknown,
+  requestId: string | null
+) {
   if (
     typeof body === 'object' &&
     !!body &&
@@ -149,22 +153,25 @@ function createRequestError(status: number, body: unknown) {
     'message' in body &&
     typeof body.message === 'string'
   ) {
-    return new RequestError(status, body.error, body.message)
+    return new RequestError(status, body.error, body.message, requestId)
   }
   return null
 }
 
 export class RequestError extends Error {
-  constructor(public status: number, name: string, message: string) {
+  constructor(
+    public status: number,
+    name: string,
+    message: string,
+    public requestId: string | null
+  ) {
     super(message)
     this.name = name
   }
 
   toString() {
-    return compact([
-      compact([this.status, this.name]).join(' '),
-      this.message,
-    ]).join('\n')
+    if (this.requestId) return ['Request ID', this.requestId].join(': ')
+    return compact([this.status, this.name]).join(' ')
   }
 }
 

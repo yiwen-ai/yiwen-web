@@ -1,5 +1,5 @@
 import { css, useTheme } from '@emotion/react'
-import { Avatar } from '@yiwen-ai/component'
+import { Avatar, textEllipsis } from '@yiwen-ai/component'
 import {
   useAuth,
   type CreationOutput,
@@ -15,6 +15,9 @@ export function CreatedBy({
   const theme = useTheme()
   const lang = useAuth().user?.locale
 
+  const creatorName = item?.creator_info?.name || item?.group_info?.name
+  const creatorAvatar = item?.creator_info?.picture || item?.group_info?.logo
+
   return (
     <div
       {...props}
@@ -22,19 +25,28 @@ export function CreatedBy({
         display: inline-flex;
         align-items: center;
         color: ${theme.color.body.secondary};
-        gap: 8px;
       `}
     >
-      {item.creator_info && (
+      {creatorName && (
         <>
-          <Avatar
-            src={item.creator_info.picture}
-            name={item.creator_info.name}
+          {creatorAvatar && (
+            <Avatar
+              src={creatorAvatar}
+              alt={creatorName}
+              size='small'
+              css={css`
+                margin-right: 12px;
+              `}
+            />
+          )}
+          <span css={textEllipsis}>{creatorName}</span>
+          <i
             css={css`
-              gap: 12px;
+              margin: 0 8px;
             `}
-          />
-          <i>·</i>
+          >
+            ·
+          </i>
         </>
       )}
       <span>{new Date(item.created_at).toLocaleDateString(lang)}</span>

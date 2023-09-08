@@ -1,4 +1,6 @@
+import { GROUP_DETAIL_PATH } from '#/App'
 import { MAX_WIDTH } from '#/shared'
+import { type GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import { type JSONContent } from '@tiptap/core'
 import { RichTextEditor } from '@yiwen-ai/component'
@@ -8,13 +10,17 @@ import {
   type PublicationOutput,
 } from '@yiwen-ai/store'
 import { useMemo } from 'react'
+import { Link, generatePath } from 'react-router-dom'
+import { Xid } from 'xid-ts'
 import { CreatedBy } from './CreatedBy'
 
 export default function CommonViewer({
+  type,
   item,
   isNarrow,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & {
+  type: GroupViewType
   item: CreationOutput | PublicationOutput | undefined
   isNarrow: boolean
 }) {
@@ -52,12 +58,27 @@ export default function CommonViewer({
       >
         {item.title}
       </div>
-      <CreatedBy
-        item={item}
+      <Link
+        to={{
+          pathname: generatePath(GROUP_DETAIL_PATH, {
+            gid: Xid.fromValue(item.gid).toString(),
+          }),
+          search: new URLSearchParams({ type }).toString(),
+        }}
         css={css`
           margin-top: 16px;
+          display: flex;
+          width: fit-content;
+          max-width: 100%;
         `}
-      />
+      >
+        <CreatedBy
+          item={item}
+          css={css`
+            max-width: 100%;
+          `}
+        />
+      </Link>
       {content && (
         <RichTextEditor
           editable={false}

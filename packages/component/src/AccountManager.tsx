@@ -33,14 +33,9 @@ export const AccountManager = memo(function AccountManager({
   return user ? (
     <Menu
       anchor={(props) => (
-        <Avatar
-          src={user.picture}
-          name={user.name}
-          {...props}
-          css={css`
-            cursor: pointer;
-          `}
-        />
+        <button {...props}>
+          <Avatar src={user.picture} name={user.name} />
+        </button>
       )}
       placement='bottom-end'
       items={items}

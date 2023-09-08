@@ -123,7 +123,11 @@ export default function Home() {
               background: ${theme.color.body.background};
               @media (min-width: ${BREAKPOINT.small}px) {
                 :focus-within + a {
-                  display: none;
+                  position: absolute;
+                  right: 0;
+                  width: 0;
+                  height: 0;
+                  overflow: hidden;
                 }
               }
             `}
