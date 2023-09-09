@@ -124,17 +124,20 @@ export const DialogFoot = memo(function DialogFoot(
   )
 })
 
-export interface DialogCloseProps
-  extends Omit<IconButtonProps, 'iconName'>,
-    Partial<Pick<IconButtonProps, 'iconName'>> {}
+export interface DialogCloseProps extends Partial<IconButtonProps> {
+  stopPropagation?: boolean
+}
 
 export const DialogClose = memo(function DialogClose({
+  stopPropagation,
   iconName = 'closecircle2',
   onClick,
+  onPointerUpCapture,
   ...props
 }: DialogCloseProps) {
   const theme = useTheme()
   const dialog = useContext(DialogContext)
+
   const handleClick = useCallback(
     (ev: React.MouseEvent<HTMLButtonElement>) => {
       onClick?.(ev)
@@ -143,12 +146,21 @@ export const DialogClose = memo(function DialogClose({
     [dialog, onClick]
   )
 
+  const handlePointerUpCapture = useCallback(
+    (ev: React.PointerEvent<HTMLButtonElement>) => {
+      onPointerUpCapture?.(ev)
+      if (stopPropagation) ev.stopPropagation()
+    },
+    [onPointerUpCapture, stopPropagation]
+  )
+
   return (
     <IconButton
       data-dialog-close={true}
       iconName={iconName}
       size='medium'
       onClick={handleClick}
+      onPointerUpCapture={handlePointerUpCapture}
       {...props}
       css={css`
         position: absolute;

@@ -1,4 +1,10 @@
-export { AuthProvider, useAuth, type IdentityProvider } from './AuthContext'
+export {
+  AuthProvider,
+  useAuth,
+  useEnsureAuthorized,
+  useEnsureAuthorizedCallback,
+  type IdentityProvider,
+} from './AuthContext'
 export { decode, encode } from './CBOR'
 export {
   UserStatus,
@@ -34,6 +40,7 @@ export {
   type FetcherConfig,
 } from './useFetcher'
 export {
+  useFollowedGroupList,
   useGroup,
   useGroupAPI,
   useMyGroupList,

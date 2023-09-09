@@ -4,6 +4,7 @@ import {
   PublicationJobStatus,
   toMessage,
   useCreationCollectionList,
+  useEnsureAuthorized,
   useFetcherConfig,
   useLanguageList,
   useLanguageProcessor,
@@ -29,6 +30,7 @@ interface Params {
 
 export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
+  const ensureAuthorized = useEnsureAuthorized()
 
   const [{ open, _gid, _cid, _language, _version }, setParams] =
     useState<Params>({
@@ -155,7 +157,41 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
 
   const { refreshDefaultGroup } = useMyGroupList()
 
-  const onTranslate = useCallback(
+  const onTranslate = useMemo(() => {
+    return ensureAuthorized(async (lang: UILanguageItem) => {
+      const language = lang.code
+      const controller = new AbortController()
+      processingControllerRef.current?.abort()
+      processingControllerRef.current = controller
+      try {
+        setProcessingLanguage(lang)
+        const gid = (await refreshDefaultGroup())?.id
+        const publication = await translate(gid, language, controller.signal)
+        show(
+          publication.gid,
+          publication.cid,
+          publication.language,
+          publication.version
+        )
+        return publication
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          pushToast({
+            type: 'warning',
+            message: intl.formatMessage({ defaultMessage: '翻译失败' }),
+            description: toMessage(error),
+          })
+        }
+        return undefined
+      } finally {
+        if (!controller.signal.aborted) {
+          setProcessingLanguage(undefined)
+        }
+      }
+    })
+  }, [ensureAuthorized, intl, pushToast, refreshDefaultGroup, show, translate])
+
+  const onSwitch = useCallback(
     async (lang: UILanguageItem) => {
       const language = lang.code
       let publication = translatedList?.find(
@@ -167,44 +203,11 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
           .sort((a, b) => b.version - a.version)[0] // latest version
       }
       if (!publication) {
-        const controller = new AbortController()
-        processingControllerRef.current?.abort()
-        processingControllerRef.current = controller
-        try {
-          setProcessingLanguage(lang)
-          const gid = (await refreshDefaultGroup())?.id
-          publication = await translate(gid, language, controller.signal)
-          show(
-            publication.gid,
-            publication.cid,
-            publication.language,
-            publication.version
-          )
-        } catch (error) {
-          if (!controller.signal.aborted) {
-            pushToast({
-              type: 'warning',
-              message: intl.formatMessage({ defaultMessage: '翻译失败' }),
-              description: toMessage(error),
-            })
-          }
-        } finally {
-          if (!controller.signal.aborted) {
-            setProcessingLanguage(undefined)
-          }
-        }
+        publication = await onTranslate(lang)
       }
       return publication
     },
-    [
-      _version,
-      intl,
-      pushToast,
-      refreshDefaultGroup,
-      show,
-      translate,
-      translatedList,
-    ]
+    [_version, onTranslate, translatedList]
   )
 
   const onProcessingDialogClose = useCallback(() => {
@@ -214,10 +217,9 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   //#endregion
 
   //#region share
-  const SHARE_URL = useFetcherConfig()?.SHARE_URL
+  const SHARE_URL = useFetcherConfig().SHARE_URL
 
   const shareLink = useMemo(() => {
-    if (!SHARE_URL) throw new Error('missing SHARE_URL in config')
     if (!_gid || !_cid || !_language || _version == null) return undefined
     return generatePublicationShareLink(
       SHARE_URL,
@@ -267,9 +269,9 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     [_isRemovingFavorite, publication]
   )
 
-  const onAddFavorite = useCallback(
-    () => publication && _addFavorite(publication),
-    [_addFavorite, publication]
+  const onAddFavorite = useMemo(
+    () => ensureAuthorized(() => publication && _addFavorite(publication)),
+    [_addFavorite, ensureAuthorized, publication]
   )
 
   const onRemoveFavorite = useCallback(
@@ -291,7 +293,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     translatedLanguageList,
     pendingLanguageList,
     processingLanguage,
-    onTranslate,
+    onTranslate: onSwitch,
     onProcessingDialogClose,
     shareLink,
     onShare,

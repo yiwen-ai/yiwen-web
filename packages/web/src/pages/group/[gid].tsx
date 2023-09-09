@@ -25,11 +25,11 @@ import {
   TabPanel,
   TabSection,
   useToast,
-  type ToastAPI,
 } from '@yiwen-ai/component'
 import {
   buildCreationKey,
   buildPublicationKey,
+  useEnsureAuthorizedCallback,
   type CreationOutput,
   type GroupInfo,
   type GroupStatisticOutput,
@@ -53,6 +53,7 @@ export default function GroupDetailPage() {
   const params = useParams<{ gid: string }>()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const ensureAuthorized = useEnsureAuthorizedCallback()
 
   const _gid = params.gid ?? null
   const _cid = searchParams.get('cid')
@@ -67,8 +68,13 @@ export default function GroupDetailPage() {
     groupStatistic,
     hasGroupReadPermission,
     hasGroupAddCreationPermission,
-    type,
-    switchType,
+    isGroupFollowed,
+    isFollowingGroup,
+    isUnfollowingGroup,
+    onGroupFollow,
+    onGroupUnfollow,
+    viewType,
+    setViewType,
     publicationViewer: {
       open: publicationViewerOpen,
       close: onPublicationViewerClose,
@@ -97,15 +103,15 @@ export default function GroupDetailPage() {
     onArchivedCreationDialogShow,
   } = useGroupDetailPage(pushToast, _gid, _cid, _language, _version, _type)
 
-  const handleSwitchType = useCallback(
+  const handleViewTypeChange = useCallback(
     (type: GroupViewType) => {
-      switchType(type)
+      setViewType(type)
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, { gid: _gid }),
         search: new URLSearchParams({ type }).toString(),
       })
     },
-    [_gid, navigate, switchType]
+    [_gid, navigate, setViewType]
   )
 
   const handlePublicationDialogClose = useCallback(() => {
@@ -186,6 +192,7 @@ export default function GroupDetailPage() {
                     ? joinURLPath(NEW_CREATION_PATH, { gid: _gid })
                     : joinURLPath(NEW_CREATION_PATH, { gid: undefined })
                 }
+                onClick={ensureAuthorized}
                 css={css`
                   margin-left: auto;
                 `}
@@ -197,9 +204,13 @@ export default function GroupDetailPage() {
             </div>
           </SetHeaderProps>
           <GroupPart
-            pushToast={pushToast}
             groupInfo={groupInfo}
             groupStatistic={groupStatistic}
+            isFollowed={isGroupFollowed}
+            isFollowing={isFollowingGroup}
+            isUnfollowing={isUnfollowingGroup}
+            onFollow={onGroupFollow}
+            onUnfollow={onGroupUnfollow}
           />
           <div
             css={css`
@@ -207,8 +218,8 @@ export default function GroupDetailPage() {
             `}
           >
             <TabSection
-              value={hasGroupReadPermission ? type : GroupViewType.Publication}
-              onChange={handleSwitchType}
+              value={viewType}
+              onChange={handleViewTypeChange}
               css={css`
                 max-width: ${MAX_WIDTH};
                 margin: 0 auto;
@@ -243,7 +254,7 @@ export default function GroupDetailPage() {
                           })}
                         </Button>
                       )
-                      switch (type) {
+                      switch (viewType) {
                         case GroupViewType.Publication:
                           return (
                             <MediumDialog
@@ -318,37 +329,29 @@ export default function GroupDetailPage() {
 }
 
 function GroupPart({
-  pushToast,
   groupInfo,
   groupStatistic,
+  isFollowed,
+  isFollowing,
+  isUnfollowing,
+  onFollow,
+  onUnfollow,
 }: {
-  pushToast: ToastAPI['pushToast']
   groupInfo: GroupInfo
   groupStatistic: GroupStatisticOutput
+  isFollowed: boolean
+  isFollowing: boolean
+  isUnfollowing: boolean
+  onFollow: () => void
+  onUnfollow: () => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
   const logo = groupInfo.logo || groupInfo.owner?.picture
 
-  //#region menu
   const handleDelete = useCallback(() => {
     // TODO
-    pushToast({
-      type: 'warning',
-      message: intl.formatMessage({ defaultMessage: '删除' }),
-      description: intl.formatMessage({ defaultMessage: '功能暂未实现' }),
-    })
-  }, [intl, pushToast])
-
-  const handleSubscribe = useCallback(() => {
-    // TODO
-    pushToast({
-      type: 'warning',
-      message: intl.formatMessage({ defaultMessage: '订阅' }),
-      description: intl.formatMessage({ defaultMessage: '功能暂未实现' }),
-    })
-  }, [intl, pushToast])
-  //#endregion
+  }, [])
 
   return (
     <div
@@ -426,8 +429,13 @@ function GroupPart({
               `}
             />
             <MenuItem
-              label={intl.formatMessage({ defaultMessage: '订阅' })}
-              onClick={handleSubscribe}
+              label={
+                isFollowed
+                  ? intl.formatMessage({ defaultMessage: '取消订阅' })
+                  : intl.formatMessage({ defaultMessage: '订阅' })
+              }
+              disabled={isFollowing || isUnfollowing}
+              onClick={isFollowed ? onUnfollow : onFollow}
             />
           </Menu>
         </div>

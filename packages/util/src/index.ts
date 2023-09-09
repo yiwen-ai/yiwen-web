@@ -30,6 +30,7 @@ export { useControlled } from './useControlled'
 export { useHover } from './useHover'
 export { useIsMounted } from './useIsMounted'
 export { useLayoutEffect } from './useIsomorphicLayoutEffect'
+export { useLoading } from './useLoading'
 export {
   mergeAnchorProps,
   pickModalProps,

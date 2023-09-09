@@ -10,14 +10,16 @@ import {
   PublicationStatus,
   toMessage,
   useCreationList,
+  useEnsureAuthorized,
   useFetcherConfig,
+  useFollowedGroupList,
   useGroup,
   usePublicationList,
   type CreationOutput,
   type PublicationOutput,
   type UILanguageItem,
 } from '@yiwen-ai/store'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { Xid } from 'xid-ts'
@@ -40,6 +42,7 @@ export function useGroupDetailPage(
   const intl = useIntl()
   const navigate = useNavigate()
   const config = useFetcherConfig()
+  const ensureAuthorized = useEnsureAuthorized()
 
   //#region group info & statistic
   const {
@@ -54,13 +57,54 @@ export function useGroupDetailPage(
     refreshGroupStatistic,
   } = useGroup(_gid)
 
+  const {
+    refresh: refreshFollowedGroupList,
+    isFollowed: _isFollowed,
+    isFollowing: _isFollowing,
+    isUnfollowing: _isUnfollowing,
+    follow,
+    unfollow,
+  } = useFollowedGroupList()
+  const isGroupFollowed = _gid ? _isFollowed(_gid) : false
+  const isFollowingGroup = _gid ? _isFollowing(_gid) : false
+  const isUnfollowingGroup = _gid ? _isUnfollowing(_gid) : false
+
   useEffect(() => {
     refreshGroupInfo()
     refreshGroupStatistic()
-  }, [refreshGroupInfo, refreshGroupStatistic])
+    refreshFollowedGroupList()
+  }, [refreshFollowedGroupList, refreshGroupInfo, refreshGroupStatistic])
+
+  const onGroupFollow = useMemo(() => {
+    return ensureAuthorized(async () => {
+      try {
+        await follow(_gid)
+      } catch (error) {
+        pushToast({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '关注失败' }),
+          description: toMessage(error),
+        })
+      }
+    })
+  }, [_gid, ensureAuthorized, follow, intl, pushToast])
+
+  const onGroupUnfollow = useMemo(() => {
+    return ensureAuthorized(async () => {
+      try {
+        await unfollow(_gid)
+      } catch (error) {
+        pushToast({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '取消关注失败' }),
+          description: toMessage(error),
+        })
+      }
+    })
+  }, [_gid, ensureAuthorized, intl, pushToast, unfollow])
   //#endregion
 
-  const [type, setType] = useState(_type ?? GroupViewType.Publication)
+  const [viewType, setViewType] = useState(_type ?? GroupViewType.Publication)
 
   //#region publication viewer & creation viewer
   const {
@@ -82,7 +126,7 @@ export function useGroupDetailPage(
 
   useEffect(() => {
     if (
-      type === GroupViewType.Publication &&
+      viewType === GroupViewType.Publication &&
       _gid &&
       _cid &&
       _language &&
@@ -100,11 +144,11 @@ export function useGroupDetailPage(
     closePublicationViewer,
     publicationViewerOpen,
     showPublicationViewer,
-    type,
+    viewType,
   ])
 
   useEffect(() => {
-    if (type === GroupViewType.Creation && _gid && _cid) {
+    if (viewType === GroupViewType.Creation && _gid && _cid) {
       showCreationViewer(_gid, _cid)
     } else if (creationViewerOpen) {
       closeCreationViewer()
@@ -115,7 +159,7 @@ export function useGroupDetailPage(
     closeCreationViewer,
     creationViewerOpen,
     showCreationViewer,
-    type,
+    viewType,
   ])
   //#endregion
 
@@ -148,13 +192,31 @@ export function useGroupDetailPage(
     ...archivedCreationList
   } = useCreationList(_gid, CreationStatus.Archived)
 
-  useEffect(() => {
-    if (type === GroupViewType.Publication) refreshPublicationList()
-  }, [refreshPublicationList, type])
+  const groupInfoLoaded = !!groupInfo
 
   useEffect(() => {
-    if (type === GroupViewType.Creation) refreshCreationList()
-  }, [refreshCreationList, type])
+    if (
+      viewType === GroupViewType.Publication ||
+      (groupInfoLoaded && !hasGroupReadPermission)
+    ) {
+      refreshPublicationList()
+    }
+  }, [
+    groupInfoLoaded,
+    hasGroupReadPermission,
+    refreshPublicationList,
+    viewType,
+  ])
+
+  useEffect(() => {
+    if (
+      viewType === GroupViewType.Creation &&
+      groupInfoLoaded &&
+      hasGroupReadPermission
+    ) {
+      refreshCreationList()
+    }
+  }, [groupInfoLoaded, hasGroupReadPermission, refreshCreationList, viewType])
   //#endregion
 
   //#region actions
@@ -181,7 +243,6 @@ export function useGroupDetailPage(
     async (item: PublicationOutput) => {
       try {
         await publishPublication(item)
-        if (!config?.SHARE_URL) throw new Error('missing SHARE_URL in config')
         pushToast({
           type: 'success',
           message: intl.formatMessage({ defaultMessage: '发布成功' }),
@@ -203,7 +264,7 @@ export function useGroupDetailPage(
       }
     },
     [
-      config?.SHARE_URL,
+      config.SHARE_URL,
       intl,
       publishPublication,
       pushToast,
@@ -446,8 +507,13 @@ export function useGroupDetailPage(
     hasGroupReadPermission,
     hasGroupWritePermission,
     hasGroupAddCreationPermission,
-    type,
-    switchType: setType,
+    isGroupFollowed,
+    isFollowingGroup,
+    isUnfollowingGroup,
+    onGroupFollow,
+    onGroupUnfollow,
+    viewType: hasGroupReadPermission ? viewType : GroupViewType.Publication,
+    setViewType,
     publicationViewer: {
       ...publicationViewer,
       onTranslate: onPublicationTranslate,

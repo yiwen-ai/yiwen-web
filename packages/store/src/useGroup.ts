@@ -1,5 +1,8 @@
+import { useLoading } from '@yiwen-ai/util'
 import { useCallback, useMemo } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
+import { Xid } from 'xid-ts'
+import { useAuth } from './AuthContext'
 import { RoleLevel, type GroupInfo, type Page, type UserInfo } from './common'
 import { useFetcher } from './useFetcher'
 
@@ -164,11 +167,13 @@ export function useGroup(_gid: string | null | undefined) {
 }
 
 export function useMyGroupList() {
+  const { isAuthorized } = useAuth()
   const { readMyGroupList } = useGroupAPI()
 
   const getKey = useCallback(() => {
+    if (!isAuthorized) return null
     return [`${path}/list_my`] as const
-  }, [])
+  }, [isAuthorized])
 
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
@@ -199,5 +204,94 @@ export function useMyGroupList() {
     defaultGroup,
     refresh,
     refreshDefaultGroup,
+  }
+}
+
+export function useFollowedGroupList() {
+  const { isAuthorized } = useAuth()
+  const { readFollowedGroupList, followGroup, unfollowGroup } = useGroupAPI()
+
+  const getKey = useCallback(() => {
+    if (!isAuthorized) return null
+    return [`${path}/list_following`] as const
+  }, [isAuthorized])
+
+  const { data, error, mutate, isValidating, isLoading } = useSWR(
+    getKey,
+    ([_]) => readFollowedGroupList(),
+    { revalidateOnMount: false } as SWRConfiguration
+  )
+
+  const refresh = useCallback(
+    async () => getKey() && (await mutate()),
+    [getKey, mutate]
+  )
+
+  const isFollowed = useCallback(
+    (_gid: Uint8Array | string) => {
+      const gid = Xid.fromValue(_gid)
+      return (data?.result ?? []).some(({ id }) =>
+        Xid.fromValue(id).equals(gid)
+      )
+    },
+    [data?.result]
+  )
+
+  const [setFollowing, isFollowing] = useLoading((gid: Uint8Array | string) =>
+    Xid.fromValue(gid).toString()
+  )
+
+  const [setUnfollowing, isUnfollowing] = useLoading(
+    (gid: Uint8Array | string) => Xid.fromValue(gid).toString()
+  )
+
+  const follow = useCallback(
+    async (_gid: Uint8Array | string | null | undefined) => {
+      if (!_gid) throw new Error('group id is required')
+      try {
+        setFollowing(_gid, true)
+        const gid = Xid.fromValue(_gid)
+        await followGroup({ id: gid })
+        mutate()
+      } finally {
+        setFollowing(_gid, false)
+      }
+    },
+    [followGroup, mutate, setFollowing]
+  )
+
+  const unfollow = useCallback(
+    async (_gid: Uint8Array | string | null | undefined) => {
+      if (!_gid) throw new Error('group id is required')
+      try {
+        setUnfollowing(_gid, true)
+        const gid = Xid.fromValue(_gid)
+        await unfollowGroup({ id: gid })
+        mutate(
+          (prev) =>
+            prev && {
+              ...prev,
+              result: prev.result.filter(
+                ({ id }) => !Xid.fromValue(id).equals(gid)
+              ),
+            }
+        )
+      } finally {
+        setUnfollowing(_gid, false)
+      }
+    },
+    [mutate, setUnfollowing, unfollowGroup]
+  )
+
+  return {
+    isLoading: isValidating || isLoading,
+    error,
+    groupList: data?.result,
+    refresh,
+    isFollowed,
+    isFollowing,
+    isUnfollowing,
+    follow,
+    unfollow,
   }
 }

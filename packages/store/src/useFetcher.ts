@@ -13,7 +13,12 @@ export interface FetcherConfig {
   SHARE_URL: string
 }
 
-const FetcherConfigContext = createContext<FetcherConfig | undefined>(undefined)
+const FetcherConfigContext = createContext<FetcherConfig>({
+  PUBLIC_PATH: 'https://www.yiwen.ai/',
+  API_URL: 'https://api.yiwen.ai/',
+  AUTH_URL: 'https://auth.yiwen.ai/',
+  SHARE_URL: 'https://www.yiwen.pub/',
+})
 
 export const FetcherConfigProvider = FetcherConfigContext.Provider
 
@@ -126,16 +131,12 @@ export function useFetcher(baseURL?: string) {
   const { accessToken } = useAuth()
   const logger = useLogger()
   return useMemo(() => {
-    const API_URL = baseURL ?? config?.API_URL
-    if (!API_URL) {
-      logger.debug('fetcher config is not ready', { config: { API_URL } })
-      throw new ReferenceError('invalid fetcher config')
-    }
+    const API_URL = baseURL ?? config.API_URL
     return createRequest(logger, API_URL, {
       credentials: 'include',
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     })
-  }, [accessToken, baseURL, config?.API_URL, logger])
+  }, [accessToken, baseURL, config.API_URL, logger])
 }
 //#endregion
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
+import { useAuth } from './AuthContext'
 import { encode } from './CBOR'
 import {
   type GIDPagination,
@@ -372,6 +373,7 @@ export function useTranslatedPublicationList(
   _language: string | null | undefined,
   _version: number | null | undefined
 ) {
+  const { isAuthorized } = useAuth()
   const {
     readTranslatedPublicationList,
     readProcessingPublicationList,
@@ -409,8 +411,9 @@ export function useTranslatedPublicationList(
   )
 
   const getProcessingListKey = useCallback(() => {
+    if (!isAuthorized) return null
     return [`${path}/list_job`, null] as const
-  }, [])
+  }, [isAuthorized])
 
   const {
     data: processingList,

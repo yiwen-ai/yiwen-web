@@ -48,6 +48,7 @@ import {
   RouterProvider,
   createBrowserRouter,
   createRoutesFromElements,
+  useLocation,
   useNavigate,
 } from 'react-router-dom'
 import { SWRConfig, type SWRConfiguration } from 'swr'
@@ -114,6 +115,12 @@ function Layout() {
   const intl = useIntl()
   const navigate = useNavigate()
 
+  //#region close auth dialog on location change
+  const location = useLocation()
+  const closeAuthDialog = useAuth().dialog.close
+  useEffect(() => closeAuthDialog(), [closeAuthDialog, location])
+  //#endregion
+
   //#region error boundary
   const [key, setKey] = useState(0)
 
@@ -140,6 +147,7 @@ function Layout() {
       items: [
         {
           label: intl.formatMessage({ defaultMessage: '我的资料' }),
+          style: { display: 'none' },
         },
         {
           label: intl.formatMessage({ defaultMessage: '创作中心' }),
@@ -151,6 +159,7 @@ function Layout() {
         },
         {
           label: intl.formatMessage({ defaultMessage: '我的订阅' }),
+          style: { display: 'none' },
         },
       ],
     }),
