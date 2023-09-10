@@ -12,7 +12,6 @@ import {
   useCreationList,
   useEnsureAuthorized,
   useFetcherConfig,
-  useFollowedGroupList,
   useGroup,
   usePublicationList,
   type CreationOutput,
@@ -55,53 +54,53 @@ export function useGroupDetailPage(
     hasGroupAddCreationPermission,
     refreshGroupInfo,
     refreshGroupStatistic,
-  } = useGroup(_gid)
-
-  const {
-    refresh: refreshFollowedGroupList,
-    isFollowed: _isFollowed,
-    isFollowing: _isFollowing,
-    isUnfollowing: _isUnfollowing,
+    isFollowed: isGroupFollowed,
+    isFollowing: isFollowingGroup,
+    isUnfollowing: isUnfollowingGroup,
     follow,
     unfollow,
-  } = useFollowedGroupList()
-  const isGroupFollowed = _gid ? _isFollowed(_gid) : false
-  const isFollowingGroup = _gid ? _isFollowing(_gid) : false
-  const isUnfollowingGroup = _gid ? _isUnfollowing(_gid) : false
+  } = useGroup(_gid)
 
   useEffect(() => {
     refreshGroupInfo()
     refreshGroupStatistic()
-    refreshFollowedGroupList()
-  }, [refreshFollowedGroupList, refreshGroupInfo, refreshGroupStatistic])
+  }, [refreshGroupInfo, refreshGroupStatistic])
 
   const onGroupFollow = useMemo(() => {
     return ensureAuthorized(async () => {
       try {
-        await follow(_gid)
+        await follow()
+        pushToast({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '订阅成功' }),
+        })
       } catch (error) {
         pushToast({
           type: 'warning',
-          message: intl.formatMessage({ defaultMessage: '关注失败' }),
+          message: intl.formatMessage({ defaultMessage: '订阅失败' }),
           description: toMessage(error),
         })
       }
     })
-  }, [_gid, ensureAuthorized, follow, intl, pushToast])
+  }, [ensureAuthorized, follow, intl, pushToast])
 
   const onGroupUnfollow = useMemo(() => {
     return ensureAuthorized(async () => {
       try {
-        await unfollow(_gid)
+        await unfollow()
+        pushToast({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '已取消订阅' }),
+        })
       } catch (error) {
         pushToast({
           type: 'warning',
-          message: intl.formatMessage({ defaultMessage: '取消关注失败' }),
+          message: intl.formatMessage({ defaultMessage: '取消失败' }),
           description: toMessage(error),
         })
       }
     })
-  }, [_gid, ensureAuthorized, intl, pushToast, unfollow])
+  }, [ensureAuthorized, intl, pushToast, unfollow])
   //#endregion
 
   const [viewType, setViewType] = useState(_type ?? GroupViewType.Publication)

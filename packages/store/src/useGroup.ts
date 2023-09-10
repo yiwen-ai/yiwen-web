@@ -1,9 +1,15 @@
-import { useLoading } from '@yiwen-ai/util'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
+import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
-import { RoleLevel, type GroupInfo, type Page, type UserInfo } from './common'
+import {
+  RoleLevel,
+  type GroupInfo,
+  type Page,
+  type Pagination,
+  type UserInfo,
+} from './common'
 import { useFetcher } from './useFetcher'
 
 export interface Group {
@@ -64,9 +70,12 @@ export function useGroupAPI() {
     return request.post<{ result: Group[] }>(`${path}/list_my`)
   }, [request])
 
-  const readFollowedGroupList = useCallback(() => {
-    return request.post<Page<Group>>(`${path}/list_following`)
-  }, [request])
+  const readFollowedGroupList = useCallback(
+    (body: Pagination) => {
+      return request.post<Page<Group>>(`${path}/list_following`, body)
+    },
+    [request]
+  )
 
   const followGroup = useCallback(
     (body: QueryIdCn) => {
@@ -93,7 +102,8 @@ export function useGroupAPI() {
 }
 
 export function useGroup(_gid: string | null | undefined) {
-  const { readGroupInfo, readGroupStatistic } = useGroupAPI()
+  const { readGroupInfo, readGroupStatistic, followGroup, unfollowGroup } =
+    useGroupAPI()
 
   const getInfoKey = useCallback(() => {
     if (!_gid) return null
@@ -152,6 +162,34 @@ export function useGroup(_gid: string | null | undefined) {
   const hasGroupAddCreationPermission =
     _role === RoleLevel.MEMBER || _role === RoleLevel.OWNER
 
+  const isFollowed = !!groupInfo?.result._following
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [isUnfollowing, setIsUnfollowing] = useState(false)
+
+  const follow = useCallback(async () => {
+    if (!_gid) throw new Error('group id is required')
+    try {
+      setIsFollowing(true)
+      const gid = Xid.fromValue(_gid)
+      await followGroup({ id: gid })
+      mutateGroupInfo()
+    } finally {
+      setIsFollowing(false)
+    }
+  }, [_gid, followGroup, mutateGroupInfo])
+
+  const unfollow = useCallback(async () => {
+    if (!_gid) throw new Error('group id is required')
+    try {
+      setIsUnfollowing(true)
+      const gid = Xid.fromValue(_gid)
+      await unfollowGroup({ id: gid })
+      mutateGroupInfo()
+    } finally {
+      setIsUnfollowing(false)
+    }
+  }, [_gid, mutateGroupInfo, unfollowGroup])
+
   return {
     isLoading: isLoadingGroupInfo || isLoadingGroupStatistic,
     isValidating: isValidatingGroupInfo || isValidatingGroupStatistic,
@@ -163,6 +201,11 @@ export function useGroup(_gid: string | null | undefined) {
     hasGroupAddCreationPermission,
     refreshGroupInfo,
     refreshGroupStatistic,
+    isFollowed,
+    isFollowing,
+    isUnfollowing,
+    follow,
+    unfollow,
   } as const
 }
 
@@ -209,89 +252,50 @@ export function useMyGroupList() {
 
 export function useFollowedGroupList() {
   const { isAuthorized } = useAuth()
-  const { readFollowedGroupList, followGroup, unfollowGroup } = useGroupAPI()
+  const { readFollowedGroupList } = useGroupAPI()
 
-  const getKey = useCallback(() => {
-    if (!isAuthorized) return null
-    return [`${path}/list_following`] as const
-  }, [isAuthorized])
-
-  const { data, error, mutate, isValidating, isLoading } = useSWR(
-    getKey,
-    ([_]) => readFollowedGroupList(),
-    { revalidateOnMount: false } as SWRConfiguration
+  const getKey = useCallback(
+    (_: unknown, prevPage: Page<Group> | null) => {
+      if (!isAuthorized) return null
+      if (prevPage && !prevPage.next_page_token) return null
+      const body: Pagination = {
+        page_size: 100,
+        page_token: prevPage?.next_page_token,
+      }
+      return [`${path}/list_following`, body] as const
+    },
+    [isAuthorized]
   )
 
+  const { data, error, mutate, isValidating, isLoading, setSize } =
+    useSWRInfinite(getKey, ([, body]) => readFollowedGroupList(body), {
+      revalidateOnMount: false,
+    })
+
+  const items = useMemo(() => {
+    if (!data) return []
+    return data.flatMap((page) => page.result)
+  }, [data])
+
+  const hasMore = useMemo(() => {
+    if (!data) return false
+    return !!data[data.length - 1]?.next_page_token
+  }, [data])
+
+  const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
+
   const refresh = useCallback(
-    async () => getKey() && (await mutate()),
+    async () => getKey(0, null) && (await mutate()),
     [getKey, mutate]
   )
 
-  const isFollowed = useCallback(
-    (_gid: Uint8Array | string) => {
-      const gid = Xid.fromValue(_gid)
-      return (data?.result ?? []).some(({ id }) =>
-        Xid.fromValue(id).equals(gid)
-      )
-    },
-    [data?.result]
-  )
-
-  const [setFollowing, isFollowing] = useLoading((gid: Uint8Array | string) =>
-    Xid.fromValue(gid).toString()
-  )
-
-  const [setUnfollowing, isUnfollowing] = useLoading(
-    (gid: Uint8Array | string) => Xid.fromValue(gid).toString()
-  )
-
-  const follow = useCallback(
-    async (_gid: Uint8Array | string | null | undefined) => {
-      if (!_gid) throw new Error('group id is required')
-      try {
-        setFollowing(_gid, true)
-        const gid = Xid.fromValue(_gid)
-        await followGroup({ id: gid })
-        mutate()
-      } finally {
-        setFollowing(_gid, false)
-      }
-    },
-    [followGroup, mutate, setFollowing]
-  )
-
-  const unfollow = useCallback(
-    async (_gid: Uint8Array | string | null | undefined) => {
-      if (!_gid) throw new Error('group id is required')
-      try {
-        setUnfollowing(_gid, true)
-        const gid = Xid.fromValue(_gid)
-        await unfollowGroup({ id: gid })
-        mutate(
-          (prev) =>
-            prev && {
-              ...prev,
-              result: prev.result.filter(
-                ({ id }) => !Xid.fromValue(id).equals(gid)
-              ),
-            }
-        )
-      } finally {
-        setUnfollowing(_gid, false)
-      }
-    },
-    [mutate, setUnfollowing, unfollowGroup]
-  )
-
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
     error,
-    groupList: data?.result,
+    items,
+    hasMore,
+    isLoadingMore: isValidating,
+    loadMore,
     refresh,
-    isFollowed,
-    isFollowing,
-    isUnfollowing,
-    follow,
-    unfollow,
-  }
+  } as const
 }

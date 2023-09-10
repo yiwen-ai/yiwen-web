@@ -55,4 +55,5 @@ export interface GroupInfo {
   status: number
   _role?: RoleLevel
   owner?: UserInfo
+  _following?: boolean
 }
