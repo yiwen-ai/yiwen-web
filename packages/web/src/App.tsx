@@ -56,7 +56,7 @@ import Loading from './components/Loading'
 import { useLogger } from './logger'
 import Home from './pages'
 import NotFound from './pages/404'
-import CollectionPage from './pages/collection'
+import BookmarkPage from './pages/bookmark'
 import EditCreationPage from './pages/creation/[cid]'
 import NewCreationPage from './pages/creation/new'
 import GroupDetailPage from './pages/group/[gid]'
@@ -154,8 +154,8 @@ function Layout() {
           onClick: () => navigate(DEFAULT_GROUP_PATH),
         },
         {
-          label: intl.formatMessage({ defaultMessage: '我的收藏' }),
-          onClick: () => navigate(COLLECTION_PATH),
+          label: intl.formatMessage({ defaultMessage: '我的书签' }),
+          onClick: () => navigate(BOOKMARK_PATH),
         },
         {
           label: intl.formatMessage({ defaultMessage: '我的订阅' }),
@@ -213,7 +213,7 @@ export function SetHeaderProps(props: HeaderProps) {
 }
 
 export const SEARCH_PATH = '/search'
-export const COLLECTION_PATH = '/collection'
+export const BOOKMARK_PATH = '/bookmark'
 export const NEW_CREATION_PATH = '/creation/new'
 export const EDIT_CREATION_PATH = '/creation/:cid'
 export const EDIT_PUBLICATION_PATH = '/publication/:cid'
@@ -228,7 +228,7 @@ const router = createBrowserRouter(
       <Route path='/' element={<Home />} />
       <Route path='/login/state' element={<LoginStatePage />} />
       <Route path={SEARCH_PATH} element={<SearchPage />} />
-      <Route path={COLLECTION_PATH} element={<CollectionPage />} />
+      <Route path={BOOKMARK_PATH} element={<BookmarkPage />} />
       <Route path={NEW_CREATION_PATH} element={<NewCreationPage />} />
       <Route path={EDIT_CREATION_PATH} element={<EditCreationPage />} />
       <Route path={EDIT_PUBLICATION_PATH} element={<EditPublicationPage />} />

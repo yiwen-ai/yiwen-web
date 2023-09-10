@@ -13,11 +13,11 @@ export {
   type UserInfo,
 } from './common'
 export {
-  useCollectionAPI,
-  useCollectionList,
-  useCreationCollectionList,
-  type CollectionOutput,
-} from './useCollection'
+  useBookmarkAPI,
+  useBookmarkList,
+  useCreationBookmarkList,
+  type BookmarkOutput,
+} from './useBookmark'
 export {
   CreationStatus,
   buildCreationKey,

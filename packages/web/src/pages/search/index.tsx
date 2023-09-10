@@ -1,5 +1,5 @@
 import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
-import CollectionSection from '#/components/CollectionSection'
+import BookmarkSection from '#/components/BookmarkSection'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import LargeDialog from '#/components/LargeDialog'
 import Loading from '#/components/Loading'
@@ -43,7 +43,7 @@ export default function SearchPage() {
       close: onPublicationViewerClose,
       ...publicationViewer
     },
-    collectionList,
+    bookmarkList,
   } = useSearchPage(pushToast)
 
   const handleChange = useCallback(
@@ -135,9 +135,9 @@ export default function SearchPage() {
           `}
         >
           <NewCreationLink />
-          <CollectionSection
-            isLoading={collectionList.isLoading}
-            items={collectionList.items.slice(0, LIMIT)}
+          <BookmarkSection
+            isLoading={bookmarkList.isLoading}
+            items={bookmarkList.items.slice(0, LIMIT)}
             onView={onView}
           />
         </div>

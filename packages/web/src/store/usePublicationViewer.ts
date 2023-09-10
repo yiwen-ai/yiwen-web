@@ -4,7 +4,7 @@ import {
   PublicationJobStatus,
   RequestError,
   toMessage,
-  useCreationCollectionList,
+  useCreationBookmarkList,
   useEnsureAuthorized,
   useFetcherConfig,
   useLanguageList,
@@ -62,13 +62,13 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   } = useTranslatedPublicationList(_gid, _cid, originalLanguageCode, _version)
 
   const {
-    refresh: refreshCollectionList,
+    refresh: refreshBookmarkList,
     isAdded: _isFavorite,
     isAdding: _isAddingFavorite,
     isRemoving: _isRemovingFavorite,
     add: _addFavorite,
     remove: _removeFavorite,
-  } = useCreationCollectionList(_cid)
+  } = useCreationBookmarkList(_cid)
 
   const { languageList } = useLanguageList()
 
@@ -136,11 +136,11 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       refreshPublication(),
       refreshTranslatedList(),
       refreshProcessingList(),
-      refreshCollectionList(),
+      refreshBookmarkList(),
     ])
     return publication
   }, [
-    refreshCollectionList,
+    refreshBookmarkList,
     refreshProcessingList,
     refreshPublication,
     refreshTranslatedList,

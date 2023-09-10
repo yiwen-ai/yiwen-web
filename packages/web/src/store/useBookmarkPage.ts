@@ -1,18 +1,18 @@
 import { type ToastAPI } from '@yiwen-ai/component'
-import { useCollectionList, type CollectionOutput } from '@yiwen-ai/store'
+import { useBookmarkList, type BookmarkOutput } from '@yiwen-ai/store'
 import { useCallback, useEffect } from 'react'
 import { usePublicationViewer } from './usePublicationViewer'
 
-export function useCollectionPage(pushToast: ToastAPI['pushToast']) {
+export function useBookmarkPage(pushToast: ToastAPI['pushToast']) {
   const {
-    refresh: refreshCollectionList,
+    refresh: refreshBookmarkList,
     remove,
-    ...collectionList
-  } = useCollectionList()
+    ...bookmarkList
+  } = useBookmarkList()
 
   useEffect(() => {
-    refreshCollectionList()
-  }, [refreshCollectionList])
+    refreshBookmarkList()
+  }, [refreshBookmarkList])
 
   const {
     show: showPublicationViewer,
@@ -23,29 +23,26 @@ export function useCollectionPage(pushToast: ToastAPI['pushToast']) {
   } = usePublicationViewer(pushToast)
 
   const onView = useCallback(
-    (item: CollectionOutput) => {
+    (item: BookmarkOutput) => {
       showPublicationViewer(item.gid, item.cid, item.language, item.version)
     },
     [showPublicationViewer]
   )
 
-  const onRemove = useCallback(
-    (item: CollectionOutput) => remove(item),
-    [remove]
-  )
+  const onRemove = useCallback((item: BookmarkOutput) => remove(item), [remove])
 
   const handlePublicationAddFavorite = useCallback(async () => {
     await onPublicationAddFavorite()
-    refreshCollectionList()
-  }, [onPublicationAddFavorite, refreshCollectionList])
+    refreshBookmarkList()
+  }, [onPublicationAddFavorite, refreshBookmarkList])
 
   const handlePublicationRemoveFavorite = useCallback(async () => {
     await onPublicationRemoveFavorite()
-    refreshCollectionList()
-  }, [onPublicationRemoveFavorite, refreshCollectionList])
+    refreshBookmarkList()
+  }, [onPublicationRemoveFavorite, refreshBookmarkList])
 
   return {
-    ...collectionList,
+    ...bookmarkList,
     onView,
     onRemove,
     publicationViewer: {
