@@ -1,8 +1,8 @@
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
-  useCollectionList,
+  useBookmarkList,
   useSearch,
-  type CollectionOutput,
+  type BookmarkOutput,
   type SearchDocument,
   type SearchInput,
 } from '@yiwen-ai/store'
@@ -60,33 +60,33 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   } = usePublicationViewer(pushToast)
 
   const onView = useCallback(
-    (item: SearchDocument | CollectionOutput) => {
+    (item: SearchDocument | BookmarkOutput) => {
       showPublicationViewer(item.gid, item.cid, item.language, item.version)
     },
     [showPublicationViewer]
   )
   //#endregion
 
-  //#region collection list
+  //#region bookmark list
   const {
-    refresh: refreshCollectionList,
+    refresh: refreshBookmarkList,
     remove,
-    ...collectionList
-  } = useCollectionList()
+    ...bookmarkList
+  } = useBookmarkList()
 
   const handlePublicationAddFavorite = useCallback(async () => {
     await onPublicationAddFavorite()
-    refreshCollectionList()
-  }, [onPublicationAddFavorite, refreshCollectionList])
+    refreshBookmarkList()
+  }, [onPublicationAddFavorite, refreshBookmarkList])
 
   const handlePublicationRemoveFavorite = useCallback(async () => {
     await onPublicationRemoveFavorite()
-    refreshCollectionList()
-  }, [onPublicationRemoveFavorite, refreshCollectionList])
+    refreshBookmarkList()
+  }, [onPublicationRemoveFavorite, refreshBookmarkList])
 
   useEffect(() => {
-    refreshCollectionList()
-  }, [refreshCollectionList])
+    refreshBookmarkList()
+  }, [refreshBookmarkList])
   //#endregion
 
   return {
@@ -101,6 +101,6 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
       onRemoveFavorite: handlePublicationRemoveFavorite,
       ...publicationViewer,
     },
-    collectionList,
+    bookmarkList,
   } as const
 }

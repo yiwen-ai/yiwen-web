@@ -1,4 +1,4 @@
-import { COLLECTION_PATH } from '#/App'
+import { BOOKMARK_PATH } from '#/App'
 import OrderedItem from '#/components/OrderedItem'
 import OrderedList from '#/components/OrderedList'
 import PublicationLink from '#/components/PublicationLink'
@@ -6,21 +6,21 @@ import Section, { SectionHeader, SectionTitle } from '#/components/Section'
 import { BREAKPOINT } from '#/shared'
 import { css } from '@emotion/react'
 import { IconButton } from '@yiwen-ai/component'
-import { buildPublicationKey, type CollectionOutput } from '@yiwen-ai/store'
+import { buildPublicationKey, type BookmarkOutput } from '@yiwen-ai/store'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
 import { Link } from 'react-router-dom'
 import Loading from './Loading'
 
-export default function CollectionSection({
+export default function BookmarkSection({
   isLoading,
   items,
   onView,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & {
   isLoading: boolean
-  items: CollectionOutput[]
-  onView: (item: CollectionOutput) => void
+  items: BookmarkOutput[]
+  onView: (item: BookmarkOutput) => void
 }) {
   const intl = useIntl()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
@@ -40,11 +40,11 @@ export default function CollectionSection({
         >
           <SectionTitle
             iconName='heart'
-            label={intl.formatMessage({ defaultMessage: '收藏' })}
+            label={intl.formatMessage({ defaultMessage: '书签' })}
             active={true}
           />
           <Link
-            to={COLLECTION_PATH}
+            to={BOOKMARK_PATH}
             css={css`
               display: flex;
             `}

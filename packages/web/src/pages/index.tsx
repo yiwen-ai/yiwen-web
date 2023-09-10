@@ -1,5 +1,5 @@
 import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
-import CollectionSection from '#/components/CollectionSection'
+import BookmarkSection from '#/components/BookmarkSection'
 import LargeDialog from '#/components/LargeDialog'
 import PublicationViewer from '#/components/PublicationViewer'
 import { BREAKPOINT } from '#/shared'
@@ -31,7 +31,7 @@ export default function Home() {
       close: onPublicationViewerClose,
       ...publicationViewer
     },
-    collectionList,
+    bookmarkList,
   } = useHomePage(pushToast)
 
   return (
@@ -88,9 +88,9 @@ export default function Home() {
               margin-top: 48px;
             `}
           >
-            <CollectionSection
-              isLoading={collectionList.isLoading}
-              items={collectionList.items.slice(0, LIMIT)}
+            <BookmarkSection
+              isLoading={bookmarkList.isLoading}
+              items={bookmarkList.items.slice(0, LIMIT)}
               onView={onView}
             />
           </div>

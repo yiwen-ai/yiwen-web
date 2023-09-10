@@ -12,7 +12,7 @@ import {
   type PublicationOutput,
 } from './usePublication'
 
-export interface CollectionOutput {
+export interface BookmarkOutput {
   id: Uint8Array
   gid: Uint8Array
   cid: Uint8Array
@@ -24,17 +24,17 @@ export interface CollectionOutput {
   group_info?: GroupInfo
 }
 
-export interface QueryCollection {
+export interface QueryBookmark {
   id: Uint8Array
   fields: string
 }
 
-export interface QueryCollectionByCid {
+export interface QueryBookmarkByCid {
   cid: Uint8Array
   fields: string
 }
 
-export interface CreateCollectionInput {
+export interface CreateBookmarkInput {
   gid: Uint8Array
   cid: Uint8Array
   language: string
@@ -43,7 +43,7 @@ export interface CreateCollectionInput {
   labels?: string[]
 }
 
-export interface UpdateCollectionInput {
+export interface UpdateBookmarkInput {
   id: Uint8Array
   updated_at: number
   version?: number
@@ -51,59 +51,59 @@ export interface UpdateCollectionInput {
   labels?: string[]
 }
 
-const path = '/v1/collection'
+const path = '/v1/bookmark'
 
-export function useCollectionAPI() {
+export function useBookmarkAPI() {
   const request = useFetcher()
 
-  const readCreationCollectionList = useCallback(
-    (params: Record<keyof QueryCollectionByCid, string | undefined>) => {
-      return request.get<Page<CollectionOutput>>(`${path}/by_cid`, params)
+  const readCreationBookmarkList = useCallback(
+    (params: Record<keyof QueryBookmarkByCid, string | undefined>) => {
+      return request.get<Page<BookmarkOutput>>(`${path}/by_cid`, params)
     },
     [request]
   )
 
-  const readCollectionList = useCallback(
+  const readBookmarkList = useCallback(
     (body: Pagination) => {
-      return request.post<Page<CollectionOutput>>(`${path}/list`, body)
+      return request.post<Page<BookmarkOutput>>(`${path}/list`, body)
     },
     [request]
   )
 
-  const addCollection = useCallback(
-    (body: CreateCollectionInput) => {
-      return request.post<{ result: CollectionOutput }>(
-        '/v1/publication/collect',
+  const addBookmark = useCallback(
+    (body: CreateBookmarkInput) => {
+      return request.post<{ result: BookmarkOutput }>(
+        '/v1/publication/bookmark',
         body
       )
     },
     [request]
   )
 
-  const removeCollection = useCallback(
-    (params: Record<keyof QueryCollection, string | undefined>) => {
+  const removeBookmark = useCallback(
+    (params: Record<keyof QueryBookmark, string | undefined>) => {
       return request.delete(path, params)
     },
     [request]
   )
 
   return {
-    readCreationCollectionList,
-    readCollectionList,
-    addCollection,
-    removeCollection,
+    readCreationBookmarkList,
+    readBookmarkList,
+    addBookmark,
+    removeBookmark,
   } as const
 }
 
-export function useCreationCollectionList(_cid: string | null | undefined) {
+export function useCreationBookmarkList(_cid: string | null | undefined) {
   const { isAuthorized } = useAuth()
-  const { readCreationCollectionList, addCollection, removeCollection } =
-    useCollectionAPI()
+  const { readCreationBookmarkList, addBookmark, removeBookmark } =
+    useBookmarkAPI()
 
   const getKey = useCallback(() => {
     if (!isAuthorized || !_cid) return null
 
-    const params: Record<keyof QueryCollectionByCid, string | undefined> = {
+    const params: Record<keyof QueryBookmarkByCid, string | undefined> = {
       cid: _cid,
       fields: 'gid,cid,language,version',
     }
@@ -113,7 +113,7 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
 
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
-    ([, params]) => readCreationCollectionList(params),
+    ([, params]) => readCreationBookmarkList(params),
     { revalidateOnMount: false } as SWRConfiguration
   )
 
@@ -148,7 +148,7 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
   )
 
   const setRemoving = useCallback(
-    (item: PublicationOutput | CollectionOutput, isRemoving: boolean) => {
+    (item: PublicationOutput | BookmarkOutput, isRemoving: boolean) => {
       setState((prev) => ({
         ...prev,
         isRemoving: {
@@ -168,7 +168,7 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
   )
 
   const isRemoving = useCallback(
-    (item: PublicationOutput | CollectionOutput) => {
+    (item: PublicationOutput | BookmarkOutput) => {
       return state.isRemoving[buildPublicationKey(item)] ?? false
     },
     [state.isRemoving]
@@ -178,7 +178,7 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
     async (item: PublicationOutput) => {
       try {
         setAdding(item, true)
-        const { result } = await addCollection({
+        const { result } = await addBookmark({
           gid: item.gid,
           cid: item.cid,
           language: item.language,
@@ -194,16 +194,16 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
         setAdding(item, false)
       }
     },
-    [addCollection, mutate, setAdding]
+    [addBookmark, mutate, setAdding]
   )
 
   const remove = useCallback(
-    async (item: PublicationOutput | CollectionOutput) => {
+    async (item: PublicationOutput | BookmarkOutput) => {
       try {
         setRemoving(item, true)
         const item2 = data?.result.find(isSamePublication.bind(null, item))
-        if (!item2) throw new Error('cannot find the collection to be removed')
-        await removeCollection({
+        if (!item2) throw new Error('cannot find the bookmark to be removed')
+        await removeBookmark({
           id: Xid.fromValue(item2.id).toString(),
           fields: undefined,
         })
@@ -215,13 +215,13 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
         setRemoving(item, false)
       }
     },
-    [data?.result, mutate, removeCollection, setRemoving]
+    [data?.result, mutate, removeBookmark, setRemoving]
   )
 
   return {
     isLoading: isValidating || isLoading,
     error,
-    collectionList: data?.result,
+    bookmarkList: data?.result,
     refresh,
     isAdded,
     isAdding,
@@ -231,12 +231,12 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
   } as const
 }
 
-export function useCollectionList() {
+export function useBookmarkList() {
   const { isAuthorized } = useAuth()
-  const { readCollectionList, removeCollection } = useCollectionAPI()
+  const { readBookmarkList, removeBookmark } = useBookmarkAPI()
 
   const getKey = useCallback(
-    (_: unknown, prevPage: Page<CollectionOutput> | null) => {
+    (_: unknown, prevPage: Page<BookmarkOutput> | null) => {
       if (!isAuthorized) return null
       if (prevPage && !prevPage.next_page_token) return null
       const body: Pagination = {
@@ -249,7 +249,7 @@ export function useCollectionList() {
   )
 
   const { data, error, mutate, isValidating, isLoading, setSize } =
-    useSWRInfinite(getKey, ([, body]) => readCollectionList(body), {
+    useSWRInfinite(getKey, ([, body]) => readBookmarkList(body), {
       revalidateOnMount: false,
     })
 
@@ -275,7 +275,7 @@ export function useCollectionList() {
   })
 
   const setRemoving = useCallback(
-    (item: CollectionOutput, isRemoving: boolean) => {
+    (item: BookmarkOutput, isRemoving: boolean) => {
       setState((prev) => ({
         ...prev,
         isRemoving: {
@@ -288,17 +288,17 @@ export function useCollectionList() {
   )
 
   const isRemoving = useCallback(
-    (item: CollectionOutput) => {
+    (item: BookmarkOutput) => {
       return state.isRemoving[buildPublicationKey(item)] ?? false
     },
     [state.isRemoving]
   )
 
   const remove = useCallback(
-    async (item: CollectionOutput) => {
+    async (item: BookmarkOutput) => {
       try {
         setRemoving(item, true)
-        await removeCollection({
+        await removeBookmark({
           id: Xid.fromValue(item.id).toString(),
           fields: undefined,
         })
@@ -312,7 +312,7 @@ export function useCollectionList() {
         setRemoving(item, false)
       }
     },
-    [mutate, removeCollection, setRemoving]
+    [mutate, removeBookmark, setRemoving]
   )
 
   return {

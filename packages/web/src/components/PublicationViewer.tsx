@@ -315,8 +315,8 @@ export default function PublicationViewer({
                     <Icon name='heart' size='small' />
                   )}
                   {isFavorite
-                    ? intl.formatMessage({ defaultMessage: '已收藏' })
-                    : intl.formatMessage({ defaultMessage: '收藏' })}
+                    ? intl.formatMessage({ defaultMessage: '已加入书签' })
+                    : intl.formatMessage({ defaultMessage: '添加书签' })}
                 </Button>
               )}
               {publication.status === PublicationStatus.Published &&

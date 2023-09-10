@@ -7,7 +7,7 @@ import Placeholder from '#/components/Placeholder'
 import PublicationLink from '#/components/PublicationLink'
 import PublicationViewer from '#/components/PublicationViewer'
 import { BREAKPOINT } from '#/shared'
-import { useCollectionPage } from '#/store/useCollectionPage'
+import { useBookmarkPage } from '#/store/useBookmarkPage'
 import { css, useTheme } from '@emotion/react'
 import {
   Icon,
@@ -17,13 +17,13 @@ import {
   textEllipsis,
   useToast,
 } from '@yiwen-ai/component'
-import { type CollectionOutput } from '@yiwen-ai/store'
+import { type BookmarkOutput } from '@yiwen-ai/store'
 import { preventDefaultStopPropagation } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import { Xid } from 'xid-ts'
 
-export default function CollectionPage() {
+export default function BookmarkPage() {
   const { renderToastContainer, pushToast } = useToast()
 
   const {
@@ -41,7 +41,7 @@ export default function CollectionPage() {
       close: onPublicationViewerClose,
       ...publicationViewer
     },
-  } = useCollectionPage(pushToast)
+  } = useBookmarkPage(pushToast)
 
   return (
     <>
@@ -63,7 +63,7 @@ export default function CollectionPage() {
         ) : (
           <>
             {items.map((item) => (
-              <CollectionItem
+              <BookmarkItem
                 key={Xid.fromValue(item.id).toString()}
                 item={item}
                 isRemoving={isRemoving(item)}
@@ -88,16 +88,16 @@ export default function CollectionPage() {
   )
 }
 
-function CollectionItem({
+function BookmarkItem({
   item,
   isRemoving,
   onView,
   onRemove,
 }: {
-  item: CollectionOutput
+  item: BookmarkOutput
   isRemoving: boolean
-  onView: (item: CollectionOutput) => void
-  onRemove: (item: CollectionOutput) => void
+  onView: (item: BookmarkOutput) => void
+  onRemove: (item: BookmarkOutput) => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
@@ -161,7 +161,7 @@ function CollectionItem({
                   <Icon name='heart' size='small' />
                 )
               }
-              label={intl.formatMessage({ defaultMessage: '取消收藏' })}
+              label={intl.formatMessage({ defaultMessage: '移除书签' })}
               disabled={isRemoving}
               onClick={handleRemove}
               closeOnClick={false}

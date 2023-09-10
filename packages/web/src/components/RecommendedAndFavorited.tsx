@@ -88,7 +88,7 @@ export default function RecommendedAndFavorited(
               <TabItem
                 tab={Tab.Favorited}
                 tabIcon='heart'
-                tabName={intl.formatMessage({ defaultMessage: '收藏' })}
+                tabName={intl.formatMessage({ defaultMessage: '书签' })}
                 currentTab={tab}
                 onClick={setTab}
               />
@@ -117,7 +117,7 @@ export default function RecommendedAndFavorited(
               <TabItem
                 tab={Tab.Favorited}
                 tabIcon='heart'
-                tabName={intl.formatMessage({ defaultMessage: '收藏' })}
+                tabName={intl.formatMessage({ defaultMessage: '书签' })}
               />
             }
             items={favoritedItems}
