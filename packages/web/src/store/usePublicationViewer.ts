@@ -210,11 +210,23 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
         }
       } catch (error) {
         if (!controller.signal.aborted) {
-          pushToast({
-            type: 'warning',
-            message: intl.formatMessage({ defaultMessage: '翻译失败' }),
-            description: toMessage(error),
-          })
+          if (
+            lang.isOriginal &&
+            error instanceof RequestError &&
+            error.status === 404
+          ) {
+            pushToast({
+              type: 'warning',
+              message: intl.formatMessage({ defaultMessage: '原文不存在' }),
+              description: toMessage(error),
+            })
+          } else {
+            pushToast({
+              type: 'warning',
+              message: intl.formatMessage({ defaultMessage: '翻译失败' }),
+              description: toMessage(error),
+            })
+          }
         }
         return undefined
       } finally {
