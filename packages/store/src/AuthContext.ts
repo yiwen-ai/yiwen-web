@@ -1,4 +1,10 @@
-import { Channel, createAction, isWindow, joinURL } from '@yiwen-ai/util'
+import {
+  Channel,
+  createAction,
+  isWindow,
+  joinURL,
+  type ModalRef,
+} from '@yiwen-ai/util'
 import {
   createContext,
   createElement,
@@ -9,12 +15,13 @@ import {
   useState,
 } from 'react'
 import {
-  EMPTY,
-  Observable,
   catchError,
   concatMap,
+  EMPTY,
   finalize,
   from,
+  Observable,
+  tap,
   type Subscription,
 } from 'rxjs'
 import { type UserInfo } from './common'
@@ -111,9 +118,11 @@ class AuthAPI {
 
 interface State {
   isInitialized: boolean
-  user?: UserInfo
+  isAuthorized: boolean
+  user?: UserInfo | undefined
   accessToken?: string | undefined
   refreshInterval?: number | undefined
+  dialog: ModalRef
   authorize: (provider: IdentityProvider) => void
   authorizingProvider?: IdentityProvider | undefined
   callback: (payload: { status: number }) => void
@@ -122,6 +131,13 @@ interface State {
 
 const Context = createContext<Readonly<State>>({
   isInitialized: false,
+  isAuthorized: false,
+  dialog: {
+    open: false,
+    show: () => {},
+    close: () => {},
+    toggle: () => {},
+  },
   authorize: () => {},
   callback: () => {},
   logout: () => {},
@@ -131,54 +147,112 @@ export function useAuth() {
   return useContext(Context)
 }
 
+export function useEnsureAuthorized() {
+  const {
+    isAuthorized,
+    dialog: { show: showDialog },
+  } = useAuth()
+
+  return useCallback(
+    <T extends (...args: never[]) => unknown>(callback: T) => {
+      return (...args: Parameters<T>) => {
+        if (isAuthorized) {
+          return callback(...args) as ReturnType<T>
+        } else {
+          return showDialog() as undefined
+        }
+      }
+    },
+    [isAuthorized, showDialog]
+  )
+}
+
+export function useEnsureAuthorizedCallback() {
+  const {
+    isAuthorized,
+    dialog: { show: showDialog },
+  } = useAuth()
+
+  const createHandler = useCallback(
+    <T extends React.SyntheticEvent>(callback?: (ev: T) => void) => {
+      return (ev: T) => {
+        if (isAuthorized) {
+          callback?.(ev)
+        } else {
+          ev.preventDefault()
+          ev.stopPropagation()
+          showDialog()
+        }
+      }
+    },
+    [isAuthorized, showDialog]
+  )
+
+  return useCallback(
+    <T extends React.SyntheticEvent>(ev: T | ((ev: T) => void)) => {
+      if (typeof ev === 'function') {
+        const callback = ev
+        return createHandler(callback)
+      } else {
+        createHandler()(ev)
+        return undefined
+      }
+    },
+    [createHandler]
+  )
+}
+
 export function AuthProvider(
   props: React.PropsWithChildren<{ fallback?: React.ReactNode }>
 ) {
   const logger = useLogger()
   const config = useFetcherConfig()
-  const authAPI = useMemo(
-    () => config && new AuthAPI(logger, config),
-    [config, logger]
-  )
+  const authAPI = useMemo(() => new AuthAPI(logger, config), [config, logger])
   const [state, setState] = useState(useAuth())
   const { isInitialized, refreshInterval } = state
 
   const refresh = useCallback(
     async (authAPI: AuthAPI, signal: AbortSignal | null) => {
-      const [user, { access_token, expires_in }] = await Promise.all([
-        authAPI.fetchUser(signal),
-        authAPI.fetchAccessToken(signal),
-      ])
-      setState((state) => ({
-        ...state,
-        user,
-        accessToken: access_token,
-        refreshInterval: expires_in,
-      }))
+      try {
+        const [user, { access_token, expires_in }] = await Promise.all([
+          authAPI.fetchUser(signal),
+          authAPI.fetchAccessToken(signal),
+        ])
+        setState((state) => ({
+          ...state,
+          isAuthorized: true,
+          user,
+          accessToken: access_token,
+          refreshInterval: expires_in,
+        }))
+      } catch {
+        setState((state) => ({
+          ...state,
+          isAuthorized: false,
+          user: undefined,
+          accessToken: undefined,
+          refreshInterval: undefined,
+        }))
+      }
     },
     []
   )
 
   useEffect(() => {
-    if (!authAPI) return
     const controller = new AbortController()
-    let aborted = false
     refresh(authAPI, controller.signal)
       .catch((error) => {
         // TODO: handle error
       })
       .finally(() => {
-        if (aborted) return
+        if (controller.signal.aborted) return
         setState((state) => ({ ...state, isInitialized: true }))
       })
-    return () => {
-      controller.abort()
-      aborted = true
-    }
+    return () => controller.abort()
   }, [authAPI, refresh])
 
   useEffect(() => {
-    if (!authAPI || !refreshInterval) return
+    if (!refreshInterval) return
     const controller = new AbortController()
     const timer = window.setInterval(() => {
       authAPI
@@ -205,7 +279,6 @@ export function AuthProvider(
   }, [authAPI, refreshInterval])
 
   useEffect(() => {
-    if (!authAPI) return
     const subscriptionList = new Set<Subscription>()
     const authorize = (provider: IdentityProvider) => {
       setState((state) => ({ ...state, authorizingProvider: provider }))
@@ -219,12 +292,22 @@ export function AuthProvider(
               return () => controller.abort()
             })
           }),
+          tap(() => {
+            setState((state) => ({
+              ...state,
+              dialog: { ...state.dialog, open: false },
+              authorizingProvider: undefined,
+            }))
+          }),
           catchError((error) => {
+            setState((state) => ({
+              ...state,
+              authorizingProvider: undefined,
+            }))
             // TODO: handle error
             return EMPTY
           }),
           finalize(() => {
-            setState((state) => ({ ...state, authorizingProvider: undefined }))
             subscriptionList.delete(subscription)
           })
         )
@@ -259,6 +342,36 @@ export function AuthProvider(
       subscriptionList.clear()
     }
   }, [authAPI, refresh])
+
+  useEffect(() => {
+    const showDialog = () => {
+      setState((state) => ({
+        ...state,
+        dialog: { ...state.dialog, open: true },
+      }))
+    }
+    const closeDialog = () => {
+      setState((state) => ({
+        ...state,
+        dialog: { ...state.dialog, open: false },
+      }))
+    }
+    const toggleDialog = () => {
+      setState((state) => ({
+        ...state,
+        dialog: { ...state.dialog, open: !state.dialog.open },
+      }))
+    }
+    setState((state) => ({
+      ...state,
+      dialog: {
+        ...state.dialog,
+        show: showDialog,
+        close: closeDialog,
+        toggle: toggleDialog,
+      },
+    }))
+  }, [])
 
   return createElement(
     Context.Provider,

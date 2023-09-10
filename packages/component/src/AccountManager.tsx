@@ -21,7 +21,7 @@ export const AccountManager = memo(function AccountManager({
 }: MenuProps) {
   const intl = useIntl()
   const theme = useTheme()
-  const { user, authorize, authorizingProvider, logout } = useAuth()
+  const { user, dialog, authorize, authorizingProvider, logout } = useAuth()
   const items = useMemo(() => {
     return (_items || []).concat({
       label: intl.formatMessage({ defaultMessage: '退出登录' }),
@@ -43,6 +43,8 @@ export const AccountManager = memo(function AccountManager({
     />
   ) : (
     <AlertDialog
+      open={dialog.open}
+      onToggle={dialog.toggle}
       anchor={(props) => (
         <Button color='primary' {...props}>
           {intl.formatMessage({ defaultMessage: '登录' })}
@@ -129,7 +131,7 @@ export const AccountManager = memo(function AccountManager({
           />
         </div>
       </AlertDialogBody>
-      <AlertDialogClose />
+      <AlertDialogClose stopPropagation={true} />
     </AlertDialog>
   )
 })

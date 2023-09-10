@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
+import { useAuth } from './AuthContext'
 import { type GroupInfo, type Page, type Pagination } from './common'
 import { useFetcher } from './useFetcher'
 import {
@@ -95,11 +96,12 @@ export function useCollectionAPI() {
 }
 
 export function useCreationCollectionList(_cid: string | null | undefined) {
+  const { isAuthorized } = useAuth()
   const { readCreationCollectionList, addCollection, removeCollection } =
     useCollectionAPI()
 
   const getKey = useCallback(() => {
-    if (!_cid) return null
+    if (!isAuthorized || !_cid) return null
 
     const params: Record<keyof QueryCollectionByCid, string | undefined> = {
       cid: _cid,
@@ -107,7 +109,7 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
     }
 
     return [`${path}/by_cid`, params] as const
-  }, [_cid])
+  }, [_cid, isAuthorized])
 
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
@@ -230,10 +232,12 @@ export function useCreationCollectionList(_cid: string | null | undefined) {
 }
 
 export function useCollectionList() {
+  const { isAuthorized } = useAuth()
   const { readCollectionList, removeCollection } = useCollectionAPI()
 
   const getKey = useCallback(
     (_: unknown, prevPage: Page<CollectionOutput> | null) => {
+      if (!isAuthorized) return null
       if (prevPage && !prevPage.next_page_token) return null
       const body: Pagination = {
         page_size: 100,
@@ -241,7 +245,7 @@ export function useCollectionList() {
       }
       return [`${path}/list`, body] as const
     },
-    []
+    [isAuthorized]
   )
 
   const { data, error, mutate, isValidating, isLoading, setSize } =

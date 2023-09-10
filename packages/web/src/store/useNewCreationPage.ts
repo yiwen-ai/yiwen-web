@@ -8,7 +8,15 @@ import { useCallback, useEffect, useState } from 'react'
 import { Xid } from 'xid-ts'
 
 export function useNewCreationPage(_gid: string | null | undefined) {
+  const {
+    isAuthorized,
+    dialog: { show: showAuthDialog },
+  } = useAuth()
   const { createCreation } = useCreationAPI()
+
+  useEffect(() => {
+    if (!isAuthorized) showAuthDialog()
+  }, [isAuthorized, showAuthDialog])
 
   //#region draft
   const { locale } = useAuth().user ?? {}
