@@ -10,6 +10,7 @@ import {
   type GIDPagination,
   type GroupInfo,
   type Page,
+  type Pagination,
   type UserInfo,
 } from './common'
 import { RequestMethod, useFetcher } from './useFetcher'
@@ -183,6 +184,22 @@ export function usePublicationAPI() {
     return request.get<{ result: PublicationJob[] }>(`${path}/list_job`)
   }, [request])
 
+  const readRecommendedPublicationList = useCallback(() => {
+    return request.get<{ result: PublicationOutput[] }>(
+      `${path}/recommendations`
+    )
+  }, [request])
+
+  const readFollowedPublicationList = useCallback(
+    (body: Pagination) => {
+      return request.post<Page<PublicationOutput>>(
+        `${path}/list_by_following`,
+        body
+      )
+    },
+    [request]
+  )
+
   const translatePublication = useCallback(
     (body: CreatePublicationInput) => {
       return request.post<{ job: string; result: PublicationOutput | null }>(
@@ -318,6 +335,8 @@ export function usePublicationAPI() {
     readArchivedPublicationList,
     readTranslatedPublicationList,
     readProcessingPublicationList,
+    readRecommendedPublicationList,
+    readFollowedPublicationList,
     translatePublication,
     createPublication,
     updatePublication,
@@ -818,4 +837,80 @@ export function usePublicationList(
     restoreItem,
     deleteItem,
   }
+}
+
+export function useFollowedPublicationList() {
+  const { isAuthorized } = useAuth()
+  const { readFollowedPublicationList } = usePublicationAPI()
+
+  const getKey = useCallback(
+    (_: unknown, prevPage: Page<PublicationOutput> | null) => {
+      if (!isAuthorized) return null
+      if (prevPage && !prevPage.next_page_token) return null
+      const body: Pagination = {
+        page_size: 100,
+        page_token: prevPage?.next_page_token,
+      }
+      return [`${path}/list_by_following`, body] as const
+    },
+    [isAuthorized]
+  )
+
+  const { data, error, mutate, isValidating, isLoading, setSize } =
+    useSWRInfinite(getKey, ([, body]) => readFollowedPublicationList(body), {
+      revalidateOnMount: false,
+    })
+
+  const items = useMemo(() => {
+    if (!data) return []
+    return data.flatMap((page) => page.result)
+  }, [data])
+
+  const hasMore = useMemo(() => {
+    if (!data) return false
+    return !!data[data.length - 1]?.next_page_token
+  }, [data])
+
+  const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
+
+  const refresh = useCallback(
+    async () => getKey(0, null) && (await mutate()),
+    [getKey, mutate]
+  )
+
+  return {
+    isLoading,
+    error,
+    items,
+    hasMore,
+    isLoadingMore: isValidating,
+    loadMore,
+    refresh,
+  } as const
+}
+
+export function useRecommendedPublicationList() {
+  const { readRecommendedPublicationList } = usePublicationAPI()
+
+  const getKey = useCallback(() => {
+    return [`${path}/recommendations`] as const
+  }, [])
+
+  const { data, error, mutate, isValidating, isLoading } = useSWR(
+    getKey,
+    () => readRecommendedPublicationList(),
+    { revalidateOnMount: false } as SWRConfiguration
+  )
+
+  const refresh = useCallback(
+    async () => getKey() && (await mutate()),
+    [getKey, mutate]
+  )
+
+  return {
+    isLoading: isValidating || isLoading,
+    error,
+    publicationList: data?.result,
+    refresh,
+  } as const
 }

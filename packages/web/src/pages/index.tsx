@@ -1,7 +1,12 @@
-import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
-import BookmarkSection from '#/components/BookmarkSection'
+import {
+  BOOKMARK_PATH,
+  NEW_CREATION_PATH,
+  SUBSCRIPTION_PATH,
+  SetHeaderProps,
+} from '#/App'
 import LargeDialog from '#/components/LargeDialog'
 import PublicationViewer from '#/components/PublicationViewer'
+import ResponsiveTabSection from '#/components/ResponsiveTabSection'
 import { BREAKPOINT } from '#/shared'
 import { useHomePage } from '#/store/useHomePage'
 import { css, useTheme } from '@emotion/react'
@@ -16,8 +21,6 @@ import {
 import { useIntl } from 'react-intl'
 import { Link } from 'react-router-dom'
 
-const LIMIT = 6
-
 export default function Home() {
   const intl = useIntl()
   const theme = useTheme()
@@ -31,6 +34,7 @@ export default function Home() {
       close: onPublicationViewerClose,
       ...publicationViewer
     },
+    subscriptionList,
     bookmarkList,
   } = useHomePage(pushToast)
 
@@ -83,17 +87,30 @@ export default function Home() {
               defaultMessage: '搜你想要的内容，用你想要的语言来阅读',
             })}
           </div>
-          <div
+          <ResponsiveTabSection
+            tabs={[
+              {
+                key: 'subscription',
+                icon: 'wanchain',
+                title: intl.formatMessage({ defaultMessage: '订阅更新' }),
+                more: SUBSCRIPTION_PATH,
+                isLoading: subscriptionList.isLoading,
+                items: subscriptionList.items,
+              },
+              {
+                key: 'bookmark',
+                icon: 'heart',
+                title: intl.formatMessage({ defaultMessage: '书签' }),
+                more: BOOKMARK_PATH,
+                isLoading: bookmarkList.isLoading,
+                items: bookmarkList.items,
+              },
+            ]}
+            onView={onView}
             css={css`
               margin-top: 48px;
             `}
-          >
-            <BookmarkSection
-              isLoading={bookmarkList.isLoading}
-              items={bookmarkList.items.slice(0, LIMIT)}
-              onView={onView}
-            />
-          </div>
+          />
         </div>
         <div
           css={css`

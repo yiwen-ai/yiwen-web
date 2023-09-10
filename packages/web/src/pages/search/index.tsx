@@ -7,6 +7,7 @@ import NewCreationLink from '#/components/NewCreationLink'
 import Placeholder from '#/components/Placeholder'
 import PublicationViewer from '#/components/PublicationViewer'
 import SearchItem from '#/components/SearchItem'
+import SubscriptionSection from '#/components/SubscriptionSection'
 import { BREAKPOINT } from '#/shared'
 import { useSearchPage } from '#/store/useSearchPage'
 import { css, useTheme } from '@emotion/react'
@@ -24,7 +25,6 @@ import { useIntl } from 'react-intl'
 import { Link } from 'react-router-dom'
 
 const MAX_WIDTH = 680
-const LIMIT = 6
 
 export default function SearchPage() {
   const intl = useIntl()
@@ -43,6 +43,7 @@ export default function SearchPage() {
       close: onPublicationViewerClose,
       ...publicationViewer
     },
+    subscriptionList,
     bookmarkList,
   } = useSearchPage(pushToast)
 
@@ -135,9 +136,14 @@ export default function SearchPage() {
           `}
         >
           <NewCreationLink />
+          <SubscriptionSection
+            isLoading={subscriptionList.isLoading}
+            items={subscriptionList.items}
+            onView={onView}
+          />
           <BookmarkSection
             isLoading={bookmarkList.isLoading}
-            items={bookmarkList.items.slice(0, LIMIT)}
+            items={bookmarkList.items}
             onView={onView}
           />
         </div>
