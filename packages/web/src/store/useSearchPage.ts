@@ -1,8 +1,11 @@
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   useBookmarkList,
+  useFollowedPublicationList,
+  useRecommendedPublicationList,
   useSearch,
   type BookmarkOutput,
+  type PublicationOutput,
   type SearchDocument,
   type SearchInput,
 } from '@yiwen-ai/store'
@@ -60,10 +63,45 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   } = usePublicationViewer(pushToast)
 
   const onView = useCallback(
-    (item: SearchDocument | BookmarkOutput) => {
+    (item: SearchDocument | PublicationOutput | BookmarkOutput) => {
       showPublicationViewer(item.gid, item.cid, item.language, item.version)
     },
     [showPublicationViewer]
+  )
+  //#endregion
+
+  //#region subscription list
+  const {
+    isLoading: isLoadingFollowedPublicationList,
+    items: followedPublicationList,
+    refresh: refreshFollowedPublicationList,
+  } = useFollowedPublicationList()
+
+  const {
+    isLoading: isLoadingRecommendedPublicationList,
+    publicationList: recommendedPublicationList,
+    refresh: refreshRecommendedPublicationList,
+  } = useRecommendedPublicationList()
+
+  useEffect(() => {
+    refreshFollowedPublicationList()
+    refreshRecommendedPublicationList()
+  }, [refreshFollowedPublicationList, refreshRecommendedPublicationList])
+
+  const subscriptionList = useMemo(
+    () => ({
+      isLoading:
+        isLoadingFollowedPublicationList || isLoadingRecommendedPublicationList,
+      items: followedPublicationList.length
+        ? followedPublicationList
+        : recommendedPublicationList ?? [],
+    }),
+    [
+      followedPublicationList,
+      isLoadingFollowedPublicationList,
+      isLoadingRecommendedPublicationList,
+      recommendedPublicationList,
+    ]
   )
   //#endregion
 
@@ -101,6 +139,7 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
       onRemoveFavorite: handlePublicationRemoveFavorite,
       ...publicationViewer,
     },
+    subscriptionList,
     bookmarkList,
   } as const
 }

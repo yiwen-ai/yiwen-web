@@ -7,9 +7,7 @@ export default function OrderedList({
     <div
       {...props}
       css={css`
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-start;
+        display: grid;
         gap: 12px 24px;
       `}
     />

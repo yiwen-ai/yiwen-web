@@ -65,6 +65,7 @@ import LoginStatePage from './pages/login/state'
 import SharePublicationPage from './pages/pub/[cid]'
 import EditPublicationPage from './pages/publication/[cid]'
 import SearchPage from './pages/search'
+import SubscriptionPage from './pages/subscription'
 import { BREAKPOINT } from './shared'
 
 function Fallback({
@@ -159,7 +160,7 @@ function Layout() {
         },
         {
           label: intl.formatMessage({ defaultMessage: '我的订阅' }),
-          style: { display: 'none' },
+          onClick: () => navigate(SUBSCRIPTION_PATH),
         },
       ],
     }),
@@ -214,6 +215,7 @@ export function SetHeaderProps(props: HeaderProps) {
 
 export const SEARCH_PATH = '/search'
 export const BOOKMARK_PATH = '/bookmark'
+export const SUBSCRIPTION_PATH = '/subscription'
 export const NEW_CREATION_PATH = '/creation/new'
 export const EDIT_CREATION_PATH = '/creation/:cid'
 export const EDIT_PUBLICATION_PATH = '/publication/:cid'
@@ -229,6 +231,7 @@ const router = createBrowserRouter(
       <Route path='/login/state' element={<LoginStatePage />} />
       <Route path={SEARCH_PATH} element={<SearchPage />} />
       <Route path={BOOKMARK_PATH} element={<BookmarkPage />} />
+      <Route path={SUBSCRIPTION_PATH} element={<SubscriptionPage />} />
       <Route path={NEW_CREATION_PATH} element={<NewCreationPage />} />
       <Route path={EDIT_CREATION_PATH} element={<EditCreationPage />} />
       <Route path={EDIT_PUBLICATION_PATH} element={<EditPublicationPage />} />

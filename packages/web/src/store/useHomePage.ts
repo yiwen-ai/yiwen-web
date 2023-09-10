@@ -1,7 +1,13 @@
 import { SEARCH_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
-import { useBookmarkList, type BookmarkOutput } from '@yiwen-ai/store'
-import { useCallback, useEffect } from 'react'
+import {
+  useBookmarkList,
+  useFollowedPublicationList,
+  useRecommendedPublicationList,
+  type BookmarkOutput,
+  type PublicationOutput,
+} from '@yiwen-ai/store'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePublicationViewer } from './usePublicationViewer'
 
@@ -32,10 +38,45 @@ export function useHomePage(pushToast: ToastAPI['pushToast']) {
   } = usePublicationViewer(pushToast)
 
   const onView = useCallback(
-    (item: BookmarkOutput) => {
+    (item: PublicationOutput | BookmarkOutput) => {
       showPublicationViewer(item.gid, item.cid, item.language, item.version)
     },
     [showPublicationViewer]
+  )
+  //#endregion
+
+  //#region subscription list
+  const {
+    isLoading: isLoadingFollowedPublicationList,
+    items: followedPublicationList,
+    refresh: refreshFollowedPublicationList,
+  } = useFollowedPublicationList()
+
+  const {
+    isLoading: isLoadingRecommendedPublicationList,
+    publicationList: recommendedPublicationList,
+    refresh: refreshRecommendedPublicationList,
+  } = useRecommendedPublicationList()
+
+  useEffect(() => {
+    refreshFollowedPublicationList()
+    refreshRecommendedPublicationList()
+  }, [refreshFollowedPublicationList, refreshRecommendedPublicationList])
+
+  const subscriptionList = useMemo(
+    () => ({
+      isLoading:
+        isLoadingFollowedPublicationList || isLoadingRecommendedPublicationList,
+      items: followedPublicationList.length
+        ? followedPublicationList
+        : recommendedPublicationList ?? [],
+    }),
+    [
+      followedPublicationList,
+      isLoadingFollowedPublicationList,
+      isLoadingRecommendedPublicationList,
+      recommendedPublicationList,
+    ]
   )
   //#endregion
 
@@ -69,6 +110,7 @@ export function useHomePage(pushToast: ToastAPI['pushToast']) {
       onRemoveFavorite: handlePublicationRemoveFavorite,
       ...publicationViewer,
     },
+    subscriptionList,
     bookmarkList,
   } as const
 }

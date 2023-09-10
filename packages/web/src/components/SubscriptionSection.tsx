@@ -1,4 +1,4 @@
-import { BOOKMARK_PATH } from '#/App'
+import { SUBSCRIPTION_PATH } from '#/App'
 import OrderedItem from '#/components/OrderedItem'
 import OrderedList from '#/components/OrderedList'
 import PublicationLink from '#/components/PublicationLink'
@@ -6,7 +6,7 @@ import Section, { SectionHeader, SectionTitle } from '#/components/Section'
 import { BREAKPOINT } from '#/shared'
 import { css } from '@emotion/react'
 import { IconButton } from '@yiwen-ai/component'
-import { buildPublicationKey, type BookmarkOutput } from '@yiwen-ai/store'
+import { buildPublicationKey, type PublicationOutput } from '@yiwen-ai/store'
 import { useMemo } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
@@ -15,15 +15,15 @@ import Loading from './Loading'
 
 const LIMIT = 6
 
-export default function BookmarkSection({
+export default function SubscriptionSection({
   isLoading,
   items: _items,
   onView,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & {
   isLoading: boolean
-  items: BookmarkOutput[]
-  onView: (item: BookmarkOutput) => void
+  items: PublicationOutput[]
+  onView: (item: PublicationOutput) => void
 }) {
   const intl = useIntl()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
@@ -43,12 +43,12 @@ export default function BookmarkSection({
           }
         >
           <SectionTitle
-            iconName='heart'
-            label={intl.formatMessage({ defaultMessage: '书签' })}
+            iconName='wanchain'
+            label={intl.formatMessage({ defaultMessage: '订阅更新' })}
             active={true}
           />
           <Link
-            to={BOOKMARK_PATH}
+            to={SUBSCRIPTION_PATH}
             css={css`
               display: flex;
             `}
