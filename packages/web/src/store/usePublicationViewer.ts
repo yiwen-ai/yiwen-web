@@ -2,6 +2,7 @@ import { generatePublicationShareLink } from '#/shared'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   PublicationJobStatus,
+  RequestError,
   toMessage,
   useCreationCollectionList,
   useEnsureAuthorized,
@@ -10,6 +11,7 @@ import {
   useLanguageProcessor,
   useMyGroupList,
   usePublication,
+  usePublicationAPI,
   useTranslatedPublicationList,
   type Language,
   type UILanguageItem,
@@ -31,6 +33,7 @@ interface Params {
 export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
   const ensureAuthorized = useEnsureAuthorized()
+  const { readPublication } = usePublicationAPI()
 
   const [{ open, _gid, _cid, _language, _version }, setParams] =
     useState<Params>({
@@ -155,7 +158,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
 
   const processingControllerRef = useRef<AbortController | undefined>()
 
-  const { refreshDefaultGroup } = useMyGroupList()
+  const { defaultGroup, refreshDefaultGroup } = useMyGroupList()
 
   const onTranslate = useMemo(() => {
     return ensureAuthorized(async (lang: UILanguageItem) => {
@@ -165,15 +168,46 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       processingControllerRef.current = controller
       try {
         setProcessingLanguage(lang)
-        const gid = (await refreshDefaultGroup())?.id
-        const publication = await translate(gid, language, controller.signal)
-        show(
-          publication.gid,
-          publication.cid,
-          publication.language,
-          publication.version
-        )
-        return publication
+        if (lang.isOriginal && _gid && _cid && _version != null) {
+          // original publication may be archived, so we need to read it directly
+          const { result } = await readPublication(
+            {
+              gid: _gid,
+              cid: _cid,
+              language,
+              version: _version,
+              fields: null,
+            },
+            controller.signal
+          )
+          return result
+        }
+        const gid = defaultGroup?.id ?? (await refreshDefaultGroup())?.id
+        try {
+          return await translate(gid, language, controller.signal)
+        } catch (error) {
+          if (
+            error instanceof RequestError &&
+            error.status === 409 &&
+            gid &&
+            _cid &&
+            _version != null
+          ) {
+            // translation already exists, read it directly
+            const { result } = await readPublication(
+              {
+                gid: Xid.fromValue(gid).toString(),
+                cid: _cid,
+                language,
+                version: _version,
+                fields: null,
+              },
+              controller.signal
+            )
+            return result
+          }
+          throw error
+        }
       } catch (error) {
         if (!controller.signal.aborted) {
           pushToast({
@@ -189,7 +223,18 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
         }
       }
     })
-  }, [ensureAuthorized, intl, pushToast, refreshDefaultGroup, show, translate])
+  }, [
+    _cid,
+    _gid,
+    _version,
+    defaultGroup?.id,
+    ensureAuthorized,
+    intl,
+    pushToast,
+    readPublication,
+    refreshDefaultGroup,
+    translate,
+  ])
 
   const onSwitch = useCallback(
     async (lang: UILanguageItem) => {
@@ -205,9 +250,17 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       if (!publication) {
         publication = await onTranslate(lang)
       }
+      if (publication) {
+        show(
+          publication.gid,
+          publication.cid,
+          publication.language,
+          publication.version
+        )
+      }
       return publication
     },
-    [_version, onTranslate, translatedList]
+    [_version, onTranslate, show, translatedList]
   )
 
   const onProcessingDialogClose = useCallback(() => {

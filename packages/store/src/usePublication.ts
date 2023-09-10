@@ -12,7 +12,7 @@ import {
   type Page,
   type UserInfo,
 } from './common'
-import { useFetcher } from './useFetcher'
+import { RequestMethod, useFetcher } from './useFetcher'
 
 export const DEFAULT_MODEL = 'gpt3.5'
 
@@ -132,8 +132,14 @@ export function usePublicationAPI() {
   const request = useFetcher()
 
   const readPublication = useCallback(
-    (params: Record<keyof QueryPublication, string | number | null>) => {
-      return request.get<{ result: PublicationOutput }>(path, params)
+    (
+      params: Record<keyof QueryPublication, string | number | null>,
+      signal: AbortSignal | null = null
+    ) => {
+      return request<{ result: PublicationOutput }>(path, params, {
+        method: RequestMethod.GET,
+        signal,
+      })
     },
     [request]
   )
