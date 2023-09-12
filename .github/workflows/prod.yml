@@ -1,0 +1,30 @@
+name: PROD
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          registry-url: https://npm.pkg.github.com/
+      - run: npm config set //registry.tiptap.dev/:_authToken ${{ secrets.TIPTAP_TOKEN }}
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - run: pnpm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: deploy to production environment
+        run: |
+          sudo -v ; curl https://gosspublic.alicdn.com/ossutil/install.sh | sudo bash
+          ossutil --version
+          pnpm --filter web run build --mode=production --base=https://cdn.yiwen.pub/web
+          ossutil cp ./packages/web/dist/ oss://yiwenai/web/ -r -u -e ${{ secrets.ALIYUN_OSS_ENDPOINT }} -i ${{ secrets.ALIYUN_ACCESS_KEY_ID }} -k ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
