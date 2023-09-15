@@ -30,7 +30,7 @@ const SizeDict: Record<TextFieldSize, CSSObject> = {
 
 export interface TextFieldProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
-  size?: TextFieldSize
+  size?: TextFieldSize | undefined
   before?: string | JSX.Element | (() => JSX.Element | null)
   after?: string | JSX.Element | (() => JSX.Element | null)
   onSearch?: (

@@ -45,6 +45,7 @@ export const Menu = memo(
         role='menu'
         {...menuProps}
         css={css`
+          padding-left: 0;
           display: flex;
           flex-direction: column;
           gap: 8px;

@@ -82,9 +82,7 @@ export default function CommonEditor({
             css={css`
               padding-top: 100px;
               border: none;
-              font-size: 42px;
-              font-weight: 600;
-              line-height: 60px;
+              ${theme.typography.h0}
               ${isNarrow &&
               css`
                 padding-top: 24px;
@@ -150,10 +148,12 @@ function ArticleSettings(props: React.HTMLAttributes<HTMLDivElement>) {
           placeholder={intl.formatMessage({ defaultMessage: '请选择' })}
           options={[
             {
+              key: 'original',
               label: intl.formatMessage({ defaultMessage: '原创' }),
               value: 'original',
             },
             {
+              key: 'non-original',
               label: intl.formatMessage({ defaultMessage: '非原创' }),
               value: 'non-original',
             },

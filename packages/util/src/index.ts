@@ -18,6 +18,7 @@ export {
   preventDefaultStopPropagation,
   stopPropagation,
 } from './stopPropagation'
+export { toFixed } from './toFixed'
 export {
   mergeURLSearchParams,
   toURLSearchParams,
@@ -40,4 +41,4 @@ export {
   type ModalRef,
 } from './useModal'
 export { mergeForwardedRef, useRefCallback } from './useRefCallback'
-export { waitUntilClosed } from './waitUntilClosed'
+export { onLocationChange, waitUntilClosed } from './waitUntilClosed'

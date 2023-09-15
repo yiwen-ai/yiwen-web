@@ -1,5 +1,5 @@
 import { css } from '@emotion/react'
-import { useHover, useRefCallback } from '@yiwen-ai/util'
+import { stopPropagation, useHover, useRefCallback } from '@yiwen-ai/util'
 import { without } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import {
@@ -112,7 +112,7 @@ export function useToast() {
   const renderToastContainer = useCallback<ToastAPI['renderToastContainer']>(
     (props) => {
       return list.length > 0 ? (
-        <ToastContainer {...props}>
+        <ToastContainer onPointerUpCapture={stopPropagation} {...props}>
           {list.map(({ key, ...item }) => (
             <Toast key={key} data-toast-id={key} {...item} />
           ))}

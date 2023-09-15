@@ -42,6 +42,7 @@ export {
   Select,
   SelectOption,
   SelectOptionGroup,
+  type SelectOptionProps,
   type SelectProps,
 } from './Select'
 export { Spinner, type SpinnerProps, type SpinnerSize } from './Spinner'

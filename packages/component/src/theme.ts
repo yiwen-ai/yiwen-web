@@ -60,15 +60,13 @@ declare module '@emotion/react' {
         background: string
         primary: string
         secondary: string
+        link: string
+        linkHover: string
         danger: string
       }
       divider: {
         primary: string
         secondary: string
-      }
-      link: {
-        normal: string
-        hover: string
       }
       button: {
         primary: {
@@ -171,7 +169,7 @@ const palette: Theme['palette'] = {
   grayNormal1: '#2D2C52',
   grayNormal: '#1F1E40',
   grayLight: '#7C7C94',
-  grayLight0: '#CECEE2',
+  grayLight0: '#E4E4EF',
   grayLight1: '#F7F7FB',
   black: '#000000',
   white: '#FFFFFF',
@@ -187,15 +185,13 @@ export const lightTheme: Theme = {
       background: palette.white,
       primary: palette.grayNormal,
       secondary: palette.grayLight,
+      link: palette.primaryNormal,
+      linkHover: palette.primaryLight,
       danger: palette.orange,
     },
     divider: {
       primary: palette.grayLight0,
       secondary: RGBA(palette.grayLight0, 0.25),
-    },
-    link: {
-      normal: palette.primaryNormal,
-      hover: palette.primaryLight,
     },
     button: {
       primary: {
@@ -414,15 +410,13 @@ export const darkTheme: Theme = {
       background: palette.grayNormal,
       primary: palette.grayLight1,
       secondary: palette.grayLight0,
+      link: palette.primaryNormal,
+      linkHover: palette.primaryLight,
       danger: palette.orange,
     },
     divider: {
       primary: palette.grayLight0,
       secondary: RGBA(palette.grayLight0, 0.25),
-    },
-    link: {
-      normal: palette.primaryNormal,
-      hover: palette.primaryLight,
     },
     button: {
       primary: {
