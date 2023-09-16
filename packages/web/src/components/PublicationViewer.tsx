@@ -201,6 +201,9 @@ export default function PublicationViewer({
                     )}
                   </Button>
                 )}
+                css={css`
+                  width: 280px;
+                `}
               >
                 <li
                   role='none'
@@ -231,6 +234,7 @@ export default function PublicationViewer({
                 </li>
                 {originalLanguage && (
                   <SelectOption
+                    key={originalLanguage.code}
                     label={intl.formatMessage(
                       { defaultMessage: '{name}（创作语言）' },
                       { name: originalLanguage.nativeName }

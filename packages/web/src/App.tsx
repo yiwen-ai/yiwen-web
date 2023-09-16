@@ -66,6 +66,7 @@ import SharePublicationPage from './pages/pub/[cid]'
 import EditPublicationPage from './pages/publication/[cid]'
 import SearchPage from './pages/search'
 import SubscriptionPage from './pages/subscription'
+import WalletPage from './pages/wallet'
 import { BREAKPOINT } from './shared'
 
 function Fallback({
@@ -151,6 +152,10 @@ function Layout() {
           style: { display: 'none' },
         },
         {
+          label: intl.formatMessage({ defaultMessage: '我的钱包' }),
+          onClick: () => navigate(WALLET_PATH),
+        },
+        {
           label: intl.formatMessage({ defaultMessage: '创作中心' }),
           onClick: () => navigate(DEFAULT_GROUP_PATH),
         },
@@ -216,6 +221,7 @@ export function SetHeaderProps(props: HeaderProps) {
 export const SEARCH_PATH = '/search'
 export const BOOKMARK_PATH = '/bookmark'
 export const SUBSCRIPTION_PATH = '/subscription'
+export const WALLET_PATH = '/wallet'
 export const NEW_CREATION_PATH = '/creation/new'
 export const EDIT_CREATION_PATH = '/creation/:cid'
 export const EDIT_PUBLICATION_PATH = '/publication/:cid'
@@ -232,6 +238,7 @@ const router = createBrowserRouter(
       <Route path={SEARCH_PATH} element={<SearchPage />} />
       <Route path={BOOKMARK_PATH} element={<BookmarkPage />} />
       <Route path={SUBSCRIPTION_PATH} element={<SubscriptionPage />} />
+      <Route path={WALLET_PATH} element={<WalletPage />} />
       <Route path={NEW_CREATION_PATH} element={<NewCreationPage />} />
       <Route path={EDIT_CREATION_PATH} element={<EditCreationPage />} />
       <Route path={EDIT_PUBLICATION_PATH} element={<EditPublicationPage />} />
@@ -250,6 +257,7 @@ export default function App() {
       API_URL: resolveURL(import.meta.env.VITE_API_URL),
       AUTH_URL: resolveURL(import.meta.env.VITE_AUTH_URL),
       SHARE_URL: resolveURL(import.meta.env.VITE_SHARE_URL),
+      WALLET_URL: resolveURL(import.meta.env.VITE_WALLET_URL),
     }),
     []
   )

@@ -3,7 +3,7 @@ import OrderedList from '#/components/OrderedList'
 import PublicationLink from '#/components/PublicationLink'
 import Section, { SectionHeader, SectionTitle } from '#/components/Section'
 import { BREAKPOINT } from '#/shared'
-import { css, useTheme } from '@emotion/react'
+import { css } from '@emotion/react'
 import {
   IconButton,
   Tab,
@@ -46,7 +46,6 @@ export default function ResponsiveTabSection({
   onView,
 }: ResponsiveTabSectionProps) {
   const intl = useIntl()
-  const theme = useTheme()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const isNarrow = width <= BREAKPOINT.small
 
@@ -145,6 +144,7 @@ export default function ResponsiveTabSection({
             css={css`
               padding: 0 32px;
               gap: 24px;
+              border: unset;
             `}
           >
             {tabs.map(({ key, icon, title }) => (
@@ -152,11 +152,13 @@ export default function ResponsiveTabSection({
                 key={key}
                 value={key}
                 css={css`
-                  ${theme.typography.body}
                   padding: unset;
                   :hover,
                   &[data-selected] {
                     background: unset;
+                    ::after {
+                      content: none;
+                    }
                   }
                 `}
               >

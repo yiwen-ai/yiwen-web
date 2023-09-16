@@ -103,9 +103,9 @@ export const AccountManager = memo(function AccountManager({
                   target='_blank'
                   rel='noopener noreferrer'
                   css={css`
-                    color: ${theme.color.link.normal};
+                    color: ${theme.color.body.link};
                     :hover {
-                      color: ${theme.color.link.hover};
+                      color: ${theme.color.body.linkHover};
                     }
                   `}
                 >
@@ -118,9 +118,9 @@ export const AccountManager = memo(function AccountManager({
                   target='_blank'
                   rel='noopener noreferrer'
                   css={css`
-                    color: ${theme.color.link.normal};
+                    color: ${theme.color.body.link};
                     :hover {
-                      color: ${theme.color.link.hover};
+                      color: ${theme.color.body.linkHover};
                     }
                   `}
                 >

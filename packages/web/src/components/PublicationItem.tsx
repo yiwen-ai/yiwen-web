@@ -53,7 +53,7 @@ export default function PublicationItem({
       onClick={handleClick}
       css={css`
         display: block;
-        padding: 32px 40px;
+        padding: 24px;
         border: 1px solid ${theme.color.divider.primary};
         border-radius: 12px;
         cursor: pointer;

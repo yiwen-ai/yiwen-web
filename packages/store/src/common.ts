@@ -1,9 +1,20 @@
+import { useCallback, useMemo } from 'react'
+import { type SWRInfiniteResponse } from 'swr/infinite'
 import { type CreationStatus } from './useCreation'
 import { type PublicationStatus } from './usePublication'
 
 export interface Pagination {
   page_token?: Uint8Array | null | undefined
   page_size?: number
+  status?: number
+  fields?: string[]
+}
+
+export interface UIDPagination {
+  uid?: Uint8Array
+  page_token?: Uint8Array | null | undefined
+  page_size?: number
+  kind?: string
   status?: number
   fields?: string[]
 }
@@ -56,4 +67,43 @@ export interface GroupInfo {
   _role?: RoleLevel
   owner?: UserInfo
   _following?: boolean
+}
+
+export function usePagination<T>({
+  getKey,
+  data,
+  error,
+  mutate,
+  isValidating,
+  isLoading,
+  setSize,
+}: SWRInfiniteResponse<Page<T>, unknown> & {
+  getKey: (_: number, prevPage: Page<T> | null) => readonly unknown[] | null
+}) {
+  const items = useMemo(() => {
+    if (!data) return []
+    return data.flatMap((page) => page.result)
+  }, [data])
+
+  const hasMore = useMemo(() => {
+    if (!data) return false
+    return !!data[data.length - 1]?.next_page_token
+  }, [data])
+
+  const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
+
+  const refresh = useCallback(
+    async () => getKey(0, null) && (await mutate()),
+    [getKey, mutate]
+  )
+
+  return {
+    isLoading,
+    error,
+    items,
+    hasMore,
+    isLoadingMore: isValidating,
+    loadMore,
+    refresh,
+  } as const
 }

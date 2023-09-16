@@ -82,10 +82,12 @@ export const TabList = memo(
         role='tablist'
         {...props}
         ref={ref}
-        css={css`
+        css={(theme) => css`
+          padding: 8px 0;
           display: flex;
           gap: 8px;
           list-style: none;
+          border-bottom: 1px solid ${theme.color.divider.primary};
         `}
       />
     )
@@ -134,13 +136,28 @@ export const Tab = memo(
         {...props}
         ref={ref}
         css={css`
-          padding: 8px;
+          display: flex;
+          align-items: center;
+          text-align: center;
+          padding: 4px 8px;
           border-radius: 8px;
-          ${theme.typography.h2}
           cursor: pointer;
           &[data-selected] {
             background: ${theme.color.tab.active.background};
             color: ${theme.color.tab.active.text};
+            ${theme.typography.bodyBold}
+            position: relative;
+            ::after {
+              content: '';
+              position: absolute;
+              left: 50%;
+              bottom: -11px;
+              margin-left: -3px;
+              width: 6px;
+              height: 6px;
+              border-radius: 50%;
+              background: ${theme.color.tab.active.indicator};
+            }
           }
           :hover {
             background: ${theme.color.tab.hover.background};

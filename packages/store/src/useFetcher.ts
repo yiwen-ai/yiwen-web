@@ -11,6 +11,7 @@ export interface FetcherConfig {
   API_URL: string
   AUTH_URL: string
   SHARE_URL: string
+  WALLET_URL: string
 }
 
 const FetcherConfigContext = createContext<FetcherConfig>({
@@ -18,6 +19,7 @@ const FetcherConfigContext = createContext<FetcherConfig>({
   API_URL: 'https://api.yiwen.ai/',
   AUTH_URL: 'https://auth.yiwen.ai/',
   SHARE_URL: 'https://www.yiwen.pub/',
+  WALLET_URL: 'https://wallet.yiwen.ai/',
 })
 
 export const FetcherConfigProvider = FetcherConfigContext.Provider
@@ -73,41 +75,63 @@ export function createRequest(
     }
   }
   request.defaultOptions = Object.freeze(defaultOptions)
-  request.get = <T>(path: string, params?: URLSearchParamsInit) => {
+  request.get = <T>(
+    path: string,
+    params?: URLSearchParamsInit,
+    signal: AbortSignal | null | undefined = null
+  ) => {
     return request<T>(path, params, {
       method: RequestMethod.GET,
+      signal,
     })
   }
-  request.post = <T>(path: string, body?: object) => {
+  request.post = <T>(
+    path: string,
+    body?: object,
+    signal: AbortSignal | null | undefined = null
+  ) => {
     return request<T>(path, undefined, {
       method: RequestMethod.POST,
       body: body ? encode(body) : null,
       headers: { 'Content-Type': CBOR_MIME_TYPE },
+      signal,
     })
   }
-  request.put = <T>(path: string, body?: object) => {
+  request.put = <T>(
+    path: string,
+    body?: object,
+    signal: AbortSignal | null | undefined = null
+  ) => {
     return request<T>(path, undefined, {
       method: RequestMethod.PUT,
       body: body ? encode(body) : null,
       headers: { 'Content-Type': CBOR_MIME_TYPE },
+      signal,
     })
   }
-  request.patch = <T>(path: string, body?: object) => {
+  request.patch = <T>(
+    path: string,
+    body?: object,
+    signal: AbortSignal | null | undefined = null
+  ) => {
     return request<T>(path, undefined, {
       method: RequestMethod.PATCH,
       body: body ? encode(body) : null,
       headers: { 'Content-Type': CBOR_MIME_TYPE },
+      signal,
     })
   }
   request.delete = <T>(
     path: string,
     params?: URLSearchParamsInit,
-    body?: object
+    body?: object,
+    signal: AbortSignal | null | undefined = null
   ) => {
     return request<T>(path, params, {
       method: RequestMethod.DELETE,
       body: body ? encode(body) : null,
       headers: { 'Content-Type': CBOR_MIME_TYPE },
+      signal,
     })
   }
   return request

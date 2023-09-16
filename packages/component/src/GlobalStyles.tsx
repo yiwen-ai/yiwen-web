@@ -22,10 +22,15 @@ export function GlobalStyles() {
           ${theme.typography.body}
         }
 
+        p {
+          margin-block-start: 0;
+          margin-block-end: 0;
+        }
+
         ul,
         ol {
           margin: 0;
-          padding: 0;
+          padding-inline-start: 20px;
         }
 
         a {

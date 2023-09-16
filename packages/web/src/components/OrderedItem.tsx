@@ -1,4 +1,5 @@
 import { css, useTheme } from '@emotion/react'
+import { textEllipsis } from '@yiwen-ai/component'
 
 export default function OrderedItem({
   index,
@@ -30,19 +31,13 @@ export default function OrderedItem({
         css={css`
           font-weight: ${primary ? 600 : 400};
           color: ${primary
-            ? theme.color.link.normal
+            ? theme.color.body.link
             : theme.color.body.secondary};
         `}
       >
         {index + 1 + '.'}
       </span>
-      <span
-        css={css`
-          overflow-wrap: break-word;
-        `}
-      >
-        {props.children}
-      </span>
+      <span css={textEllipsis}>{props.children}</span>
     </div>
   )
 }

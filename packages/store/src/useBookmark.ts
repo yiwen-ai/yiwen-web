@@ -1,10 +1,16 @@
+import { useLoading } from '@yiwen-ai/util'
 import { without } from 'lodash-es'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
-import { type GroupInfo, type Page, type Pagination } from './common'
+import {
+  usePagination,
+  type GroupInfo,
+  type Page,
+  type Pagination,
+} from './common'
 import { useFetcher } from './useFetcher'
 import {
   buildPublicationKey,
@@ -248,50 +254,14 @@ export function useBookmarkList() {
     [isAuthorized]
   )
 
-  const { data, error, mutate, isValidating, isLoading, setSize } =
-    useSWRInfinite(getKey, ([, body]) => readBookmarkList(body), {
-      revalidateOnMount: false,
-    })
-
-  const items = useMemo(() => {
-    if (!data) return []
-    return data.flatMap((page) => page.result)
-  }, [data])
-
-  const hasMore = useMemo(() => {
-    if (!data) return false
-    return !!data[data.length - 1]?.next_page_token
-  }, [data])
-
-  const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
-
-  const refresh = useCallback(
-    async () => getKey(0, null) && (await mutate()),
-    [getKey, mutate]
+  const { mutate, ...response } = useSWRInfinite(
+    getKey,
+    ([, body]) => readBookmarkList(body),
+    { revalidateOnMount: false } as SWRConfiguration
   )
 
-  const [state, setState] = useState({
-    isRemoving: {} as Record<string, boolean>,
-  })
-
-  const setRemoving = useCallback(
-    (item: BookmarkOutput, isRemoving: boolean) => {
-      setState((prev) => ({
-        ...prev,
-        isRemoving: {
-          ...prev.isRemoving,
-          [buildPublicationKey(item)]: isRemoving,
-        },
-      }))
-    },
-    []
-  )
-
-  const isRemoving = useCallback(
-    (item: BookmarkOutput) => {
-      return state.isRemoving[buildPublicationKey(item)] ?? false
-    },
-    [state.isRemoving]
+  const [setRemoving, isRemoving] = useLoading((item: BookmarkOutput) =>
+    buildPublicationKey(item)
   )
 
   const remove = useCallback(
@@ -316,13 +286,7 @@ export function useBookmarkList() {
   )
 
   return {
-    isLoading,
-    error,
-    items,
-    hasMore,
-    isLoadingMore: isValidating,
-    loadMore,
-    refresh,
+    ...usePagination({ getKey, mutate, ...response }),
     isRemoving,
     remove,
   } as const

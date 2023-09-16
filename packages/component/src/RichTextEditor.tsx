@@ -431,9 +431,9 @@ export const RichTextEditor = memo(
             a {
               display: inline-block;
               cursor: pointer;
-              color: ${theme.color.link.normal};
+              color: ${theme.color.body.link};
               :hover {
-                color: ${theme.color.link.hover};
+                color: ${theme.color.body.linkHover};
               }
             }
 

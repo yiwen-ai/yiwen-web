@@ -11,15 +11,17 @@ import {
 } from 'react'
 import { Menu, MenuItem, type MenuItemProps } from './Menu'
 import { Popover, pickPopoverProps, type PopoverProps } from './Popover'
-import { TextField } from './TextField'
+import { TextField, type TextFieldSize } from './TextField'
 
 export interface SelectProps<T>
   extends Omit<HTMLAttributes<HTMLUListElement>, 'defaultValue' | 'onChange'>,
     PopoverProps {
+  size?: TextFieldSize
   placeholder?: string
   options?: readonly SelectOptionProps<T>[]
   defaultValue?: T
   value?: T
+  disabled?: boolean
   onChange?: (value: T) => void
 }
 
@@ -32,10 +34,13 @@ export const Select = memo(
     const {
       popoverProps,
       restProps: {
+        className,
+        size,
         placeholder,
         options,
         defaultValue,
         value: _value,
+        disabled,
         onChange: _onChange,
         ...selectProps
       },
@@ -60,15 +65,19 @@ export const Select = memo(
             aria-controls={id}
             aria-expanded={ref?.open}
             aria-haspopup='listbox'
+            className={className}
+            size={size}
             placeholder={placeholder}
             value={option?.label ?? ''}
             readOnly={true}
+            disabled={disabled}
             {...props}
             css={css`
-              cursor: pointer;
+              cursor: ${disabled ? 'not-allowed' : 'pointer'};
             `}
           />
         )}
+        className={className}
         {...popoverProps}
         ref={setRef}
         css={css`
@@ -83,15 +92,16 @@ export const Select = memo(
           id={id}
           {...selectProps}
           css={css`
+            padding-left: 0;
             display: flex;
             flex-direction: column;
             gap: 8px;
           `}
         >
           {options?.length
-            ? options.map(({ onSelect, ...option }, index) => (
+            ? options.map(({ key, onSelect, ...option }) => (
                 <SelectOption
-                  key={index}
+                  key={key}
                   selected={value === option.value}
                   onSelect={(value, ev) => {
                     onSelect?.(value, ev)
@@ -112,6 +122,7 @@ export const Select = memo(
 
 export interface SelectOptionProps<T>
   extends Omit<MenuItemProps, 'value' | 'onSelect' | 'children'> {
+  key: React.Key
   selected?: boolean
   label: string
   value: T
@@ -201,8 +212,8 @@ export const SelectOptionGroup = memo(function SelectOptionGroup<T>({
       </div>
       <Menu role='group' aria-labelledby={id}>
         {options?.length
-          ? options.map((option, index) => (
-              <SelectOption key={index} {...option} />
+          ? options.map(({ key, ...option }) => (
+              <SelectOption key={key} {...option} />
             ))
           : props.children}
       </Menu>

@@ -123,7 +123,7 @@ function BookmarkItem({
         border-bottom: 1px solid ${theme.color.divider.primary};
         cursor: pointer;
         :hover {
-          color: ${theme.color.link.hover};
+          color: ${theme.color.body.linkHover};
         }
       `}
     >

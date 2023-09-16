@@ -229,8 +229,19 @@ export default function GroupDetailPage() {
             >
               {hasGroupReadPermission && (
                 <TabList
-                  css={css`
-                    padding: 16px 24px;
+                  css={(theme) => css`
+                    padding: 16px;
+                    border: unset;
+
+                    > [role='tab'] {
+                      padding: 8px;
+                      ${theme.typography.h2}
+                      &[data-selected] {
+                        ::after {
+                          bottom: -3px;
+                        }
+                      }
+                    }
                   `}
                 >
                   <Tab value={GroupViewType.Publication}>
