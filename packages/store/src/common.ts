@@ -69,6 +69,8 @@ export interface GroupInfo {
   _following?: boolean
 }
 
+export const isSystem = (info: UserInfo | undefined) => info?.cn === 'sys'
+
 export function usePagination<T>({
   getKey,
   data,

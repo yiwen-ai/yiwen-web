@@ -1,5 +1,6 @@
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
+  YIWEN_COIN_RATE,
   toMessage,
   useCurrencyList,
   useNewCharge,
@@ -72,7 +73,10 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
         throw new Error('currency and amount must be selected before charging')
       }
       const { result, aborted } = await charge(
-        { quantity: chargeAmount, currency: currentCurrency.alpha },
+        {
+          quantity: chargeAmount * YIWEN_COIN_RATE,
+          currency: currentCurrency.alpha,
+        },
         controller.signal
       )
       if (aborted) {

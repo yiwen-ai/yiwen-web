@@ -1,4 +1,4 @@
-import { waitUntilClosed } from '@yiwen-ai/util'
+import { currencyFormatter, waitUntilClosed } from '@yiwen-ai/util'
 import { useCallback, useMemo, useState } from 'react'
 import {
   concatMap,
@@ -40,9 +40,13 @@ export interface WalletOutput {
   txn: Uint8Array
 }
 
+export enum CreditKind {
+  Expenditure = 'expenditure',
+}
+
 export interface CreditOutput {
   txn: Uint8Array
-  kind: string
+  kind: CreditKind
   amount: number
   created_at: number
   description?: string
@@ -112,9 +116,16 @@ export enum ChargeStatus {
   Committed = 3,
 }
 
+export enum ChargeProvider {
+  Alipay = 'alipay',
+  PayPal = 'paypal',
+  Stripe = 'stripe',
+  WeChat = 'wechat',
+}
+
 export interface ChargeOutput {
   id: Uint8Array
-  provider: string
+  provider: ChargeProvider
   status: ChargeStatus
   quantity: number
   created_at: number
@@ -129,6 +140,7 @@ export interface ChargeOutput {
   txn_refunded?: Uint8Array
   failure_code?: string
   failure_msg?: string
+  payment_url?: string
 }
 
 export interface CheckoutInput {
@@ -144,6 +156,31 @@ export interface CheckoutOutput {
 export interface QueryId {
   id?: Uint8Array
   fields?: string
+}
+
+export const YIWEN_COIN_RATE = 10
+
+export function formatChargeCurrency(
+  charge: ChargeOutput,
+  currencyList: readonly Currency[] | null | undefined
+) {
+  const { currency: currencyCode } = charge
+  const currency = currencyList?.find(
+    (currency) => currency.alpha.toLowerCase() === currencyCode?.toLowerCase()
+  )
+  return currency?.name ?? charge.currency
+}
+
+export function formatChargeAmount(
+  charge: ChargeOutput,
+  currencyList: readonly Currency[] | null | undefined
+) {
+  const { amount, currency: currencyCode } = charge
+  const currency = currencyList?.find(
+    (currency) => currency.alpha.toLowerCase() === currencyCode?.toLowerCase()
+  )
+  if (amount == null || currency == null) return null
+  return currencyFormatter(amount / 10 ** currency.decimals, currency.decimals)
 }
 
 export function useWalletAPI() {
@@ -388,7 +425,7 @@ export function useChargeList() {
   const { readChargeList } = useWalletAPI()
 
   const getKey = useCallback(
-    (_: number, prevPage: Page<TransactionOutput> | null) => {
+    (_: number, prevPage: Page<ChargeOutput> | null) => {
       if (prevPage && !prevPage.next_page_token) return null
       const body: UIDPagination = {
         page_token: prevPage?.next_page_token,

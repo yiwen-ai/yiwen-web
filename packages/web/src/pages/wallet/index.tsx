@@ -3,9 +3,14 @@ import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import Loading from '#/components/Loading'
 import MembershipLevel from '#/components/MembershipLevel'
 import MembershipLevelAndCreditScore from '#/components/MembershipLevelAndCreditScore'
+import Table from '#/components/Table'
 import YiwenCoin from '#/components/YiwenCoin'
 import { BREAKPOINT } from '#/shared'
-import { WalletPageTab, useWalletPage } from '#/store/useWalletPage'
+import {
+  WalletPageHistoryType,
+  WalletPageTab,
+  useWalletPage,
+} from '#/store/useWalletPage'
 import { css } from '@emotion/react'
 import {
   Button,
@@ -36,6 +41,13 @@ export default function WalletPage() {
     },
     currentTab,
     setCurrentTab,
+    historyTypeOptions,
+    currentHistoryType,
+    setCurrentHistoryType,
+    chargeList,
+    outgoList,
+    incomeList,
+    creditList,
   } = useWalletPage(pushToast)
 
   return isLoading ? (
@@ -200,7 +212,7 @@ export default function WalletPage() {
           css={css`
             padding: 36px 100px 100px;
             @media (max-width: ${BREAKPOINT.small}px) {
-              padding: 36px 48px;
+              padding: 36px 48px 48px;
             }
           `}
         >
@@ -211,11 +223,71 @@ export default function WalletPage() {
           css={css`
             padding: 36px 100px 100px;
             @media (max-width: ${BREAKPOINT.small}px) {
-              padding: 36px 48px;
+              padding: 36px 48px 48px;
             }
           `}
         >
           <MembershipLevelAndCreditScore />
+        </TabPanel>
+        <TabPanel
+          value={WalletPageTab.History}
+          css={css`
+            padding: 24px 100px 100px;
+            @media (max-width: ${BREAKPOINT.small}px) {
+              padding: 24px 48px 48px;
+            }
+          `}
+        >
+          <div
+            css={css`
+              display: flex;
+              flex-wrap: wrap;
+              gap: 24px;
+            `}
+          >
+            {historyTypeOptions.map((option) => (
+              <Button
+                key={option.key}
+                data-selected={option.selected ? '' : undefined}
+                color='secondary'
+                variant='contained'
+                onClick={() => setCurrentHistoryType(option.value)}
+                css={(theme) =>
+                  css`
+                    padding: 0 16px;
+                    &[data-selected] {
+                      &,
+                      :hover {
+                        color: ${theme.color.button.primary.text.text};
+                        background: ${theme.color.button.secondary.contained
+                          .hover.background};
+                      }
+                    }
+                  `
+                }
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+          <div
+            css={css`
+              margin-top: 24px;
+            `}
+          >
+            {(() => {
+              switch (currentHistoryType) {
+                case WalletPageHistoryType.Charge:
+                  return <Table {...chargeList} />
+                case WalletPageHistoryType.Outgo:
+                  return <Table {...outgoList} />
+                case WalletPageHistoryType.Income:
+                  return <Table {...incomeList} />
+                case WalletPageHistoryType.Credit:
+                  return <Table {...creditList} />
+              }
+            })()}
+          </div>
         </TabPanel>
       </TabSection>
       <ChargeDialog

@@ -8,6 +8,7 @@ export {
 export { decode, encode } from './CBOR'
 export {
   UserStatus,
+  isSystem,
   type ColorScheme,
   type GroupInfo,
   type UserInfo,
@@ -74,9 +75,14 @@ export {
   type SearchInput,
 } from './useSearch'
 export {
+  ChargeProvider,
   ChargeStatus,
+  CreditKind,
   TransactionKind,
   TransactionStatus,
+  YIWEN_COIN_RATE,
+  formatChargeAmount,
+  formatChargeCurrency,
   useChargeList,
   useCreditList,
   useCurrencyList,
@@ -85,5 +91,8 @@ export {
   useNewCharge,
   useOutgoList,
   useWalletAPI,
+  type ChargeOutput,
+  type CreditOutput,
   type Currency,
+  type TransactionOutput,
 } from './useWallet'
