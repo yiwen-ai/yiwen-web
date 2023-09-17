@@ -17,7 +17,7 @@ export const TABLE_ROW_ACTIONS_STYLES = css`
   }
 `
 
-interface TableProps<T> extends React.TableHTMLAttributes<HTMLTableElement> {
+interface TableProps<T> extends React.HTMLAttributes<HTMLDivElement> {
   isLoading: boolean
   error: unknown
   columns: ColumnDef<T>[]
@@ -52,11 +52,15 @@ export default function Table<T>({
   ) : error ? (
     <ErrorPlaceholder error={error} />
   ) : (
-    <>
+    <div
+      {...props}
+      css={css`
+        overflow-x: auto;
+      `}
+    >
       <table
-        {...props}
         css={(theme) => css`
-          width: 100%;
+          min-width: 100%;
           border-spacing: 0;
 
           tfoot {
@@ -81,6 +85,9 @@ export default function Table<T>({
             padding-bottom: 16px;
           }
         `}
+        style={{
+          width: table.getCenterTotalSize(),
+        }}
       >
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -139,6 +146,6 @@ export default function Table<T>({
         isLoadingMore={isLoadingMore}
         onLoadMore={onLoadMore}
       />
-    </>
+    </div>
   )
 }

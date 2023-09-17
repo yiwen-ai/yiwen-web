@@ -46,7 +46,7 @@ export function useIncomeTable(
         header: intl.formatMessage({ defaultMessage: '数量' }),
         size: 140,
       }),
-      columnHelper.accessor((row) => row.payee_info, {
+      columnHelper.accessor((row) => row.payer_info, {
         cell: (props) => {
           const info = props.getValue()
           return isSystem(info)
