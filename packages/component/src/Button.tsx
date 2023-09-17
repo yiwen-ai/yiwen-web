@@ -97,6 +97,9 @@ export const Button = memo(
             : readOnly
             ? 'default'
             : 'pointer'};
+          border-color: ${colorCSS.border};
+          background-color: ${colorCSS.background};
+          color: ${colorCSS.text};
           :hover {
             border-color: ${colorCSS.hover.border};
             background-color: ${colorCSS.hover.background};
@@ -109,7 +112,6 @@ export const Button = memo(
             background-color: ${colorCSS.disabled.background};
             color: ${colorCSS.disabled.text};
           }
-          &,
           &[data-readonly] {
             border-color: ${colorCSS.border};
             background-color: ${colorCSS.background};

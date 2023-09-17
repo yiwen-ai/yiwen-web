@@ -205,9 +205,16 @@ function Choice({
           ${theme.typography.tooltip}
         `}
       >
-        {currencyFormatter(value * currency.exchange_rate, currency.decimals) +
-          ' ' +
-          currency.name}
+        {intl.formatMessage(
+          { defaultMessage: '约 {value} {name}' },
+          {
+            value: currencyFormatter(
+              value * currency.exchange_rate,
+              currency.decimals
+            ),
+            name: currency.name,
+          }
+        )}
       </span>
     </button>
   )

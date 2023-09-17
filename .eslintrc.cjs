@@ -34,6 +34,7 @@ module.exports = {
     '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/no-empty-interface': 'off',
     '@typescript-eslint/no-unused-vars': 'off',
+    'import/named': 'off',
     'import/newline-after-import': 'error',
     'import/no-unresolved': 'off',
     'import/order': [

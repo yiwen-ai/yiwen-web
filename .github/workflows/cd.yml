@@ -28,7 +28,3 @@ jobs:
           ossutil --version
           pnpm --filter web run build --mode=testing --base=https://cdn.yiwen.pub/dev/web
           ossutil cp ./packages/web/dist/ oss://yiwenai/dev/web/ -r -u -e ${{ secrets.ALIYUN_OSS_ENDPOINT }} -i ${{ secrets.ALIYUN_ACCESS_KEY_ID }} -k ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
-      # TODO
-      # 0. convert the extracted files to the format (CBOR) of the Translation Management System (our own API)
-      # 1. upload the extracted files to the Translation Management System (our own API)
-      # 2. download the translated files from the Translation Management System (our own API)

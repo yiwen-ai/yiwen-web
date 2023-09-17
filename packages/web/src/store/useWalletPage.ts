@@ -1,13 +1,12 @@
-import { type ToastAPI } from '@yiwen-ai/component'
-import {
-  useChargeList,
-  useCreditList,
-  useIncomeList,
-  useMyWallet,
-  useOutgoList,
-} from '@yiwen-ai/store'
-import { useCallback, useEffect, useState } from 'react'
+import { type SelectOptionProps, type ToastAPI } from '@yiwen-ai/component'
+import { useCurrencyList, useMyWallet } from '@yiwen-ai/store'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useIntl } from 'react-intl'
 import { useChargeDialog } from './useChargeDialog'
+import { useChargeTable } from './useChargeTable'
+import { useCreditTable } from './useCreditTable'
+import { useIncomeTable } from './useIncomeTable'
+import { useOutgoTable } from './useOutgoTable'
 
 export enum WalletPageTab {
   Coin = 'coin',
@@ -23,21 +22,14 @@ export enum WalletPageHistoryType {
 }
 
 export function useWalletPage(pushToast: ToastAPI['pushToast']) {
+  const intl = useIntl()
+
   //#region Wallet
   const { refresh: refreshWallet, ...wallet } = useMyWallet()
 
   useEffect(() => {
     refreshWallet()
   }, [refreshWallet])
-  //#endregion
-
-  //#region Charge
-  const { onCharge, ...chargeDialog } = useChargeDialog(pushToast)
-
-  const handleCharge = useCallback(async () => {
-    const result = await onCharge()
-    if (result) refreshWallet()
-  }, [onCharge, refreshWallet])
   //#endregion
 
   const [currentTab, setCurrentTab] = useState(WalletPageTab.Coin)
@@ -47,10 +39,44 @@ export function useWalletPage(pushToast: ToastAPI['pushToast']) {
     WalletPageHistoryType.Charge
   )
 
-  const { refresh: refreshChargeList, ...chargeList } = useChargeList()
-  const { refresh: refreshOutgoList, ...outgoList } = useOutgoList()
-  const { refresh: refreshIncomeList, ...incomeList } = useIncomeList()
-  const { refresh: refreshCreditList, ...creditList } = useCreditList()
+  const historyTypeOptions = useMemo(() => {
+    const options: SelectOptionProps<WalletPageHistoryType>[] = [
+      {
+        key: WalletPageHistoryType.Charge,
+        label: intl.formatMessage({ defaultMessage: '充值记录' }),
+        value: WalletPageHistoryType.Charge,
+      },
+      {
+        key: WalletPageHistoryType.Outgo,
+        label: intl.formatMessage({ defaultMessage: '亿文币转出' }),
+        value: WalletPageHistoryType.Outgo,
+      },
+      {
+        key: WalletPageHistoryType.Income,
+        label: intl.formatMessage({ defaultMessage: '亿文币转入' }),
+        value: WalletPageHistoryType.Income,
+      },
+      {
+        key: WalletPageHistoryType.Credit,
+        label: intl.formatMessage({ defaultMessage: '信用分记录' }),
+        value: WalletPageHistoryType.Credit,
+      },
+    ]
+    return options.map<SelectOptionProps<WalletPageHistoryType>>((option) => ({
+      ...option,
+      selected: option.value === currentHistoryType,
+    }))
+  }, [currentHistoryType, intl])
+
+  const { currencyList, refresh: refreshCurrencyList } = useCurrencyList()
+  const { refreshChargeList, ...chargeList } = useChargeTable(currencyList)
+  const { refreshOutgoList, ...outgoList } = useOutgoTable(currencyList)
+  const { refreshIncomeList, ...incomeList } = useIncomeTable(currencyList)
+  const { refreshCreditList, ...creditList } = useCreditTable(currencyList)
+
+  useEffect(() => {
+    if (currentTab === WalletPageTab.History) refreshCurrencyList()
+  }, [currentTab, refreshCurrencyList])
 
   useEffect(() => {
     if (currentTab === WalletPageTab.History) {
@@ -79,6 +105,29 @@ export function useWalletPage(pushToast: ToastAPI['pushToast']) {
   ])
   //#endregion
 
+  //#region Charge
+  const { onCharge, ...chargeDialog } = useChargeDialog(pushToast)
+
+  const handleCharge = useCallback(async () => {
+    const result = await onCharge()
+    if (result) {
+      refreshWallet()
+      if (
+        currentTab === WalletPageTab.History &&
+        currentHistoryType === WalletPageHistoryType.Charge
+      ) {
+        refreshChargeList()
+      }
+    }
+  }, [
+    currentHistoryType,
+    currentTab,
+    onCharge,
+    refreshChargeList,
+    refreshWallet,
+  ])
+  //#endregion
+
   return {
     ...wallet,
     chargeDialog: {
@@ -87,6 +136,7 @@ export function useWalletPage(pushToast: ToastAPI['pushToast']) {
     },
     currentTab,
     setCurrentTab,
+    historyTypeOptions,
     currentHistoryType,
     setCurrentHistoryType,
     chargeList,
