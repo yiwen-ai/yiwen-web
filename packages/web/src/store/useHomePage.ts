@@ -8,10 +8,12 @@ import {
   type PublicationOutput,
 } from '@yiwen-ai/store'
 import { useCallback, useEffect, useMemo } from 'react'
+import { useIntl } from 'react-intl'
 import { useNavigate } from 'react-router-dom'
 import { usePublicationViewer } from './usePublicationViewer'
 
 export function useHomePage(pushToast: ToastAPI['pushToast']) {
+  const intl = useIntl()
   const navigate = useNavigate()
 
   //#region search
@@ -65,6 +67,9 @@ export function useHomePage(pushToast: ToastAPI['pushToast']) {
 
   const subscriptionList = useMemo(
     () => ({
+      title: followedPublicationList.length
+        ? intl.formatMessage({ defaultMessage: '订阅更新' })
+        : intl.formatMessage({ defaultMessage: '推荐' }),
       isLoading:
         isLoadingFollowedPublicationList || isLoadingRecommendedPublicationList,
       items: followedPublicationList.length
@@ -73,6 +78,7 @@ export function useHomePage(pushToast: ToastAPI['pushToast']) {
     }),
     [
       followedPublicationList,
+      intl,
       isLoadingFollowedPublicationList,
       isLoadingRecommendedPublicationList,
       recommendedPublicationList,

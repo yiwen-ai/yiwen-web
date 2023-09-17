@@ -5,7 +5,7 @@ import {
   Spinner,
   type SelectOptionProps,
 } from '@yiwen-ai/component'
-import { type Currency } from '@yiwen-ai/store'
+import { YIWEN_COIN_RATE, type Currency } from '@yiwen-ai/store'
 import { currencyFormatter } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
@@ -13,7 +13,7 @@ import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
 import SmallDialog from './SmallDialog'
 
-interface ChargeDialogProps {
+export interface ChargeDialogProps {
   open: boolean
   onClose: () => void
   isLoading: boolean
@@ -97,6 +97,7 @@ export default function ChargeDialog({
               onChange={onCurrencyChange}
               css={css`
                 width: 240px;
+                max-width: 100%;
               `}
             />
             <div
@@ -110,7 +111,7 @@ export default function ChargeDialog({
                 {
                   name: currentCurrency.name,
                   rate: currencyFormatter(
-                    1 / currentCurrency.exchange_rate,
+                    (1 * YIWEN_COIN_RATE) / currentCurrency.exchange_rate,
                     currentCurrency.decimals
                   ),
                 }
@@ -209,7 +210,7 @@ function Choice({
           { defaultMessage: '约 {value} {name}' },
           {
             value: currencyFormatter(
-              value * currency.exchange_rate,
+              (value / YIWEN_COIN_RATE) * currency.exchange_rate,
               currency.decimals
             ),
             name: currency.name,

@@ -137,6 +137,7 @@ export default function SearchPage() {
         >
           <NewCreationLink />
           <SubscriptionSection
+            title={subscriptionList.title}
             isLoading={subscriptionList.isLoading}
             items={subscriptionList.items}
             onView={onView}

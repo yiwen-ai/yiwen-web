@@ -131,7 +131,7 @@ export const AccountManager = memo(function AccountManager({
           />
         </div>
       </AlertDialogBody>
-      <AlertDialogClose stopPropagation={true} />
+      <AlertDialogClose />
     </AlertDialog>
   )
 })

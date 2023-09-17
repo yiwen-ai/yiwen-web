@@ -67,6 +67,9 @@ export function SectionTitle({
         color: ${active
           ? theme.color.body.primary
           : theme.color.body.secondary};
+        :hover {
+          color: ${theme.color.body.primary};
+        }
       `}
     >
       <Icon name={iconName} size='small' />

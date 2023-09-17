@@ -11,11 +11,13 @@ import {
 } from '@yiwen-ai/store'
 import { toURLSearchParams } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useIntl } from 'react-intl'
 import { useSearchParams } from 'react-router-dom'
 import { useDebounce } from 'use-debounce'
 import { usePublicationViewer } from './usePublicationViewer'
 
 export function useSearchPage(pushToast: ToastAPI['pushToast']) {
+  const intl = useIntl()
   const [searchParams, setSearchParams] = useSearchParams()
 
   //#region params
@@ -90,6 +92,9 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
 
   const subscriptionList = useMemo(
     () => ({
+      title: followedPublicationList.length
+        ? intl.formatMessage({ defaultMessage: '订阅更新' })
+        : intl.formatMessage({ defaultMessage: '推荐' }),
       isLoading:
         isLoadingFollowedPublicationList || isLoadingRecommendedPublicationList,
       items: followedPublicationList.length
@@ -98,6 +103,7 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
     }),
     [
       followedPublicationList,
+      intl,
       isLoadingFollowedPublicationList,
       isLoadingRecommendedPublicationList,
       recommendedPublicationList,

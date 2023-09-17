@@ -15,6 +15,7 @@ import {
   useGroup,
   usePublicationList,
   type CreationOutput,
+  type GPT_MODEL,
   type PublicationOutput,
   type UILanguageItem,
 } from '@yiwen-ai/store'
@@ -110,6 +111,7 @@ export function useGroupDetailPage(
     show: showPublicationViewer,
     refresh: refreshPublicationViewer,
     onTranslate,
+    onSwitch,
     ...publicationViewer
   } = usePublicationViewer(pushToast)
   const { open: publicationViewerOpen, close: closePublicationViewer } =
@@ -219,10 +221,8 @@ export function useGroupDetailPage(
   //#endregion
 
   //#region actions
-  const onPublicationTranslate = useCallback(
-    async (language: UILanguageItem) => {
-      const publication = await onTranslate(language)
-      if (!publication) return
+  const updateRoute = useCallback(
+    (publication: PublicationOutput) => {
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(publication.gid).toString(),
@@ -235,7 +235,23 @@ export function useGroupDetailPage(
         }).toString(),
       })
     },
-    [navigate, onTranslate]
+    [navigate]
+  )
+
+  const handlePublicationTranslate = useCallback(
+    async (language: UILanguageItem, model: GPT_MODEL) => {
+      const publication = await onTranslate(language, model)
+      if (publication) updateRoute(publication)
+    },
+    [onTranslate, updateRoute]
+  )
+
+  const handlePublicationSwitch = useCallback(
+    async (language: UILanguageItem) => {
+      const publication = await onSwitch(language)
+      if (publication) updateRoute(publication)
+    },
+    [onSwitch, updateRoute]
   )
 
   const onPublicationPublish = useCallback(
@@ -515,7 +531,8 @@ export function useGroupDetailPage(
     setViewType,
     publicationViewer: {
       ...publicationViewer,
-      onTranslate: onPublicationTranslate,
+      onTranslate: handlePublicationTranslate,
+      onSwitch: handlePublicationSwitch,
     },
     publicationList: {
       hasGroupWritePermission,

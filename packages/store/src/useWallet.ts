@@ -41,7 +41,7 @@ export interface WalletOutput {
 }
 
 export enum CreditKind {
-  Expenditure = 'expenditure',
+  Payout = 'payout',
 }
 
 export interface CreditOutput {

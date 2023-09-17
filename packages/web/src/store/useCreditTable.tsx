@@ -14,7 +14,7 @@ function useCreditKindLabelDict() {
 
   return useMemo<Record<CreditKind, string>>(
     () => ({
-      [CreditKind.Expenditure]: intl.formatMessage({
+      [CreditKind.Payout]: intl.formatMessage({
         defaultMessage: '支出',
       }),
     }),

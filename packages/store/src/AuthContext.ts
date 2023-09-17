@@ -3,6 +3,7 @@ import {
   createAction,
   isWindow,
   joinURL,
+  useIsMounted,
   type ModalRef,
 } from '@yiwen-ai/util'
 import {
@@ -12,15 +13,16 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import {
+  EMPTY,
+  Observable,
   catchError,
   concatMap,
-  EMPTY,
   finalize,
   from,
-  Observable,
   tap,
   type Subscription,
 } from 'rxjs'
@@ -210,6 +212,7 @@ export function AuthProvider(
   const authAPI = useMemo(() => new AuthAPI(logger, config), [config, logger])
   const [state, setState] = useState(useAuth())
   const { isInitialized, refreshInterval } = state
+  const isMounted = useIsMounted()
 
   const refresh = useCallback(
     async (authAPI: AuthAPI, signal: AbortSignal | null) => {
@@ -218,38 +221,41 @@ export function AuthProvider(
           authAPI.fetchUser(signal),
           authAPI.fetchAccessToken(signal),
         ])
-        setState((state) => ({
-          ...state,
-          isAuthorized: true,
-          user,
-          accessToken: access_token,
-          refreshInterval: expires_in,
-        }))
+        isMounted() &&
+          setState((state) => ({
+            ...state,
+            isAuthorized: true,
+            user,
+            accessToken: access_token,
+            refreshInterval: expires_in,
+          }))
       } catch {
-        setState((state) => ({
-          ...state,
-          isAuthorized: false,
-          user: undefined,
-          accessToken: undefined,
-          refreshInterval: undefined,
-        }))
+        isMounted() &&
+          setState((state) => ({
+            ...state,
+            isAuthorized: false,
+            user: undefined,
+            accessToken: undefined,
+            refreshInterval: undefined,
+          }))
       }
     },
-    []
+    [isMounted]
   )
 
+  const isLoadingRef = useRef(false)
   useEffect(() => {
-    const controller = new AbortController()
-    refresh(authAPI, controller.signal)
+    if (isLoadingRef.current) return
+    isLoadingRef.current = true
+    refresh(authAPI, null)
       .catch((error) => {
         // TODO: handle error
       })
       .finally(() => {
-        if (controller.signal.aborted) return
+        if (!isMounted()) return
         setState((state) => ({ ...state, isInitialized: true }))
       })
-    return () => controller.abort()
-  }, [authAPI, refresh])
+  }, [authAPI, isMounted, refresh])
 
   useEffect(() => {
     if (!refreshInterval) return

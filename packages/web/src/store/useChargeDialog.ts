@@ -1,6 +1,5 @@
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
-  YIWEN_COIN_RATE,
   toMessage,
   useCurrencyList,
   useNewCharge,
@@ -74,7 +73,7 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
       }
       const { result, aborted } = await charge(
         {
-          quantity: chargeAmount * YIWEN_COIN_RATE,
+          quantity: chargeAmount,
           currency: currentCurrency.alpha,
         },
         controller.signal

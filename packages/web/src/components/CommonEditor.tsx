@@ -133,6 +133,8 @@ function ArticleSettings(props: React.HTMLAttributes<HTMLDivElement>) {
         display: flex;
         flex-direction: column;
         gap: 16px;
+        /* TODO */
+        display: none;
       `}
     >
       <div

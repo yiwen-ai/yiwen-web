@@ -2,9 +2,6 @@ import { BREAKPOINT } from '#/shared'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogClose,
   Button,
   Icon,
   IconButton,
@@ -20,7 +17,7 @@ import {
 } from '@yiwen-ai/component'
 import {
   PublicationStatus,
-  type Language,
+  type GPT_MODEL,
   type PublicationOutput,
   type UILanguageItem,
 } from '@yiwen-ai/store'
@@ -28,9 +25,14 @@ import { escapeRegExp } from 'lodash-es'
 import { useCallback, useMemo, useState, type HTMLAttributes } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
+import ChargeDialog, { type ChargeDialogProps } from './ChargeDialog'
 import CommonViewer from './CommonViewer'
 import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
+import TranslateConfirmDialog, {
+  type TranslateConfirmDialogProps,
+} from './TranslateConfirmDialog'
+import TranslateDialog, { type TranslateDialogProps } from './TranslateDialog'
 
 export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   responsive: boolean
@@ -41,9 +43,9 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   originalLanguage: UILanguageItem | undefined
   translatedLanguageList: UILanguageItem[] | undefined
   pendingLanguageList: UILanguageItem[] | undefined
-  processingLanguage: Language | undefined
-  onTranslate: (language: UILanguageItem) => void
-  onProcessingDialogClose: () => void
+  onCharge: () => void
+  onTranslate: (language: UILanguageItem, model: GPT_MODEL) => void
+  onSwitch: (language: UILanguageItem) => void
   shareLink: string | undefined
   onShare: () => void
   isFavorite: boolean
@@ -51,6 +53,12 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   isRemovingFavorite: boolean
   onAddFavorite: () => void
   onRemoveFavorite: () => void
+  translateConfirmDialog: Omit<
+    TranslateConfirmDialogProps,
+    'onCharge' | 'onTranslate'
+  >
+  translateDialog: TranslateDialogProps
+  chargeDialog: ChargeDialogProps
 }
 
 export default function PublicationViewer({
@@ -62,9 +70,9 @@ export default function PublicationViewer({
   originalLanguage,
   translatedLanguageList: _translatedLanguageList,
   pendingLanguageList: _pendingLanguageList,
-  processingLanguage,
+  onCharge,
   onTranslate,
-  onProcessingDialogClose,
+  onSwitch,
   shareLink,
   onShare,
   isFavorite,
@@ -72,6 +80,9 @@ export default function PublicationViewer({
   isRemovingFavorite,
   onAddFavorite,
   onRemoveFavorite,
+  translateConfirmDialog,
+  translateDialog,
+  chargeDialog,
   ...props
 }: PublicationViewerProps) {
   const intl = useIntl()
@@ -113,11 +124,10 @@ export default function PublicationViewer({
 
   const isProcessing = useMemo(() => {
     return Boolean(
-      !!processingLanguage ||
-        _translatedLanguageList?.some((item) => item.isProcessing) ||
+      _translatedLanguageList?.some((item) => item.isProcessing) ||
         _pendingLanguageList?.some((item) => item.isProcessing)
     )
-  }, [_pendingLanguageList, _translatedLanguageList, processingLanguage])
+  }, [_pendingLanguageList, _translatedLanguageList])
 
   return (
     <div
@@ -159,9 +169,7 @@ export default function PublicationViewer({
               size={isNarrow ? 'small' : 'large'}
               disabled={!originalLanguage || originalLanguage.isCurrent}
               onClick={
-                originalLanguage
-                  ? () => onTranslate(originalLanguage)
-                  : undefined
+                originalLanguage ? () => onSwitch(originalLanguage) : undefined
               }
             >
               {!originalLanguage && <Spinner size='small' />}
@@ -240,7 +248,7 @@ export default function PublicationViewer({
                       { name: originalLanguage.nativeName }
                     )}
                     value={originalLanguage.code}
-                    onSelect={() => onTranslate(originalLanguage)}
+                    onSelect={() => onSwitch(originalLanguage)}
                   />
                 )}
                 {translatedLanguageList.length > 0 && (
@@ -253,7 +261,7 @@ export default function PublicationViewer({
                         after={item.isProcessing && <Spinner size='small' />}
                         label={`${item.nativeName} (${item.name})`}
                         value={item.code}
-                        onSelect={() => onTranslate(item)}
+                        onSelect={() => onSwitch(item)}
                       />
                     ))}
                   </SelectOptionGroup>
@@ -269,7 +277,7 @@ export default function PublicationViewer({
                         label={`${item.nativeName} (${item.name})`}
                         value={item.code}
                         disabled={item.isProcessing}
-                        onSelect={() => onTranslate(item)}
+                        onSelect={() => onSwitch(item)}
                       />
                     ))}
                   </SelectOptionGroup>
@@ -379,33 +387,13 @@ export default function PublicationViewer({
           />
         </>
       ) : null}
-      {processingLanguage && (
-        <AlertDialog defaultOpen={true} onClose={onProcessingDialogClose}>
-          <AlertDialogBody
-            css={css`
-              padding: 48px 56px;
-            `}
-          >
-            <Spinner />
-            <div
-              css={css`
-                margin-top: 16px;
-              `}
-            >
-              {intl.formatMessage(
-                {
-                  defaultMessage:
-                    '「{language}」正在翻译，请稍后，翻译好后可在你的发布列表里进行修改和提交。',
-                },
-                {
-                  language: processingLanguage.nativeName,
-                }
-              )}
-            </div>
-          </AlertDialogBody>
-          <AlertDialogClose />
-        </AlertDialog>
-      )}
+      <TranslateConfirmDialog
+        onCharge={onCharge}
+        onTranslate={onTranslate}
+        {...translateConfirmDialog}
+      />
+      <TranslateDialog {...translateDialog} />
+      <ChargeDialog {...chargeDialog} />
     </div>
   )
 }
