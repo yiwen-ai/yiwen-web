@@ -6,12 +6,12 @@ import {
   type SelectOptionProps,
 } from '@yiwen-ai/component'
 import { type Currency } from '@yiwen-ai/store'
-import { toFixed } from '@yiwen-ai/util'
+import { currencyFormatter } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
-import MediumDialog from './MediumDialog'
+import SmallDialog from './SmallDialog'
 
 interface ChargeDialogProps {
   open: boolean
@@ -47,13 +47,11 @@ export default function ChargeDialog({
   const intl = useIntl()
 
   return (
-    <MediumDialog
+    <SmallDialog
       title={intl.formatMessage({ defaultMessage: '充值亿文币' })}
       open={open}
       onClose={onClose}
       css={css`
-        width: 600px;
-        height: fit-content;
         > [data-dialog-body] {
           padding: 24px 36px 36px;
         }
@@ -111,7 +109,7 @@ export default function ChargeDialog({
                 { defaultMessage: '1 {name} = {rate} 文' },
                 {
                   name: currentCurrency.name,
-                  rate: toFixed(
+                  rate: currencyFormatter(
                     1 / currentCurrency.exchange_rate,
                     currentCurrency.decimals
                   ),
@@ -151,7 +149,7 @@ export default function ChargeDialog({
           </Button>
         </>
       ) : null}
-    </MediumDialog>
+    </SmallDialog>
   )
 }
 
@@ -207,7 +205,7 @@ function Choice({
           ${theme.typography.tooltip}
         `}
       >
-        {toFixed(value * currency.exchange_rate, currency.decimals) +
+        {currencyFormatter(value * currency.exchange_rate, currency.decimals) +
           ' ' +
           currency.name}
       </span>

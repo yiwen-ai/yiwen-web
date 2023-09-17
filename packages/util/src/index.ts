@@ -18,7 +18,7 @@ export {
   preventDefaultStopPropagation,
   stopPropagation,
 } from './stopPropagation'
-export { toFixed } from './toFixed'
+export { currencyFormatter, toFixed } from './toFixed'
 export {
   mergeURLSearchParams,
   toURLSearchParams,
