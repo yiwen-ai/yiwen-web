@@ -6,6 +6,7 @@ import {
   DialogHead,
   type DialogProps,
 } from '@yiwen-ai/component'
+import { stopPropagation } from '@yiwen-ai/util'
 
 interface SmallDialogProps extends DialogProps {
   title: string
@@ -18,6 +19,7 @@ export default function SmallDialog({
 }: SmallDialogProps) {
   return (
     <Dialog
+      onPointerUpCapture={stopPropagation}
       {...props}
       css={css`
         width: 600px;

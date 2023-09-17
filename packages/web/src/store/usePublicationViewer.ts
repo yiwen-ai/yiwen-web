@@ -9,11 +9,10 @@ import {
   useFetcherConfig,
   useLanguageList,
   useLanguageProcessor,
-  useMyGroupList,
   usePublication,
   usePublicationAPI,
   useTranslatedPublicationList,
-  type Language,
+  type GPT_MODEL,
   type UILanguageItem,
 } from '@yiwen-ai/store'
 import { isTruthy } from '@yiwen-ai/util'
@@ -21,6 +20,11 @@ import { uniq } from 'lodash-es'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { Xid } from 'xid-ts'
+import { useChargeDialog } from './useChargeDialog'
+import {
+  useTranslateConfirmDialog,
+  useTranslateDialog,
+} from './useTranslateConfirmDialog'
 
 interface Params {
   open: boolean
@@ -34,6 +38,13 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
   const ensureAuthorized = useEnsureAuthorized()
   const { readPublication } = usePublicationAPI()
+
+  const {
+    show: showChargeDialog,
+    close: closeChargeDialog,
+    onCharge,
+    ...chargeDialog
+  } = useChargeDialog(pushToast)
 
   const [{ open, _gid, _cid, _language, _version }, setParams] =
     useState<Params>({
@@ -58,8 +69,21 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     processingList,
     refreshTranslatedList,
     refreshProcessingList,
-    translate,
   } = useTranslatedPublicationList(_gid, _cid, originalLanguageCode, _version)
+
+  const {
+    show: showTranslateConfirmDialog,
+    close: closeTranslateConfirmDialog,
+    refresh: refreshTranslateConfirmDialog,
+    ...translateConfirmDialog
+  } = useTranslateConfirmDialog(_gid, _cid, originalLanguageCode, _version)
+
+  const {
+    show: showTranslateDialog,
+    close: closeTranslateDialog,
+    translate,
+    ...translateDialog
+  } = useTranslateDialog(pushToast, _gid, _cid, originalLanguageCode, _version)
 
   const {
     refresh: refreshBookmarkList,
@@ -152,115 +176,90 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   //#endregion
 
   //#region translate
-  const [processingLanguage, setProcessingLanguage] = useState(
-    undefined as Language | undefined
+  const processingControllerRef = useRef<AbortController | undefined>()
+  useEffect(() => () => processingControllerRef.current?.abort(), [])
+
+  const handleCharge = useCallback(async () => {
+    const result = await onCharge()
+    if (result) refreshTranslateConfirmDialog()
+  }, [onCharge, refreshTranslateConfirmDialog])
+
+  const onTranslate = useCallback(
+    async (language: UILanguageItem, model: GPT_MODEL) => {
+      closeTranslateConfirmDialog()
+      const publication = await translate(language, model)
+      if (publication) {
+        show(
+          publication.gid,
+          publication.cid,
+          publication.language,
+          publication.version
+        )
+      }
+      return publication
+    },
+    [closeTranslateConfirmDialog, translate, show]
   )
 
-  const processingControllerRef = useRef<AbortController | undefined>()
-
-  const { defaultGroup, refreshDefaultGroup } = useMyGroupList()
-
-  const onTranslate = useMemo(() => {
-    return ensureAuthorized(async (lang: UILanguageItem) => {
-      const language = lang.code
-      const controller = new AbortController()
-      processingControllerRef.current?.abort()
-      processingControllerRef.current = controller
-      try {
-        setProcessingLanguage(lang)
-        if (lang.isOriginal && _gid && _cid && _version != null) {
+  const onSwitch = useCallback(
+    async (language: UILanguageItem) => {
+      const _language = language.code
+      let publication = translatedList?.find(
+        (item) => item.language === _language && item.version === _version
+      )
+      if (!publication) {
+        publication = translatedList
+          ?.filter((item) => item.language === _language)
+          .sort((a, b) => b.version - a.version)[0] // latest version
+      }
+      if (
+        !publication &&
+        language.isOriginal &&
+        _gid &&
+        _cid &&
+        _version != null
+      ) {
+        const controller = new AbortController()
+        processingControllerRef.current?.abort()
+        processingControllerRef.current = controller
+        try {
           // original publication may be archived, so we need to read it directly
           const { result } = await readPublication(
             {
               gid: _gid,
               cid: _cid,
-              language,
+              language: _language,
               version: _version,
               fields: null,
             },
             controller.signal
           )
-          return result
-        }
-        const gid = defaultGroup?.id ?? (await refreshDefaultGroup())?.id
-        try {
-          return await translate(gid, language, controller.signal)
+          publication = result
         } catch (error) {
-          if (
-            error instanceof RequestError &&
-            error.status === 409 &&
-            gid &&
-            _cid &&
-            _version != null
-          ) {
-            // translation already exists, read it directly
-            const { result } = await readPublication(
-              {
-                gid: Xid.fromValue(gid).toString(),
-                cid: _cid,
-                language,
-                version: _version,
-                fields: null,
-              },
-              controller.signal
-            )
-            return result
-          }
-          throw error
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          if (
-            lang.isOriginal &&
-            error instanceof RequestError &&
-            error.status === 404
-          ) {
-            pushToast({
-              type: 'warning',
-              message: intl.formatMessage({ defaultMessage: '原文不存在' }),
-              description: toMessage(error),
-            })
-          } else {
-            pushToast({
-              type: 'warning',
-              message: intl.formatMessage({ defaultMessage: '翻译失败' }),
-              description: toMessage(error),
-            })
+          if (!controller.signal.aborted) {
+            if (error instanceof RequestError && error.status === 403) {
+              pushToast({
+                type: 'warning',
+                message: intl.formatMessage({ defaultMessage: '无权限查看' }),
+                description: toMessage(error),
+              })
+            } else if (error instanceof RequestError && error.status === 404) {
+              pushToast({
+                type: 'warning',
+                message: intl.formatMessage({ defaultMessage: '原文不存在' }),
+                description: toMessage(error),
+              })
+            } else {
+              pushToast({
+                type: 'warning',
+                message: intl.formatMessage({ defaultMessage: '读取原文失败' }),
+                description: toMessage(error),
+              })
+            }
           }
         }
-        return undefined
-      } finally {
-        if (!controller.signal.aborted) {
-          setProcessingLanguage(undefined)
-        }
-      }
-    })
-  }, [
-    _cid,
-    _gid,
-    _version,
-    defaultGroup?.id,
-    ensureAuthorized,
-    intl,
-    pushToast,
-    readPublication,
-    refreshDefaultGroup,
-    translate,
-  ])
-
-  const onSwitch = useCallback(
-    async (lang: UILanguageItem) => {
-      const language = lang.code
-      let publication = translatedList?.find(
-        (item) => item.language === language && item.version === _version
-      )
-      if (!publication) {
-        publication = translatedList
-          ?.filter((item) => item.language === language)
-          .sort((a, b) => b.version - a.version)[0] // latest version
-      }
-      if (!publication) {
-        publication = await onTranslate(lang)
+      } else if (!publication) {
+        showTranslateConfirmDialog(language)
       }
       if (publication) {
         show(
@@ -272,13 +271,18 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       }
       return publication
     },
-    [_version, onTranslate, show, translatedList]
+    [
+      _cid,
+      _gid,
+      _version,
+      intl,
+      pushToast,
+      readPublication,
+      show,
+      showTranslateConfirmDialog,
+      translatedList,
+    ]
   )
-
-  const onProcessingDialogClose = useCallback(() => {
-    setProcessingLanguage(undefined)
-    processingControllerRef.current?.abort()
-  }, [])
   //#endregion
 
   //#region share
@@ -346,6 +350,19 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   //#endregion
 
   return {
+    translateConfirmDialog: {
+      onClose: closeTranslateConfirmDialog,
+      ...translateConfirmDialog,
+    },
+    translateDialog: {
+      onClose: closeTranslateDialog,
+      ...translateDialog,
+    },
+    chargeDialog: {
+      onClose: closeChargeDialog,
+      onCharge: handleCharge,
+      ...chargeDialog,
+    },
     isLoading,
     error,
     publication,
@@ -357,9 +374,9 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     originalLanguage,
     translatedLanguageList,
     pendingLanguageList,
-    processingLanguage,
-    onTranslate: onSwitch,
-    onProcessingDialogClose,
+    onCharge: showChargeDialog,
+    onTranslate,
+    onSwitch,
     shareLink,
     onShare,
     isFavorite,

@@ -15,6 +15,7 @@ import {
   useImperativeHandle,
   type HTMLAttributes,
 } from 'react'
+import { useIntl } from 'react-intl'
 import { IconButton, type IconButtonProps } from './Button'
 import { Portal, type PortalProps } from './Portal'
 
@@ -129,12 +130,13 @@ export interface DialogCloseProps extends Partial<IconButtonProps> {
 }
 
 export const DialogClose = memo(function DialogClose({
-  stopPropagation,
+  stopPropagation = true,
   iconName = 'closecircle2',
   onClick,
   onPointerUpCapture,
   ...props
 }: DialogCloseProps) {
+  const intl = useIntl()
   const theme = useTheme()
   const dialog = useContext(DialogContext)
 
@@ -156,6 +158,7 @@ export const DialogClose = memo(function DialogClose({
 
   return (
     <IconButton
+      aria-label={intl.formatMessage({ defaultMessage: '关闭' })}
       data-dialog-close={true}
       iconName={iconName}
       size='medium'

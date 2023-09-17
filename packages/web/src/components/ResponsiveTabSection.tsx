@@ -69,25 +69,42 @@ export default function ResponsiveTabSection({
               auto
             );
           `}
+          ${items.length === 0 &&
+          css`
+            display: block;
+          `}
         `}
       >
-        {items.slice(0, LIMIT).map((item, index) => (
-          <PublicationLink
-            key={buildPublicationKey(item)}
-            gid={item.gid}
-            cid={item.cid}
-            language={item.language}
-            version={item.version}
-            onClick={() => onView(item)}
+        {items.length === 0 ? (
+          <div
+            css={(theme) => css`
+              padding: 20px;
+              text-align: center;
+              color: ${theme.color.body.secondary};
+              ${theme.typography.tooltip}
+            `}
           >
-            <OrderedItem index={index} primary={index < LIMIT / 2}>
-              {item.title}
-            </OrderedItem>
-          </PublicationLink>
-        ))}
+            {intl.formatMessage({ defaultMessage: '暂无数据' })}
+          </div>
+        ) : (
+          items.slice(0, LIMIT).map((item, index) => (
+            <PublicationLink
+              key={buildPublicationKey(item)}
+              gid={item.gid}
+              cid={item.cid}
+              language={item.language}
+              version={item.version}
+              onClick={() => onView(item)}
+            >
+              <OrderedItem index={index} primary={index < LIMIT / 2}>
+                {item.title}
+              </OrderedItem>
+            </PublicationLink>
+          ))
+        )}
       </OrderedList>
     ),
-    [isNarrow, onView]
+    [intl, isNarrow, onView]
   )
 
   return (

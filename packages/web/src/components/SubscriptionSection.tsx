@@ -16,11 +16,13 @@ import Loading from './Loading'
 const LIMIT = 6
 
 export default function SubscriptionSection({
+  title,
   isLoading,
   items: _items,
   onView,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & {
+  title: string
   isLoading: boolean
   items: PublicationOutput[]
   onView: (item: PublicationOutput) => void
@@ -42,11 +44,7 @@ export default function SubscriptionSection({
             `
           }
         >
-          <SectionTitle
-            iconName='wanchain'
-            label={intl.formatMessage({ defaultMessage: '订阅更新' })}
-            active={true}
-          />
+          <SectionTitle iconName='wanchain' label={title} active={true} />
           <Link
             to={SUBSCRIPTION_PATH}
             css={css`

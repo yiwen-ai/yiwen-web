@@ -92,7 +92,7 @@ export default function Home() {
               {
                 key: 'subscription',
                 icon: 'wanchain',
-                title: intl.formatMessage({ defaultMessage: '订阅更新' }),
+                title: subscriptionList.title,
                 more: SUBSCRIPTION_PATH,
                 isLoading: subscriptionList.isLoading,
                 items: subscriptionList.items,

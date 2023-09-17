@@ -1,4 +1,5 @@
 import { type JSONContent } from '@tiptap/core'
+import { useLoading } from '@yiwen-ai/util'
 import { omitBy } from 'lodash-es'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
@@ -15,8 +16,6 @@ import {
   type UserInfo,
 } from './common'
 import { RequestMethod, useFetcher } from './useFetcher'
-
-export const DEFAULT_MODEL = 'gpt3.5'
 
 export enum PublicationStatus {
   Deleted = -2,
@@ -67,6 +66,26 @@ export interface CreatePublicationInput {
   model: string
   to_gid?: Uint8Array
   to_language?: string
+}
+
+export interface EstimateOutput {
+  balance: number
+  tokens: number
+  models: Record<GPT_MODEL, ModelCost>
+}
+
+export enum GPT_MODEL {
+  GPT3_5 = 'gpt-3.5',
+  GPT4 = 'gpt-4',
+}
+
+export const DEFAULT_MODEL = GPT_MODEL.GPT3_5
+
+export interface ModelCost {
+  id: GPT_MODEL
+  name: string
+  price: number
+  cost: number
 }
 
 export interface UpdatePublicationStatusInput {
@@ -197,6 +216,13 @@ export function usePublicationAPI() {
         `${path}/list_by_following`,
         body
       )
+    },
+    [request]
+  )
+
+  const estimatePublication = useCallback(
+    (body: CreatePublicationInput) => {
+      return request.post<{ result: EstimateOutput }>(`${path}/estimate`, body)
     },
     [request]
   )
@@ -338,6 +364,7 @@ export function usePublicationAPI() {
     readProcessingPublicationList,
     readRecommendedPublicationList,
     readFollowedPublicationList,
+    estimatePublication,
     translatePublication,
     createPublication,
     updatePublication,
@@ -403,6 +430,7 @@ export function useTranslatedPublicationList(
   const {
     readTranslatedPublicationList,
     readProcessingPublicationList,
+    estimatePublication,
     translatePublication,
   } = usePublicationAPI()
   const readPublicationByJob = useReadPublicationByJob()
@@ -458,10 +486,47 @@ export function useTranslatedPublicationList(
     [getProcessingListKey, mutateProcessingList]
   )
 
+  //#region
+  const [setEstimating, isEstimating] = useLoading(
+    (language: string) => language
+  )
+
+  const estimate = useCallback(
+    async (language: string | undefined) => {
+      if (!_gid || !_cid || !_language || _version == null || !language) {
+        throw new Error(
+          'group id, creation id, language, version, target group id and target language are required to translate a publication'
+        )
+      }
+      try {
+        setEstimating(language, true)
+        const { result } = await estimatePublication({
+          gid: Xid.fromValue(_gid),
+          cid: Xid.fromValue(_cid),
+          language: _language,
+          version: _version,
+          model: DEFAULT_MODEL,
+          to_language: language,
+        })
+        return result
+      } finally {
+        setEstimating(language, false)
+      }
+    },
+    [_cid, _gid, _language, _version, estimatePublication, setEstimating]
+  )
+  //#endregion
+
+  //#region
+  const [setTranslating, isTranslating] = useLoading(
+    (language: string) => language
+  )
+
   const translate = useCallback(
     async (
       gid: Uint8Array | undefined,
       language: string | undefined,
+      model: GPT_MODEL,
       signal: AbortSignal
     ) => {
       if (
@@ -476,23 +541,28 @@ export function useTranslatedPublicationList(
           'group id, creation id, language, version, target group id and target language are required to translate a publication'
         )
       }
-      const resp = await translatePublication({
-        gid: Xid.fromValue(_gid),
-        cid: Xid.fromValue(_cid),
-        language: _language,
-        version: _version,
-        model: DEFAULT_MODEL,
-        to_gid: gid,
-        to_language: language,
-      })
-      let { result } = resp
-      if (!result) {
+      try {
+        setTranslating(language, true)
+        const resp = await translatePublication({
+          gid: Xid.fromValue(_gid),
+          cid: Xid.fromValue(_cid),
+          language: _language,
+          version: _version,
+          model,
+          to_gid: gid,
+          to_language: language,
+        })
+        let { result } = resp
+        if (!result) {
+          mutateProcessingList()
+          result = await readPublicationByJob(resp.job, signal)
+        }
         mutateProcessingList()
-        result = await readPublicationByJob(resp.job, signal)
+        mutateTranslatedList()
+        return result
+      } finally {
+        setTranslating(language, false)
       }
-      mutateProcessingList()
-      mutateTranslatedList()
-      return result
     },
     [
       _cid,
@@ -502,9 +572,11 @@ export function useTranslatedPublicationList(
       mutateProcessingList,
       mutateTranslatedList,
       readPublicationByJob,
+      setTranslating,
       translatePublication,
     ]
   )
+  //#endregion
 
   return {
     isLoadingTranslatedList:
@@ -517,6 +589,9 @@ export function useTranslatedPublicationList(
     processingList: processingList?.result,
     refreshTranslatedList,
     refreshProcessingList,
+    isEstimating,
+    isTranslating,
+    estimate,
     translate,
   } as const
 }

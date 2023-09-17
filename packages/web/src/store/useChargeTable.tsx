@@ -87,7 +87,7 @@ export function useChargeTable(
       columnHelper.accessor((row) => row.provider, {
         cell: (props) => chargeProviderLabelDict[props.getValue()],
         header: intl.formatMessage({ defaultMessage: '充值渠道' }),
-        size: 200,
+        size: 140,
       }),
       columnHelper.accessor((row) => row.quantity, {
         cell: (props) => props.getValue(),
@@ -107,7 +107,7 @@ export function useChargeTable(
       columnHelper.accessor((row) => row.status, {
         cell: (props) => chargeStatusLabelDict[props.getValue()],
         header: intl.formatMessage({ defaultMessage: '状态' }),
-        size: 200,
+        size: 140,
       }),
       columnHelper.accessor((row) => row, {
         id: '_actions',
@@ -131,7 +131,7 @@ export function useChargeTable(
           )
         },
         header: () => null,
-        size: 140,
+        size: 60,
       }),
     ],
     [
