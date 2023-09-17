@@ -25,7 +25,12 @@ export const AlertDialog = memo(
         ref={ref}
         css={css`
           width: 444px;
-          height: fit-content;
+          height: auto;
+          max-width: 100%;
+          max-height: 100%;
+          top: 50%;
+          bottom: unset;
+          transform: translateY(-50%);
         `}
       />
     )
