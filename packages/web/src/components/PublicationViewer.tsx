@@ -236,7 +236,7 @@ export default function PublicationViewer({
                   <SelectOption
                     key={originalLanguage.code}
                     label={intl.formatMessage(
-                      { defaultMessage: '{name}（创作语言）' },
+                      { defaultMessage: '{name} (创作语言)' },
                       { name: originalLanguage.nativeName }
                     )}
                     value={originalLanguage.code}
@@ -251,7 +251,7 @@ export default function PublicationViewer({
                       <SelectOption
                         key={item.code}
                         after={item.isProcessing && <Spinner size='small' />}
-                        label={item.nativeName}
+                        label={`${item.nativeName} (${item.name})`}
                         value={item.code}
                         onSelect={() => onTranslate(item)}
                       />
@@ -266,7 +266,7 @@ export default function PublicationViewer({
                       <SelectOption
                         key={item.code}
                         after={item.isProcessing && <Spinner size='small' />}
-                        label={item.nativeName}
+                        label={`${item.nativeName} (${item.name})`}
                         value={item.code}
                         disabled={item.isProcessing}
                         onSelect={() => onTranslate(item)}
