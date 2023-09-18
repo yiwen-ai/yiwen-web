@@ -44,6 +44,7 @@
     "@tiptap/starter-kit": "^2.1.7",
     "@yiwen-ai/store": "workspace:*",
     "@yiwen-ai/util": "workspace:*",
+    "katex": "^0.16.8",
     "lodash-es": "^4.17.21",
     "nanoid": "^4.0.2",
     "qrcode": "^1.5.3",
