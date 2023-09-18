@@ -1,10 +1,12 @@
 import { SHARE_PUBLICATION_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
+  PublicationStatus,
   type GPT_MODEL,
   type PublicationOutput,
   type UILanguageItem,
 } from '@yiwen-ai/store'
+import { toURLSearchParams } from '@yiwen-ai/util'
 import { useCallback, useEffect } from 'react'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { Xid } from 'xid-ts'
@@ -29,9 +31,10 @@ export function useSharePublicationPage(
     ...publicationViewer
   } = usePublicationViewer(pushToast)
 
-  useEffect(() => {
-    show(_gid, _cid, _language, _version)
-  }, [_cid, _gid, _language, _version, show])
+  useEffect(
+    () => show(_gid, _cid, _language, _version),
+    [_cid, _gid, _language, _version, show]
+  )
 
   const updateRoute = useCallback(
     (publication: PublicationOutput) => {
@@ -39,10 +42,16 @@ export function useSharePublicationPage(
         pathname: generatePath(SHARE_PUBLICATION_PATH, {
           cid: Xid.fromValue(publication.cid).toString(),
         }),
-        search: new URLSearchParams({
-          gid: Xid.fromValue(publication.gid).toString(),
+        search: toURLSearchParams({
+          gid:
+            publication.status === PublicationStatus.Published
+              ? undefined
+              : Xid.fromValue(publication.gid).toString(),
           language: publication.language,
-          version: publication.version.toString(),
+          version:
+            publication.status === PublicationStatus.Published
+              ? undefined
+              : publication.version,
         }).toString(),
       })
     },
