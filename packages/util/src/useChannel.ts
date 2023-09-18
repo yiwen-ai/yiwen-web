@@ -85,10 +85,10 @@ export class Channel {
 
     // close channel when endpoint is closed
     if (isWindow(endpoint)) {
-      const subscription = waitUntilClosed(endpoint).subscribe(
+      const following = waitUntilClosed(endpoint).subscribe(
         this.close.bind(this)
       )
-      this.unsubscribeList.add(() => subscription.unsubscribe())
+      this.unsubscribeList.add(() => following.unsubscribe())
     }
   }
 
@@ -104,7 +104,7 @@ export class Channel {
 
   [Symbol.observable]() {
     return new Observable<Action<unknown>>((observer) => {
-      const subscription = from(this.port.promise)
+      const following = from(this.port.promise)
         .pipe(
           tap((port) => port.start()),
           concatMap((port) => fromEvent<MessageEvent>(port, 'message')),
@@ -114,7 +114,7 @@ export class Channel {
       const onClose = observer.complete.bind(observer)
       this.unsubscribeList.add(onClose)
       return () => {
-        subscription.unsubscribe()
+        following.unsubscribe()
         this.unsubscribeList.delete(onClose)
       }
     })

@@ -72,7 +72,7 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   )
   //#endregion
 
-  //#region subscription list
+  //#region following list
   const {
     isLoading: isLoadingFollowedPublicationList,
     items: followedPublicationList,
@@ -90,10 +90,10 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
     refreshRecommendedPublicationList()
   }, [refreshFollowedPublicationList, refreshRecommendedPublicationList])
 
-  const subscriptionList = useMemo(
+  const followingList = useMemo(
     () => ({
       title: followedPublicationList.length
-        ? intl.formatMessage({ defaultMessage: '订阅更新' })
+        ? intl.formatMessage({ defaultMessage: '关注' })
         : intl.formatMessage({ defaultMessage: '推荐' }),
       isLoading:
         isLoadingFollowedPublicationList || isLoadingRecommendedPublicationList,
@@ -145,7 +145,7 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
       onRemoveFavorite: handlePublicationRemoveFavorite,
       ...publicationViewer,
     },
-    subscriptionList,
+    followingList,
     bookmarkList,
   } as const
 }

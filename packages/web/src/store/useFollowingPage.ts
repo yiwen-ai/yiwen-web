@@ -6,7 +6,7 @@ import {
 import { useCallback, useEffect } from 'react'
 import { usePublicationViewer } from './usePublicationViewer'
 
-export function useSubscriptionPage(pushToast: ToastAPI['pushToast']) {
+export function useFollowingPage(pushToast: ToastAPI['pushToast']) {
   const {
     refresh: refreshFollowedPublicationList,
     ...followedPublicationList

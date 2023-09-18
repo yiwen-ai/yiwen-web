@@ -7,7 +7,7 @@ import NewCreationLink from '#/components/NewCreationLink'
 import Placeholder from '#/components/Placeholder'
 import PublicationViewer from '#/components/PublicationViewer'
 import SearchItem from '#/components/SearchItem'
-import SubscriptionSection from '#/components/SubscriptionSection'
+import FollowingSection from '#/components/FollowingSection'
 import { BREAKPOINT } from '#/shared'
 import { useSearchPage } from '#/store/useSearchPage'
 import { css, useTheme } from '@emotion/react'
@@ -43,7 +43,7 @@ export default function SearchPage() {
       close: onPublicationViewerClose,
       ...publicationViewer
     },
-    subscriptionList,
+    followingList,
     bookmarkList,
   } = useSearchPage(pushToast)
 
@@ -136,10 +136,10 @@ export default function SearchPage() {
           `}
         >
           <NewCreationLink />
-          <SubscriptionSection
-            title={subscriptionList.title}
-            isLoading={subscriptionList.isLoading}
-            items={subscriptionList.items}
+          <FollowingSection
+            title={followingList.title}
+            isLoading={followingList.isLoading}
+            items={followingList.items}
             onView={onView}
           />
           <BookmarkSection

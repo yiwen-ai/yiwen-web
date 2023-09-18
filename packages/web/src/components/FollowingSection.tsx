@@ -1,4 +1,4 @@
-import { SUBSCRIPTION_PATH } from '#/App'
+import { FOLLOWING_PATH } from '#/App'
 import OrderedItem from '#/components/OrderedItem'
 import OrderedList from '#/components/OrderedList'
 import PublicationLink from '#/components/PublicationLink'
@@ -15,7 +15,7 @@ import Loading from './Loading'
 
 const LIMIT = 6
 
-export default function SubscriptionSection({
+export default function FollowingSection({
   title,
   isLoading,
   items: _items,
@@ -46,7 +46,7 @@ export default function SubscriptionSection({
         >
           <SectionTitle iconName='wanchain' label={title} active={true} />
           <Link
-            to={SUBSCRIPTION_PATH}
+            to={FOLLOWING_PATH}
             css={css`
               display: flex;
             `}

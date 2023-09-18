@@ -73,12 +73,12 @@ export function useGroupDetailPage(
         await follow()
         pushToast({
           type: 'success',
-          message: intl.formatMessage({ defaultMessage: '订阅成功' }),
+          message: intl.formatMessage({ defaultMessage: '关注成功' }),
         })
       } catch (error) {
         pushToast({
           type: 'warning',
-          message: intl.formatMessage({ defaultMessage: '订阅失败' }),
+          message: intl.formatMessage({ defaultMessage: '关注失败' }),
           description: toMessage(error),
         })
       }
@@ -91,7 +91,7 @@ export function useGroupDetailPage(
         await unfollow()
         pushToast({
           type: 'success',
-          message: intl.formatMessage({ defaultMessage: '已取消订阅' }),
+          message: intl.formatMessage({ defaultMessage: '已取消关注' }),
         })
       } catch (error) {
         pushToast({

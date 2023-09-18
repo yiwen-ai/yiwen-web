@@ -6,13 +6,13 @@ import Placeholder from '#/components/Placeholder'
 import PublicationLink from '#/components/PublicationLink'
 import PublicationViewer from '#/components/PublicationViewer'
 import { BREAKPOINT } from '#/shared'
-import { useSubscriptionPage } from '#/store/useSubscriptionPage'
+import { useFollowingPage } from '#/store/useFollowingPage'
 import { css, useTheme } from '@emotion/react'
 import { textEllipsis, useToast } from '@yiwen-ai/component'
 import { buildPublicationKey, type PublicationOutput } from '@yiwen-ai/store'
 import { useCallback } from 'react'
 
-export default function SubscriptionPage() {
+export default function FollowingPage() {
   const { renderToastContainer, pushToast } = useToast()
 
   const {
@@ -30,7 +30,7 @@ export default function SubscriptionPage() {
       close: onPublicationViewerClose,
       ...publicationViewer
     },
-  } = useSubscriptionPage(pushToast)
+  } = useFollowingPage(pushToast)
 
   return (
     <>

@@ -65,7 +65,7 @@ import LoginStatePage from './pages/login/state'
 import SharePublicationPage from './pages/pub/[cid]'
 import EditPublicationPage from './pages/publication/[cid]'
 import SearchPage from './pages/search'
-import SubscriptionPage from './pages/subscription'
+import FollowingPage from './pages/following'
 import WalletPage from './pages/wallet'
 import { BREAKPOINT } from './shared'
 
@@ -164,8 +164,8 @@ function Layout() {
           onClick: () => navigate(BOOKMARK_PATH),
         },
         {
-          label: intl.formatMessage({ defaultMessage: '我的订阅' }),
-          onClick: () => navigate(SUBSCRIPTION_PATH),
+          label: intl.formatMessage({ defaultMessage: '我的关注' }),
+          onClick: () => navigate(FOLLOWING_PATH),
         },
       ],
     }),
@@ -220,7 +220,7 @@ export function SetHeaderProps(props: HeaderProps) {
 
 export const SEARCH_PATH = '/search'
 export const BOOKMARK_PATH = '/bookmark'
-export const SUBSCRIPTION_PATH = '/subscription'
+export const FOLLOWING_PATH = '/following'
 export const WALLET_PATH = '/wallet'
 export const NEW_CREATION_PATH = '/creation/new'
 export const EDIT_CREATION_PATH = '/creation/:cid'
@@ -237,7 +237,7 @@ const router = createBrowserRouter(
       <Route path='/login/state' element={<LoginStatePage />} />
       <Route path={SEARCH_PATH} element={<SearchPage />} />
       <Route path={BOOKMARK_PATH} element={<BookmarkPage />} />
-      <Route path={SUBSCRIPTION_PATH} element={<SubscriptionPage />} />
+      <Route path={FOLLOWING_PATH} element={<FollowingPage />} />
       <Route path={WALLET_PATH} element={<WalletPage />} />
       <Route path={NEW_CREATION_PATH} element={<NewCreationPage />} />
       <Route path={EDIT_CREATION_PATH} element={<EditCreationPage />} />

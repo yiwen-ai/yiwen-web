@@ -442,8 +442,8 @@ function GroupPart({
             <MenuItem
               label={
                 isFollowed
-                  ? intl.formatMessage({ defaultMessage: '取消订阅' })
-                  : intl.formatMessage({ defaultMessage: '订阅' })
+                  ? intl.formatMessage({ defaultMessage: '取消关注' })
+                  : intl.formatMessage({ defaultMessage: '关注' })
               }
               disabled={isFollowing || isUnfollowing}
               onClick={isFollowed ? onUnfollow : onFollow}

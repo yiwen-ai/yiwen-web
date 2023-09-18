@@ -83,7 +83,7 @@ class AuthAPI {
         return
       }
       const channel = new Channel(popup)
-      const subscription = from(channel).subscribe((action) => {
+      const following = from(channel).subscribe((action) => {
         if (!this.authentication.match(action)) return
         if (action.payload.status >= 200 && action.payload.status < 300) {
           observer.next()
@@ -95,7 +95,7 @@ class AuthAPI {
         }
       })
       return () => {
-        subscription.unsubscribe()
+        following.unsubscribe()
         channel.close()
         popup.close()
       }
@@ -285,10 +285,10 @@ export function AuthProvider(
   }, [authAPI, refreshInterval])
 
   useEffect(() => {
-    const subscriptionList = new Set<Subscription>()
+    const followingList = new Set<Subscription>()
     const authorize = (provider: IdentityProvider) => {
       setState((state) => ({ ...state, authorizingProvider: provider }))
-      const subscription = authAPI
+      const following = authAPI
         .authorize(provider)
         .pipe(
           concatMap(() => {
@@ -314,15 +314,15 @@ export function AuthProvider(
             return EMPTY
           }),
           finalize(() => {
-            subscriptionList.delete(subscription)
+            followingList.delete(following)
           })
         )
         .subscribe()
-      subscriptionList.add(subscription)
+      followingList.add(following)
     }
     const callback = authAPI.callback.bind(authAPI)
     const logout = () => {
-      const subscription = from(authAPI.logout())
+      const following = from(authAPI.logout())
         .pipe(
           concatMap(() => {
             return new Observable<void>((observer) => {
@@ -336,16 +336,16 @@ export function AuthProvider(
             return EMPTY
           }),
           finalize(() => {
-            subscriptionList.delete(subscription)
+            followingList.delete(following)
           })
         )
         .subscribe()
-      subscriptionList.add(subscription)
+      followingList.add(following)
     }
     setState((state) => ({ ...state, authorize, callback, logout }))
     return () => {
-      subscriptionList.forEach((subscription) => subscription.unsubscribe())
-      subscriptionList.clear()
+      followingList.forEach((following) => following.unsubscribe())
+      followingList.clear()
     }
   }, [authAPI, refresh])
 

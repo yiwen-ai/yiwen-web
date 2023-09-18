@@ -25,7 +25,7 @@ import Loading from './Loading'
 
 const LIMIT = 6
 
-type TabKey = 'subscription' | 'bookmark'
+type TabKey = 'following' | 'bookmark'
 
 interface ResponsiveTabSectionProps {
   className?: string
@@ -49,7 +49,7 @@ export default function ResponsiveTabSection({
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const isNarrow = width <= BREAKPOINT.small
 
-  const [currentTab, setCurrentTab] = useState<TabKey>('subscription')
+  const [currentTab, setCurrentTab] = useState<TabKey>('following')
 
   const currentTabMore = tabs.find((tab) => tab.key === currentTab)?.more
 

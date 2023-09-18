@@ -1,7 +1,7 @@
 import {
   BOOKMARK_PATH,
   NEW_CREATION_PATH,
-  SUBSCRIPTION_PATH,
+  FOLLOWING_PATH,
   SetHeaderProps,
 } from '#/App'
 import LargeDialog from '#/components/LargeDialog'
@@ -34,7 +34,7 @@ export default function Home() {
       close: onPublicationViewerClose,
       ...publicationViewer
     },
-    subscriptionList,
+    followingList,
     bookmarkList,
   } = useHomePage(pushToast)
 
@@ -90,12 +90,12 @@ export default function Home() {
           <ResponsiveTabSection
             tabs={[
               {
-                key: 'subscription',
+                key: 'following',
                 icon: 'wanchain',
-                title: subscriptionList.title,
-                more: SUBSCRIPTION_PATH,
-                isLoading: subscriptionList.isLoading,
-                items: subscriptionList.items,
+                title: followingList.title,
+                more: FOLLOWING_PATH,
+                isLoading: followingList.isLoading,
+                items: followingList.items,
               },
               {
                 key: 'bookmark',
