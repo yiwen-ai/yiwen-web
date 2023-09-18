@@ -16,7 +16,6 @@ import {
   textEllipsis,
 } from '@yiwen-ai/component'
 import {
-  PublicationStatus,
   type GPT_MODEL,
   type PublicationOutput,
   type UILanguageItem,
@@ -331,8 +330,7 @@ export default function PublicationViewer({
                     : intl.formatMessage({ defaultMessage: '添加书签' })}
                 </Button>
               )}
-              {publication.status === PublicationStatus.Published &&
-              shareLink ? (
+              {shareLink ? (
                 <Menu
                   anchor={(props) =>
                     isNarrow ? (

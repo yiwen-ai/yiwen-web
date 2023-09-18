@@ -2,6 +2,7 @@ import { generatePublicationShareLink } from '#/shared'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   PublicationJobStatus,
+  PublicationStatus,
   RequestError,
   toMessage,
   useCreationBookmarkList,
@@ -46,14 +47,13 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     ...chargeDialog
   } = useChargeDialog(pushToast)
 
-  const [{ open, _gid, _cid, _language, _version }, setParams] =
-    useState<Params>({
-      open: false,
-      _gid: undefined,
-      _cid: undefined,
-      _language: undefined,
-      _version: undefined,
-    })
+  const [{ open, ...params }, setParams] = useState<Params>({
+    open: false,
+    _gid: undefined,
+    _cid: undefined,
+    _language: undefined,
+    _version: undefined,
+  })
 
   //#region fetch
   const {
@@ -61,29 +61,57 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     error,
     publication,
     refresh: refreshPublication,
-  } = usePublication(_gid, _cid, _language, _version)
-  const originalLanguageCode = publication?.from_language
+  } = usePublication(
+    params._gid,
+    params._cid,
+    params._language,
+    params._version
+  )
+
+  const { _gid, _cid, _language, _version, _fromLanguage } = useMemo(() => {
+    return {
+      _gid: publication?.gid
+        ? Xid.fromValue(publication.gid).toString()
+        : params._gid,
+      _cid: publication?.cid
+        ? Xid.fromValue(publication.cid).toString()
+        : params._cid,
+      _language: publication?.language ?? params._language,
+      _version: publication?.version ?? params._version,
+      _fromLanguage: publication?.from_language,
+    }
+  }, [
+    params._cid,
+    params._gid,
+    params._language,
+    params._version,
+    publication?.cid,
+    publication?.from_language,
+    publication?.gid,
+    publication?.language,
+    publication?.version,
+  ])
 
   const {
     translatedList,
     processingList,
     refreshTranslatedList,
     refreshProcessingList,
-  } = useTranslatedPublicationList(_gid, _cid, originalLanguageCode, _version)
+  } = useTranslatedPublicationList(_gid, _cid, _fromLanguage, _version)
 
   const {
     show: showTranslateConfirmDialog,
     close: closeTranslateConfirmDialog,
     refresh: refreshTranslateConfirmDialog,
     ...translateConfirmDialog
-  } = useTranslateConfirmDialog(_gid, _cid, originalLanguageCode, _version)
+  } = useTranslateConfirmDialog(_gid, _cid, _fromLanguage, _version)
 
   const {
     show: showTranslateDialog,
     close: closeTranslateDialog,
     translate,
     ...translateDialog
-  } = useTranslateDialog(pushToast, _gid, _cid, originalLanguageCode, _version)
+  } = useTranslateDialog(pushToast, _gid, _cid, _fromLanguage, _version)
 
   const {
     refresh: refreshBookmarkList,
@@ -121,7 +149,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     pendingLanguageList,
   } = useLanguageProcessor(
     languageList,
-    originalLanguageCode, // original language
+    _fromLanguage, // original language
     _language, // current language
     translatedLanguageCodeList,
     processingLanguageCodeList
@@ -171,8 +199,20 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   ])
 
   useEffect(() => {
-    open && refresh()
-  }, [open, refresh])
+    open && refreshPublication()
+  }, [open, refreshPublication])
+
+  useEffect(() => {
+    open && refreshTranslatedList()
+  }, [open, refreshTranslatedList])
+
+  useEffect(() => {
+    open && refreshProcessingList()
+  }, [open, refreshProcessingList])
+
+  useEffect(() => {
+    open && refreshBookmarkList()
+  }, [open, refreshBookmarkList])
   //#endregion
 
   //#region translate
@@ -289,21 +329,16 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   const SHARE_URL = useFetcherConfig().SHARE_URL
 
   const shareLink = useMemo(() => {
-    if (!_gid || !_cid || !_language || _version == null) return undefined
-    return generatePublicationShareLink(
-      SHARE_URL,
-      _gid,
-      _cid,
-      _language,
-      _version
-    )
-  }, [SHARE_URL, _cid, _gid, _language, _version])
+    if (!_cid) return undefined
+    if (publication?.status !== PublicationStatus.Published) return undefined
+    return generatePublicationShareLink(SHARE_URL, null, _cid, _language, null)
+  }, [SHARE_URL, _cid, _language, publication?.status])
 
   const onShare = useCallback(async () => {
     try {
       if (!shareLink) {
         throw new Error(
-          'group id, creation id, language and version are required to generate share link'
+          'creation id and language are required to generate share link'
         )
       }
       await navigator.clipboard.writeText(shareLink)

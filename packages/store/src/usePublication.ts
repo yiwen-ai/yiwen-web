@@ -384,12 +384,12 @@ export function usePublication(
   const { readPublication } = usePublicationAPI()
 
   const getKey = useCallback(() => {
-    if (!_gid || !_cid || !_language || _version == null) return null
+    if (!_cid) return null
     const params: Record<keyof QueryPublication, string | number | null> = {
-      gid: _gid,
+      gid: _gid || null,
       cid: _cid,
-      language: _language,
-      version: _version,
+      language: _language || null,
+      version: _version || null,
       fields: null,
     }
     return [path, params] as const
@@ -406,9 +406,7 @@ export function usePublication(
   } as SWRConfiguration)
 
   const refresh = useCallback(
-    async (data?: ReturnType<typeof readPublication>) => {
-      return getKey() && (await mutate(data, !data))?.result
-    },
+    async () => getKey() && (await mutate())?.result,
     [getKey, mutate]
   )
 
@@ -486,7 +484,7 @@ export function useTranslatedPublicationList(
     [getProcessingListKey, mutateProcessingList]
   )
 
-  //#region
+  //#region estimate
   const [setEstimating, isEstimating] = useLoading(
     (language: string) => language
   )
@@ -517,7 +515,7 @@ export function useTranslatedPublicationList(
   )
   //#endregion
 
-  //#region
+  //#region translate
   const [setTranslating, isTranslating] = useLoading(
     (language: string) => language
   )

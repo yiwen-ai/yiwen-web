@@ -13,10 +13,10 @@ export const BREAKPOINT = {
 
 export function generatePublicationShareLink(
   SHARE_URL: string,
-  gid: Uint8Array | string,
+  gid: Uint8Array | string | null | undefined,
   cid: Uint8Array | string,
-  language: string,
-  version: number | string
+  language: string | null | undefined,
+  version: number | string | null | undefined
 ) {
   return joinURL(
     SHARE_URL,
@@ -24,7 +24,7 @@ export function generatePublicationShareLink(
       cid: Xid.fromValue(cid).toString(),
     }),
     {
-      gid: Xid.fromValue(gid).toString(),
+      gid: gid && Xid.fromValue(gid).toString(),
       language,
       version,
     }
