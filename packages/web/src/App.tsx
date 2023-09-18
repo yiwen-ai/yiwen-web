@@ -1,4 +1,4 @@
-import { css, useTheme } from '@emotion/react'
+import { css, keyframes, useTheme } from '@emotion/react'
 import {
   Button,
   DEFAULT_LOCALE,
@@ -59,13 +59,13 @@ import NotFound from './pages/404'
 import BookmarkPage from './pages/bookmark'
 import EditCreationPage from './pages/creation/[cid]'
 import NewCreationPage from './pages/creation/new'
+import FollowingPage from './pages/following'
 import GroupDetailPage from './pages/group/[gid]'
 import DefaultGroupPage from './pages/group/default'
 import LoginStatePage from './pages/login/state'
 import SharePublicationPage from './pages/pub/[cid]'
 import EditPublicationPage from './pages/publication/[cid]'
 import SearchPage from './pages/search'
-import FollowingPage from './pages/following'
 import WalletPage from './pages/wallet'
 import { BREAKPOINT } from './shared'
 
@@ -183,7 +183,19 @@ function Layout() {
           overflow: hidden;
         `}
       >
-        <Header {...headerProps} userMenu={userMenu} />
+        <Header
+          {...headerProps}
+          userMenu={userMenu}
+          css={css`
+            animation: 0.5s ease-in-out ${keyframes`
+                from {
+                  opacity: 0;
+                }
+                to {
+                  opacity: 1;
+                }`};
+          `}
+        />
         <div
           css={css`
             flex: 1;
