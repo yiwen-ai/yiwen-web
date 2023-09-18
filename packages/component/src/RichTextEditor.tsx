@@ -40,6 +40,7 @@ import {
   type FloatingMenuProps,
 } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
+import 'katex/dist/katex.min.css'
 import { nanoid } from 'nanoid'
 import {
   forwardRef,
