@@ -18,7 +18,7 @@ const FetcherConfigContext = createContext<FetcherConfig>({
   PUBLIC_PATH: 'https://www.yiwen.ai/',
   API_URL: 'https://api.yiwen.ai/',
   AUTH_URL: 'https://auth.yiwen.ai/',
-  SHARE_URL: 'https://www.yiwen.pub/',
+  SHARE_URL: 'https://www.yiwen.ai/',
   WALLET_URL: 'https://wallet.yiwen.ai/',
 })
 
