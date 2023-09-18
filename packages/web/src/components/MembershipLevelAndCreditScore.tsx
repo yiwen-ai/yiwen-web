@@ -8,11 +8,6 @@ export default function MembershipLevelAndCreditScore(
 
   return (
     <PlainArticle {...props}>
-      <h3>
-        {intl.formatMessage({
-          defaultMessage: '基本信息',
-        })}
-      </h3>
       <p>
         {intl.formatMessage({
           defaultMessage:
