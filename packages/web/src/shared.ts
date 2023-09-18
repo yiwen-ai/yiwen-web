@@ -16,7 +16,8 @@ export function generatePublicationShareLink(
   gid: Uint8Array | string | null | undefined,
   cid: Uint8Array | string,
   language: string | null | undefined,
-  version: number | string | null | undefined
+  version: number | string | null | undefined,
+  by: string | null | undefined
 ) {
   return joinURL(
     SHARE_URL,
@@ -27,6 +28,7 @@ export function generatePublicationShareLink(
       gid: gid && Xid.fromValue(gid).toString(),
       language,
       version,
+      by,
     }
   )
 }
