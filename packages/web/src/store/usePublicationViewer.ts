@@ -5,6 +5,7 @@ import {
   PublicationStatus,
   RequestError,
   toMessage,
+  useAuth,
   useCreationBookmarkList,
   useEnsureAuthorized,
   useFetcherConfig,
@@ -33,6 +34,7 @@ interface Params {
   _cid: string | null | undefined
   _language: string | null | undefined
   _version: number | null | undefined
+  _by: string | null | undefined
 }
 
 export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
@@ -53,6 +55,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     _cid: undefined,
     _language: undefined,
     _version: undefined,
+    _by: undefined,
   })
 
   //#region fetch
@@ -160,15 +163,17 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       _gid: Uint8Array | string | null | undefined,
       _cid: Uint8Array | string | null | undefined,
       _language: string | null | undefined,
-      _version: number | string | null | undefined
+      _version: number | string | null | undefined,
+      _by?: string | null | undefined
     ) => {
-      setParams({
+      setParams((params) => ({
         open: true,
         _gid: _gid != null ? Xid.fromValue(_gid).toString() : undefined,
         _cid: _cid != null ? Xid.fromValue(_cid).toString() : undefined,
         _language,
         _version: _version != null ? Number(_version) : undefined,
-      })
+        _by: _by ?? params._by,
+      }))
     },
     []
   )
@@ -180,6 +185,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       _cid: undefined,
       _language: undefined,
       _version: undefined,
+      _by: undefined,
     })
   }, [])
 
@@ -238,7 +244,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       }
       return publication
     },
-    [closeTranslateConfirmDialog, translate, show]
+    [closeTranslateConfirmDialog, show, translate]
   )
 
   const onSwitch = useCallback(
@@ -327,12 +333,20 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
 
   //#region share
   const SHARE_URL = useFetcherConfig().SHARE_URL
+  const { user } = useAuth()
 
   const shareLink = useMemo(() => {
     if (!_cid) return undefined
     if (publication?.status !== PublicationStatus.Published) return undefined
-    return generatePublicationShareLink(SHARE_URL, null, _cid, _language, null)
-  }, [SHARE_URL, _cid, _language, publication?.status])
+    return generatePublicationShareLink(
+      SHARE_URL,
+      null,
+      _cid,
+      _language,
+      null,
+      user?.cn ?? params._by
+    )
+  }, [SHARE_URL, _cid, _language, params._by, publication?.status, user?.cn])
 
   const onShare = useCallback(async () => {
     try {

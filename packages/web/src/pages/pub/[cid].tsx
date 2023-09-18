@@ -15,7 +15,8 @@ export default function SharePublicationPage() {
     searchParams.get('gid'),
     params.cid,
     searchParams.get('language'),
-    searchParams.get('version')
+    searchParams.get('version'),
+    searchParams.get('by')
   )
 
   return (

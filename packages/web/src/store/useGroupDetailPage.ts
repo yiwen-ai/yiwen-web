@@ -9,6 +9,7 @@ import {
   CreationStatus,
   PublicationStatus,
   toMessage,
+  useAuth,
   useCreationList,
   useEnsureAuthorized,
   useFetcherConfig,
@@ -45,6 +46,8 @@ export function useGroupDetailPage(
   const ensureAuthorized = useEnsureAuthorized()
 
   //#region group info & statistic
+  const { user } = useAuth()
+
   const {
     isLoading,
     error,
@@ -263,10 +266,11 @@ export function useGroupDetailPage(
           message: intl.formatMessage({ defaultMessage: '发布成功' }),
           description: generatePublicationShareLink(
             config.SHARE_URL,
-            item.gid,
+            null,
             item.cid,
             item.language,
-            item.version
+            null,
+            user?.cn
           ),
         })
         refreshGroupStatistic()
@@ -284,6 +288,7 @@ export function useGroupDetailPage(
       publishPublication,
       pushToast,
       refreshGroupStatistic,
+      user?.cn,
     ]
   )
 

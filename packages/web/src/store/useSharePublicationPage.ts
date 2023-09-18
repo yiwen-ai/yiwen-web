@@ -17,7 +17,8 @@ export function useSharePublicationPage(
   _gid: string | null | undefined,
   _cid: string | null | undefined,
   _language: string | null | undefined,
-  _version: string | null | undefined
+  _version: string | null | undefined,
+  _by: string | null | undefined
 ) {
   const navigate = useNavigate()
 
@@ -32,8 +33,8 @@ export function useSharePublicationPage(
   } = usePublicationViewer(pushToast)
 
   useEffect(
-    () => show(_gid, _cid, _language, _version),
-    [_cid, _gid, _language, _version, show]
+    () => show(_gid, _cid, _language, _version, _by),
+    [_by, _cid, _gid, _language, _version, show]
   )
 
   const updateRoute = useCallback(
@@ -52,10 +53,11 @@ export function useSharePublicationPage(
             publication.status === PublicationStatus.Published
               ? undefined
               : publication.version,
+          by: _by,
         }).toString(),
       })
     },
-    [navigate]
+    [_by, navigate]
   )
 
   const handleTranslate = useCallback(
