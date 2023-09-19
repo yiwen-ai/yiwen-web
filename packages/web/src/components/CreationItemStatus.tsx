@@ -33,12 +33,14 @@ export default function CreationItemStatus({
         }
       case CreationStatus.Review:
         return {
-          label: intl.formatMessage({ defaultMessage: '待审核' }),
+          label: intl.formatMessage({ defaultMessage: '评审中' }),
           color: theme.palette.primaryNormal,
         }
       case CreationStatus.Approved:
         return {
-          label: intl.formatMessage({ defaultMessage: '已发布' }),
+          label: intl.formatMessage({
+            defaultMessage: '已投稿，在发布栏翻译',
+          }),
           color: theme.palette.green,
         }
     }

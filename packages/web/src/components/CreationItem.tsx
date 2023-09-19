@@ -98,7 +98,9 @@ export default function CreationItem({
             onClick={handleRelease}
           >
             {isReleasing && <Spinner size={12} />}
-            <span>{intl.formatMessage({ defaultMessage: '发布' })}</span>
+            <span>
+              {intl.formatMessage({ defaultMessage: '投稿，在发布栏翻译' })}
+            </span>
           </Button>
         ) : (
           <CreationItemStatus status={item.status} />

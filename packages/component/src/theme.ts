@@ -339,7 +339,7 @@ export const lightTheme: Theme = {
         },
       },
       group: {
-        text: palette.grayLight,
+        text: palette.primaryNormal,
       },
     },
     tab: {

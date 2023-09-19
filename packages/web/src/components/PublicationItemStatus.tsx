@@ -28,18 +28,18 @@ export default function PublicationItemStatus({
         }
       case PublicationStatus.Review:
         return {
-          label: intl.formatMessage({ defaultMessage: '已发布待审核' }),
+          label: intl.formatMessage({ defaultMessage: '系统审核中' }),
           color: theme.palette.primaryNormal,
         }
       case PublicationStatus.Approved:
         return {
-          label: intl.formatMessage({ defaultMessage: '系统审核通过' }),
+          label: intl.formatMessage({ defaultMessage: '审核通过' }),
           color: theme.palette.green,
         }
       case PublicationStatus.Published:
         return {
           label: intl.formatMessage({
-            defaultMessage: '已发布不支持编辑，编辑可前往文稿更新',
+            defaultMessage: '已公开发布不可编辑，可在文稿栏更新',
           }),
           color: theme.palette.green,
         }

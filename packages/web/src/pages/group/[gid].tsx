@@ -261,7 +261,7 @@ export default function GroupDetailPage() {
                       const anchor = (props: AnchorProps) => (
                         <Button color='secondary' variant='text' {...props}>
                           {intl.formatMessage({
-                            defaultMessage: '已归档的文章',
+                            defaultMessage: '查看已归档',
                           })}
                         </Button>
                       )
@@ -287,7 +287,7 @@ export default function GroupDetailPage() {
                             <MediumDialog
                               anchor={anchor}
                               title={intl.formatMessage({
-                                defaultMessage: '已归档的原稿',
+                                defaultMessage: '已归档的文稿',
                               })}
                               onShow={onArchivedCreationDialogShow}
                             >

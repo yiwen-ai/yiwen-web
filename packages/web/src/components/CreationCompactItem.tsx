@@ -58,7 +58,7 @@ export default function CreationCompactItem({
                   <Icon name='recoveryconvert' size='small' />
                 )
               }
-              label={intl.formatMessage({ defaultMessage: '恢复文章' })}
+              label={intl.formatMessage({ defaultMessage: '恢复' })}
               disabled={disabled}
               onClick={handleRestore}
               closeOnClick={3000}
