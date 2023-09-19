@@ -185,7 +185,6 @@ export default function GroupDetailPage() {
                 gap: 40px;
               `}
             >
-              {groupInfo.name && <span>{groupInfo.name}</span>}
               <Link
                 to={
                   hasGroupAddCreationPermission
@@ -408,7 +407,7 @@ function GroupPart({
             `}
           >
             {intl.formatMessage(
-              { defaultMessage: '{owner} · {count} 篇公开文章' },
+              { defaultMessage: '{owner} · {count} 篇公开内容' },
               { owner: groupInfo.name, count: groupStatistic.publications }
             )}
           </span>

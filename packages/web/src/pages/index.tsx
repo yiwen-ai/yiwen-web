@@ -1,7 +1,7 @@
 import {
   BOOKMARK_PATH,
-  NEW_CREATION_PATH,
   FOLLOWING_PATH,
+  NEW_CREATION_PATH,
   SetHeaderProps,
 } from '#/App'
 import LargeDialog from '#/components/LargeDialog'
@@ -84,7 +84,7 @@ export default function Home() {
             `}
           >
             {intl.formatMessage({
-              defaultMessage: '搜你想要的内容，用你想要的语言来阅读',
+              defaultMessage: '智能搜索内容，用你熟练的语言来阅读',
             })}
           </div>
           <ResponsiveTabSection
@@ -180,7 +180,7 @@ export default function Home() {
                 >
                   {intl.formatMessage({
                     defaultMessage:
-                      '获得语义检索分析，AI 以及众包翻译等更多权利',
+                      '用强大的 AI 能力进行语义搜索和全文智能翻译',
                   })}
                 </div>
               </div>

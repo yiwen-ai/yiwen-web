@@ -22,7 +22,7 @@ export default function NewCreationLink(props: Omit<LinkProps, 'to'>) {
         })}
         icon='lampon'
         description={intl.formatMessage({
-          defaultMessage: '获得语义检索分析，AI 以及众包翻译等更多权利',
+          defaultMessage: '用强大的 AI 能力进行语义搜索和全文智能翻译',
         })}
       />
     </Link>

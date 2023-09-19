@@ -16,6 +16,6 @@ export const Default: Story = {
   args: {
     text: '我有内容，去创作',
     icon: 'lampon',
-    description: '获得语义检索分析，AI 以及众包翻译等更多权利',
+    description: '用强大的 AI 能力进行语义搜索和全文智能翻译',
   },
 }
