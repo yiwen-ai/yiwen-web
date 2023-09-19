@@ -99,7 +99,7 @@ export const AccountManager = memo(function AccountManager({
             values={{
               terms: (
                 <a
-                  href='https://www.yiwen-ai.com/terms'
+                  href='https://www.yiwen.ai/pub/ck1snliglcahc6fks820'
                   target='_blank'
                   rel='noopener noreferrer'
                   css={css`
@@ -114,7 +114,7 @@ export const AccountManager = memo(function AccountManager({
               ),
               privacy: (
                 <a
-                  href='https://www.yiwen-ai.com/privacy'
+                  href='https://www.yiwen.ai/pub/ck1sasaglcahc6fks810'
                   target='_blank'
                   rel='noopener noreferrer'
                   css={css`
