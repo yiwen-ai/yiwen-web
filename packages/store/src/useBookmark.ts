@@ -257,7 +257,7 @@ export function useBookmarkList() {
   const { mutate, ...response } = useSWRInfinite(
     getKey,
     ([, body]) => readBookmarkList(body),
-    { revalidateOnMount: false } as SWRConfiguration
+    { revalidateOnMount: false, revalidateFirstPage: false }
   )
 
   const [setRemoving, isRemoving] = useLoading((item: BookmarkOutput) =>

@@ -234,7 +234,10 @@ export default function GroupDetailPage() {
 
                     > [role='tab'] {
                       padding: 8px;
-                      ${theme.typography.h2}
+                      &,
+                      &[data-selected] {
+                        ${theme.typography.h2}
+                      }
                       &[data-selected] {
                         ::after {
                           bottom: -3px;

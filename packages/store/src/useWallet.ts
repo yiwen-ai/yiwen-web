@@ -438,7 +438,7 @@ export function useChargeList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readChargeList(body),
-    { revalidateOnMount: false } as SWRConfiguration
+    { revalidateOnMount: false, revalidateFirstPage: false }
   )
 
   return usePagination({
@@ -464,7 +464,7 @@ export function useOutgoList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readTransactionOutgoList(body),
-    { revalidateOnMount: false } as SWRConfiguration
+    { revalidateOnMount: false, revalidateFirstPage: false }
   )
 
   return usePagination({
@@ -490,7 +490,7 @@ export function useIncomeList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readTransactionIncomeList(body),
-    { revalidateOnMount: false } as SWRConfiguration
+    { revalidateOnMount: false, revalidateFirstPage: false }
   )
 
   return usePagination({
@@ -516,7 +516,7 @@ export function useCreditList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readCreditList(body),
-    { revalidateOnMount: false } as SWRConfiguration
+    { revalidateOnMount: false, revalidateFirstPage: false }
   )
 
   return usePagination({
