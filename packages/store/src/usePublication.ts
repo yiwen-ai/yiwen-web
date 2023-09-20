@@ -211,7 +211,7 @@ export function usePublicationAPI() {
   }, [request])
 
   const readFollowedPublicationList = useCallback(
-    (body: Pagination) => {
+    (body: Omit<Pagination, 'page_size'>) => {
       return request.post<Page<PublicationOutput>>(
         `${path}/list_by_following`,
         body
@@ -681,7 +681,7 @@ export function usePublicationList(
         path === '/v1/publication/list_archived'
           ? readArchivedPublicationList(params)
           : readPublicationList(params),
-      { revalidateOnMount: false }
+      { revalidateOnMount: false, revalidateFirstPage: false }
     )
 
   //#region processing state
@@ -921,8 +921,7 @@ export function useFollowedPublicationList() {
     (_: unknown, prevPage: Page<PublicationOutput> | null) => {
       if (!isAuthorized) return null
       if (prevPage && !prevPage.next_page_token) return null
-      const body: Pagination = {
-        page_size: 100,
+      const body: Omit<Pagination, 'page_size'> = {
         page_token: prevPage?.next_page_token,
       }
       return [`${path}/list_by_following`, body] as const
@@ -933,7 +932,7 @@ export function useFollowedPublicationList() {
   const response = useSWRInfinite(
     getKey,
     ([, body]) => readFollowedPublicationList(body),
-    { revalidateOnMount: false }
+    { revalidateOnMount: false, revalidateFirstPage: false }
   )
 
   return usePagination({

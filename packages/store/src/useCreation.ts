@@ -356,7 +356,7 @@ export function useCreationList(
         path === '/v1/creation/list_archived'
           ? readArchivedCreationList(params)
           : readCreationList(params),
-      { revalidateOnMount: false }
+      { revalidateOnMount: false, revalidateFirstPage: false }
     )
 
   //#region processing state

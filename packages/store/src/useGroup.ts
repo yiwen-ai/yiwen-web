@@ -5,6 +5,7 @@ import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
 import {
   RoleLevel,
+  usePagination,
   type GroupInfo,
   type Page,
   type Pagination,
@@ -267,35 +268,14 @@ export function useFollowedGroupList() {
     [isAuthorized]
   )
 
-  const { data, error, mutate, isValidating, isLoading, setSize } =
-    useSWRInfinite(getKey, ([, body]) => readFollowedGroupList(body), {
-      revalidateOnMount: false,
-    })
-
-  const items = useMemo(() => {
-    if (!data) return []
-    return data.flatMap((page) => page.result)
-  }, [data])
-
-  const hasMore = useMemo(() => {
-    if (!data) return false
-    return !!data[data.length - 1]?.next_page_token
-  }, [data])
-
-  const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
-
-  const refresh = useCallback(
-    async () => getKey(0, null) && (await mutate()),
-    [getKey, mutate]
+  const response = useSWRInfinite(
+    getKey,
+    ([, body]) => readFollowedGroupList(body),
+    { revalidateOnMount: false, revalidateFirstPage: false }
   )
 
-  return {
-    isLoading,
-    error,
-    items,
-    hasMore,
-    isLoadingMore: isValidating,
-    loadMore,
-    refresh,
-  } as const
+  return usePagination({
+    getKey,
+    ...response,
+  })
 }
