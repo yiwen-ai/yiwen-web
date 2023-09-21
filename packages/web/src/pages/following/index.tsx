@@ -54,7 +54,12 @@ export default function FollowingPage() {
         ) : items.length === 0 ? (
           <Placeholder />
         ) : (
-          <>
+          <div
+            css={css`
+              max-width: 800px;
+              margin: auto;
+            `}
+          >
             {items.map((item) => (
               <PublicationItem
                 key={buildPublicationKey(item)}
@@ -67,7 +72,7 @@ export default function FollowingPage() {
               isLoadingMore={isLoadingMore}
               onLoadMore={loadMore}
             />
-          </>
+          </div>
         )}
       </div>
       {publicationViewerOpen && (
