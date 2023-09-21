@@ -126,7 +126,7 @@ function Layout() {
   //#region close auth dialog on location change
   const location = useLocation()
   const closeAuthDialog = useAuth().dialog.close
-  useEffect(() => closeAuthDialog(), [closeAuthDialog, location])
+  useLayoutEffect(() => closeAuthDialog(), [closeAuthDialog, location])
   //#endregion
 
   //#region error boundary
@@ -293,7 +293,13 @@ export default function App() {
       SHARE_URL: resolveURL(VITE_SHARE_URL),
       WALLET_URL: resolveURL(VITE_WALLET_URL),
     }),
-    []
+    [
+      VITE_API_URL,
+      VITE_AUTH_URL,
+      VITE_PUBLIC_PATH,
+      VITE_SHARE_URL,
+      VITE_WALLET_URL,
+    ]
   )
 
   const loggingHandler = useMemo<LoggingHandler>(

@@ -33,7 +33,15 @@ export default function SharePublicationPage() {
           }
         `}
       />
-      <PublicationViewer responsive={true} {...publicationViewer} />
+      <PublicationViewer
+        responsive={true}
+        {...publicationViewer}
+        css={css`
+          width: 100%;
+          max-width: 1280px;
+          margin: auto;
+        `}
+      />
     </>
   )
 }

@@ -61,7 +61,12 @@ export default function BookmarkPage() {
         ) : items.length === 0 ? (
           <Placeholder />
         ) : (
-          <>
+          <div
+            css={css`
+              max-width: 800px;
+              margin: auto;
+            `}
+          >
             {items.map((item) => (
               <BookmarkItem
                 key={Xid.fromValue(item.id).toString()}
@@ -76,7 +81,7 @@ export default function BookmarkPage() {
               isLoadingMore={isLoadingMore}
               onLoadMore={loadMore}
             />
-          </>
+          </div>
         )}
       </div>
       {publicationViewerOpen && (
