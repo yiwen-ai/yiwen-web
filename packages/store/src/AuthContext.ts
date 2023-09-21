@@ -72,11 +72,16 @@ class AuthAPI {
       const { AUTH_URL, PUBLIC_PATH } = this.config
       const app =
         document.documentElement.attributes.getNamedItem('data-app')?.value
-      let idp = provider
-      if (app == 'wechat' && idp == 'wechat') {
-        idp = 'wechat_h5'
+      if (app == 'wechat') {
+        const idp = provider == 'wechat' ? 'wechat_h5' : provider
+        const url = joinURL(AUTH_URL, `/idp/${idp}/authorize`, {
+          next_url: document.location.href,
+        })
+        window.location.assign(url)
+        return
       }
-      const url = joinURL(AUTH_URL, `/idp/${idp}/authorize`, {
+
+      const url = joinURL(AUTH_URL, `/idp/${provider}/authorize`, {
         next_url: joinURL(PUBLIC_PATH, '/login/state', { provider }),
       })
 
@@ -86,7 +91,7 @@ class AuthAPI {
         'popup=true,width=600,height=600,menubar=false,toolbar=false,location=false'
       )
       if (!popup) {
-        const url = joinURL(AUTH_URL, `/idp/${idp}/authorize`, {
+        const url = joinURL(AUTH_URL, `/idp/${provider}/authorize`, {
           next_url: document.location.href,
         })
         window.location.assign(url) // redirect if popup is blocked
