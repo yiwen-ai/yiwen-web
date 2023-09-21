@@ -54,7 +54,7 @@ export default function CommonEditor({
     [updateDraft]
   )
 
-  const lang = document.documentElement.lang
+  const lang = document.documentElement.lang ?? window.navigator.language
 
   return isLoading ? (
     <Loading />

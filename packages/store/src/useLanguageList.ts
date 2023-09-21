@@ -2,7 +2,20 @@ import { useCallback, useMemo } from 'react'
 import useSWR from 'swr'
 import { useFetcher } from './useFetcher'
 
-const rtlLanguageCodeList = [
+// iso 639-1
+const rtlLanguageCodeList1 = [
+  'ar', // Arabic
+  'he', // Hebrew
+  'fa', // Persian
+  'ur', // Urdu
+  'ks', // Kashmiri
+  'ps', // Pashto
+  'ug', // Uighur
+  'sd', // Sindhi
+]
+
+// iso 639-3
+const rtlLanguageCodeList3 = [
   'ara', // Arabic
   'heb', // Hebrew
   'fas', // Persian
@@ -14,7 +27,9 @@ const rtlLanguageCodeList = [
 ]
 
 export function isRTL(languageCode: string) {
-  return rtlLanguageCodeList.includes(languageCode)
+  return languageCode?.length == 2
+    ? rtlLanguageCodeList1.includes(languageCode)
+    : rtlLanguageCodeList3.includes(languageCode)
 }
 
 export interface Language {

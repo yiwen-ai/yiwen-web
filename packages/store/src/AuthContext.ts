@@ -70,9 +70,11 @@ class AuthAPI {
   authorize(provider: IdentityProvider) {
     return new Observable<void>((observer) => {
       const { AUTH_URL, PUBLIC_PATH } = this.config
-      const app =
-        document.documentElement.attributes.getNamedItem('data-app')?.value
-      if (app == 'wechat') {
+      const isInWechat = window.navigator.userAgent
+        .toLowerCase()
+        .includes('micromessenger/')
+
+      if (isInWechat) {
         const idp = provider == 'wechat' ? 'wechat_h5' : provider
         const url = joinURL(AUTH_URL, `/idp/${idp}/authorize`, {
           next_url: document.location.href,
