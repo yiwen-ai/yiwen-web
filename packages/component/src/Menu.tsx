@@ -65,7 +65,7 @@ export const Menu = memo(
         ref={setRef}
         css={css`
           width: 208px;
-          padding: 20px 12px;
+          padding: 12px;
           border: 1px solid ${theme.color.menu.border};
           background: ${theme.color.menu.background};
         `}

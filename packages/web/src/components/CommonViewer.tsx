@@ -37,9 +37,9 @@ export default function CommonViewer({
       {...props}
       css={css`
         width: 100%;
-        max-width: calc(${MAX_WIDTH} + 80px * 2);
+        max-width: calc(${MAX_WIDTH} + 36px * 2);
         margin: 0 auto;
-        padding: 0 80px;
+        padding: 0 36px;
         box-sizing: border-box;
         ${isNarrow &&
         css`
@@ -68,7 +68,7 @@ export default function CommonViewer({
           search: new URLSearchParams({ type }).toString(),
         }}
         css={css`
-          margin-top: 16px;
+          margin-top: 12px;
           display: flex;
           width: fit-content;
           max-width: 100%;
@@ -87,7 +87,7 @@ export default function CommonViewer({
           initialContent={content}
           dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
-            margin-top: 32px;
+            margin-top: 24px;
             margin-bottom: 48px;
             ${isNarrow &&
             css`

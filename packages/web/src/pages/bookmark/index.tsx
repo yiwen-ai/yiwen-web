@@ -80,8 +80,12 @@ export default function BookmarkPage() {
         )}
       </div>
       {publicationViewerOpen && (
-        <LargeDialog defaultOpen={true} onClose={onPublicationViewerClose}>
-          <PublicationViewer responsive={true} {...publicationViewer} />
+        <LargeDialog open={true} onClose={onPublicationViewerClose}>
+          <PublicationViewer
+            responsive={true}
+            onClose={onPublicationViewerClose}
+            {...publicationViewer}
+          />
         </LargeDialog>
       )}
     </>

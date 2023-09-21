@@ -57,7 +57,6 @@ export default function CreationItemStatus({
     <span
       {...props}
       css={css`
-        ${theme.typography.tooltip}
         color: ${color};
       `}
     >

@@ -18,6 +18,7 @@ import {
   TileButton,
   useToast,
 } from '@yiwen-ai/component'
+import { useEnsureAuthorizedCallback } from '@yiwen-ai/store'
 import { useIntl } from 'react-intl'
 import { Link } from 'react-router-dom'
 
@@ -25,6 +26,7 @@ export default function Home() {
   const intl = useIntl()
   const theme = useTheme()
   const { renderToastContainer, pushToast } = useToast()
+  const ensureAuthorized = useEnsureAuthorizedCallback()
 
   const {
     onSearch,
@@ -52,7 +54,7 @@ export default function Home() {
             gap: 36px;
           `}
         >
-          <Link to={NEW_CREATION_PATH}>
+          <Link to={NEW_CREATION_PATH} onClick={ensureAuthorized}>
             <Button color='primary' variant='text'>
               {intl.formatMessage({ defaultMessage: '创作内容' })}
             </Button>
@@ -195,8 +197,12 @@ export default function Home() {
         </div>
       </div>
       {publicationViewerOpen && (
-        <LargeDialog defaultOpen={true} onClose={onPublicationViewerClose}>
-          <PublicationViewer responsive={true} {...publicationViewer} />
+        <LargeDialog open={true} onClose={onPublicationViewerClose}>
+          <PublicationViewer
+            responsive={true}
+            onClose={onPublicationViewerClose}
+            {...publicationViewer}
+          />
         </LargeDialog>
       )}
     </>

@@ -35,7 +35,7 @@ export default function PublicationCompactItem({
   return (
     <div
       css={css`
-        padding: 24px 0;
+        padding: 16px 0;
         border-bottom: 1px solid ${theme.color.divider.primary};
       `}
     >

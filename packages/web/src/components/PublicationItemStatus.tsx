@@ -57,7 +57,6 @@ export default function PublicationItemStatus({
     <span
       {...props}
       css={css`
-        ${theme.typography.tooltip}
         color: ${color};
       `}
     >

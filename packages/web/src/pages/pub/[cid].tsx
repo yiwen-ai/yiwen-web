@@ -1,5 +1,6 @@
 import { SetHeaderProps } from '#/App'
 import PublicationViewer from '#/components/PublicationViewer'
+import { BREAKPOINT } from '#/shared'
 import { useSharePublicationPage } from '#/store/useSharePublicationPage'
 import { css } from '@emotion/react'
 import { useToast } from '@yiwen-ai/component'
@@ -23,8 +24,13 @@ export default function SharePublicationPage() {
     <>
       {renderToastContainer()}
       <SetHeaderProps
-        css={css`
-          display: none;
+        brand={true}
+        css={(theme) => css`
+          @media (max-width: ${BREAKPOINT.small}px) {
+            height: 60px;
+            padding: 0 16px;
+            border-bottom: 1px solid ${theme.color.divider.primary};
+          }
         `}
       />
       <PublicationViewer responsive={true} {...publicationViewer} />

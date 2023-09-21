@@ -101,7 +101,6 @@ export default function PublicationItem({
           <Button
             color='secondary'
             variant='text'
-            size='small'
             disabled={disabled}
             onClick={handleEdit}
           >
@@ -117,7 +116,6 @@ export default function PublicationItem({
           <Button
             color='primary'
             variant='outlined'
-            size='small'
             disabled={disabled}
             onClick={handlePublish}
           >

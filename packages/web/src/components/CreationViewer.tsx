@@ -1,9 +1,10 @@
 import { BREAKPOINT } from '#/shared'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css } from '@emotion/react'
-import { Button } from '@yiwen-ai/component'
+import { Button, IconButton } from '@yiwen-ai/component'
 import { type CreationOutput, type Language } from '@yiwen-ai/store'
 import { type HTMLAttributes } from 'react'
+import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
 import CommonViewer from './CommonViewer'
 import ErrorPlaceholder from './ErrorPlaceholder'
@@ -15,6 +16,7 @@ export interface CreationViewerProps extends HTMLAttributes<HTMLDivElement> {
   error: unknown
   creation: CreationOutput | undefined
   currentLanguage: Language | undefined
+  onClose: () => void
 }
 
 export default function CreationViewer({
@@ -23,8 +25,10 @@ export default function CreationViewer({
   error,
   creation,
   currentLanguage,
+  onClose,
   ...props
 }: CreationViewerProps) {
+  const intl = useIntl()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const isNarrow = responsive && width <= BREAKPOINT.small
 
@@ -46,29 +50,54 @@ export default function CreationViewer({
         <>
           <div
             css={css`
-              padding: 40px 80px;
+              padding: 36px;
               display: flex;
-              flex-wrap: wrap;
-              align-items: center;
+              align-items: flex-start;
               gap: 24px;
               ${isNarrow &&
               css`
                 padding: 24px 16px;
                 gap: 16px;
               `}
-              > button:last-of-type {
-                margin-right: auto;
-              }
             `}
           >
-            <Button
-              color='primary'
-              variant='outlined'
-              size={isNarrow ? 'small' : 'large'}
-              disabled={true}
+            <div
+              css={css`
+                flex: 1;
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: inherit;
+                > button:last-of-type {
+                  margin-right: auto;
+                }
+              `}
             >
-              {currentLanguage?.nativeName ?? creation.language}
-            </Button>
+              <Button
+                title={intl.formatMessage({ defaultMessage: '创作语言' })}
+                color='primary'
+                variant='outlined'
+                size={isNarrow ? 'small' : 'large'}
+                disabled={true}
+              >
+                {currentLanguage?.nativeName ?? creation.language}
+              </Button>
+            </div>
+            <div
+              css={css`
+                height: ${isNarrow ? undefined : '40px'};
+                display: flex;
+                align-items: center;
+              `}
+            >
+              <IconButton
+                aria-label={intl.formatMessage({ defaultMessage: '关闭' })}
+                iconName='closecircle2'
+                size={isNarrow ? 'small' : 'medium'}
+                variant='contained'
+                onClick={onClose}
+              />
+            </div>
           </div>
           <CommonViewer
             type={GroupViewType.Creation}

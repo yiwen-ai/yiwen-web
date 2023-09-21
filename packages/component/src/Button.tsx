@@ -12,7 +12,7 @@ const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
     paddingRight: 16,
     gap: 4,
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 6,
     fontSize: theme.typography.tooltip.fontSize,
     fontWeight: theme.typography.tooltip.fontWeight,
     lineHeight: theme.typography.tooltip.lineHeight,
@@ -23,15 +23,15 @@ const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
     paddingRight: 24,
     gap: 8,
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 8,
   }),
   large: () => ({
-    minHeight: 48,
+    minHeight: 40,
     paddingLeft: 36,
     paddingRight: 36,
     gap: 12,
     borderWidth: 2,
-    borderRadius: 20,
+    borderRadius: 10,
   }),
 }
 
@@ -157,6 +157,7 @@ export const IconButton = memo(
           minWidth: SizeDict[size](theme).minHeight,
           paddingLeft: 0,
           paddingRight: 0,
+          border: 'none',
         }}
       >
         <Icon name={iconName} size={iconSize} />

@@ -1,13 +1,13 @@
 import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
 import BookmarkSection from '#/components/BookmarkSection'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
+import FollowingSection from '#/components/FollowingSection'
 import LargeDialog from '#/components/LargeDialog'
 import Loading from '#/components/Loading'
 import NewCreationLink from '#/components/NewCreationLink'
 import Placeholder from '#/components/Placeholder'
 import PublicationViewer from '#/components/PublicationViewer'
 import SearchItem from '#/components/SearchItem'
-import FollowingSection from '#/components/FollowingSection'
 import { BREAKPOINT } from '#/shared'
 import { useSearchPage } from '#/store/useSearchPage'
 import { css, useTheme } from '@emotion/react'
@@ -18,7 +18,10 @@ import {
   TextField,
   useToast,
 } from '@yiwen-ai/component'
-import { buildPublicationKey } from '@yiwen-ai/store'
+import {
+  buildPublicationKey,
+  useEnsureAuthorizedCallback,
+} from '@yiwen-ai/store'
 import { RGBA } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
@@ -30,6 +33,7 @@ export default function SearchPage() {
   const intl = useIntl()
   const theme = useTheme()
   const { renderToastContainer, pushToast } = useToast()
+  const ensureAuthorized = useEnsureAuthorizedCallback()
 
   const {
     isLoading,
@@ -61,7 +65,16 @@ export default function SearchPage() {
   return (
     <>
       {renderToastContainer()}
-      <SetHeaderProps brand={true}>
+      <SetHeaderProps
+        brand={true}
+        css={css`
+          @media (max-width: ${BREAKPOINT.small}px) {
+            > a > svg:nth-of-type(2) {
+              display: none;
+            }
+          }
+        `}
+      >
         <div
           css={css`
             flex: 1;
@@ -70,7 +83,7 @@ export default function SearchPage() {
             justify-content: flex-end;
           `}
         >
-          <Link to={NEW_CREATION_PATH}>
+          <Link to={NEW_CREATION_PATH} onClick={ensureAuthorized}>
             <Button color='primary' variant='text'>
               {intl.formatMessage({ defaultMessage: '创作内容' })}
             </Button>
@@ -199,8 +212,12 @@ export default function SearchPage() {
         />
       </div>
       {publicationViewerOpen && (
-        <LargeDialog defaultOpen={true} onClose={onPublicationViewerClose}>
-          <PublicationViewer responsive={true} {...publicationViewer} />
+        <LargeDialog open={true} onClose={onPublicationViewerClose}>
+          <PublicationViewer
+            responsive={true}
+            onClose={onPublicationViewerClose}
+            {...publicationViewer}
+          />
         </LargeDialog>
       )}
     </>
