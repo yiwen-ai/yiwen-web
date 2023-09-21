@@ -11,7 +11,6 @@
   },
   "scripts": {
     "build": "vite build",
-    "extract": "formatjs extract 'src/**/*.{ts,tsx}' --ignore '**/*.d.ts' --out-file lang.json",
     "start": "vite"
   },
   "devDependencies": {

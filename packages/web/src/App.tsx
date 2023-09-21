@@ -4,7 +4,6 @@ import {
   DEFAULT_LOCALE,
   GlobalStyles,
   Header,
-  LocaleProvider,
   ThemeProvider,
   useUserTheme,
   type HeaderProps,
@@ -20,6 +19,7 @@ import {
   LoggerProvider,
   LoggingLevel,
   resolveURL,
+  useIsMounted,
   useLayoutEffect,
   type LoggingHandler,
 } from '@yiwen-ai/util'
@@ -40,6 +40,7 @@ import {
   IntlProvider,
   MissingTranslationError,
   useIntl,
+  type IntlShape,
   type ResolvedIntlConfig,
 } from 'react-intl'
 import {
@@ -372,11 +373,24 @@ export default function App() {
 }
 
 function UserLocaleProvider(props: React.PropsWithChildren) {
-  const { user } = useAuth()
-  const locale = user?.locale || window.navigator.language
-  // TODO: load messages based on locale
-  const [messages] = useState({})
-  // TODO: update html lang attribute based on locale (and direction)
+  const isMounted = useIsMounted()
+  const [messages, setMessages] = useState({})
+
+  const locale = useMemo<Intl.Locale>(
+    () =>
+      new Intl.Locale(
+        document.documentElement.lang || window.navigator.language
+      ),
+    []
+  )
+
+  useEffect(() => {
+    loadLanguages(locale.language)
+      .then((msg) => {
+        isMounted() && setMessages(msg)
+      })
+      .catch(() => {})
+  }, [isMounted])
 
   const logger = useLogger()
   const onError = useCallback<ResolvedIntlConfig['onError']>(
@@ -385,26 +399,24 @@ function UserLocaleProvider(props: React.PropsWithChildren) {
       if (error instanceof MissingTranslationError) {
         logger.warn('missing translation', {
           key: error.descriptor?.id,
-          locale,
+          locale: locale.language,
           error,
         })
       } else {
-        logger.error('failed to format', { locale, error })
+        logger.error('failed to format', { locale: locale.language, error })
       }
     },
-    [locale, logger]
+    [locale.language, logger]
   )
 
   return (
     <IntlProvider
       messages={messages}
-      locale={locale}
+      locale={locale.language}
       defaultLocale={DEFAULT_LOCALE}
       onError={onError}
     >
-      <LocaleProvider locale={locale} onError={onError}>
-        {props.children}
-      </LocaleProvider>
+      {props.children}
     </IntlProvider>
   )
 }
@@ -439,4 +451,8 @@ function LoggingUnhandledError() {
   }, [logger])
 
   return null
+}
+
+async function loadLanguages(locale: string) {
+  return import(`../lang/${locale}.json`) as Promise<IntlShape['messages']>
 }

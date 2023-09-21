@@ -1,0 +1,533 @@
+{
+  "+EmHFM": {
+    "defaultMessage": "输入内容开始创作"
+  },
+  "+GiPmc": {
+    "defaultMessage": "更多语言"
+  },
+  "+NljH7": {
+    "defaultMessage": "请稍后重试"
+  },
+  "/Ul/o/": {
+    "defaultMessage": "原文不存在"
+  },
+  "/ePDMw": {
+    "defaultMessage": "奖励"
+  },
+  "/oHshG": {
+    "defaultMessage": "我的关注"
+  },
+  "0YCes0": {
+    "defaultMessage": "关注"
+  },
+  "0aAIbo": {
+    "defaultMessage": "Yiwen AI"
+  },
+  "0fjz1L": {
+    "defaultMessage": "已登录成功，请关闭此页面"
+  },
+  "0kBHvW": {
+    "defaultMessage": "访问的内容暂时无法查看，请稍后再试"
+  },
+  "0m1taa": {
+    "defaultMessage": "退款"
+  },
+  "0uoQ8a": {
+    "defaultMessage": "已投稿，在发布栏翻译"
+  },
+  "0x6ogM": {
+    "defaultMessage": "暂无内容"
+  },
+  "1ZW8T8": {
+    "defaultMessage": "{name} (创作语言)"
+  },
+  "1a8j4U": {
+    "defaultMessage": "确定翻译"
+  },
+  "1mxyUS": {
+    "defaultMessage": "登录失败"
+  },
+  "1tw6N7": {
+    "defaultMessage": "1 {name} = {rate} 文"
+  },
+  "2Ieuj3": {
+    "defaultMessage": "收款人"
+  },
+  "2MYr1m": {
+    "defaultMessage": "登录"
+  },
+  "2MdY3g": {
+    "defaultMessage": "对比原文"
+  },
+  "32hDtj": {
+    "defaultMessage": "距离下一个等级还需 {point} 分"
+  },
+  "3hBL3l": {
+    "defaultMessage": "{value} 文"
+  },
+  "47GdDb": {
+    "defaultMessage": "关闭"
+  },
+  "4hHXvr": {
+    "defaultMessage": "收入"
+  },
+  "5FboZ/": {
+    "defaultMessage": "类型"
+  },
+  "5elXzv": {
+    "defaultMessage": "归档失败"
+  },
+  "5fE2C6": {
+    "defaultMessage": "更新记录"
+  },
+  "5hv/EJ": {
+    "defaultMessage": "充值亿文币"
+  },
+  "5kP9bk": {
+    "defaultMessage": "修正"
+  },
+  "5xv1MA": {
+    "defaultMessage": "分享失败"
+  },
+  "66awCH": {
+    "defaultMessage": "刷新"
+  },
+  "6Ty5/G": {
+    "defaultMessage": "发布成功"
+  },
+  "6lHTFj": {
+    "defaultMessage": "分享"
+  },
+  "70m0td": {
+    "defaultMessage": "当前语言"
+  },
+  "8Dh6XH": {
+    "defaultMessage": "提现"
+  },
+  "8aMLgx": {
+    "defaultMessage": "转入记录"
+  },
+  "8akyLe": {
+    "defaultMessage": "查看已归档"
+  },
+  "96Mzoq": {
+    "defaultMessage": "已完成"
+  },
+  "9Ioii4": {
+    "defaultMessage": "已恢复：{title}"
+  },
+  "9n8bNu": {
+    "defaultMessage": "支付中"
+  },
+  "9tiP5Q": {
+    "defaultMessage": "已归档的发布"
+  },
+  "B+YBvr": {
+    "defaultMessage": "退出登录"
+  },
+  "B6j+TA": {
+    "defaultMessage": "约 {value} {name}"
+  },
+  "CLqPBU": {
+    "defaultMessage": "编辑"
+  },
+  "DU8aMO": {
+    "defaultMessage": "会员等级"
+  },
+  "DdJaH+": {
+    "defaultMessage": "智能搜索内容，用熟悉的语言来阅读"
+  },
+  "DpnauN": {
+    "defaultMessage": "时间"
+  },
+  "E0bHrY": {
+    "defaultMessage": "加载更多"
+  },
+  "EEMaFl": {
+    "defaultMessage": "恢复失败"
+  },
+  "EHkC32": {
+    "defaultMessage": "使用 {provider} 登录"
+  },
+  "ENWxyt": {
+    "defaultMessage": "消费"
+  },
+  "EtBE5C": {
+    "defaultMessage": "翻译成 {language}"
+  },
+  "F3ndvv": {
+    "defaultMessage": "删除失败"
+  },
+  "F8z/CD": {
+    "defaultMessage": "Yiwen AI — 跨语言的知识网络"
+  },
+  "FThwWd": {
+    "defaultMessage": "发生错误，请稍后再试"
+  },
+  "FeF0RQ": {
+    "defaultMessage": "充值记录"
+  },
+  "Fljs6C": {
+    "defaultMessage": "已归档的文稿"
+  },
+  "Fp8Tez": {
+    "defaultMessage": "处理中"
+  },
+  "FysJUS": {
+    "defaultMessage": "读取原文失败"
+  },
+  "GS3YuW": {
+    "defaultMessage": "文稿设置"
+  },
+  "GoFUI2": {
+    "defaultMessage": "书签"
+  },
+  "HLQK6J": {
+    "defaultMessage": "充值"
+  },
+  "HMexdi": {
+    "defaultMessage": "会员等级和信用分"
+  },
+  "HcwfND": {
+    "defaultMessage": "阅读并接受 {terms} 和 {privacy}"
+  },
+  "I+852a": {
+    "defaultMessage": "链接已复制"
+  },
+  "I/1233": {
+    "defaultMessage": "确定充值"
+  },
+  "I/k8FH": {
+    "defaultMessage": "发布"
+  },
+  "IMlqQ+": {
+    "defaultMessage": "GPT-4（质量高，适用于内容复杂、要求专业的翻译）"
+  },
+  "IVRBji": {
+    "defaultMessage": "已公开发布不可编辑，可在文稿栏更新"
+  },
+  "J6OmSY": {
+    "defaultMessage": "选择 AI 模型"
+  },
+  "JpavxL": {
+    "defaultMessage": "未翻译"
+  },
+  "L24ioQ": {
+    "defaultMessage": "标题"
+  },
+  "Lcuu+S": {
+    "defaultMessage": "更新版本"
+  },
+  "Lu39ZE": {
+    "defaultMessage": "编辑简介"
+  },
+  "M7SXob": {
+    "defaultMessage": "支付人"
+  },
+  "OA1lI2": {
+    "defaultMessage": "取消失败"
+  },
+  "OE0ejp": {
+    "defaultMessage": "对于未翻译语言，可创建翻译版本到自己的创作中心"
+  },
+  "OSGtn1": {
+    "defaultMessage": "选择支付货币"
+  },
+  "OejW4G": {
+    "defaultMessage": "搜索语言"
+  },
+  "OtNA8e": {
+    "defaultMessage": "我的资料"
+  },
+  "PftEkb": {
+    "defaultMessage": "发布失败"
+  },
+  "Q5XI/L": {
+    "defaultMessage": "创作语言"
+  },
+  "QU9UtI": {
+    "defaultMessage": "恢复成功"
+  },
+  "QV3pnn": {
+    "defaultMessage": "状态"
+  },
+  "QlnqkN": {
+    "defaultMessage": "充值失败"
+  },
+  "QsAe0/": {
+    "defaultMessage": "保存失败"
+  },
+  "RsyScM": {
+    "defaultMessage": "取消中"
+  },
+  "SSEnfr": {
+    "defaultMessage": "登录到 {brand}"
+  },
+  "TaaAgz": {
+    "defaultMessage": "评审中"
+  },
+  "Ud46We": {
+    "defaultMessage": "访问的内容不存在"
+  },
+  "Ut8+i2": {
+    "defaultMessage": "审核通过"
+  },
+  "V0Tu6G": {
+    "defaultMessage": "支付成功"
+  },
+  "VtILvi": {
+    "defaultMessage": "推荐"
+  },
+  "VvqVcg": {
+    "defaultMessage": "使用 AI 模型进行翻译需要消耗亿文币，内容越长消耗的亿文币越多。亿文币可通过充值、创作内容获得收益、平台活动奖励等方式获得。"
+  },
+  "VzrSDH": {
+    "defaultMessage": "出错了，请稍后再试"
+  },
+  "X8fPpI": {
+    "defaultMessage": "已归档"
+  },
+  "XBnuW2": {
+    "defaultMessage": "已加入书签"
+  },
+  "XI/sng": {
+    "defaultMessage": "复制链接"
+  },
+  "Xhn2gT": {
+    "defaultMessage": "请选择"
+  },
+  "Xjfb5m": {
+    "defaultMessage": "隐私政策"
+  },
+  "Xomgmb": {
+    "defaultMessage": "支付宝"
+  },
+  "YFdQgK": {
+    "defaultMessage": "登录成功"
+  },
+  "YIAhsY": {
+    "defaultMessage": "系统"
+  },
+  "YJAkVx": {
+    "defaultMessage": "归档成功"
+  },
+  "Yq7bo5": {
+    "defaultMessage": "交易号"
+  },
+  "ZfHVmn": {
+    "defaultMessage": "充值渠道"
+  },
+  "ZjpY1C": {
+    "defaultMessage": "{owner} · {count} 篇公开内容"
+  },
+  "a016zb": {
+    "defaultMessage": "已取消关注"
+  },
+  "a4I1pA": {
+    "defaultMessage": "更新版本失败"
+  },
+  "agMrua": {
+    "defaultMessage": "移除书签"
+  },
+  "aiBGBs": {
+    "defaultMessage": "删除成功"
+  },
+  "ap5e13": {
+    "defaultMessage": "系统审核中"
+  },
+  "b1H+Hx": {
+    "defaultMessage": "已删除"
+  },
+  "b5l2vN": {
+    "defaultMessage": "保存"
+  },
+  "bc6368": {
+    "defaultMessage": "声明："
+  },
+  "c8WrBr": {
+    "defaultMessage": "查看所有"
+  },
+  "cDZ00w": {
+    "defaultMessage": "查看"
+  },
+  "dKMxz8": {
+    "defaultMessage": "修订失败"
+  },
+  "e+VcOA": {
+    "defaultMessage": "返回首页"
+  },
+  "er7lkB": {
+    "defaultMessage": "金额"
+  },
+  "ezVhiW": {
+    "defaultMessage": "货币"
+  },
+  "fFmyYM": {
+    "defaultMessage": "数量"
+  },
+  "fU5OSS": {
+    "defaultMessage": "充值取消"
+  },
+  "frqra4": {
+    "defaultMessage": "转出记录"
+  },
+  "g6V3he": {
+    "defaultMessage": "微信"
+  },
+  "h7w4pz": {
+    "defaultMessage": "暂无数据"
+  },
+  "hdiR0N": {
+    "defaultMessage": "订阅"
+  },
+  "hhIzM9": {
+    "defaultMessage": "红包"
+  },
+  "iAxy/J": {
+    "defaultMessage": "创作中心"
+  },
+  "iBmKeP": {
+    "defaultMessage": "Stripe"
+  },
+  "iCsN+t": {
+    "defaultMessage": "GPT-3.5（实惠，适用于一般翻译）"
+  },
+  "iRkavT": {
+    "defaultMessage": "我有内容，去创作"
+  },
+  "iY0ak1": {
+    "defaultMessage": "非原创"
+  },
+  "ikJDiM": {
+    "defaultMessage": "翻译失败"
+  },
+  "iknw3L": {
+    "defaultMessage": "支付失败"
+  },
+  "j+670c": {
+    "defaultMessage": "搜索 yiwen.ai 的内容"
+  },
+  "jaY6EJ": {
+    "defaultMessage": "用户协议"
+  },
+  "jhfb/7": {
+    "defaultMessage": "保存成功"
+  },
+  "kN2hWB": {
+    "defaultMessage": "充值完成"
+  },
+  "kP/6YK": {
+    "defaultMessage": "彻底删除"
+  },
+  "kXaBbd": {
+    "defaultMessage": "关注成功"
+  },
+  "ktD156": {
+    "defaultMessage": "文稿"
+  },
+  "kzJAaJ": {
+    "defaultMessage": "我的书签"
+  },
+  "lIS+DP": {
+    "defaultMessage": "已退款"
+  },
+  "lfgCg5": {
+    "defaultMessage": "已删除：{title}"
+  },
+  "lzgH40": {
+    "defaultMessage": "Google"
+  },
+  "msMQ0+": {
+    "defaultMessage": "分享到微信"
+  },
+  "mspiIV": {
+    "defaultMessage": "我的亿文币"
+  },
+  "o2hVZY": {
+    "defaultMessage": "信用分记录"
+  },
+  "oOQ1Wl": {
+    "defaultMessage": "已发布审核中：{title}"
+  },
+  "oZO9me": {
+    "defaultMessage": "关键词："
+  },
+  "ofES7j": {
+    "defaultMessage": "取消关注"
+  },
+  "pEcVK/": {
+    "defaultMessage": "赞助"
+  },
+  "pZUDXc": {
+    "defaultMessage": "原创"
+  },
+  "plTZFx": {
+    "defaultMessage": "已归档：{title}"
+  },
+  "q3bj9N": {
+    "defaultMessage": "归档于 {date}"
+  },
+  "qYeYxS": {
+    "defaultMessage": "关注失败"
+  },
+  "qkMpf9": {
+    "defaultMessage": "归档"
+  },
+  "rGsu2l": {
+    "defaultMessage": "亿文币"
+  },
+  "sRPg4f": {
+    "defaultMessage": "创作内容"
+  },
+  "sV2uhG": {
+    "defaultMessage": "恢复"
+  },
+  "sahQQG": {
+    "defaultMessage": "投稿，在发布栏翻译"
+  },
+  "spMXqt": {
+    "defaultMessage": "会员等级：LV{level}"
+  },
+  "tr2z/6": {
+    "defaultMessage": "添加书签"
+  },
+  "vCmahJ": {
+    "defaultMessage": "无权限查看"
+  },
+  "vsIP7Y": {
+    "defaultMessage": "「{language}」正在翻译，请稍后。翻译好后可以在发布栏里进行修正和公开发布。"
+  },
+  "wO9wb5": {
+    "defaultMessage": "GitHub"
+  },
+  "wUKH6+": {
+    "defaultMessage": "当前翻译约 {tokens} Tokens，预计花费 {cost} 文，钱包余额 {balance} 文"
+  },
+  "wbtiQC": {
+    "defaultMessage": "PayPal"
+  },
+  "xNQwL+": {
+    "defaultMessage": "已翻译"
+  },
+  "xNeD5U": {
+    "defaultMessage": "已取消"
+  },
+  "yz5G/I": {
+    "defaultMessage": "微信支付"
+  },
+  "z3zd1c": {
+    "defaultMessage": "我的钱包"
+  },
+  "zUjFky": {
+    "defaultMessage": "用 AI 进行语义搜索和全文智能翻译"
+  },
+  "zbyL/b": {
+    "defaultMessage": "亿文币余额不足，可前往 {charge}"
+  },
+  "zeMk2K": {
+    "defaultMessage": "草稿"
+  },
+  "zr8DkJ": {
+    "defaultMessage": "公开发布"
+  }
+}

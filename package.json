@@ -1,16 +1,21 @@
 {
   "private": true,
   "scripts": {
-    "prepare": "husky install"
+    "extract": "formatjs extract 'packages/*/src/**/*.ts*' --ignore='**/*.d.ts' --out-file lang/zho.json --id-interpolation-pattern '[sha512:contenthash:base64:6]'",
+    "prepare": "husky install",
+    "tms-compile": "node lang/cli.mjs compile",
+    "tms-extract": "npm run extract && node lang/cli.mjs extract"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.1",
     "@commitlint/config-conventional": "^17.7.0",
+    "@formatjs/cli": "^6.1.3",
     "@types/eslint": "^8.44.2",
     "@types/node": "^20.5.6",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "babel-plugin-formatjs": "^10.5.3",
+    "cborg": "^2.0.5",
     "eslint": "^8.48.0",
     "eslint-config-prettier": "^8.10.0",
     "eslint-plugin-import": "^2.28.1",
@@ -27,7 +32,8 @@
     "stylelint-config-standard": "^34.0.0",
     "ts-node": "^10.9.1",
     "tslib": "^2.6.2",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "xid-ts": "1.0.0"
   },
   "packageManager": "pnpm@8.6.12",
   "engines": {
