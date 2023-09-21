@@ -190,7 +190,6 @@ export const MenuItem = memo(
               dir={dir ? dir : undefined}
               css={css`
                 flex: 1;
-                text-align: ${dir === 'rtl' ? 'right' : undefined};
                 color: ${danger && theme.color.body.danger};
               `}
             >
