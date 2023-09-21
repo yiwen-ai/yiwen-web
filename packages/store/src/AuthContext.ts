@@ -43,7 +43,7 @@ interface AccessToken {
   expires_in: number
 }
 
-export type IdentityProvider = 'github' | 'google' | 'wechat'
+export type IdentityProvider = 'github' | 'google' | 'wechat' | 'wechat_h5'
 
 class AuthAPI {
   private request: ReturnType<typeof createRequest>
@@ -70,15 +70,25 @@ class AuthAPI {
   authorize(provider: IdentityProvider) {
     return new Observable<void>((observer) => {
       const { AUTH_URL, PUBLIC_PATH } = this.config
-      const url = joinURL(AUTH_URL, `/idp/${provider}/authorize`, {
+      const app =
+        document.documentElement.attributes.getNamedItem('data-app')?.value
+      let idp = provider
+      if (app == 'wechat' && idp == 'wechat') {
+        idp = 'wechat_h5'
+      }
+      const url = joinURL(AUTH_URL, `/idp/${idp}/authorize`, {
         next_url: joinURL(PUBLIC_PATH, '/login/state', { provider }),
       })
+
       const popup = window.open(
         url,
-        'popup',
+        'YiwenAILogin',
         'popup=true,width=600,height=600,menubar=false,toolbar=false,location=false'
       )
       if (!popup) {
+        const url = joinURL(AUTH_URL, `/idp/${idp}/authorize`, {
+          next_url: document.location.href,
+        })
         window.location.assign(url) // redirect if popup is blocked
         return
       }
