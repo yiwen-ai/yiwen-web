@@ -2,10 +2,26 @@ import { useCallback, useMemo } from 'react'
 import useSWR from 'swr'
 import { useFetcher } from './useFetcher'
 
+const rtlLanguageCodeList = [
+  'ara', // Arabic
+  'heb', // Hebrew
+  'fas', // Persian
+  'urd', // Urdu
+  'kas', // Kashmiri
+  'pus', // Pashto
+  'uig', // Uighur
+  'snd', // Sindhi
+]
+
+export function isRTL(languageCode: string) {
+  return rtlLanguageCodeList.includes(languageCode)
+}
+
 export interface Language {
   code: string
   name: string
   nativeName: string
+  dir: string
 }
 
 export function useLanguageList() {
@@ -20,6 +36,7 @@ export function useLanguageList() {
       code,
       name,
       nativeName,
+      dir: isRTL(code) ? 'rtl' : 'ltr',
     }))
   }, [data?.result])
 

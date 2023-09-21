@@ -6,6 +6,7 @@ import { type JSONContent } from '@tiptap/core'
 import { RichTextEditor } from '@yiwen-ai/component'
 import {
   decode,
+  isRTL,
   type CreationOutput,
   type PublicationOutput,
 } from '@yiwen-ai/store'
@@ -47,6 +48,7 @@ export default function CommonViewer({
       `}
     >
       <div
+        dir={isRTL(item.language) ? 'rtl' : undefined}
         css={css`
           ${theme.typography.h1}
           overflow-wrap: break-word;
@@ -83,6 +85,7 @@ export default function CommonViewer({
         <RichTextEditor
           editable={false}
           initialContent={content}
+          dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
             margin-top: 32px;
             margin-bottom: 48px;

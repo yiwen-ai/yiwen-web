@@ -4,7 +4,11 @@ import { type GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import { type Editor, type JSONContent } from '@tiptap/core'
 import { RichTextEditor, Select, TextareaAutosize } from '@yiwen-ai/component'
-import { type CreationDraft, type PublicationDraft } from '@yiwen-ai/store'
+import {
+  isRTL,
+  type CreationDraft,
+  type PublicationDraft,
+} from '@yiwen-ai/store'
 import { useCallback, useRef } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
@@ -50,6 +54,8 @@ export default function CommonEditor({
     [updateDraft]
   )
 
+  const lang = document.documentElement.lang
+
   return isLoading ? (
     <Loading />
   ) : (
@@ -66,6 +72,7 @@ export default function CommonEditor({
         `}
       >
         <div
+          dir={isRTL(lang) ? 'rtl' : undefined}
           css={css`
             flex: 1;
             width: 100%;
@@ -94,6 +101,7 @@ export default function CommonEditor({
             editable={!isSaving}
             initialContent={draft.content}
             onChange={handleContentChange}
+            dir={isRTL(lang) ? 'rtl' : undefined}
             css={css`
               .ProseMirror {
                 padding-top: 24px;

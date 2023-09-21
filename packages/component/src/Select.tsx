@@ -125,6 +125,7 @@ export interface SelectOptionProps<T>
   key: React.Key
   selected?: boolean
   label: string
+  dir?: string
   value: T
   onSelect?: (value: T, ev: React.SyntheticEvent) => void
 }
@@ -135,6 +136,7 @@ export const SelectOption = memo(
       selected,
       label,
       value,
+      dir,
       onSelect,
       onClick,
       onKeyDown,
@@ -162,6 +164,7 @@ export const SelectOption = memo(
         aria-selected={selected}
         data-selected={selected ? '' : undefined}
         label={label}
+        dir={dir}
         onClick={handleClick}
         {...props}
         ref={ref}

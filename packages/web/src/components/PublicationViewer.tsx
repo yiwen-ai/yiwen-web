@@ -247,6 +247,7 @@ export default function PublicationViewer({
                       { name: originalLanguage.nativeName }
                     )}
                     value={originalLanguage.code}
+                    dir={originalLanguage.dir}
                     onSelect={() => onSwitch(originalLanguage)}
                   />
                 )}
@@ -260,6 +261,7 @@ export default function PublicationViewer({
                         after={item.isProcessing && <Spinner size='small' />}
                         label={`${item.nativeName} (${item.name})`}
                         value={item.code}
+                        dir={item.dir}
                         onSelect={() => onSwitch(item)}
                       />
                     ))}
@@ -275,6 +277,7 @@ export default function PublicationViewer({
                         after={item.isProcessing && <Spinner size='small' />}
                         label={`${item.nativeName} (${item.name})`}
                         value={item.code}
+                        dir={item.dir}
                         disabled={item.isProcessing}
                         onSelect={() => onSwitch(item)}
                       />

@@ -17,7 +17,7 @@ import {
   textEllipsis,
   useToast,
 } from '@yiwen-ai/component'
-import { type BookmarkOutput } from '@yiwen-ai/store'
+import { isRTL, type BookmarkOutput } from '@yiwen-ai/store'
 import { preventDefaultStopPropagation } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
@@ -136,6 +136,7 @@ function BookmarkItem({
         `}
       >
         <div
+          dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
             ${theme.typography.h2}
             ${textEllipsis}

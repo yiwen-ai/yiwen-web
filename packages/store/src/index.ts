@@ -49,6 +49,7 @@ export {
   type GroupStatisticOutput,
 } from './useGroup'
 export {
+  isRTL,
   useLanguageList,
   useLanguageProcessor,
   type Language,

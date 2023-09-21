@@ -9,7 +9,11 @@ import { BREAKPOINT } from '#/shared'
 import { useFollowingPage } from '#/store/useFollowingPage'
 import { css, useTheme } from '@emotion/react'
 import { textEllipsis, useToast } from '@yiwen-ai/component'
-import { buildPublicationKey, type PublicationOutput } from '@yiwen-ai/store'
+import {
+  buildPublicationKey,
+  isRTL,
+  type PublicationOutput,
+} from '@yiwen-ai/store'
 import { useCallback } from 'react'
 
 export default function FollowingPage() {
@@ -114,6 +118,7 @@ function PublicationItem({
         `}
       >
         <div
+          dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
             ${theme.typography.h2}
             ${textEllipsis}

@@ -108,6 +108,7 @@ export interface RichTextEditorProps {
   editable?: boolean
   autofocus?: FocusPosition
   placeholder?: string
+  dir?: string | undefined
   initialContent?: JSONContent | null | undefined
   content?: JSONContent | null | undefined
   onChange?: (content: JSONContent) => void
@@ -120,6 +121,7 @@ export const RichTextEditor = memo(
       placeholder,
       initialContent = null,
       content,
+      dir,
       onChange,
       ...props
     }: RichTextEditorProps,
@@ -304,6 +306,7 @@ export const RichTextEditor = memo(
       <EditorContent
         className={className}
         editor={editor}
+        dir={dir}
         css={css`
           flex: 1;
           display: flex;

@@ -7,7 +7,7 @@ import {
   Spinner,
   textEllipsis,
 } from '@yiwen-ai/component'
-import { CreationStatus, type CreationOutput } from '@yiwen-ai/store'
+import { CreationStatus, isRTL, type CreationOutput } from '@yiwen-ai/store'
 import { preventDefaultStopPropagation } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
@@ -62,6 +62,7 @@ export default function CreationItem({
       `}
     >
       <div
+        dir={isRTL(item.language) ? 'rtl' : undefined}
         css={css`
           ${textEllipsis}
           ${theme.typography.h2}
@@ -71,6 +72,7 @@ export default function CreationItem({
       </div>
       {item.summary && (
         <div
+          dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
             margin-top: 12px;
           `}

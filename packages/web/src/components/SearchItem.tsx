@@ -1,6 +1,6 @@
 import { css, useTheme } from '@emotion/react'
 import { Avatar, textEllipsis } from '@yiwen-ai/component'
-import { type SearchDocument } from '@yiwen-ai/store'
+import { isRTL, type SearchDocument } from '@yiwen-ai/store'
 import { useCallback } from 'react'
 import PublicationLink from './PublicationLink'
 
@@ -34,6 +34,7 @@ export default function SearchItem({
       `}
     >
       <div
+        dir={isRTL(item.language) ? 'rtl' : undefined}
         css={css`
           ${theme.typography.h2}
           color: ${theme.palette.primaryNormal};
@@ -43,6 +44,7 @@ export default function SearchItem({
       </div>
       {item.summary && (
         <div
+          dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
             margin-top: 12px;
           `}

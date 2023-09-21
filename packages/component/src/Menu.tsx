@@ -85,6 +85,7 @@ export interface MenuItemProps
   before?: JSX.Element | false | null | undefined
   after?: JSX.Element | false | null | undefined
   label: string | JSX.Element
+  dir?: string | undefined
   description?: string | JSX.Element
   danger?: boolean | undefined
   disabled?: boolean | undefined
@@ -99,6 +100,7 @@ export const MenuItem = memo(
       before,
       after,
       label,
+      dir,
       description,
       danger,
       disabled,
@@ -185,8 +187,10 @@ export const MenuItem = memo(
             `}
           >
             <span
+              dir={dir ? dir : undefined}
               css={css`
                 flex: 1;
+                text-align: ${dir === 'rtl' ? 'right' : undefined};
                 color: ${danger && theme.color.body.danger};
               `}
             >
