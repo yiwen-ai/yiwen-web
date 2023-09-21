@@ -263,13 +263,29 @@ const router = createBrowserRouter(
 )
 
 export default function App() {
+  let {
+    VITE_PUBLIC_PATH,
+    VITE_API_URL,
+    VITE_AUTH_URL,
+    VITE_SHARE_URL,
+    VITE_WALLET_URL,
+  } = import.meta.env
+
+  if (document.location.host === 'www.yiwen.pub') {
+    VITE_PUBLIC_PATH = 'https://www.yiwen.pub'
+    VITE_API_URL = 'https://api.yiwen.pub'
+    VITE_AUTH_URL = 'https://auth.yiwen.pub'
+    VITE_SHARE_URL = 'https://www.yiwen.pub'
+    VITE_WALLET_URL = 'https://wallet.yiwen.pub'
+  }
+
   const fetcherConfig = useMemo<FetcherConfig>(
     () => ({
-      PUBLIC_PATH: resolveURL(import.meta.env.VITE_PUBLIC_PATH),
-      API_URL: resolveURL(import.meta.env.VITE_API_URL),
-      AUTH_URL: resolveURL(import.meta.env.VITE_AUTH_URL),
-      SHARE_URL: resolveURL(import.meta.env.VITE_SHARE_URL),
-      WALLET_URL: resolveURL(import.meta.env.VITE_WALLET_URL),
+      PUBLIC_PATH: resolveURL(VITE_PUBLIC_PATH),
+      API_URL: resolveURL(VITE_API_URL),
+      AUTH_URL: resolveURL(VITE_AUTH_URL),
+      SHARE_URL: resolveURL(VITE_SHARE_URL),
+      WALLET_URL: resolveURL(VITE_WALLET_URL),
     }),
     []
   )
