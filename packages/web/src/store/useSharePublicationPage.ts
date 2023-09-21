@@ -78,9 +78,9 @@ export function useSharePublicationPage(
 
   return {
     publicationViewer: {
-      ...publicationViewer,
       onTranslate: handleTranslate,
       onSwitch: handleSwitch,
+      ...publicationViewer,
     },
   } as const
 }

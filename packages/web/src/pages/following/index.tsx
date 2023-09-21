@@ -71,8 +71,12 @@ export default function FollowingPage() {
         )}
       </div>
       {publicationViewerOpen && (
-        <LargeDialog defaultOpen={true} onClose={onPublicationViewerClose}>
-          <PublicationViewer responsive={true} {...publicationViewer} />
+        <LargeDialog open={true} onClose={onPublicationViewerClose}>
+          <PublicationViewer
+            responsive={true}
+            onClose={onPublicationViewerClose}
+            {...publicationViewer}
+          />
         </LargeDialog>
       )}
     </>

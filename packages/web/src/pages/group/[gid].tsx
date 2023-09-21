@@ -3,7 +3,6 @@ import CreationCompactItem from '#/components/CreationCompactItem'
 import CreationItem from '#/components/CreationItem'
 import CreationViewer from '#/components/CreationViewer'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
-import { IconMoreAnchor } from '#/components/IconMoreAnchor'
 import LargeDialog from '#/components/LargeDialog'
 import LoadMore from '#/components/LoadMore'
 import Loading from '#/components/Loading'
@@ -18,8 +17,7 @@ import { css, useTheme } from '@emotion/react'
 import {
   Avatar,
   Button,
-  Menu,
-  MenuItem,
+  Spinner,
   Tab,
   TabList,
   TabPanel,
@@ -328,13 +326,21 @@ export default function GroupDetailPage() {
         </>
       ) : null}
       {publicationViewerOpen && (
-        <LargeDialog defaultOpen={true} onClose={handlePublicationDialogClose}>
-          <PublicationViewer responsive={true} {...publicationViewer} />
+        <LargeDialog open={true} onClose={handlePublicationDialogClose}>
+          <PublicationViewer
+            responsive={true}
+            onClose={handlePublicationDialogClose}
+            {...publicationViewer}
+          />
         </LargeDialog>
       )}
       {creationViewerOpen && (
-        <LargeDialog defaultOpen={true} onClose={handleCreationDialogClose}>
-          <CreationViewer responsive={true} {...creationViewer} />
+        <LargeDialog open={true} onClose={handleCreationDialogClose}>
+          <CreationViewer
+            responsive={true}
+            onClose={handleCreationDialogClose}
+            {...creationViewer}
+          />
         </LargeDialog>
       )}
     </>
@@ -362,9 +368,9 @@ function GroupPart({
   const theme = useTheme()
   const logo = groupInfo.logo || groupInfo.owner?.picture
 
-  const handleDelete = useCallback(() => {
-    // TODO
-  }, [])
+  // TODO
+  // const handleDelete = useCallback(() => {
+  // }, [])
 
   return (
     <div
@@ -376,7 +382,7 @@ function GroupPart({
         css={css`
           max-width: 1080px;
           margin: 0 auto;
-          padding: 40px 24px 48px;
+          padding: 36px 24px;
         `}
       >
         {groupInfo.slogan && (
@@ -417,7 +423,7 @@ function GroupPart({
         </div>
         <div
           css={css`
-            margin-top: 24px;
+            margin-top: 16px;
             display: flex;
             align-items: center;
             gap: 24px;
@@ -432,25 +438,24 @@ function GroupPart({
           >
             {intl.formatMessage({ defaultMessage: '编辑简介' })}
           </Button>
-          <Menu anchor={IconMoreAnchor}>
+          <Button
+            color='primary'
+            variant='outlined'
+            disabled={isFollowing || isUnfollowing}
+            onClick={isFollowed ? onUnfollow : onFollow}
+          >
+            {(isFollowing || isUnfollowing) && <Spinner size='small' />}
+            {isFollowed
+              ? intl.formatMessage({ defaultMessage: '取消关注' })
+              : intl.formatMessage({ defaultMessage: '关注' })}
+          </Button>
+          {/* <Menu anchor={IconMoreAnchor}>
             <MenuItem
               label={intl.formatMessage({ defaultMessage: '删除' })}
               danger={true}
               onClick={handleDelete}
-              css={css`
-                display: none;
-              `}
             />
-            <MenuItem
-              label={
-                isFollowed
-                  ? intl.formatMessage({ defaultMessage: '取消关注' })
-                  : intl.formatMessage({ defaultMessage: '关注' })
-              }
-              disabled={isFollowing || isUnfollowing}
-              onClick={isFollowed ? onUnfollow : onFollow}
-            />
-          </Menu>
+          </Menu> */}
         </div>
       </div>
     </div>
@@ -554,7 +559,6 @@ function ArchivedPublicationPart({
         padding: 0 24px 24px;
         display: flex;
         flex-direction: column;
-        gap: 24px;
       `}
     >
       {!isLoading && error ? (
@@ -689,7 +693,6 @@ function ArchivedCreationPart({
         padding: 0 24px 24px;
         display: flex;
         flex-direction: column;
-        gap: 24px;
       `}
     >
       {!isLoading && error ? (

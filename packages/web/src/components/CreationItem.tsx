@@ -95,7 +95,6 @@ export default function CreationItem({
           <Button
             color='primary'
             variant='outlined'
-            size='small'
             disabled={disabled}
             onClick={handleRelease}
           >
@@ -111,7 +110,6 @@ export default function CreationItem({
           <Button
             color='secondary'
             variant='text'
-            size='small'
             disabled={disabled}
             onClick={handleEdit}
           >

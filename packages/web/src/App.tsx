@@ -117,6 +117,12 @@ function Layout() {
   const intl = useIntl()
   const navigate = useNavigate()
 
+  useEffect(() => {
+    document.title = intl.formatMessage({
+      defaultMessage: 'Yiwen AI — AI 多语言知识网络平台 ',
+    })
+  }, [intl])
+
   //#region close auth dialog on location change
   const location = useLocation()
   const closeAuthDialog = useAuth().dialog.close
