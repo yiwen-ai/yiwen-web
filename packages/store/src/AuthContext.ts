@@ -73,7 +73,7 @@ class AuthAPI {
 
   private authentication = createAction<{ status: number }>('__AUTH_CALLBACK__')
 
-  authorize(provider: IdentityProvider) {
+  authorize(provider: IdentityProvider, signal: AbortSignal | null) {
     return new Observable<UserInfo>((observer) => {
       const { AUTH_URL, PUBLIC_PATH } = this.config
       const isInWechat = window.navigator.userAgent
@@ -106,7 +106,6 @@ class AuthAPI {
         return
       }
 
-      const controller = new AbortController()
       return merge(
         timer(1000, 2000).pipe(takeUntil(waitUntilClosed(popup))),
         waitUntilClosed(popup)
@@ -114,9 +113,9 @@ class AuthAPI {
         .pipe(
           concatMap(async () => {
             try {
-              return await this.fetchUser(controller.signal)
+              return await this.fetchUser(signal)
             } catch (error) {
-              if (popup.closed || controller.signal.aborted) {
+              if (popup.closed || signal?.aborted) {
                 throw error
               } else {
                 return undefined
@@ -126,7 +125,6 @@ class AuthAPI {
           filter((user) => !!user),
           take(1),
           finalize(() => {
-            controller.abort()
             popup.close()
           })
         )
@@ -316,20 +314,23 @@ export function AuthProvider(
     }
   }, [authAPI, refreshInterval])
 
+  const authorizingControllerRef = useRef<AbortController>()
+  useEffect(() => () => authorizingControllerRef.current?.abort(), [])
+  useEffect(() => {
+    if (!state.dialog.open) authorizingControllerRef.current?.abort()
+  }, [state.dialog.open])
+
   useEffect(() => {
     const followingList = new Set<Subscription>()
     const authorize = (provider: IdentityProvider) => {
+      const controller = new AbortController()
+      authorizingControllerRef.current?.abort()
+      authorizingControllerRef.current = controller
       setState((state) => ({ ...state, authorizingProvider: provider }))
       const following = authAPI
-        .authorize(provider)
+        .authorize(provider, controller.signal)
         .pipe(
-          concatMap(() => {
-            return new Observable<void>((observer) => {
-              const controller = new AbortController()
-              from(refresh(authAPI, controller.signal)).subscribe(observer)
-              return () => controller.abort()
-            })
-          }),
+          concatMap(() => refresh(authAPI, controller.signal)),
           tap(() => {
             setState((state) => ({
               ...state,
@@ -346,6 +347,10 @@ export function AuthProvider(
             return EMPTY
           }),
           finalize(() => {
+            controller.abort()
+            if (authorizingControllerRef.current === controller) {
+              authorizingControllerRef.current = undefined
+            }
             followingList.delete(following)
           })
         )
