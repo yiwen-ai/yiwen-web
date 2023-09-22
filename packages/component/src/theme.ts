@@ -586,7 +586,7 @@ export const darkTheme: Theme = {
   },
 }
 
-export const useDarkMode = () => {
+export const useIsDarkMode = () => {
   const query = useMemo(() => {
     return window.matchMedia('(prefers-color-scheme: dark)')
   }, [])
@@ -614,7 +614,7 @@ export function useUserTheme() {
     // TODO: set user theme
   }, [])
 
-  const darkMode = useDarkMode()
+  const darkMode = useIsDarkMode()
 
   const theme = useMemo(() => {
     switch (userTheme) {

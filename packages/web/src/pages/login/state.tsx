@@ -1,17 +1,13 @@
 import { BREAKPOINT } from '#/shared'
 import { css, useTheme } from '@emotion/react'
-import { useAuth } from '@yiwen-ai/store'
-import { useEffect } from 'react'
 import { useIntl } from 'react-intl'
 import { useSearchParams } from 'react-router-dom'
 
 export default function LoginStatePage() {
   const intl = useIntl()
   const theme = useTheme()
-  const auth = useAuth()
   const [params] = useSearchParams()
   const status = Number(params.get('status'))
-  useEffect(() => auth.callback({ status }), [auth, status])
 
   return (
     <div

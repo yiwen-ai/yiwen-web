@@ -4,6 +4,7 @@ import {
   isWindow,
   joinURL,
   useIsMounted,
+  waitUntilClosed,
   type ModalRef,
 } from '@yiwen-ai/util'
 import {
@@ -21,9 +22,14 @@ import {
   Observable,
   catchError,
   concatMap,
+  filter,
   finalize,
   from,
+  merge,
+  take,
+  takeUntil,
   tap,
+  timer,
   type Subscription,
 } from 'rxjs'
 import { type UserInfo } from './common'
@@ -68,7 +74,7 @@ class AuthAPI {
   private authentication = createAction<{ status: number }>('__AUTH_CALLBACK__')
 
   authorize(provider: IdentityProvider) {
-    return new Observable<void>((observer) => {
+    return new Observable<UserInfo>((observer) => {
       const { AUTH_URL, PUBLIC_PATH } = this.config
       const isInWechat = window.navigator.userAgent
         .toLowerCase()
@@ -99,23 +105,32 @@ class AuthAPI {
         window.location.assign(url) // redirect if popup is blocked
         return
       }
-      const channel = new Channel(popup)
-      const following = from(channel).subscribe((action) => {
-        if (!this.authentication.match(action)) return
-        if (action.payload.status >= 200 && action.payload.status < 300) {
-          observer.next()
-          observer.complete()
-        } else {
-          // TODO: failed to authorize, handle error
-          // show error message
-          observer.error(action.payload)
-        }
-      })
-      return () => {
-        following.unsubscribe()
-        channel.close()
-        popup.close()
-      }
+
+      const controller = new AbortController()
+      return merge(
+        timer(1000, 2000).pipe(takeUntil(waitUntilClosed(popup))),
+        waitUntilClosed(popup)
+      )
+        .pipe(
+          concatMap(async () => {
+            try {
+              return await this.fetchUser(controller.signal)
+            } catch (error) {
+              if (popup.closed || controller.signal.aborted) {
+                throw error
+              } else {
+                return undefined
+              }
+            }
+          }),
+          filter((user) => !!user),
+          take(1),
+          finalize(() => {
+            controller.abort()
+            popup.close()
+          })
+        )
+        .subscribe(observer)
     })
   }
 

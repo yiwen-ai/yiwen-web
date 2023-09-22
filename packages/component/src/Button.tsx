@@ -160,7 +160,13 @@ export const IconButton = memo(
           border: 'none',
         }}
       >
-        <Icon name={iconName} size={iconSize} />
+        <Icon
+          name={iconName}
+          size={iconSize}
+          css={css`
+            outline: none;
+          `}
+        />
       </Button>
     )
   })
