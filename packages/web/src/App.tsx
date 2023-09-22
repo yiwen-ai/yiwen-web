@@ -40,7 +40,6 @@ import {
   IntlProvider,
   MissingTranslationError,
   useIntl,
-  type IntlShape,
   type ResolvedIntlConfig,
 } from 'react-intl'
 import {
@@ -390,7 +389,7 @@ function UserLocaleProvider(props: React.PropsWithChildren) {
         isMounted() && setMessages(msg)
       })
       .catch(() => {})
-  }, [isMounted])
+  }, [isMounted, locale.language, setMessages])
 
   const logger = useLogger()
   const onError = useCallback<ResolvedIntlConfig['onError']>(
@@ -454,5 +453,6 @@ function LoggingUnhandledError() {
 }
 
 async function loadLanguages(locale: string) {
-  return import(`../lang/${locale}.json`) as Promise<IntlShape['messages']>
+  const res = await import(`../lang/${locale}.json`)
+  return res.messages
 }

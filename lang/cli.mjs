@@ -104,7 +104,7 @@ async function compile() {
     const lang = Intl.getCanonicalLocales(publication.result.language)[0]
     await fs.writeFile(
       `./packages/web/lang/${lang}.json`,
-      JSON.stringify(messages, null, 2)
+      JSON.stringify({ messages }, null, 2)
     )
     console.log(`Compiled ${lang}`)
   }
