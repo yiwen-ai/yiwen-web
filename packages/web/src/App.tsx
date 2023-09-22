@@ -345,26 +345,26 @@ export default function App() {
     <FetcherConfigProvider value={fetcherConfig}>
       <LoggerProvider handler={loggingHandler}>
         <SWRConfig value={swrConfig}>
-          <AuthProvider
-            fallback={
-              <UserThemeProvider>
-                <Loading
-                  css={css`
-                    position: absolute;
-                    inset: 0;
-                  `}
-                />
-              </UserThemeProvider>
-            }
-          >
-            <UserLocaleProvider>
+          <UserLocaleProvider>
+            <AuthProvider
+              fallback={
+                <UserThemeProvider>
+                  <Loading
+                    css={css`
+                      position: absolute;
+                      inset: 0;
+                    `}
+                  />
+                </UserThemeProvider>
+              }
+            >
               <UserThemeProvider>
                 <GlobalStyles />
                 <RouterProvider router={router} />
                 <LoggingUnhandledError />
               </UserThemeProvider>
-            </UserLocaleProvider>
-          </AuthProvider>
+            </AuthProvider>
+          </UserLocaleProvider>
         </SWRConfig>
       </LoggerProvider>
     </FetcherConfigProvider>
