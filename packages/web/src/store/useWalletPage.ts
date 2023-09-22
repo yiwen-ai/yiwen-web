@@ -48,12 +48,12 @@ export function useWalletPage(pushToast: ToastAPI['pushToast']) {
       },
       {
         key: WalletPageHistoryType.Outgo,
-        label: intl.formatMessage({ defaultMessage: '亿文币转出' }),
+        label: intl.formatMessage({ defaultMessage: '转出记录' }),
         value: WalletPageHistoryType.Outgo,
       },
       {
         key: WalletPageHistoryType.Income,
-        label: intl.formatMessage({ defaultMessage: '亿文币转入' }),
+        label: intl.formatMessage({ defaultMessage: '转入记录' }),
         value: WalletPageHistoryType.Income,
       },
       {

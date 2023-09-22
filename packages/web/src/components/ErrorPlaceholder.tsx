@@ -26,13 +26,13 @@ export default function ErrorPlaceholder({
       case 403:
         return [
           intl.formatMessage({
-            defaultMessage: '你访问的内容暂时无法查看，请稍后再试',
+            defaultMessage: '访问的内容暂时无法查看，请稍后再试',
           }),
           undefined,
         ]
       case 404:
         return [
-          intl.formatMessage({ defaultMessage: '你访问的内容不存在' }),
+          intl.formatMessage({ defaultMessage: '访问的内容不存在' }),
           undefined,
         ]
       default:

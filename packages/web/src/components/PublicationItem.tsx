@@ -109,7 +109,7 @@ export default function PublicationItem({
             ) : (
               <Icon name='edit' size='small' />
             )}
-            <span>{intl.formatMessage({ defaultMessage: '修订' })}</span>
+            <span>{intl.formatMessage({ defaultMessage: '修正' })}</span>
           </Button>
         )}
         {hasWritePermission && item.status === PublicationStatus.Approved && (

@@ -26,8 +26,8 @@ export default function LoginStatePage() {
     >
       <div css={theme.typography.h1}>
         {status === 200
-          ? intl.formatMessage({ defaultMessage: 'Login successful!' })
-          : intl.formatMessage({ defaultMessage: 'Login failed!' })}
+          ? intl.formatMessage({ defaultMessage: '登录成功' })
+          : intl.formatMessage({ defaultMessage: '登录失败' })}
       </div>
       <div
         css={css`
@@ -37,10 +37,10 @@ export default function LoginStatePage() {
       >
         {status === 200
           ? intl.formatMessage({
-              defaultMessage: 'Redirecting to the previous page...',
+              defaultMessage: '已登录成功，请关闭此页面',
             })
           : intl.formatMessage({
-              defaultMessage: 'Please try again later.',
+              defaultMessage: '请稍后重试',
             })}
       </div>
     </div>

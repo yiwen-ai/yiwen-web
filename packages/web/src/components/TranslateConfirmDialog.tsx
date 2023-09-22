@@ -89,7 +89,7 @@ export default function TranslateConfirmDialog({
           >
             {intl.formatMessage({
               defaultMessage:
-                '亿文网使用人工智能技术，保证翻译的准确性，为保证资源得到合理运用，翻译需要消耗亿文币，亿文币可通过购买、创作内容读者付费打赏、平台活动等方式获得。',
+                '使用 AI 模型进行翻译需要消耗亿文币，内容越长消耗的亿文币越多。亿文币可通过充值、创作内容获得收益、平台活动奖励等方式获得。',
             })}
           </div>
           <div
@@ -105,7 +105,7 @@ export default function TranslateConfirmDialog({
                 color: ${theme.color.body.link};
               `}
             >
-              {intl.formatMessage({ defaultMessage: '选择翻译模型' })}
+              {intl.formatMessage({ defaultMessage: '选择 AI 模型' })}
             </div>
             <Select
               size='large'
@@ -118,15 +118,14 @@ export default function TranslateConfirmDialog({
               value={currentModel}
               onChange={onModelChange}
               css={css`
-                width: 360px;
                 max-width: 100%;
               `}
             />
             {tokenCount != null && balance != null && (
               <div
                 css={(theme) => css`
-                  color: ${theme.color.body.secondary};
-                  ${theme.typography.tooltip}
+                  color: ${theme.color.body.primary};
+                  ${theme.typography.body}
 
                   > strong {
                     font-weight: normal;
@@ -137,7 +136,7 @@ export default function TranslateConfirmDialog({
                 {intl.formatMessage(
                   {
                     defaultMessage:
-                      '当前文章共 {tokens} Tokens，预计消耗 {cost} 文；目前亿文币余额 {balance} 文',
+                      '当前翻译约 {tokens} Tokens，预计花费 {cost} 文，钱包余额 {balance} 文',
                   },
                   {
                     tokens: <strong>{tokenCount}</strong>,
@@ -165,7 +164,7 @@ export default function TranslateConfirmDialog({
               `}
             >
               {intl.formatMessage(
-                { defaultMessage: '当前亿文币余额不足，可前往 {charge}' },
+                { defaultMessage: '亿文币余额不足，可前往 {charge}' },
                 {
                   charge: (
                     <button

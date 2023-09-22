@@ -119,7 +119,7 @@ function Layout() {
 
   useEffect(() => {
     document.title = intl.formatMessage({
-      defaultMessage: 'Yiwen AI — AI 多语言知识网络平台 ',
+      defaultMessage: 'Yiwen AI — 跨语言的知识网络',
     })
   }, [intl])
 

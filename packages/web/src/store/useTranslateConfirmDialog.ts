@@ -21,10 +21,10 @@ export function useModelLabelDict() {
   return useMemo<Record<GPT_MODEL, string>>(
     () => ({
       [GPT_MODEL.GPT3_5]: intl.formatMessage({
-        defaultMessage: 'GPT-3.5 (更实惠，适用于一般翻译)',
+        defaultMessage: 'GPT-3.5（实惠，适用于一般翻译）',
       }),
       [GPT_MODEL.GPT4]: intl.formatMessage({
-        defaultMessage: 'GPT-4.0 (质量更高，适用于要求更高场合，如论文文献等)',
+        defaultMessage: 'GPT-4（质量高，适用于内容复杂、要求专业的翻译）',
       }),
     }),
     [intl]

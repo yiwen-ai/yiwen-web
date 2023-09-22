@@ -41,7 +41,9 @@ export interface WalletOutput {
 }
 
 export enum CreditKind {
+  Award = 'award',
   Payout = 'payout',
+  Income = 'income',
 }
 
 export interface CreditOutput {

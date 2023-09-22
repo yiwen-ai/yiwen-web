@@ -26,7 +26,7 @@ export const Logo = memo(
     return (
       <SVG
         role='img'
-        aria-label={intl.formatMessage({ defaultMessage: '亿文' })}
+        aria-label={intl.formatMessage({ defaultMessage: 'Yiwen AI' })}
         {...props}
         css={css`
           width: ${width}px;

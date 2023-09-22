@@ -63,7 +63,7 @@ export const Dialog = memo(
                 max-height: calc(100% - 80px * 2);
                 margin: auto;
                 background: ${theme.color.dialog.background};
-                border-radius: 20px;
+                border-radius: 16px;
                 border: none;
                 display: flex;
                 flex-direction: column;

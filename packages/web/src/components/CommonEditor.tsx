@@ -150,7 +150,7 @@ function ArticleSettings(props: React.HTMLAttributes<HTMLDivElement>) {
           ${theme.typography.bodyBold}
         `}
       >
-        {intl.formatMessage({ defaultMessage: '文章设置' })}
+        {intl.formatMessage({ defaultMessage: '文稿设置' })}
       </div>
       <Field label={intl.formatMessage({ defaultMessage: '关键词：' })} />
       <Field label={intl.formatMessage({ defaultMessage: '声明：' })}>

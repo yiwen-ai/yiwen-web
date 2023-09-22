@@ -86,7 +86,7 @@ export default function Home() {
             `}
           >
             {intl.formatMessage({
-              defaultMessage: '智能搜索内容，用你熟练的语言来阅读',
+              defaultMessage: '智能搜索内容，用熟悉的语言来阅读',
             })}
           </div>
           <ResponsiveTabSection
@@ -181,8 +181,7 @@ export default function Home() {
                   `}
                 >
                   {intl.formatMessage({
-                    defaultMessage:
-                      '用强大的 AI 能力进行语义搜索和全文智能翻译',
+                    defaultMessage: '用 AI 进行语义搜索和全文智能翻译',
                   })}
                 </div>
               </div>

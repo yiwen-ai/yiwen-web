@@ -216,7 +216,7 @@ export default function PublicationViewer({
                       {isNarrow ? null : (
                         <span css={textEllipsis}>
                           {intl.formatMessage({
-                            defaultMessage: '更多语言翻译',
+                            defaultMessage: '更多语言',
                           })}
                         </span>
                       )}
@@ -235,7 +235,7 @@ export default function PublicationViewer({
                   >
                     {intl.formatMessage({
                       defaultMessage:
-                        '已翻译可直接查看，未翻译可立即翻译并查看',
+                        '对于未翻译语言，可创建翻译版本到自己的创作中心',
                     })}
                   </li>
                   <li

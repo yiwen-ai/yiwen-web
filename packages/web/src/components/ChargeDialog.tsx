@@ -80,7 +80,7 @@ export default function ChargeDialog({
                 color: ${theme.color.body.link};
               `}
             >
-              {intl.formatMessage({ defaultMessage: '选择充值货币类型' })}
+              {intl.formatMessage({ defaultMessage: '选择支付货币' })}
             </div>
             <Select
               size='large'

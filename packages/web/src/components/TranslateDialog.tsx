@@ -44,7 +44,7 @@ export default function TranslateDialog({
               {intl.formatMessage(
                 {
                   defaultMessage:
-                    '「{language}」正在翻译，请稍后，翻译好后可在你的发布列表里进行修改和提交。',
+                    '「{language}」正在翻译，请稍后。翻译好后可以在发布栏里进行修正和公开发布。',
                 },
                 { language: language.nativeName }
               )}

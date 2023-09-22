@@ -137,7 +137,7 @@ export default function CreationItem({
                   <Icon name='archive' size='small' />
                 )
               }
-              label={intl.formatMessage({ defaultMessage: '归档文章' })}
+              label={intl.formatMessage({ defaultMessage: '归档' })}
               disabled={disabled}
               onClick={handleArchive}
               closeOnClick={3000}

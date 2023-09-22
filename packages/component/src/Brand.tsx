@@ -29,7 +29,7 @@ export const Brand = memo(
     return (
       <SVG
         role='img'
-        title={intl.formatMessage({ defaultMessage: '亿文' })}
+        title={intl.formatMessage({ defaultMessage: 'Yiwen AI' })}
         {...props}
         ref={ref}
         css={css`

@@ -300,7 +300,7 @@ export function useGroupDetailPage(
           type: 'success',
           message: intl.formatMessage({ defaultMessage: '归档成功' }),
           description: intl.formatMessage(
-            { defaultMessage: '已归档文章：{title}' },
+            { defaultMessage: '已归档：{title}' },
             { title: item.title }
           ),
         })
@@ -323,7 +323,7 @@ export function useGroupDetailPage(
           type: 'success',
           message: intl.formatMessage({ defaultMessage: '恢复成功' }),
           description: intl.formatMessage(
-            { defaultMessage: '已恢复文章：{title}' },
+            { defaultMessage: '已恢复：{title}' },
             { title: item.title }
           ),
         })
@@ -375,7 +375,7 @@ export function useGroupDetailPage(
           type: 'success',
           message: intl.formatMessage({ defaultMessage: '删除成功' }),
           description: intl.formatMessage(
-            { defaultMessage: '已删除文章：{title}' },
+            { defaultMessage: '已删除：{title}' },
             { title: item.title }
           ),
         })
@@ -402,7 +402,7 @@ export function useGroupDetailPage(
           type: 'success',
           message: intl.formatMessage({ defaultMessage: '发布成功' }),
           description: intl.formatMessage(
-            { defaultMessage: '已发布待审核：{title}' },
+            { defaultMessage: '已发布审核中：{title}' },
             { title: item.title }
           ),
         })
@@ -426,7 +426,7 @@ export function useGroupDetailPage(
           type: 'success',
           message: intl.formatMessage({ defaultMessage: '归档成功' }),
           description: intl.formatMessage(
-            { defaultMessage: '已归档文章：{title}' },
+            { defaultMessage: '已归档：{title}' },
             { title: item.title }
           ),
         })
@@ -449,7 +449,7 @@ export function useGroupDetailPage(
           type: 'success',
           message: intl.formatMessage({ defaultMessage: '恢复成功' }),
           description: intl.formatMessage(
-            { defaultMessage: '已恢复文章：{title}' },
+            { defaultMessage: '已恢复：{title}' },
             { title: item.title }
           ),
         })
@@ -499,7 +499,7 @@ export function useGroupDetailPage(
           type: 'success',
           message: intl.formatMessage({ defaultMessage: '删除成功' }),
           description: intl.formatMessage(
-            { defaultMessage: '已删除文章：{title}' },
+            { defaultMessage: '已删除：{title}' },
             { title: item.title }
           ),
         })

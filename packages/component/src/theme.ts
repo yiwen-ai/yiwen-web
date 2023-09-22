@@ -211,7 +211,7 @@ export const lightTheme: Theme = {
           },
         },
         outlined: {
-          border: palette.primaryNormal,
+          border: RGBA(palette.primaryNormal, 0.75),
           background: palette.grayLight1,
           text: palette.primaryNormal,
           hover: {
@@ -415,7 +415,7 @@ export const darkTheme: Theme = {
       danger: palette.orange,
     },
     divider: {
-      primary: palette.grayLight0,
+      primary: RGBA(palette.grayLight, 0.75),
       secondary: RGBA(palette.grayLight0, 0.25),
     },
     button: {
@@ -436,7 +436,7 @@ export const darkTheme: Theme = {
           },
         },
         outlined: {
-          border: palette.grayLight,
+          border: RGBA(palette.grayLight0, 0.75),
           background: palette.grayNormal,
           text: palette.grayLight0,
           hover: {
