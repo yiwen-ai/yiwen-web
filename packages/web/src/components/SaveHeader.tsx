@@ -1,4 +1,5 @@
 import { SetHeaderProps } from '#/App'
+import { BREAKPOINT } from '#/shared'
 import { css } from '@emotion/react'
 import { Button, Spinner, useToast } from '@yiwen-ai/component'
 import { toMessage } from '@yiwen-ai/store'
@@ -47,6 +48,10 @@ export default function SaveHeader({
             display: flex;
             justify-content: flex-end;
             gap: 36px;
+            @media (max-width: ${BREAKPOINT.small}px) {
+              margin: 0 16px;
+              gap: 16px;
+            }
           `}
         >
           {props.children}

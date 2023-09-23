@@ -6,6 +6,7 @@ import { type Editor, type JSONContent } from '@tiptap/core'
 import { RichTextEditor, Select, TextareaAutosize } from '@yiwen-ai/component'
 import {
   isRTL,
+  useAuth,
   type CreationDraft,
   type PublicationDraft,
 } from '@yiwen-ai/store'
@@ -28,6 +29,7 @@ export default function CommonEditor({
 }) {
   const intl = useIntl()
   const theme = useTheme()
+  const { isAuthorized } = useAuth()
   const editorRef = useRef<Editor>(null)
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const isNarrow = width <= BREAKPOINT.small
@@ -56,7 +58,20 @@ export default function CommonEditor({
 
   const lang = document.documentElement.lang || window.navigator.language
 
-  return isLoading ? (
+  return !isAuthorized ? (
+    <div
+      css={(theme) => css`
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: ${theme.color.body.secondary};
+      `}
+    >
+      {intl.formatMessage({ defaultMessage: '请登录后再进行创作' })}
+    </div>
+  ) : isLoading ? (
     <Loading />
   ) : (
     <>

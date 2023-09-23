@@ -2,7 +2,6 @@ import { GROUP_DETAIL_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   decode,
-  toMessage,
   useAuth,
   useCreationAPI,
   useMyGroupList,
@@ -12,6 +11,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { Xid } from 'xid-ts'
+import { useCreateFromFileDialog } from './useCreateFromFileDialog'
 import { useCreateFromLinkDialog } from './useCreateFromLinkDialog'
 import { GroupViewType } from './useGroupDetailPage'
 
@@ -35,7 +35,8 @@ export function useNewCreationPage(
   //#region draft
   const { locale } = useAuth().user ?? {}
 
-  const { refreshDefaultGroup } = useMyGroupList()
+  const { defaultGroup, refreshDefaultGroup } = useMyGroupList()
+  const defaultGroupId = defaultGroup?.id
 
   const [draft, setDraft] = useState<CreationDraft>(() => ({
     __isReady: false,
@@ -48,22 +49,18 @@ export function useNewCreationPage(
   }))
 
   useEffect(() => {
-    let aborted = false
-    Promise.resolve(_gid || refreshDefaultGroup().then((group) => group?.id))
-      .then((gid) => {
-        if (!aborted && gid) {
-          setDraft((prev) => ({
-            ...prev,
-            gid: Xid.fromValue(gid),
-            __isReady: true,
-          }))
-        }
-      })
-      .catch(() => {})
-    return () => {
-      aborted = true
+    refreshDefaultGroup()
+  }, [refreshDefaultGroup])
+
+  useEffect(() => {
+    if (!draft.gid && defaultGroupId) {
+      setDraft((prev) => ({
+        ...prev,
+        gid: defaultGroupId,
+        __isReady: true,
+      }))
     }
-  }, [_gid, refreshDefaultGroup])
+  }, [defaultGroupId, draft.gid])
 
   const updateDraft = useCallback((draft: Partial<CreationDraft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
@@ -110,14 +107,11 @@ export function useNewCreationPage(
 
   const {
     close: closeCreateFromLinkDialog,
-    isCrawling,
     onCrawl,
     ...createFromLinkDialog
   } = useCreateFromLinkDialog(pushToast, draft.gid)
 
-  const [isSavingFromLink, setIsSavingFromLink] = useState(false)
-
-  const handleCreateFromLink = useCallback(async () => {
+  const handleCrawl = useCallback(async () => {
     const result = await onCrawl()
     if (!result) return
 
@@ -131,43 +125,33 @@ export function useNewCreationPage(
       return
     }
 
-    try {
-      setIsSavingFromLink(true)
-      const content2 = decode(content)
-      updateDraft({
-        title,
-        content: content2,
-      })
-      const result = await createCreation({
-        ...draft,
-        title,
-        content: content2,
-      } as Partial<CreationDraft> as CreationDraft)
-      pushToast({
-        type: 'success',
-        message: intl.formatMessage({ defaultMessage: '创建成功' }),
-      })
-      navigateTo(result.gid, result.id)
-    } catch (error) {
-      closeCreateFromLinkDialog()
+    updateDraft({ title, content: decode(content) })
+    closeCreateFromLinkDialog()
+  }, [closeCreateFromLinkDialog, intl, onCrawl, pushToast, updateDraft])
+
+  const {
+    close: closeCreateFromFileDialog,
+    onUpload,
+    ...createFromFileDialog
+  } = useCreateFromFileDialog(pushToast, draft.gid)
+
+  const handleUpload = useCallback(async () => {
+    const result = await onUpload()
+    if (!result) return
+
+    const { title, content } = result
+    if (!title || !content) {
       pushToast({
         type: 'warning',
-        message: intl.formatMessage({ defaultMessage: '创建失败' }),
-        description: toMessage(error),
+        message: intl.formatMessage({ defaultMessage: '无法从文件中获取内容' }),
+        description: result.url,
       })
-    } finally {
-      setIsSavingFromLink(false)
+      return
     }
-  }, [
-    closeCreateFromLinkDialog,
-    createCreation,
-    draft,
-    intl,
-    navigateTo,
-    onCrawl,
-    pushToast,
-    updateDraft,
-  ])
+
+    updateDraft({ title, content: decode(content) })
+    closeCreateFromFileDialog()
+  }, [closeCreateFromFileDialog, intl, onUpload, pushToast, updateDraft])
 
   return {
     draft,
@@ -178,9 +162,13 @@ export function useNewCreationPage(
     onSave,
     createFromLinkDialog: {
       close: closeCreateFromLinkDialog,
-      isSaving: isCrawling || isSavingFromLink,
-      onSave: handleCreateFromLink,
+      onCrawl: handleCrawl,
       ...createFromLinkDialog,
+    },
+    createFromFileDialog: {
+      close: closeCreateFromFileDialog,
+      onUpload: handleUpload,
+      ...createFromFileDialog,
     },
   } as const
 }

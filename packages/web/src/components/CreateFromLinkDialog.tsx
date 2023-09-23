@@ -9,9 +9,9 @@ interface CreateFromLinkDialogProps {
   onClose: () => void
   link: string
   onLinkChange: (link: string) => void
-  isSaving: boolean
+  isCrawling: boolean
   disabled: boolean
-  onSave: () => void
+  onCrawl: () => void
 }
 
 export default function CreateFromLinkDialog({
@@ -20,8 +20,8 @@ export default function CreateFromLinkDialog({
   link,
   onLinkChange,
   disabled,
-  isSaving,
-  onSave,
+  isCrawling,
+  onCrawl,
 }: CreateFromLinkDialogProps) {
   const intl = useIntl()
   const id = useId()
@@ -39,7 +39,7 @@ export default function CreateFromLinkDialog({
       onClose={onClose}
       title={intl.formatMessage({ defaultMessage: '从链接创作' })}
     >
-      {isSaving ? (
+      {isCrawling ? (
         <>
           <div
             css={css`
@@ -84,7 +84,7 @@ export default function CreateFromLinkDialog({
           <Button
             color='primary'
             disabled={disabled}
-            onClick={onSave}
+            onClick={onCrawl}
             css={css`
               margin-top: 24px;
             `}

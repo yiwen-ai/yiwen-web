@@ -11,7 +11,7 @@ import {
   type Page,
   type UserInfo,
 } from './common'
-import { useFetcher } from './useFetcher'
+import { RequestMethod, useFetcher } from './useFetcher'
 import {
   DEFAULT_MODEL,
   useReadPublicationByJob,
@@ -270,6 +270,17 @@ export function useCreationAPI() {
     [request]
   )
 
+  const uploadDocument = useCallback(
+    (file: File) => {
+      return request<{ result: ScrapingOutput }>('/v1/converting', undefined, {
+        method: RequestMethod.POST,
+        body: file,
+        headers: { 'Content-Type': file.type },
+      })
+    },
+    [request]
+  )
+
   return {
     readCreation,
     readCreationList,
@@ -281,6 +292,7 @@ export function useCreationAPI() {
     archiveCreation,
     restoreCreation,
     crawlDocument,
+    uploadDocument,
   } as const
 }
 
@@ -630,5 +642,30 @@ export function useCrawlDocument(_gid: string | null | undefined) {
   return {
     isCrawling,
     crawl,
+  } as const
+}
+
+export function useUploadDocument(_gid: string | null | undefined) {
+  const { uploadDocument } = useCreationAPI()
+
+  const [isUploading, setIsUploading] = useState(false)
+
+  const upload = useCallback(
+    async (file: File) => {
+      if (!_gid) throw new Error('group id is required to create a creation')
+      try {
+        setIsUploading(true)
+        const { result } = await uploadDocument(file)
+        return result
+      } finally {
+        setIsUploading(false)
+      }
+    },
+    [_gid, uploadDocument]
+  )
+
+  return {
+    isUploading,
+    upload,
   } as const
 }
