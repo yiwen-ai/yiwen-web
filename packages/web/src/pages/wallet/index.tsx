@@ -197,7 +197,7 @@ export default function WalletPage() {
           `}
         >
           <Tab value={WalletPageTab.Coin}>
-            {intl.formatMessage({ defaultMessage: '说明' })}
+            {intl.formatMessage({ defaultMessage: '亿文币' })}
           </Tab>
           <Tab value={WalletPageTab.History}>
             {intl.formatMessage({ defaultMessage: '更新记录' })}
