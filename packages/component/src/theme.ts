@@ -1,14 +1,7 @@
-import {
-  ThemeProvider,
-  useTheme,
-  type CSSObject,
-  type Theme,
-} from '@emotion/react'
+import { type CSSObject, type Theme } from '@emotion/react'
 import { useAuth, type ColorScheme } from '@yiwen-ai/store'
 import { RGBA } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-
-export { ThemeProvider, useTheme }
 
 interface Typography
   extends Required<Pick<CSSObject, 'fontSize' | 'fontWeight' | 'lineHeight'>> {}
@@ -58,14 +51,14 @@ declare module '@emotion/react' {
     color: {
       body: {
         background: string
-        primary: string
+        default: string
         secondary: string
-        link: string
-        linkHover: string
+        primary: string
+        primaryHover: string
         danger: string
       }
       divider: {
-        primary: string
+        default: string
         secondary: string
       }
       button: {
@@ -183,14 +176,14 @@ export const lightTheme: Theme = {
   color: {
     body: {
       background: palette.white,
-      primary: palette.grayNormal,
+      default: palette.grayNormal,
       secondary: palette.grayLight,
-      link: palette.primaryNormal,
-      linkHover: palette.primaryLight,
+      primary: palette.primaryNormal,
+      primaryHover: palette.primaryLight,
       danger: palette.orange,
     },
     divider: {
-      primary: palette.grayLight0,
+      default: palette.grayLight0,
       secondary: RGBA(palette.grayLight0, 0.25),
     },
     button: {
@@ -408,14 +401,14 @@ export const darkTheme: Theme = {
   color: {
     body: {
       background: palette.grayNormal,
-      primary: palette.grayLight1,
+      default: palette.grayLight1,
       secondary: palette.grayLight0,
-      link: palette.primaryNormal,
-      linkHover: palette.primaryLight,
+      primary: palette.primaryNormal,
+      primaryHover: palette.primaryLight,
       danger: palette.orange,
     },
     divider: {
-      primary: RGBA(palette.grayLight, 0.75),
+      default: RGBA(palette.grayLight, 0.75),
       secondary: RGBA(palette.grayLight0, 0.25),
     },
     button: {
@@ -586,7 +579,7 @@ export const darkTheme: Theme = {
   },
 }
 
-export const useIsDarkMode = () => {
+const useIsDarkMode = () => {
   const query = useMemo(() => {
     return window.matchMedia('(prefers-color-scheme: dark)')
   }, [])
@@ -608,16 +601,11 @@ export const useIsDarkMode = () => {
 
 export function useUserTheme() {
   const { user } = useAuth()
-  const userTheme: ColorScheme = user?.theme ?? 'auto'
-
-  const setUserTheme = useCallback((theme: ColorScheme) => {
-    // TODO: set user theme
-  }, [])
-
+  const name: ColorScheme = user?.theme ?? 'auto'
   const darkMode = useIsDarkMode()
 
   const theme = useMemo(() => {
-    switch (userTheme) {
+    switch (name) {
       case 'light':
         return lightTheme
       case 'dark':
@@ -625,7 +613,15 @@ export function useUserTheme() {
       default:
         return darkMode ? darkTheme : lightTheme
     }
-  }, [darkMode, userTheme])
+  }, [darkMode, name])
 
-  return [theme, userTheme, setUserTheme] as const
+  const switchTheme = useCallback((name: ColorScheme) => {
+    // TODO: set user theme
+  }, [])
+
+  return {
+    theme,
+    name,
+    switchTheme,
+  } as const
 }

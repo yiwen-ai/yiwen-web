@@ -58,7 +58,7 @@ export default function PublicationItem({
       css={css`
         display: block;
         padding: 24px;
-        border: 1px solid ${theme.color.divider.primary};
+        border: 1px solid ${theme.color.divider.default};
         border-radius: 12px;
         cursor: pointer;
         :hover {

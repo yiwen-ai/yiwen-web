@@ -32,7 +32,13 @@ export default function SmallDialog({
       `}
     >
       <DialogHead>{title}</DialogHead>
-      <DialogBody>{children}</DialogBody>
+      <DialogBody
+        css={css`
+          padding: 0 36px 36px;
+        `}
+      >
+        {children}
+      </DialogBody>
       <DialogClose />
     </Dialog>
   )

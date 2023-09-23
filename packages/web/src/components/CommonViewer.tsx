@@ -49,6 +49,8 @@ export default function CommonViewer({
       `}
     >
       <div
+        role='heading'
+        aria-level={1}
         css={css`
           ${theme.typography.h1}
           overflow-wrap: break-word;
@@ -84,7 +86,7 @@ export default function CommonViewer({
       {content && (
         <RichTextEditor
           editable={false}
-          initialContent={content}
+          content={content}
           css={css`
             margin-top: 24px;
             margin-bottom: 48px;

@@ -51,11 +51,6 @@ export default function ChargeDialog({
       title={intl.formatMessage({ defaultMessage: '充值亿文币' })}
       open={open}
       onClose={onClose}
-      css={css`
-        > [data-dialog-body] {
-          padding: 24px 36px 36px;
-        }
-      `}
     >
       {isLoading ? (
         <Loading
@@ -77,7 +72,7 @@ export default function ChargeDialog({
           >
             <div
               css={(theme) => css`
-                color: ${theme.color.body.link};
+                color: ${theme.color.body.primary};
               `}
             >
               {intl.formatMessage({ defaultMessage: '选择支付货币' })}
@@ -193,7 +188,7 @@ function Choice({
         }
         ${selected &&
         css`
-          border-color: ${theme.color.body.link};
+          border-color: ${theme.color.body.primary};
         `}
       `}
     >

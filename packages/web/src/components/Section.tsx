@@ -65,10 +65,10 @@ export function SectionTitle({
         gap: 4px;
         font-weight: ${active ? 600 : undefined};
         color: ${active
-          ? theme.color.body.primary
+          ? theme.color.body.default
           : theme.color.body.secondary};
         :hover {
-          color: ${theme.color.body.primary};
+          color: ${theme.color.body.default};
         }
       `}
     >

@@ -121,7 +121,7 @@ export function useChargeTable(
                   target='_blank'
                   rel='noopener noreferrer'
                   css={(theme) => css`
-                    color: ${theme.color.body.link};
+                    color: ${theme.color.body.primary};
                   `}
                 >
                   {intl.formatMessage({ defaultMessage: '查看' })}

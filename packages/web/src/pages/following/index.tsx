@@ -111,10 +111,10 @@ function PublicationItem({
       css={css`
         display: block;
         padding: 16px 0;
-        border-bottom: 1px solid ${theme.color.divider.primary};
+        border-bottom: 1px solid ${theme.color.divider.default};
         cursor: pointer;
         :hover {
-          color: ${theme.color.body.linkHover};
+          color: ${theme.color.body.primaryHover};
         }
       `}
     >

@@ -60,11 +60,6 @@ export default function TranslateConfirmDialog({
       )}
       open={open}
       onClose={onClose}
-      css={css`
-        > [data-dialog-body] {
-          padding: 36px;
-        }
-      `}
     >
       {isLoading ? (
         <Loading
@@ -79,7 +74,7 @@ export default function TranslateConfirmDialog({
           <SvgTranslate
             css={css`
               display: block;
-              margin: auto;
+              margin: 36px auto 0;
             `}
           />
           <div
@@ -102,7 +97,7 @@ export default function TranslateConfirmDialog({
           >
             <div
               css={(theme) => css`
-                color: ${theme.color.body.link};
+                color: ${theme.color.body.primary};
               `}
             >
               {intl.formatMessage({ defaultMessage: '选择 AI 模型' })}
@@ -124,12 +119,12 @@ export default function TranslateConfirmDialog({
             {tokenCount != null && balance != null && (
               <div
                 css={(theme) => css`
-                  color: ${theme.color.body.primary};
+                  color: ${theme.color.body.default};
                   ${theme.typography.body}
 
                   > strong {
                     font-weight: normal;
-                    color: ${theme.color.body.link};
+                    color: ${theme.color.body.primary};
                   }
                 `}
               >
@@ -171,7 +166,7 @@ export default function TranslateConfirmDialog({
                       onClick={onCharge}
                       css={(theme) => css`
                         vertical-align: top;
-                        color: ${theme.color.body.link};
+                        color: ${theme.color.body.primary};
                       `}
                     >
                       {intl.formatMessage({ defaultMessage: '充值' })}

@@ -31,7 +31,7 @@ export default function OrderedItem({
         css={css`
           font-weight: ${primary ? 600 : 400};
           color: ${primary
-            ? theme.color.body.link
+            ? theme.color.body.primary
             : theme.color.body.secondary};
         `}
       >

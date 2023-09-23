@@ -100,6 +100,20 @@ export interface UpdateCreationStatusInput {
   status: CreationStatus
 }
 
+export interface ScrapingInput {
+  gid: Uint8Array
+  url: string
+}
+
+export interface ScrapingOutput {
+  id: Uint8Array
+  url: string
+  src?: string
+  title?: string
+  meta?: Record<string, string>
+  content?: Uint8Array
+}
+
 export interface CreationDraft {
   __isReady: boolean
   gid: Uint8Array | undefined
@@ -249,6 +263,13 @@ export function useCreationAPI() {
     [request]
   )
 
+  const crawlDocument = useCallback(
+    (params: Record<keyof ScrapingInput, string>) => {
+      return request.get<{ result: ScrapingOutput }>('/v1/scraping', params)
+    },
+    [request]
+  )
+
   return {
     readCreation,
     readCreationList,
@@ -259,6 +280,7 @@ export function useCreationAPI() {
     releaseCreation,
     archiveCreation,
     restoreCreation,
+    crawlDocument,
   } as const
 }
 
@@ -580,4 +602,33 @@ export function useCreationList(
     restoreItem,
     deleteItem,
   }
+}
+
+export function useCrawlDocument(_gid: string | null | undefined) {
+  const { crawlDocument } = useCreationAPI()
+
+  const [isCrawling, setIsCrawling] = useState(false)
+
+  const crawl = useCallback(
+    async (url: string) => {
+      if (!_gid) throw new Error('group id is required to create a creation')
+      try {
+        setIsCrawling(true)
+        const gid = Xid.fromValue(_gid)
+        const { result } = await crawlDocument({
+          gid: gid.toString(),
+          url,
+        })
+        return result
+      } finally {
+        setIsCrawling(false)
+      }
+    },
+    [_gid, crawlDocument]
+  )
+
+  return {
+    isCrawling,
+    crawl,
+  } as const
 }

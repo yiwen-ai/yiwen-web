@@ -64,4 +64,4 @@ export {
 } from './Toast'
 export { textEllipsis } from './common'
 export { DEFAULT_LOCALE, LocaleProvider } from './locale'
-export { ThemeProvider, useTheme, useUserTheme } from './theme'
+export { useUserTheme } from './theme'

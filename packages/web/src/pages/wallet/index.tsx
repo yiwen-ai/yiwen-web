@@ -95,7 +95,7 @@ export default function WalletPage() {
             >
               <div
                 css={(theme) => css`
-                  color: ${theme.color.body.link};
+                  color: ${theme.color.body.primary};
                   ${theme.typography.bodyBold}
                   white-space: nowrap;
                 `}
@@ -107,7 +107,7 @@ export default function WalletPage() {
               </div>
               <div
                 css={(theme) => css`
-                  color: ${theme.color.body.link};
+                  color: ${theme.color.body.primary};
                   white-space: nowrap;
                 `}
               >
@@ -167,7 +167,7 @@ export default function WalletPage() {
               css={(theme) => css`
                 display: block;
                 text-align: center;
-                color: ${theme.color.body.link};
+                color: ${theme.color.body.primary};
               `}
             >
               {intl.formatMessage({ defaultMessage: '我的亿文币' })}

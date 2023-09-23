@@ -22,6 +22,7 @@ export {
 export {
   CreationStatus,
   buildCreationKey,
+  useCrawlDocument,
   useCreation,
   useCreationAPI,
   useCreationList,

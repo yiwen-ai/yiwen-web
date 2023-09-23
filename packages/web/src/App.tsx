@@ -1,10 +1,9 @@
-import { css, keyframes, useTheme } from '@emotion/react'
+import { ThemeProvider, css, keyframes, useTheme } from '@emotion/react'
 import {
   Button,
   DEFAULT_LOCALE,
   GlobalStyles,
   Header,
-  ThemeProvider,
   useUserTheme,
   type HeaderProps,
   type MenuProps,
@@ -40,6 +39,7 @@ import {
   IntlProvider,
   MissingTranslationError,
   useIntl,
+  type IntlConfig,
   type ResolvedIntlConfig,
 } from 'react-intl'
 import {
@@ -373,7 +373,9 @@ export default function App() {
 
 function UserLocaleProvider(props: React.PropsWithChildren) {
   const isMounted = useIsMounted()
-  const [messages, setMessages] = useState({})
+  const [messages, setMessages] = useState(
+    {} as NonNullable<IntlConfig['messages']>
+  )
 
   const locale = useMemo<Intl.Locale>(
     () =>
@@ -421,7 +423,7 @@ function UserLocaleProvider(props: React.PropsWithChildren) {
 }
 
 function UserThemeProvider(props: React.PropsWithChildren) {
-  const [theme] = useUserTheme() // wait for user theme to be loaded
+  const { theme } = useUserTheme() // wait for user theme to be loaded
   return <ThemeProvider theme={theme}>{props.children}</ThemeProvider>
 }
 

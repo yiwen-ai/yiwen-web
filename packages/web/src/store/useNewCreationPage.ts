@@ -1,13 +1,27 @@
+import { GROUP_DETAIL_PATH } from '#/App'
+import { type ToastAPI } from '@yiwen-ai/component'
 import {
+  decode,
+  toMessage,
   useAuth,
   useCreationAPI,
   useMyGroupList,
   type CreationDraft,
 } from '@yiwen-ai/store'
 import { useCallback, useEffect, useState } from 'react'
+import { useIntl } from 'react-intl'
+import { generatePath, useNavigate } from 'react-router-dom'
 import { Xid } from 'xid-ts'
+import { useCreateFromLinkDialog } from './useCreateFromLinkDialog'
+import { GroupViewType } from './useGroupDetailPage'
 
-export function useNewCreationPage(_gid: string | null | undefined) {
+export function useNewCreationPage(
+  pushToast: ToastAPI['pushToast'],
+  _gid: string | null | undefined
+) {
+  const intl = useIntl()
+  const navigate = useNavigate()
+
   const {
     isAuthorized,
     dialog: { show: showAuthDialog },
@@ -69,14 +83,91 @@ export function useNewCreationPage(_gid: string | null | undefined) {
     !draft.title.trim() ||
     !draft.content
 
-  const save = useCallback(async () => {
+  const navigateTo = useCallback(
+    (gid: Uint8Array, cid: Uint8Array) => {
+      navigate({
+        pathname: generatePath(GROUP_DETAIL_PATH, {
+          gid: Xid.fromValue(gid).toString(),
+        }),
+        search: new URLSearchParams({
+          cid: Xid.fromValue(cid).toString(),
+          type: GroupViewType.Creation,
+        }).toString(),
+      })
+    },
+    [navigate]
+  )
+
+  const onSave = useCallback(async () => {
     try {
       setIsSaving(true)
-      return await createCreation(draft)
+      const result = await createCreation(draft)
+      navigateTo(result.gid, result.id)
     } finally {
       setIsSaving(false)
     }
-  }, [createCreation, draft])
+  }, [createCreation, draft, navigateTo])
+
+  const {
+    close: closeCreateFromLinkDialog,
+    isCrawling,
+    onCrawl,
+    ...createFromLinkDialog
+  } = useCreateFromLinkDialog(pushToast, draft.gid)
+
+  const [isSavingFromLink, setIsSavingFromLink] = useState(false)
+
+  const handleCreateFromLink = useCallback(async () => {
+    const result = await onCrawl()
+    if (!result) return
+
+    const { title, content } = result
+    if (!title || !content) {
+      pushToast({
+        type: 'warning',
+        message: intl.formatMessage({ defaultMessage: '无法从链接中获取内容' }),
+        description: result.url,
+      })
+      return
+    }
+
+    try {
+      setIsSavingFromLink(true)
+      const content2 = decode(content)
+      updateDraft({
+        title,
+        content: content2,
+      })
+      const result = await createCreation({
+        ...draft,
+        title,
+        content: content2,
+      } as Partial<CreationDraft> as CreationDraft)
+      pushToast({
+        type: 'success',
+        message: intl.formatMessage({ defaultMessage: '创建成功' }),
+      })
+      navigateTo(result.gid, result.id)
+    } catch (error) {
+      closeCreateFromLinkDialog()
+      pushToast({
+        type: 'warning',
+        message: intl.formatMessage({ defaultMessage: '创建失败' }),
+        description: toMessage(error),
+      })
+    } finally {
+      setIsSavingFromLink(false)
+    }
+  }, [
+    closeCreateFromLinkDialog,
+    createCreation,
+    draft,
+    intl,
+    navigateTo,
+    onCrawl,
+    pushToast,
+    updateDraft,
+  ])
 
   return {
     draft,
@@ -84,6 +175,12 @@ export function useNewCreationPage(_gid: string | null | undefined) {
     isLoading,
     isDisabled,
     isSaving,
-    save,
+    onSave,
+    createFromLinkDialog: {
+      close: closeCreateFromLinkDialog,
+      isSaving: isCrawling || isSavingFromLink,
+      onSave: handleCreateFromLink,
+      ...createFromLinkDialog,
+    },
   } as const
 }

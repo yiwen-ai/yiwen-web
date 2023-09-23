@@ -129,10 +129,10 @@ function BookmarkItem({
       css={css`
         display: block;
         padding: 16px 0;
-        border-bottom: 1px solid ${theme.color.divider.primary};
+        border-bottom: 1px solid ${theme.color.divider.default};
         cursor: pointer;
         :hover {
-          color: ${theme.color.body.linkHover};
+          color: ${theme.color.body.primaryHover};
         }
       `}
     >
@@ -159,7 +159,7 @@ function BookmarkItem({
           css={css`
             display: flex;
             align-items: center;
-            color: ${theme.color.body.primary};
+            color: ${theme.color.body.default};
           `}
         >
           <Menu anchor={IconMoreAnchor}>
