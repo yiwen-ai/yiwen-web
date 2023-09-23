@@ -303,6 +303,9 @@ importers:
       swr:
         specifier: 2.2.0
         version: 2.2.0(react@18.2.0)
+      weixin-js-sdk:
+        specifier: ^1.6.0
+        version: 1.6.0
       xid-ts:
         specifier: 1.0.0
         version: 1.0.0
@@ -13020,6 +13023,10 @@ packages:
       - esbuild
       - uglify-js
     dev: true
+
+  /weixin-js-sdk@1.6.0:
+    resolution: {integrity: sha512-3IYQH7aalJGFJrwdT3epvTdR1MboMiH7vIZ5BRL2eYOJ12BNah7csoMkmSZzkq1+l92sSq29XdTCVjCJoK2sBQ==}
+    dev: false
 
   /whatwg-url@5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
