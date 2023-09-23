@@ -71,7 +71,7 @@ export default function Table<T>({
           td {
             padding: 12px 16px;
             padding-left: 0;
-            border-bottom: 1px solid ${theme.color.divider.primary};
+            border-bottom: 1px solid ${theme.color.divider.default};
           }
 
           th {

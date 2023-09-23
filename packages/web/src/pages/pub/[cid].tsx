@@ -29,7 +29,7 @@ export default function SharePublicationPage() {
           @media (max-width: ${BREAKPOINT.small}px) {
             height: 60px;
             padding: 0 16px;
-            border-bottom: 1px solid ${theme.color.divider.primary};
+            border-bottom: 1px solid ${theme.color.divider.default};
           }
         `}
       />

@@ -87,7 +87,7 @@ export const TabList = memo(
           display: flex;
           gap: 8px;
           list-style: none;
-          border-bottom: 1px solid ${theme.color.divider.primary};
+          border-bottom: 1px solid ${theme.color.divider.default};
         `}
       />
     )

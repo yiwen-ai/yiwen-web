@@ -17,6 +17,7 @@ export const TextareaAutosize = memo(
         ref={ref}
         css={css`
           width: 100%;
+          box-sizing: border-box;
           resize: none;
           border: none;
           outline: none;

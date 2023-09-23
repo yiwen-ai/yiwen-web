@@ -10,12 +10,13 @@ export default function SaveHeader({
   isDisabled,
   isSaving,
   onSave,
-}: {
+  ...props
+}: React.PropsWithChildren<{
   isLoading: boolean
   isDisabled: boolean
   isSaving: boolean
   onSave: () => void
-}) {
+}>) {
   const intl = useIntl()
   const { renderToastContainer, pushToast } = useToast()
 
@@ -42,11 +43,13 @@ export default function SaveHeader({
         <div
           css={css`
             flex: 1;
-            margin: 0 40px;
+            margin: 0 36px;
             display: flex;
             justify-content: flex-end;
+            gap: 36px;
           `}
         >
+          {props.children}
           <Button color='primary' disabled={isDisabled} onClick={handleSave}>
             {isSaving && (
               <Spinner

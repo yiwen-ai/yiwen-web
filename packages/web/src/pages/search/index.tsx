@@ -188,7 +188,7 @@ export default function SearchPage() {
                   shape='circle'
                   onClick={handleClear}
                   css={css`
-                    color: ${RGBA(theme.color.body.primary, 0.4)};
+                    color: ${RGBA(theme.color.body.default, 0.4)};
                   `}
                 />
               ) : null}

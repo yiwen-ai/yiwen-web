@@ -103,9 +103,9 @@ export const AccountManager = memo(function AccountManager({
                   target='_blank'
                   rel='noopener noreferrer'
                   css={css`
-                    color: ${theme.color.body.link};
+                    color: ${theme.color.body.primary};
                     :hover {
-                      color: ${theme.color.body.linkHover};
+                      color: ${theme.color.body.primaryHover};
                     }
                   `}
                 >
@@ -118,9 +118,9 @@ export const AccountManager = memo(function AccountManager({
                   target='_blank'
                   rel='noopener noreferrer'
                   css={css`
-                    color: ${theme.color.body.link};
+                    color: ${theme.color.body.primary};
                     :hover {
-                      color: ${theme.color.body.linkHover};
+                      color: ${theme.color.body.primaryHover};
                     }
                   `}
                 >
@@ -171,7 +171,7 @@ function ProviderItem({
         border-radius: 12px;
         border: 1px solid ${theme.palette.grayLight0};
         background: ${theme.color.body.background};
-        color: ${theme.color.body.primary};
+        color: ${theme.color.body.default};
         cursor: pointer;
         :disabled {
           cursor: not-allowed;

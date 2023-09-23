@@ -6,6 +6,7 @@ import { Emoji } from '@tiptap-pro/extension-emoji'
 import { Mathematics } from '@tiptap-pro/extension-mathematics'
 import { UniqueID } from '@tiptap-pro/extension-unique-id'
 import {
+  createDocument,
   type Editor,
   type EditorOptions,
   type Extensions,
@@ -46,6 +47,7 @@ import {
   forwardRef,
   memo,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useMemo,
 } from 'react'
@@ -105,10 +107,10 @@ export const getExtensions = (): Extensions => [
 
 export interface RichTextEditorProps {
   className?: string
+  dir?: string | undefined
   editable?: boolean
   autofocus?: FocusPosition
   placeholder?: string
-  dir?: string | undefined
   initialContent?: JSONContent | null | undefined
   content?: JSONContent | null | undefined
   onChange?: (content: JSONContent) => void
@@ -118,10 +120,10 @@ export const RichTextEditor = memo(
   forwardRef(function RichTextEditor(
     {
       className,
+      dir,
       placeholder,
       initialContent = null,
       content,
-      dir,
       onChange,
       ...props
     }: RichTextEditorProps,
@@ -152,6 +154,17 @@ export const RichTextEditor = memo(
       extensions,
       onUpdate,
     })
+
+    useEffect(() => {
+      if (!editor || content === undefined) return
+      const doc = createDocument(
+        content,
+        editor.schema,
+        editor.options.parseOptions
+      )
+      const eq = editor.state.doc.eq(doc)
+      if (!eq) editor.commands.setContent(content)
+    }, [content, editor])
 
     useImperativeHandle(ref, () => editor, [editor])
 
@@ -358,7 +371,7 @@ export const RichTextEditor = memo(
               margin-left: 0;
               margin-right: 0;
               padding: 0 16px;
-              border-left: 2px solid ${theme.color.divider.primary};
+              border-left: 2px solid ${theme.color.divider.default};
             }
 
             pre {
@@ -433,15 +446,15 @@ export const RichTextEditor = memo(
 
             hr {
               border: none;
-              border-top: 1px solid ${theme.color.divider.primary};
+              border-top: 1px solid ${theme.color.divider.default};
             }
 
             a {
               display: inline-block;
               cursor: pointer;
-              color: ${theme.color.body.link};
+              color: ${theme.color.body.primary};
               :hover {
-                color: ${theme.color.body.linkHover};
+                color: ${theme.color.body.primaryHover};
               }
             }
 
@@ -513,7 +526,7 @@ const BubbleMenuItem = memo(
         ref={ref}
         css={css`
           border-radius: 8px;
-          color: ${theme.color.body.primary} !important;
+          color: ${theme.color.body.default} !important;
           &[data-active] {
             background: ${theme.color.button.secondary.contained.hover
               .background};

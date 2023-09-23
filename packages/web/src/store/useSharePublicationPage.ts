@@ -37,7 +37,7 @@ export function useSharePublicationPage(
     [_by, _cid, _gid, _language, _version, show]
   )
 
-  const updateRoute = useCallback(
+  const navigateTo = useCallback(
     (publication: PublicationOutput) => {
       navigate({
         pathname: generatePath(SHARE_PUBLICATION_PATH, {
@@ -63,17 +63,17 @@ export function useSharePublicationPage(
   const handleTranslate = useCallback(
     async (language: UILanguageItem, model: GPT_MODEL) => {
       const publication = await onTranslate(language, model)
-      if (publication) updateRoute(publication)
+      if (publication) navigateTo(publication)
     },
-    [onTranslate, updateRoute]
+    [navigateTo, onTranslate]
   )
 
   const handleSwitch = useCallback(
     async (language: UILanguageItem) => {
       const publication = await onSwitch(language)
-      if (publication) updateRoute(publication)
+      if (publication) navigateTo(publication)
     },
-    [onSwitch, updateRoute]
+    [navigateTo, onSwitch]
   )
 
   return {

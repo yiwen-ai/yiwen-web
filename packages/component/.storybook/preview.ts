@@ -1,12 +1,8 @@
+import { ThemeProvider } from '@emotion/react'
 import { withThemeFromJSXProvider } from '@storybook/addon-styling'
 import { Decorator, type Preview } from '@storybook/react'
 import { createElement } from 'react'
-import {
-  DEFAULT_LOCALE,
-  GlobalStyles,
-  LocaleProvider,
-  ThemeProvider,
-} from '../src'
+import { DEFAULT_LOCALE, GlobalStyles, LocaleProvider } from '../src'
 import { darkTheme, lightTheme } from '../src/theme'
 
 const withLocale: Decorator = (Story) =>

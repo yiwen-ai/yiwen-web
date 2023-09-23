@@ -374,7 +374,7 @@ function GroupPart({
   return (
     <div
       css={css`
-        border-bottom: 1px solid ${theme.color.divider.primary};
+        border-bottom: 1px solid ${theme.color.divider.default};
       `}
     >
       <div

@@ -9,7 +9,7 @@ export function GlobalStyles() {
         body {
           margin: 0;
           background-color: ${theme.color.body.background};
-          color: ${theme.color.body.primary};
+          color: ${theme.color.body.default};
           -webkit-font-smoothing: antialiased;
           font-family: ${theme.font.body};
           ${theme.typography.body}

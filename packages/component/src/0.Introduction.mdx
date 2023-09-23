@@ -23,12 +23,8 @@ export default defineConfig({
 ## Get started
 
 ```tsx
-import {
-  GlobalStyles,
-  ThemeProvider,
-  useTheme,
-  useUserTheme,
-} from '@yiwen-ai/component'
+import { ThemeProvider, useTheme } from '@emotion/react'
+import { GlobalStyles, useUserTheme } from '@yiwen-ai/component'
 import {
   Outlet,
   Route,
@@ -66,7 +62,7 @@ export default function App() {
 }
 
 function UserThemeProvider(props: React.PropsWithChildren) {
-  const [theme] = useUserTheme()
+  const { theme } = useUserTheme()
   return <ThemeProvider theme={theme}>{props.children}</ThemeProvider>
 }
 ```

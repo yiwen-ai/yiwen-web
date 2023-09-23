@@ -224,7 +224,7 @@ export function useGroupDetailPage(
   //#endregion
 
   //#region actions
-  const updateRoute = useCallback(
+  const navigateTo = useCallback(
     (publication: PublicationOutput) => {
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
@@ -244,17 +244,17 @@ export function useGroupDetailPage(
   const handlePublicationTranslate = useCallback(
     async (language: UILanguageItem, model: GPT_MODEL) => {
       const publication = await onTranslate(language, model)
-      if (publication) updateRoute(publication)
+      if (publication) navigateTo(publication)
     },
-    [onTranslate, updateRoute]
+    [navigateTo, onTranslate]
   )
 
   const handlePublicationSwitch = useCallback(
     async (language: UILanguageItem) => {
       const publication = await onSwitch(language)
-      if (publication) updateRoute(publication)
+      if (publication) navigateTo(publication)
     },
-    [onSwitch, updateRoute]
+    [navigateTo, onSwitch]
   )
 
   const onPublicationPublish = useCallback(

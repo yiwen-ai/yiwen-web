@@ -1,41 +1,49 @@
-import { GROUP_DETAIL_PATH } from '#/App'
 import CommonEditor from '#/components/CommonEditor'
+import CreateFromLinkDialog from '#/components/CreateFromLinkDialog'
 import SaveHeader from '#/components/SaveHeader'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { useNewCreationPage } from '#/store/useNewCreationPage'
-import { useCallback } from 'react'
-import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
-import { Xid } from 'xid-ts'
+import { Button, useToast } from '@yiwen-ai/component'
+import { useIntl } from 'react-intl'
+import { useSearchParams } from 'react-router-dom'
 
 export default function NewCreationPage() {
+  const intl = useIntl()
   const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
+  const { renderToastContainer, pushToast } = useToast()
 
-  const { draft, updateDraft, isLoading, isDisabled, isSaving, save } =
-    useNewCreationPage(searchParams.get('gid'))
-
-  const onSave = useCallback(async () => {
-    const item = await save()
-    navigate({
-      pathname: generatePath(GROUP_DETAIL_PATH, {
-        gid: Xid.fromValue(item.gid).toString(),
-      }),
-      search: new URLSearchParams({
-        cid: Xid.fromValue(item.id).toString(),
-        type: GroupViewType.Creation,
-      }).toString(),
-    })
-    return item
-  }, [navigate, save])
+  const {
+    draft,
+    updateDraft,
+    isLoading,
+    isDisabled,
+    isSaving,
+    onSave,
+    createFromLinkDialog: {
+      show: showCreateFromLinkDialog,
+      close: closeCreateFromLinkDialog,
+      ...createFromLinkDialog
+    },
+  } = useNewCreationPage(pushToast, searchParams.get('gid'))
 
   return (
     <>
+      {renderToastContainer()}
       <SaveHeader
         isLoading={isLoading}
-        isDisabled={isDisabled}
+        isDisabled={isDisabled || createFromLinkDialog.isSaving}
         isSaving={isSaving}
         onSave={onSave}
-      />
+      >
+        <Button
+          color='primary'
+          variant='text'
+          disabled={isSaving}
+          onClick={showCreateFromLinkDialog}
+        >
+          {intl.formatMessage({ defaultMessage: '从链接创作' })}
+        </Button>
+      </SaveHeader>
       <CommonEditor
         type={GroupViewType.Creation}
         draft={draft}
@@ -43,6 +51,12 @@ export default function NewCreationPage() {
         isLoading={isLoading}
         isSaving={isSaving}
       />
+      {isLoading ? null : (
+        <CreateFromLinkDialog
+          onClose={closeCreateFromLinkDialog}
+          {...createFromLinkDialog}
+        />
+      )}
     </>
   )
 }

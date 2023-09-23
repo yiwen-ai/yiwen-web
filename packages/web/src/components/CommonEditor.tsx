@@ -99,7 +99,7 @@ export default function CommonEditor({
           <RichTextEditor
             ref={editorRef}
             editable={!isSaving}
-            initialContent={draft.content}
+            content={draft.content}
             onChange={handleContentChange}
             dir={isRTL(lang) ? 'rtl' : undefined}
             css={css`
