@@ -1,5 +1,13 @@
 import { css } from '@emotion/react'
-import { forwardRef, memo, useEffect, type HTMLAttributes } from 'react'
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useState,
+  type HTMLAttributes,
+} from 'react'
+import { textEllipsis } from './common'
 import { useLogger } from './logger'
 
 export type AvatarSize = 'small' | 'medium'
@@ -13,7 +21,7 @@ export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
   /**
    * the avatar image URL
    */
-  src: string
+  src: string | null | undefined
   /**
    * not required if `name` is provided
    */
@@ -39,6 +47,17 @@ export const Avatar = memo(
       }
     }, [alt, logger, name])
 
+    const [hasError, setHasError] = useState(!src)
+    useEffect(() => setHasError(!src), [src])
+    const onError = useCallback(() => setHasError(true), [])
+
+    const imgCss = css`
+      width: ${width}px;
+      height: ${width}px;
+      border-radius: 50%;
+      background-size: contain;
+    `
+
     return (
       <div
         {...props}
@@ -49,18 +68,25 @@ export const Avatar = memo(
           gap: 8px;
         `}
       >
-        <img
-          src={src}
-          alt={alt}
-          aria-hidden={!!name} // hide from screen reader if name is provided
-          css={css`
-            width: ${width}px;
-            height: ${width}px;
-            border-radius: 50%;
-            background-size: contain;
-          `}
-        />
-        {name && <span>{name}</span>}
+        {src && !hasError ? (
+          <img
+            src={src}
+            alt={alt}
+            aria-hidden={!!name} // hide from screen reader if name is provided
+            onError={onError}
+            css={imgCss}
+          />
+        ) : (
+          <i
+            aria-label={alt}
+            aria-hidden={!!name} // hide from screen reader if name is provided
+            css={(theme) => css`
+              ${imgCss}
+              background-color: ${theme.palette.grayLight0};
+            `}
+          />
+        )}
+        {name && <span css={textEllipsis}>{name}</span>}
       </div>
     )
   })

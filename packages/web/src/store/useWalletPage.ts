@@ -10,7 +10,6 @@ import { useOutgoTable } from './useOutgoTable'
 
 export enum WalletPageTab {
   Coin = 'coin',
-  Membership = 'membership',
   History = 'history',
 }
 

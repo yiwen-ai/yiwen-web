@@ -1,5 +1,5 @@
 import { css, useTheme } from '@emotion/react'
-import { Avatar, textEllipsis } from '@yiwen-ai/component'
+import { Avatar } from '@yiwen-ai/component'
 import { isRTL, type SearchDocument } from '@yiwen-ai/store'
 import { useCallback } from 'react'
 import PublicationLink from './PublicationLink'
@@ -13,7 +13,7 @@ export default function SearchItem({
 }) {
   const theme = useTheme()
   const groupLogo = item.group?.logo || item.group?.owner?.picture
-  const groupName = item.group?.name
+  const groupName = item.group?.name || item.group?.owner?.name
 
   const handleClick = useCallback(() => {
     onClick(item)
@@ -53,24 +53,15 @@ export default function SearchItem({
         </div>
       )}
       {groupName && (
-        <div
+        <Avatar
+          src={groupLogo}
+          name={groupName}
+          size='small'
           css={css`
             margin-top: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             color: ${theme.color.body.secondary};
           `}
-        >
-          {groupLogo && <Avatar src={groupLogo} alt={groupName} size='small' />}
-          <div
-            css={css`
-              ${textEllipsis}
-            `}
-          >
-            {groupName}
-          </div>
-        </div>
+        />
       )}
     </PublicationLink>
   )
