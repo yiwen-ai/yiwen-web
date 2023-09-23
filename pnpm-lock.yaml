@@ -246,6 +246,9 @@ importers:
       '@svgr/rollup':
         specifier: ^8.1.0
         version: 8.1.0
+      '@types/katex':
+        specifier: ^0.16.3
+        version: 0.16.3
       '@types/lodash-es':
         specifier: ^4.17.8
         version: 4.17.8
@@ -5252,6 +5255,10 @@ packages:
 
   /@types/json5@0.0.29:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
+    dev: true
+
+  /@types/katex@0.16.3:
+    resolution: {integrity: sha512-CeVMX9EhVUW8MWnei05eIRks4D5Wscw/W9Byz1s3PA+yJvcdvq9SaDjiUKvRvEgjpdTyJMjQA43ae4KTwsvOPg==}
     dev: true
 
   /@types/lodash-es@4.17.8:

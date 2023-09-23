@@ -26,6 +26,7 @@ export {
   useCreation,
   useCreationAPI,
   useCreationList,
+  useUploadDocument,
   type CreateCreationInput,
   type CreationDraft,
   type CreationOutput,

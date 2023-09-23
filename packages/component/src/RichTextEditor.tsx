@@ -54,6 +54,8 @@ import {
 import { useIntl } from 'react-intl'
 import { IconButton, type IconButtonProps } from './Button'
 
+Mathematics.options.katexOptions = {}
+
 // eslint-disable-next-line react-refresh/only-export-components
 export const getExtensions = (): Extensions => [
   Color,
@@ -71,7 +73,7 @@ export const getExtensions = (): Extensions => [
     HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' },
     validate: (href) => /^https:\/\//.test(href),
   }),
-  Mathematics,
+  Mathematics.configure({ katexOptions: { strict: false } }),
   Mention,
   StarterKit.configure({ heading: { levels: [1, 2, 3, 4, 5, 6] } }),
   Subscript,
@@ -466,6 +468,17 @@ export const RichTextEditor = memo(
               float: left;
               height: 0;
               pointer-events: none;
+            }
+
+            .Tiptap-mathematics-render {
+              .latin_fallback,
+              .cyrillic_fallback,
+              .brahmic_fallback,
+              .georgian_fallback,
+              .cjk_fallback,
+              .hangul_fallback {
+                font-style: italic;
+              }
             }
           }
         `}
