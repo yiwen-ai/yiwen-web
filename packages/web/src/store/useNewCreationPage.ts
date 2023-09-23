@@ -53,13 +53,12 @@ export function useNewCreationPage(
   }, [refreshDefaultGroup])
 
   useEffect(() => {
-    if (!draft.gid && defaultGroupId) {
-      setDraft((prev) => ({
-        ...prev,
-        gid: defaultGroupId,
-        __isReady: true,
-      }))
-    }
+    const gid = draft.gid || defaultGroupId
+    setDraft((prev) => ({
+      ...prev,
+      gid,
+      __isReady: !!gid,
+    }))
   }, [defaultGroupId, draft.gid])
 
   const updateDraft = useCallback((draft: Partial<CreationDraft>) => {
