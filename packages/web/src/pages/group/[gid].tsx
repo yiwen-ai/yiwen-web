@@ -366,7 +366,6 @@ function GroupPart({
 }) {
   const intl = useIntl()
   const theme = useTheme()
-  const logo = groupInfo.logo || groupInfo.owner?.picture
 
   // TODO
   // const handleDelete = useCallback(() => {
@@ -399,25 +398,23 @@ function GroupPart({
           css={css`
             display: flex;
             align-items: center;
+            gap: 8px;
+            color: ${theme.color.body.secondary};
           `}
         >
-          {logo && (
-            <Avatar
-              src={logo}
-              alt={groupInfo.name}
-              css={css`
-                margin-right: 12px;
-              `}
-            />
-          )}
-          <span
+          <Avatar
+            src={groupInfo.logo || groupInfo.owner?.picture}
+            name={groupInfo.name}
+            size={32}
             css={css`
-              color: ${theme.color.body.secondary};
+              gap: 12px;
             `}
-          >
+          />
+          <i>·</i>
+          <span>
             {intl.formatMessage(
-              { defaultMessage: '{owner} · {count} 篇公开内容' },
-              { owner: groupInfo.name, count: groupStatistic.publications }
+              { defaultMessage: '{count} 篇公开内容' },
+              { count: groupStatistic.publications }
             )}
           </span>
         </div>

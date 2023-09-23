@@ -149,8 +149,8 @@ export interface PublicationJob {
 
 const path = '/v1/publication'
 
-export function usePublicationAPI() {
-  const request = useFetcher()
+export function usePublicationAPI(baseURL?: string) {
+  const request = useFetcher(baseURL)
 
   const readPublication = useCallback(
     (
@@ -379,9 +379,12 @@ export function usePublication(
   _gid: string | null | undefined,
   _cid: string | null | undefined,
   _language: string | null | undefined,
-  _version: number | string | null | undefined
+  _version: number | string | null | undefined,
+  config?: {
+    baseURL?: string
+  }
 ) {
-  const { readPublication } = usePublicationAPI()
+  const { readPublication } = usePublicationAPI(config?.baseURL)
 
   const getKey = useCallback(() => {
     if (!_cid) return null

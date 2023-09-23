@@ -13,7 +13,7 @@ import {
 import { useMemo } from 'react'
 import { Link, generatePath } from 'react-router-dom'
 import { Xid } from 'xid-ts'
-import { CreatedBy } from './CreatedBy'
+import CreatedBy from './CreatedBy'
 
 export default function CommonViewer({
   type,
@@ -34,6 +34,7 @@ export default function CommonViewer({
 
   return item ? (
     <div
+      dir={isRTL(item.language) ? 'rtl' : undefined}
       {...props}
       css={css`
         width: 100%;
@@ -48,7 +49,6 @@ export default function CommonViewer({
       `}
     >
       <div
-        dir={isRTL(item.language) ? 'rtl' : undefined}
         css={css`
           ${theme.typography.h1}
           overflow-wrap: break-word;
@@ -85,7 +85,6 @@ export default function CommonViewer({
         <RichTextEditor
           editable={false}
           initialContent={content}
-          dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
             margin-top: 24px;
             margin-bottom: 48px;

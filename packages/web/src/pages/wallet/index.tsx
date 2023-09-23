@@ -2,7 +2,6 @@ import ChargeDialog from '#/components/ChargeDialog'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import Loading from '#/components/Loading'
 import MembershipLevel from '#/components/MembershipLevel'
-import MembershipLevelAndCreditScore from '#/components/MembershipLevelAndCreditScore'
 import Table from '#/components/Table'
 import YiwenCoin from '#/components/YiwenCoin'
 import { BREAKPOINT } from '#/shared'
@@ -198,10 +197,7 @@ export default function WalletPage() {
           `}
         >
           <Tab value={WalletPageTab.Coin}>
-            {intl.formatMessage({ defaultMessage: '亿文币' })}
-          </Tab>
-          <Tab value={WalletPageTab.Membership}>
-            {intl.formatMessage({ defaultMessage: '会员等级和信用分' })}
+            {intl.formatMessage({ defaultMessage: '说明' })}
           </Tab>
           <Tab value={WalletPageTab.History}>
             {intl.formatMessage({ defaultMessage: '更新记录' })}
@@ -217,17 +213,6 @@ export default function WalletPage() {
           `}
         >
           <YiwenCoin />
-        </TabPanel>
-        <TabPanel
-          value={WalletPageTab.Membership}
-          css={css`
-            padding: 36px 100px 100px;
-            @media (max-width: ${BREAKPOINT.small}px) {
-              padding: 36px 48px 48px;
-            }
-          `}
-        >
-          <MembershipLevelAndCreditScore />
         </TabPanel>
         <TabPanel
           value={WalletPageTab.History}
