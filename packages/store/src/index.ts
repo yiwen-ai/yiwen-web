@@ -101,3 +101,5 @@ export {
   type Currency,
   type TransactionOutput,
 } from './useWallet'
+
+export { useWechat } from './useWechat'

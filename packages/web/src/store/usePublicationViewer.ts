@@ -14,6 +14,7 @@ import {
   usePublication,
   usePublicationAPI,
   useTranslatedPublicationList,
+  useWechat,
   type GPT_MODEL,
   type UILanguageItem,
 } from '@yiwen-ai/store'
@@ -41,6 +42,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
   const ensureAuthorized = useEnsureAuthorized()
   const { readPublication } = usePublicationAPI()
+  const { wechat } = useWechat()
 
   const {
     show: showChargeDialog,
@@ -347,6 +349,23 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       user?.cn ?? params._by
     )
   }, [SHARE_URL, _cid, _language, params._by, publication?.status, user?.cn])
+
+  useMemo(() => {
+    if (!_cid) return undefined
+
+    if (publication?.status !== PublicationStatus.Published) return undefined
+    wechat({
+      title: publication.title,
+      link: document.location.href,
+      imgUrl: publication.cover || 'https://cdn.yiwen.pub/yiwen.png',
+    })
+  }, [
+    wechat,
+    _cid,
+    publication?.status,
+    publication?.title,
+    publication?.cover,
+  ])
 
   const onShare = useCallback(async () => {
     try {
