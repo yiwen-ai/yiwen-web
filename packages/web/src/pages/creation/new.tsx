@@ -4,6 +4,7 @@ import CreateFromLinkDialog from '#/components/CreateFromLinkDialog'
 import SaveHeader from '#/components/SaveHeader'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { useNewCreationPage } from '#/store/useNewCreationPage'
+import { css } from '@emotion/react'
 import { Button, Spinner, useToast } from '@yiwen-ai/component'
 import { useIntl } from 'react-intl'
 import { useSearchParams } from 'react-router-dom'
@@ -35,16 +36,7 @@ export default function NewCreationPage() {
   return (
     <>
       {renderToastContainer()}
-      <SaveHeader
-        isLoading={isLoading}
-        isDisabled={
-          isDisabled ||
-          createFromLinkDialog.isCrawling ||
-          createFromFileDialog.isUploading
-        }
-        isSaving={isSaving}
-        onSave={onSave}
-      >
+      <SaveHeader isLoading={isLoading}>
         <Button
           color='primary'
           variant='text'
@@ -62,6 +54,26 @@ export default function NewCreationPage() {
         >
           {createFromLinkDialog.isCrawling && <Spinner size='small' />}
           {intl.formatMessage({ defaultMessage: '从链接创作' })}
+        </Button>
+        <Button
+          color='primary'
+          disabled={
+            isDisabled ||
+            isSaving ||
+            createFromLinkDialog.isCrawling ||
+            createFromFileDialog.isUploading
+          }
+          onClick={onSave}
+        >
+          {isSaving && (
+            <Spinner
+              size='small'
+              css={css`
+                color: inherit;
+              `}
+            />
+          )}
+          {intl.formatMessage({ defaultMessage: '保存' })}
         </Button>
       </SaveHeader>
       <CommonEditor

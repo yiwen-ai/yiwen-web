@@ -11,6 +11,7 @@ import {
 import {
   AuthProvider,
   FetcherConfigProvider,
+  authorized,
   useAuth,
   type FetcherConfig,
 } from '@yiwen-ai/store'
@@ -52,6 +53,7 @@ import {
   useNavigate,
 } from 'react-router-dom'
 import { SWRConfig, type SWRConfiguration } from 'swr'
+import AuthorizedFallback from './components/AuthorizedFallback'
 import Loading from './components/Loading'
 import { useLogger } from './logger'
 import Home from './pages'
@@ -190,8 +192,8 @@ function Layout() {
         `}
       >
         <Header
-          {...headerProps}
           userMenu={userMenu}
+          {...headerProps}
           css={css`
             animation: 0.5s ease-in-out ${keyframes`
                 from {
@@ -254,12 +256,30 @@ const router = createBrowserRouter(
       <Route path='/' element={<Home />} />
       <Route path='/login/state' element={<LoginStatePage />} />
       <Route path={SEARCH_PATH} element={<SearchPage />} />
-      <Route path={BOOKMARK_PATH} element={<BookmarkPage />} />
-      <Route path={FOLLOWING_PATH} element={<FollowingPage />} />
-      <Route path={WALLET_PATH} element={<WalletPage />} />
-      <Route path={NEW_CREATION_PATH} element={<NewCreationPage />} />
-      <Route path={EDIT_CREATION_PATH} element={<EditCreationPage />} />
-      <Route path={EDIT_PUBLICATION_PATH} element={<EditPublicationPage />} />
+      <Route
+        path={BOOKMARK_PATH}
+        element={authorized(<BookmarkPage />, <AuthorizedFallback />)}
+      />
+      <Route
+        path={FOLLOWING_PATH}
+        element={authorized(<FollowingPage />, <AuthorizedFallback />)}
+      />
+      <Route
+        path={WALLET_PATH}
+        element={authorized(<WalletPage />, <AuthorizedFallback />)}
+      />
+      <Route
+        path={NEW_CREATION_PATH}
+        element={authorized(<NewCreationPage />, <AuthorizedFallback />)}
+      />
+      <Route
+        path={EDIT_CREATION_PATH}
+        element={authorized(<EditCreationPage />, <AuthorizedFallback />)}
+      />
+      <Route
+        path={EDIT_PUBLICATION_PATH}
+        element={authorized(<EditPublicationPage />, <AuthorizedFallback />)}
+      />
       <Route path={SHARE_PUBLICATION_PATH} element={<SharePublicationPage />} />
       <Route path={DEFAULT_GROUP_PATH} element={<DefaultGroupPage />} />
       <Route path={GROUP_DETAIL_PATH} element={<GroupDetailPage />} />

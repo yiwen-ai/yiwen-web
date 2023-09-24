@@ -350,22 +350,14 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     )
   }, [SHARE_URL, _cid, _language, params._by, publication?.status, user?.cn])
 
-  useMemo(() => {
-    if (!_cid) return undefined
-
-    if (publication?.status !== PublicationStatus.Published) return undefined
+  useEffect(() => {
+    if (!publication) return
     wechat({
       title: publication.title,
       link: document.location.href,
       imgUrl: publication.cover || 'https://cdn.yiwen.pub/yiwen.png',
     })
-  }, [
-    wechat,
-    _cid,
-    publication?.status,
-    publication?.title,
-    publication?.cover,
-  ])
+  }, [publication, wechat])
 
   const onShare = useCallback(async () => {
     try {

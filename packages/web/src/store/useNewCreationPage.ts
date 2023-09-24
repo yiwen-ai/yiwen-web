@@ -2,6 +2,7 @@ import { GROUP_DETAIL_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   decode,
+  toMessage,
   useAuth,
   useCreationAPI,
   useMyGroupList,
@@ -21,16 +22,7 @@ export function useNewCreationPage(
 ) {
   const intl = useIntl()
   const navigate = useNavigate()
-
-  const {
-    isAuthorized,
-    dialog: { show: showAuthDialog },
-  } = useAuth()
   const { createCreation } = useCreationAPI()
-
-  useEffect(() => {
-    if (!isAuthorized) showAuthDialog()
-  }, [isAuthorized, showAuthDialog])
 
   //#region draft
   const { locale } = useAuth().user ?? {}
@@ -98,11 +90,21 @@ export function useNewCreationPage(
     try {
       setIsSaving(true)
       const result = await createCreation(draft)
+      pushToast({
+        type: 'success',
+        message: intl.formatMessage({ defaultMessage: '保存成功' }),
+      })
       navigateTo(result.gid, result.id)
+    } catch (error) {
+      pushToast({
+        type: 'warning',
+        message: intl.formatMessage({ defaultMessage: '保存失败' }),
+        description: toMessage(error),
+      })
     } finally {
       setIsSaving(false)
     }
-  }, [createCreation, draft, navigateTo])
+  }, [createCreation, draft, intl, navigateTo, pushToast])
 
   const {
     close: closeCreateFromLinkDialog,

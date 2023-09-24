@@ -127,7 +127,7 @@ declare namespace WeixinJsSdk {
     jsApiList: JSApis[]
     /* beta */
     beta: boolean
-    [x: string]: any
+    [x: string]: unknown
   }
 
   /**
@@ -138,29 +138,29 @@ declare namespace WeixinJsSdk {
     /**
      * 接口调用成功时执行的回调函数。
      */
-    success?: (res: any) => void
+    success?: (res: unknown) => void
 
     /**
      * 接口调用失败时执行的回调函数。
      */
-    fail?: (res: any) => void
+    fail?: (res: unknown) => void
 
     /**
      * 接口调用完成时执行的回调函数，无论成功或失败都会执行。
      */
-    complete?: (res: any) => void
+    complete?: (res: unknown) => void
 
     /**
      * 用户点击取消时的回调函数，仅部分有用户取消操作的api才会用到。
      */
-    cancel?: (res: any) => void
+    cancel?: (res: unknown) => void
   }
 
   interface MenuCallbacks extends Callbacks {
     /**
      * 监听Menu中的按钮点击时触发的方法，该方法仅支持Menu中的相关接口。
      */
-    trigger?: (res: any) => void
+    trigger?: (res: unknown) => void
   }
 
   interface CheckJsApiOptions extends Callbacks {
@@ -473,7 +473,7 @@ declare namespace WeixinJsSdk {
    * 具体错误信息可以打开config的debug模式查看，也可以在返回的res参数中查看，
    * 对于SPA可以在这里更新签名。
    */
-  function error(callback: (res: any) => void): void
+  function error(callback: (res: unknown) => void): void
 
   /**
    * 判断当前客户端版本是否支持指定JS接口
