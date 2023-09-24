@@ -1,3 +1,4 @@
+import { isBlobURL } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { concatMap, from, map } from 'rxjs'
 import { ajax } from 'rxjs/ajax'
@@ -12,10 +13,10 @@ export interface UploadOutput {
   value: string
 }
 
+const UPLOAD_CDN = 'https://ywfs.oss-cn-hangzhou.aliyuncs.com/'
+
 export function useUploadAPI() {
   const upload = useCallback((policy: PostFilePolicy, file: File) => {
-    const url = 'https://ywfs.oss-cn-hangzhou.aliyuncs.com/'
-
     const body = new FormData()
     body.append('key', policy.dir + file.name)
     body.append('policy', policy.policy)
@@ -26,7 +27,7 @@ export function useUploadAPI() {
     body.append('file', file)
 
     return ajax({
-      url,
+      url: UPLOAD_CDN,
       body,
       method: RequestMethod.POST,
       includeUploadProgress: true,
@@ -59,4 +60,8 @@ export function useUploadAPI() {
     upload,
     uploadFromBlobURL,
   } as const
+}
+
+export function shouldUpload(url: string | null | undefined): url is string {
+  return isBlobURL(url)
 }

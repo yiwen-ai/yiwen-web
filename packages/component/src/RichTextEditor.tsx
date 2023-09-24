@@ -45,7 +45,7 @@ import {
   type FloatingMenuProps,
 } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
-import { type UploadOutput } from '@yiwen-ai/store'
+import { shouldUpload, type UploadOutput } from '@yiwen-ai/store'
 import { isBlobURL } from '@yiwen-ai/util'
 import 'katex/dist/katex.min.css'
 import { nanoid } from 'nanoid'
@@ -597,7 +597,7 @@ function ImageWrapper({ updateAttributes, ...props }: NodeViewProps) {
     const upload = options.upload
     let subscription: Subscription | undefined
 
-    if (retryCount && src && isBlobURL(src) && upload) {
+    if (retryCount && shouldUpload(src) && upload) {
       setIsUploading(true)
       let _result: UploadOutput | undefined
       subscription = from(fetch(src))
