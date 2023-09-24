@@ -1,5 +1,5 @@
 import { css } from '@emotion/react'
-import { Button, Icon, Spinner } from '@yiwen-ai/component'
+import { Button, Icon, Spinner, textEllipsis } from '@yiwen-ai/component'
 import { preventDefault, useDragHover } from '@yiwen-ai/util'
 import { useCallback, useId, useRef } from 'react'
 import { useIntl } from 'react-intl'
@@ -46,7 +46,7 @@ export default function CreateFromFileDialog({
 
   const inputRef = useRef<HTMLInputElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const isDragging = useDragHover(buttonRef)
+  const isDragging = useDragHover(buttonRef.current)
 
   const handleSelect = useCallback(() => {
     inputRef.current?.click()
@@ -112,6 +112,7 @@ export default function CreateFromFileDialog({
               css={(theme) => css`
                 width: 100%;
                 height: 48px;
+                padding: 0 12px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -137,7 +138,7 @@ export default function CreateFromFileDialog({
                   {intl.formatMessage({ defaultMessage: '松开鼠标以上传文件' })}
                 </span>
               ) : file ? (
-                <span>{file.name}</span>
+                <span css={textEllipsis}>{file.name}</span>
               ) : (
                 <>
                   <Icon

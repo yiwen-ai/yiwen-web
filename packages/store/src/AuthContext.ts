@@ -10,6 +10,7 @@ import {
 import {
   createContext,
   createElement,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -234,6 +235,24 @@ export function useEnsureAuthorizedCallback() {
   )
 }
 
+export function authorized(
+  children: React.ReactNode,
+  fallback?: React.ReactNode
+) {
+  return createElement(function EnsureAuthorized() {
+    const {
+      isAuthorized,
+      dialog: { show: showDialog },
+    } = useAuth()
+
+    useEffect(() => {
+      if (!isAuthorized) showDialog()
+    }, [isAuthorized, showDialog])
+
+    return !isAuthorized && isValidElement(fallback) ? fallback : children
+  })
+}
+
 export function AuthProvider(
   props: React.PropsWithChildren<{ fallback?: React.ReactNode }>
 ) {
@@ -321,13 +340,13 @@ export function AuthProvider(
   }, [state.dialog.open])
 
   useEffect(() => {
-    const followingList = new Set<Subscription>()
+    const subscriptionList = new Set<Subscription>()
     const authorize = (provider: IdentityProvider) => {
       const controller = new AbortController()
       authorizingControllerRef.current?.abort()
       authorizingControllerRef.current = controller
       setState((state) => ({ ...state, authorizingProvider: provider }))
-      const following = authAPI
+      const subscription = authAPI
         .authorize(provider, controller.signal)
         .pipe(
           concatMap(() => refresh(authAPI, controller.signal)),
@@ -351,15 +370,15 @@ export function AuthProvider(
             if (authorizingControllerRef.current === controller) {
               authorizingControllerRef.current = undefined
             }
-            followingList.delete(following)
+            subscriptionList.delete(subscription)
           })
         )
         .subscribe()
-      followingList.add(following)
+      subscriptionList.add(subscription)
     }
     const callback = authAPI.callback.bind(authAPI)
     const logout = () => {
-      const following = from(authAPI.logout())
+      const subscription = from(authAPI.logout())
         .pipe(
           concatMap(() => {
             return new Observable<void>((observer) => {
@@ -373,16 +392,16 @@ export function AuthProvider(
             return EMPTY
           }),
           finalize(() => {
-            followingList.delete(following)
+            subscriptionList.delete(subscription)
           })
         )
         .subscribe()
-      followingList.add(following)
+      subscriptionList.add(subscription)
     }
     setState((state) => ({ ...state, authorize, callback, logout }))
     return () => {
-      followingList.forEach((following) => following.unsubscribe())
-      followingList.clear()
+      subscriptionList.forEach((subscription) => subscription.unsubscribe())
+      subscriptionList.clear()
     }
   }, [authAPI, refresh])
 

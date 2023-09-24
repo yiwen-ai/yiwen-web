@@ -1,54 +1,43 @@
-import { GROUP_DETAIL_PATH } from '#/App'
 import CommonEditor from '#/components/CommonEditor'
 import SaveHeader from '#/components/SaveHeader'
 import { useEditPublicationPage } from '#/store/useEditPublicationPage'
 import { GroupViewType } from '#/store/useGroupDetailPage'
-import { useCallback } from 'react'
-import {
-  generatePath,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router-dom'
-import { Xid } from 'xid-ts'
+import { css } from '@emotion/react'
+import { Button, Spinner, useToast } from '@yiwen-ai/component'
+import { useIntl } from 'react-intl'
+import { useParams, useSearchParams } from 'react-router-dom'
 
 export default function EditPublicationPage() {
+  const intl = useIntl()
   const params = useParams<{ cid: string }>()
   const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
+  const { renderToastContainer, pushToast } = useToast()
 
-  const { draft, updateDraft, isLoading, isDisabled, isSaving, save } =
+  const { draft, updateDraft, isLoading, isDisabled, isSaving, onSave } =
     useEditPublicationPage(
+      pushToast,
       searchParams.get('gid'),
       params.cid,
       searchParams.get('language'),
       searchParams.get('version')
     )
 
-  const onSave = useCallback(async () => {
-    const item = await save()
-    navigate({
-      pathname: generatePath(GROUP_DETAIL_PATH, {
-        gid: Xid.fromValue(item.gid).toString(),
-      }),
-      search: new URLSearchParams({
-        cid: Xid.fromValue(item.cid).toString(),
-        language: item.language,
-        version: item.version.toString(),
-        type: GroupViewType.Publication,
-      }).toString(),
-    })
-    return item
-  }, [navigate, save])
-
   return (
     <>
-      <SaveHeader
-        isLoading={isLoading}
-        isDisabled={isDisabled}
-        isSaving={isSaving}
-        onSave={onSave}
-      />
+      {renderToastContainer()}
+      <SaveHeader isLoading={isLoading}>
+        <Button color='primary' disabled={isDisabled} onClick={onSave}>
+          {isSaving && (
+            <Spinner
+              size='small'
+              css={css`
+                color: inherit;
+              `}
+            />
+          )}
+          {intl.formatMessage({ defaultMessage: '保存' })}
+        </Button>
+      </SaveHeader>
       <CommonEditor
         type={GroupViewType.Publication}
         draft={draft}

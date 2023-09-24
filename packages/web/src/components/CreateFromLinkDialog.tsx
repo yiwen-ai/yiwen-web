@@ -79,6 +79,7 @@ export default function CreateFromLinkDialog({
               padding: 4px 8px;
               border-radius: 8px;
               border: 1px solid ${theme.color.divider.default};
+              background: ${theme.color.body.background};
             `}
           />
           <Button

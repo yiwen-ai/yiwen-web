@@ -1,20 +1,29 @@
+import { GROUP_DETAIL_PATH } from '#/App'
+import { GroupViewType } from '#/store/useGroupDetailPage'
+import { type ToastAPI } from '@yiwen-ai/component'
 import {
   DEFAULT_MODEL,
   decode,
+  toMessage,
   useAuth,
   usePublication,
   usePublicationAPI,
   type PublicationDraft,
 } from '@yiwen-ai/store'
 import { useCallback, useEffect, useState } from 'react'
+import { useIntl } from 'react-intl'
+import { generatePath, useNavigate } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
 export function useEditPublicationPage(
+  pushToast: ToastAPI['pushToast'],
   _gid: string | null | undefined,
   _cid: string | null | undefined,
   _language: string | null | undefined,
   _version: string | null | undefined
 ) {
+  const intl = useIntl()
+  const navigate = useNavigate()
   const { updatePublication } = usePublicationAPI()
 
   //#region draft
@@ -73,14 +82,35 @@ export function useEditPublicationPage(
     !draft.title.trim() ||
     !draft.content
 
-  const save = useCallback(async () => {
+  const onSave = useCallback(async () => {
     try {
       setIsSaving(true)
-      return await updatePublication(draft)
+      const result = await updatePublication(draft)
+      pushToast({
+        type: 'success',
+        message: intl.formatMessage({ defaultMessage: '保存成功' }),
+      })
+      navigate({
+        pathname: generatePath(GROUP_DETAIL_PATH, {
+          gid: Xid.fromValue(result.gid).toString(),
+        }),
+        search: new URLSearchParams({
+          cid: Xid.fromValue(result.cid).toString(),
+          language: result.language,
+          version: result.version.toString(),
+          type: GroupViewType.Publication,
+        }).toString(),
+      })
+    } catch (error) {
+      pushToast({
+        type: 'warning',
+        message: intl.formatMessage({ defaultMessage: '保存失败' }),
+        description: toMessage(error),
+      })
     } finally {
       setIsSaving(false)
     }
-  }, [draft, updatePublication])
+  }, [draft, intl, navigate, pushToast, updatePublication])
 
   return {
     draft,
@@ -88,6 +118,6 @@ export function useEditPublicationPage(
     isLoading,
     isDisabled,
     isSaving,
-    save,
+    onSave,
   } as const
 }
