@@ -83,7 +83,7 @@ export {
   type SearchDocument,
   type SearchInput,
 } from './useSearch'
-export { useUploadAPI, type UploadOutput } from './useUpload'
+export { shouldUpload, useUploadAPI, type UploadOutput } from './useUpload'
 export {
   ChargeProvider,
   ChargeStatus,

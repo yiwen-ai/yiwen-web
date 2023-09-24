@@ -1,7 +1,11 @@
 import { Editor, findChildren, type JSONContent } from '@tiptap/core'
 import { getExtensions } from '@yiwen-ai/component'
-import { useUploadAPI, type PostFilePolicy } from '@yiwen-ai/store'
-import { isBlobURL, joinURL } from '@yiwen-ai/util'
+import {
+  shouldUpload,
+  useUploadAPI,
+  type PostFilePolicy,
+} from '@yiwen-ai/store'
+import { joinURL } from '@yiwen-ai/util'
 import { useCallback, useEffect, useState, type ImgHTMLAttributes } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath } from 'react-router-dom'
@@ -71,7 +75,7 @@ export function useUploadDocumentImages() {
         editor.state.doc,
         (node) =>
           node.type.name === 'image' &&
-          isBlobURL((node.attrs as ImgHTMLAttributes<HTMLImageElement>).src)
+          shouldUpload((node.attrs as ImgHTMLAttributes<HTMLImageElement>).src)
       )
 
       if (imageNodes.length === 0) return null
