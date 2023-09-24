@@ -1,4 +1,5 @@
 import { joinURL } from '@yiwen-ai/util'
+import { useEffect, useState } from 'react'
 import { generatePath } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 import { SHARE_PUBLICATION_PATH } from './App'
@@ -10,6 +11,22 @@ export const BREAKPOINT = {
   medium: 960,
   large: 1440,
 } as const
+
+export function useIsNarrow() {
+  const check = () =>
+    typeof window !== 'undefined' && window.innerWidth <= BREAKPOINT.small
+
+  const [isNarrow, setIsNarrow] = useState(check)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handleResize = () => setIsNarrow(check())
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  return isNarrow
+}
 
 export function generatePublicationShareLink(
   SHARE_URL: string,

@@ -9,7 +9,7 @@ import {
 import { type CreationOutput } from '@yiwen-ai/store'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
-import { IconMoreAnchor } from './IconMoreAnchor'
+import { renderIconMoreAnchor } from './IconMoreAnchor'
 
 export default function CreationCompactItem({
   item,
@@ -49,7 +49,7 @@ export default function CreationCompactItem({
       >
         <div css={textEllipsis}>{item.title}</div>
         {hasWritePermission && (
-          <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
+          <Menu bringFocusBack={false} anchor={renderIconMoreAnchor}>
             <MenuItem
               before={
                 isRestoring ? (

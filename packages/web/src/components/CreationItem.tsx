@@ -13,7 +13,7 @@ import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import CreationItemStatus from './CreationItemStatus'
 import CreationLink from './CreationLink'
-import { IconMoreAnchor } from './IconMoreAnchor'
+import { renderIconMoreAnchor } from './IconMoreAnchor'
 
 export default function CreationItem({
   item,
@@ -128,7 +128,7 @@ export default function CreationItem({
           </Button>
         )}
         {hasWritePermission && (
-          <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
+          <Menu bringFocusBack={false} anchor={renderIconMoreAnchor}>
             <MenuItem
               before={
                 isArchiving ? (
