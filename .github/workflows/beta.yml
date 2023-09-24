@@ -1,10 +1,8 @@
-name: PROD
+name: BETA
 on:
   push:
-    tags-ignore:
-      - 'v*beta*'
     tags:
-      - 'v*'
+      - 'v*beta*'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,5 +26,5 @@ jobs:
         run: |
           sudo -v ; curl https://gosspublic.alicdn.com/ossutil/install.sh | sudo bash
           ossutil --version
-          pnpm --filter web run build --mode=production --base=https://cdn.yiwen.pub/web
-          ossutil cp ./packages/web/dist/ oss://yiwenai/web/ -r -u -e ${{ secrets.ALIYUN_OSS_ENDPOINT }} -i ${{ secrets.ALIYUN_ACCESS_KEY_ID }} -k ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
+          pnpm --filter web run build --mode=staging --base=https://cdn.yiwen.pub/beta/web
+          ossutil cp ./packages/web/dist/ oss://yiwenai/beta/web/ -r -u -e ${{ secrets.ALIYUN_OSS_ENDPOINT }} -i ${{ secrets.ALIYUN_ACCESS_KEY_ID }} -k ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
