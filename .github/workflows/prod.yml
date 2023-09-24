@@ -1,10 +1,9 @@
 name: PROD
 on:
   push:
-    tags-ignore:
-      - 'v*beta*'
     tags:
       - 'v*'
+      - '!v*beta*'
 jobs:
   build:
     runs-on: ubuntu-latest
