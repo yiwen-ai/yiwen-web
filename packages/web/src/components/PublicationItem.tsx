@@ -15,7 +15,7 @@ import {
 import { preventDefaultStopPropagation } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
-import { IconMoreAnchor } from './IconMoreAnchor'
+import { renderIconMoreAnchor } from './IconMoreAnchor'
 import PublicationItemStatus from './PublicationItemStatus'
 import PublicationLink from './PublicationLink'
 
@@ -126,7 +126,7 @@ export default function PublicationItem({
         {hasWritePermission &&
           (item.status === PublicationStatus.Review ||
             item.status === PublicationStatus.Approved) && (
-            <Menu bringFocusBack={false} anchor={IconMoreAnchor}>
+            <Menu bringFocusBack={false} anchor={renderIconMoreAnchor}>
               <MenuItem
                 before={
                   isArchiving ? (

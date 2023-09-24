@@ -1,5 +1,5 @@
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
-import { IconMoreAnchor } from '#/components/IconMoreAnchor'
+import { renderIconMoreAnchor } from '#/components/IconMoreAnchor'
 import LargeDialog from '#/components/LargeDialog'
 import LoadMore from '#/components/LoadMore'
 import Loading from '#/components/Loading'
@@ -162,7 +162,7 @@ function BookmarkItem({
             color: ${theme.color.body.default};
           `}
         >
-          <Menu anchor={IconMoreAnchor}>
+          <Menu anchor={renderIconMoreAnchor}>
             <MenuItem
               before={
                 isRemoving ? (

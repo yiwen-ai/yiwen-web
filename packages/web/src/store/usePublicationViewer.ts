@@ -31,11 +31,11 @@ import {
 
 interface Params {
   open: boolean
-  _gid: string | null | undefined
-  _cid: string | null | undefined
-  _language: string | null | undefined
-  _version: number | null | undefined
-  _by: string | null | undefined
+  _gid: string | undefined
+  _cid: string | undefined
+  _language: string | undefined
+  _version: number | undefined
+  _by: string | undefined
 }
 
 export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
@@ -168,14 +168,33 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       _version: number | string | null | undefined,
       _by?: string | null | undefined
     ) => {
-      setParams((params) => ({
-        open: true,
-        _gid: _gid != null ? Xid.fromValue(_gid).toString() : undefined,
-        _cid: _cid != null ? Xid.fromValue(_cid).toString() : undefined,
-        _language,
-        _version: _version != null ? Number(_version) : undefined,
-        _by: _by ?? params._by,
-      }))
+      setParams((params) => {
+        const gid = _gid ? Xid.fromValue(_gid).toString() : undefined
+        const cid = _cid ? Xid.fromValue(_cid).toString() : undefined
+        const language = _language ? _language : undefined
+        const version = _version != null ? Number(_version) : undefined
+        const by = _by || params._by
+
+        if (
+          params.open &&
+          (params._gid === gid || gid == null) &&
+          params._cid === cid &&
+          (params._language === language || language == null) &&
+          (params._version === version || version == null) &&
+          (params._by === by || by == null)
+        ) {
+          return params
+        }
+
+        return {
+          open: true,
+          _gid: gid,
+          _cid: cid,
+          _language: language,
+          _version: version,
+          _by: by,
+        }
+      })
     },
     []
   )

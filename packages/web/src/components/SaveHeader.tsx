@@ -1,5 +1,4 @@
 import { SetHeaderProps } from '#/App'
-import { BREAKPOINT } from '#/shared'
 import { css } from '@emotion/react'
 
 export default function SaveHeader({
@@ -17,10 +16,6 @@ export default function SaveHeader({
           display: flex;
           justify-content: flex-end;
           gap: 36px;
-          @media (max-width: ${BREAKPOINT.small}px) {
-            margin: 0 16px;
-            gap: 16px;
-          }
         `}
       >
         {props.children}

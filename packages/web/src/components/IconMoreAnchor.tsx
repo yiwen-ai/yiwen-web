@@ -1,7 +1,7 @@
 import { IconButton } from '@yiwen-ai/component'
 import { type AnchorProps } from '@yiwen-ai/util'
 
-export function IconMoreAnchor(props: AnchorProps) {
+export function renderIconMoreAnchor(props: AnchorProps) {
   return (
     <IconButton
       iconName='more'
