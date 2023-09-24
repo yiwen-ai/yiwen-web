@@ -76,12 +76,15 @@ export default function CommonViewer({
           max-width: 100%;
         `}
       >
-        <CreatedBy
-          item={item}
-          css={css`
-            max-width: 100%;
-          `}
-        />
+        {item.group_info && (
+          <CreatedBy
+            item={item.group_info}
+            timestamp={item.updated_at || item.created_at}
+            css={css`
+              max-width: 100%;
+            `}
+          />
+        )}
       </Link>
       {content && (
         <RichTextEditor

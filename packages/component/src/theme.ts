@@ -383,7 +383,7 @@ export const lightTheme: Theme = {
       lineHeight: '28px',
     },
     tooltip: {
-      fontSize: '12px',
+      fontSize: '14px',
       fontWeight: 400,
       lineHeight: '20px',
     },

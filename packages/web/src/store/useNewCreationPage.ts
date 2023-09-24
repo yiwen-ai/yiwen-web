@@ -170,7 +170,7 @@ export function useNewCreationPage(
     if (!title && !content) {
       pushToast({
         type: 'warning',
-        message: intl.formatMessage({ defaultMessage: '无法从链接中获取内容' }),
+        message: intl.formatMessage({ defaultMessage: '处理失败，请重试' }),
         description: result.url,
       })
       return
@@ -198,7 +198,7 @@ export function useNewCreationPage(
     if (!title && !content) {
       pushToast({
         type: 'warning',
-        message: intl.formatMessage({ defaultMessage: '无法从文件中获取内容' }),
+        message: intl.formatMessage({ defaultMessage: '处理失败，请重试' }),
         description: result.url,
       })
       return

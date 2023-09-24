@@ -1,3 +1,4 @@
+import CreatedBy from '#/components/CreatedBy'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import { renderIconMoreAnchor } from '#/components/IconMoreAnchor'
 import LargeDialog from '#/components/LargeDialog'
@@ -179,15 +180,15 @@ function BookmarkItem({
           </Menu>
         </div>
       </div>
-      <div
-        css={css`
-          margin-top: 4px;
-          color: ${theme.color.body.secondary};
-          ${theme.typography.tooltip}
-        `}
-      >
-        {new Date(item.updated_at).toLocaleDateString()}
-      </div>
+      {item.group_info && (
+        <CreatedBy
+          item={item.group_info}
+          timestamp={item.updated_at}
+          css={css`
+            margin-top: 8px;
+          `}
+        />
+      )}
     </PublicationLink>
   )
 }

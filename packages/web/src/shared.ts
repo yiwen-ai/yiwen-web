@@ -18,7 +18,7 @@ export const MAX_WIDTH = '800px'
 export const BREAKPOINT = {
   small: 480,
   medium: 960,
-  large: 1440,
+  large: 1280,
 } as const
 
 export function useIsNarrow() {

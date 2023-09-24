@@ -156,7 +156,7 @@ export const RichTextEditor = memo(
         image: {
           inline: false,
           placeholder: intl.formatMessage({
-            defaultMessage: '点击或拖拽图片上传',
+            defaultMessage: '选择或拖拽图片上传',
           }),
           upload,
         },
@@ -702,7 +702,7 @@ function ImageWrapper({ updateAttributes, ...props }: NodeViewProps) {
                 ${theme.typography.tooltip}
               `}
             >
-              {intl.formatMessage({ defaultMessage: '上传失败，点击重试' })}
+              {intl.formatMessage({ defaultMessage: '上传失败，请重试' })}
             </button>
           ) : null}
         </div>

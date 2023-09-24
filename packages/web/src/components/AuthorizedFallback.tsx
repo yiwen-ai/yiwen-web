@@ -32,7 +32,8 @@ export default function AuthorizedFallback({
           color: ${theme.color.body.secondary};
         `}
       >
-        {description || intl.formatMessage({ defaultMessage: '请登录后再试' })}
+        {description ||
+          intl.formatMessage({ defaultMessage: '请登录后再操作' })}
       </span>
       <div
         css={css`

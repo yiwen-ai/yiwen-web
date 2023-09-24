@@ -50,7 +50,7 @@ export default function CreateFromLinkDialog({
           >
             <span>
               {intl.formatMessage({
-                defaultMessage: '正在通过以下链接获取，请稍后',
+                defaultMessage: '正在处理，请稍后',
               })}
             </span>
             <Spinner />
@@ -67,7 +67,7 @@ export default function CreateFromLinkDialog({
       ) : (
         <>
           <div id={id}>
-            {intl.formatMessage({ defaultMessage: '输入文章链接来获取' })}
+            {intl.formatMessage({ defaultMessage: '文章链接' })}
           </div>
           <TextareaAutosize
             aria-labelledby={id}

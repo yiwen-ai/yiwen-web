@@ -1,7 +1,7 @@
 import { css, useTheme } from '@emotion/react'
-import { Avatar } from '@yiwen-ai/component'
 import { isRTL, type SearchDocument } from '@yiwen-ai/store'
 import { useCallback } from 'react'
+import CreatedBy from './CreatedBy'
 import PublicationLink from './PublicationLink'
 
 export default function SearchItem({
@@ -12,8 +12,7 @@ export default function SearchItem({
   onClick: (item: SearchDocument) => void
 }) {
   const theme = useTheme()
-  const groupLogo = item.group?.logo || item.group?.owner?.picture
-  const groupName = item.group?.name || item.group?.owner?.name
+  const group_info = item.group || item.group_info
 
   const handleClick = useCallback(() => {
     onClick(item)
@@ -49,17 +48,17 @@ export default function SearchItem({
             margin-top: 12px;
           `}
         >
-          {item.summary}
+          {item.summary.length < 140
+            ? item.summary
+            : item.summary.slice(0, 140) + '...'}
         </div>
       )}
-      {groupName && (
-        <Avatar
-          src={groupLogo}
-          name={groupName}
-          size='small'
+      {group_info && (
+        <CreatedBy
+          item={group_info}
+          timestamp={item.updated_at}
           css={css`
-            margin-top: 12px;
-            color: ${theme.color.body.secondary};
+            margin-top: 8px;
           `}
         />
       )}

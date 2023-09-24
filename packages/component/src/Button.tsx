@@ -8,8 +8,8 @@ export type ButtonSize = 'small' | 'medium' | 'large'
 const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
   small: (theme) => ({
     minHeight: 24,
-    paddingLeft: 16,
-    paddingRight: 16,
+    paddingLeft: 8,
+    paddingRight: 8,
     gap: 4,
     borderWidth: 1,
     borderRadius: 6,
@@ -19,16 +19,16 @@ const SizeDict: Record<ButtonSize, (theme: Theme) => Readonly<CSSObject>> = {
   }),
   medium: () => ({
     minHeight: 32,
-    paddingLeft: 24,
-    paddingRight: 24,
+    paddingLeft: 16,
+    paddingRight: 16,
     gap: 8,
     borderWidth: 1,
     borderRadius: 8,
   }),
   large: () => ({
     minHeight: 40,
-    paddingLeft: 36,
-    paddingRight: 36,
+    paddingLeft: 24,
+    paddingRight: 24,
     gap: 12,
     borderWidth: 2,
     borderRadius: 10,
