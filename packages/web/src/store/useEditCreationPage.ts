@@ -6,11 +6,14 @@ import {
   useAuth,
   useCreation,
   useCreationAPI,
+  useCreationUploadPolicy,
+  useUploadAPI,
   type CreationDraft,
 } from '@yiwen-ai/store'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
+import { concatMap, from } from 'rxjs'
 import { Xid } from 'xid-ts'
 import { GroupViewType } from './useGroupDetailPage'
 
@@ -22,11 +25,14 @@ export function useEditCreationPage(
   const intl = useIntl()
   const navigate = useNavigate()
   const { updateCreation } = useCreationAPI()
+  const { upload: _upload } = useUploadAPI()
 
   //#region draft
   const { locale } = useAuth().user ?? {}
 
   const { refresh } = useCreation(_gid, _cid)
+  const { uploadPolicy, refresh: refreshUploadPolicy } =
+    useCreationUploadPolicy(_gid, _cid)
 
   const [draft, setDraft] = useState<CreationDraft>(() => ({
     __isReady: false,
@@ -54,6 +60,10 @@ export function useEditCreationPage(
       .catch(() => {})
     return () => controller.abort()
   }, [refresh])
+
+  useEffect(() => {
+    refreshUploadPolicy()
+  }, [refreshUploadPolicy])
 
   const updateDraft = useCallback((draft: Partial<CreationDraft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
@@ -105,6 +115,25 @@ export function useEditCreationPage(
     }
   }, [draft, intl, navigate, pushToast, updateCreation])
 
+  const upload = useCallback(
+    (file: File) => {
+      const uploadPolicy$ = from(
+        Promise.resolve(uploadPolicy || refreshUploadPolicy())
+      )
+      return uploadPolicy$.pipe(
+        concatMap((uploadPolicy) => {
+          if (!uploadPolicy) {
+            const message = intl.formatMessage({ defaultMessage: '上传失败' })
+            pushToast({ type: 'warning', message })
+            throw new Error(message)
+          }
+          return _upload(uploadPolicy, file)
+        })
+      )
+    },
+    [_upload, intl, pushToast, refreshUploadPolicy, uploadPolicy]
+  )
+
   return {
     draft,
     updateDraft,
@@ -112,5 +141,6 @@ export function useEditCreationPage(
     isDisabled,
     isSaving,
     onSave,
+    upload,
   } as const
 }

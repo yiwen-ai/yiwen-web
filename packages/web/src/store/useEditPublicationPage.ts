@@ -8,11 +8,14 @@ import {
   useAuth,
   usePublication,
   usePublicationAPI,
+  usePublicationUploadPolicy,
+  useUploadAPI,
   type PublicationDraft,
 } from '@yiwen-ai/store'
 import { useCallback, useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
+import { concatMap, from } from 'rxjs'
 import { Xid } from 'xid-ts'
 
 export function useEditPublicationPage(
@@ -25,11 +28,14 @@ export function useEditPublicationPage(
   const intl = useIntl()
   const navigate = useNavigate()
   const { updatePublication } = usePublicationAPI()
+  const { upload: _upload } = useUploadAPI()
 
   //#region draft
   const { locale } = useAuth().user ?? {}
 
   const { refresh } = usePublication(_gid, _cid, _language, _version)
+  const { uploadPolicy, refresh: refreshUploadPolicy } =
+    usePublicationUploadPolicy(_gid, _cid, _language, _version)
 
   const [draft, setDraft] = useState<PublicationDraft>(() => ({
     __isReady: false,
@@ -61,6 +67,10 @@ export function useEditPublicationPage(
       aborted = true
     }
   }, [refresh])
+
+  useEffect(() => {
+    refreshUploadPolicy()
+  }, [refreshUploadPolicy])
 
   const updateDraft = useCallback((draft: Partial<PublicationDraft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
@@ -112,6 +122,25 @@ export function useEditPublicationPage(
     }
   }, [draft, intl, navigate, pushToast, updatePublication])
 
+  const upload = useCallback(
+    (file: File) => {
+      const uploadPolicy$ = from(
+        Promise.resolve(uploadPolicy || refreshUploadPolicy())
+      )
+      return uploadPolicy$.pipe(
+        concatMap((uploadPolicy) => {
+          if (!uploadPolicy) {
+            const message = intl.formatMessage({ defaultMessage: '上传失败' })
+            pushToast({ type: 'warning', message })
+            throw new Error(message)
+          }
+          return _upload(uploadPolicy, file)
+        })
+      )
+    },
+    [_upload, intl, pushToast, refreshUploadPolicy, uploadPolicy]
+  )
+
   return {
     draft,
     updateDraft,
@@ -119,5 +148,6 @@ export function useEditPublicationPage(
     isDisabled,
     isSaving,
     onSave,
+    upload,
   } as const
 }

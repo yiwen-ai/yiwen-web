@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
 import { Xid } from 'xid-ts'
 import { type GroupInfo } from './common'
-import { RequestMethod, useFetcher } from './useFetcher'
+import { useFetcher } from './useFetcher'
 
 export interface SearchDocument {
   gid: Uint8Array
@@ -34,12 +34,9 @@ export function useSearchAPI() {
   const search = useCallback(
     (
       params: Record<keyof SearchInput, string | null | undefined>,
-      signal: AbortSignal | null | undefined = null
+      signal?: AbortSignal
     ) => {
-      return request<{ result: SearchOutput }>(path, params, {
-        method: RequestMethod.GET,
-        signal,
-      })
+      return request.get<{ result: SearchOutput }>(path, params, signal)
     },
     [request]
   )

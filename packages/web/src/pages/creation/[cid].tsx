@@ -13,8 +13,15 @@ export default function EditCreationPage() {
   const [searchParams] = useSearchParams()
   const { renderToastContainer, pushToast } = useToast()
 
-  const { draft, updateDraft, isLoading, isDisabled, isSaving, onSave } =
-    useEditCreationPage(pushToast, searchParams.get('gid'), params.cid)
+  const {
+    draft,
+    updateDraft,
+    isLoading,
+    isDisabled,
+    isSaving,
+    onSave,
+    upload,
+  } = useEditCreationPage(pushToast, searchParams.get('gid'), params.cid)
 
   return (
     <>
@@ -38,6 +45,7 @@ export default function EditCreationPage() {
         updateDraft={updateDraft}
         isLoading={isLoading}
         isSaving={isSaving}
+        upload={upload}
       />
     </>
   )

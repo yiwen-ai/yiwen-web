@@ -9,10 +9,12 @@ import {
   useAuth,
   type CreationDraft,
   type PublicationDraft,
+  type UploadOutput,
 } from '@yiwen-ai/store'
 import { useCallback, useRef } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
+import { type Observable } from 'rxjs'
 
 export default function CommonEditor({
   type,
@@ -20,12 +22,14 @@ export default function CommonEditor({
   updateDraft,
   isLoading,
   isSaving,
+  upload,
 }: {
   type: GroupViewType
   draft: CreationDraft | PublicationDraft
   updateDraft: (draft: Partial<CreationDraft | PublicationDraft>) => void
   isLoading: boolean
   isSaving: boolean
+  upload?: (file: File) => Observable<UploadOutput>
 }) {
   const intl = useIntl()
   const theme = useTheme()
@@ -116,7 +120,7 @@ export default function CommonEditor({
             editable={!isSaving}
             content={draft.content}
             onChange={handleContentChange}
-            dir={isRTL(lang) ? 'rtl' : undefined}
+            upload={upload}
             css={css`
               .ProseMirror {
                 padding-top: 24px;

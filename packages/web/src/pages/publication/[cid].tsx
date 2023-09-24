@@ -13,14 +13,21 @@ export default function EditPublicationPage() {
   const [searchParams] = useSearchParams()
   const { renderToastContainer, pushToast } = useToast()
 
-  const { draft, updateDraft, isLoading, isDisabled, isSaving, onSave } =
-    useEditPublicationPage(
-      pushToast,
-      searchParams.get('gid'),
-      params.cid,
-      searchParams.get('language'),
-      searchParams.get('version')
-    )
+  const {
+    draft,
+    updateDraft,
+    isLoading,
+    isDisabled,
+    isSaving,
+    onSave,
+    upload,
+  } = useEditPublicationPage(
+    pushToast,
+    searchParams.get('gid'),
+    params.cid,
+    searchParams.get('language'),
+    searchParams.get('version')
+  )
 
   return (
     <>
@@ -44,6 +51,7 @@ export default function EditPublicationPage() {
         updateDraft={updateDraft}
         isLoading={isLoading}
         isSaving={isSaving}
+        upload={upload}
       />
     </>
   )
