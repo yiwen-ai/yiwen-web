@@ -1,8 +1,5 @@
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
-  useBookmarkList,
-  useFollowedPublicationList,
-  useRecommendedPublicationList,
   useSearch,
   type BookmarkOutput,
   type PublicationOutput,
@@ -11,13 +8,12 @@ import {
 } from '@yiwen-ai/store'
 import { toURLSearchParams } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useIntl } from 'react-intl'
 import { useSearchParams } from 'react-router-dom'
 import { useDebounce } from 'use-debounce'
 import { usePublicationViewer } from './usePublicationViewer'
+import { useResponsiveTabSection } from './useResponsiveTabSection'
 
 export function useSearchPage(pushToast: ToastAPI['pushToast']) {
-  const intl = useIntl()
   const [searchParams, setSearchParams] = useSearchParams()
 
   //#region params
@@ -72,51 +68,12 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   )
   //#endregion
 
-  //#region following list
   const {
-    isLoading: isLoadingFollowedPublicationList,
-    items: followedPublicationList,
-    refresh: refreshFollowedPublicationList,
-  } = useFollowedPublicationList()
-
-  const {
-    isLoading: isLoadingRecommendedPublicationList,
-    publicationList: recommendedPublicationList,
-    refresh: refreshRecommendedPublicationList,
-  } = useRecommendedPublicationList()
-
-  useEffect(() => {
-    refreshFollowedPublicationList()
-    refreshRecommendedPublicationList()
-  }, [refreshFollowedPublicationList, refreshRecommendedPublicationList])
-
-  const followingList = useMemo(
-    () => ({
-      title: followedPublicationList.length
-        ? intl.formatMessage({ defaultMessage: '关注' })
-        : intl.formatMessage({ defaultMessage: '推荐' }),
-      isLoading:
-        isLoadingFollowedPublicationList || isLoadingRecommendedPublicationList,
-      items: followedPublicationList.length
-        ? followedPublicationList
-        : recommendedPublicationList ?? [],
-    }),
-    [
-      followedPublicationList,
-      intl,
-      isLoadingFollowedPublicationList,
-      isLoadingRecommendedPublicationList,
-      recommendedPublicationList,
-    ]
-  )
-  //#endregion
-
-  //#region bookmark list
-  const {
-    refresh: refreshBookmarkList,
-    remove,
-    ...bookmarkList
-  } = useBookmarkList()
+    refreshFollowedPublicationList,
+    refreshRecommendedPublicationList,
+    refreshBookmarkList,
+    ...responsiveTabSection
+  } = useResponsiveTabSection()
 
   const handlePublicationAddFavorite = useCallback(async () => {
     await onPublicationAddFavorite()
@@ -127,11 +84,6 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
     await onPublicationRemoveFavorite()
     refreshBookmarkList()
   }, [onPublicationRemoveFavorite, refreshBookmarkList])
-
-  useEffect(() => {
-    refreshBookmarkList()
-  }, [refreshBookmarkList])
-  //#endregion
 
   return {
     isLoading,
@@ -145,7 +97,9 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
       onRemoveFavorite: handlePublicationRemoveFavorite,
       ...publicationViewer,
     },
-    followingList,
-    bookmarkList,
+    responsiveTabSection: {
+      onView,
+      ...responsiveTabSection,
+    },
   } as const
 }

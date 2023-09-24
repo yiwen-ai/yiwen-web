@@ -38,7 +38,7 @@ export interface CreateCreationInput {
   title: string
   content: Uint8Array
   language: string
-  original_url?: string
+  original_url?: string | undefined
   genre?: string[]
   cover?: string
   keywords?: string[]
@@ -122,6 +122,7 @@ export interface CreationDraft {
   updated_at: number | undefined
   title: string
   content: JSONContent | undefined
+  original_url?: string | undefined
 }
 
 const path = '/v1/creation'
@@ -180,7 +181,7 @@ export function useCreationAPI() {
       }
       const { result } = await request.post<{ result: CreationOutput }>(
         path,
-        body
+        omitBy(body, (val) => val == null)
       )
       return result
     },

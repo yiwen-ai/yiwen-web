@@ -117,7 +117,7 @@ export function useNewCreationPage(
     if (!result) return
 
     const { title, content } = result
-    if (!title || !content) {
+    if (!title && !content) {
       pushToast({
         type: 'warning',
         message: intl.formatMessage({ defaultMessage: '无法从链接中获取内容' }),
@@ -126,7 +126,11 @@ export function useNewCreationPage(
       return
     }
 
-    updateDraft({ title, content: decode(content) })
+    const draft: Partial<CreationDraft> = {}
+    if (title) draft.title = title
+    if (content) draft.content = decode(content)
+    draft.original_url = result.url
+    updateDraft(draft)
     closeCreateFromLinkDialog()
   }, [closeCreateFromLinkDialog, intl, onCrawl, pushToast, updateDraft])
 
@@ -141,7 +145,7 @@ export function useNewCreationPage(
     if (!result) return
 
     const { title, content } = result
-    if (!title || !content) {
+    if (!title && !content) {
       pushToast({
         type: 'warning',
         message: intl.formatMessage({ defaultMessage: '无法从文件中获取内容' }),
@@ -150,7 +154,10 @@ export function useNewCreationPage(
       return
     }
 
-    updateDraft({ title, content: decode(content) })
+    const draft: Partial<CreationDraft> = {}
+    if (title) draft.title = title
+    if (content) draft.content = decode(content)
+    updateDraft(draft)
     closeCreateFromFileDialog()
   }, [closeCreateFromFileDialog, intl, onUpload, pushToast, updateDraft])
 

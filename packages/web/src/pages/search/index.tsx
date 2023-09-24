@@ -1,12 +1,11 @@
 import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
-import BookmarkSection from '#/components/BookmarkSection'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
-import FollowingSection from '#/components/FollowingSection'
 import LargeDialog from '#/components/LargeDialog'
 import Loading from '#/components/Loading'
 import NewCreationLink from '#/components/NewCreationLink'
 import Placeholder from '#/components/Placeholder'
 import PublicationViewer from '#/components/PublicationViewer'
+import ResponsiveTabSection from '#/components/ResponsiveTabSection'
 import SearchItem from '#/components/SearchItem'
 import { BREAKPOINT } from '#/shared'
 import { useSearchPage } from '#/store/useSearchPage'
@@ -47,8 +46,7 @@ export default function SearchPage() {
       close: onPublicationViewerClose,
       ...publicationViewer
     },
-    followingList,
-    bookmarkList,
+    responsiveTabSection,
   } = useSearchPage(pushToast)
 
   const handleChange = useCallback(
@@ -149,16 +147,11 @@ export default function SearchPage() {
           `}
         >
           <NewCreationLink />
-          <FollowingSection
-            title={followingList.title}
-            isLoading={followingList.isLoading}
-            items={followingList.items}
-            onView={onView}
-          />
-          <BookmarkSection
-            isLoading={bookmarkList.isLoading}
-            items={bookmarkList.items}
-            onView={onView}
+          <ResponsiveTabSection
+            {...responsiveTabSection}
+            css={css`
+              gap: inherit;
+            `}
           />
         </div>
       </div>
