@@ -351,11 +351,18 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   }, [SHARE_URL, _cid, _language, params._by, publication?.status, user?.cn])
 
   useEffect(() => {
-    if (!publication) return
+    const link = document.location.href.split('#')[0] as string
+    const title = publication?.title || document.title
+    const imgUrl = publication?.cover || 'https://cdn.yiwen.pub/yiwen.jpg'
+    let desc = publication?.summary || link
+    if (desc.length > 100) {
+      desc = desc.substring(0, 100) + '...'
+    }
     wechat({
-      title: publication.title,
-      link: document.location.href,
-      imgUrl: publication.cover || 'https://cdn.yiwen.pub/yiwen.png',
+      title,
+      link,
+      imgUrl,
+      desc,
     })
   }, [publication, wechat])
 
