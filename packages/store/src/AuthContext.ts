@@ -65,11 +65,11 @@ class AuthAPI {
   }
 
   fetchUser(signal: AbortSignal | null) {
-    return this.request<UserInfo>('/userinfo', undefined, { signal })
+    return this.request.get<UserInfo>('/userinfo', undefined, signal)
   }
 
   fetchAccessToken(signal: AbortSignal | null) {
-    return this.request<AccessToken>('/access_token', undefined, { signal })
+    return this.request.get<AccessToken>('/access_token', undefined, signal)
   }
 
   private authentication = createAction<{ status: number }>('__AUTH_CALLBACK__')

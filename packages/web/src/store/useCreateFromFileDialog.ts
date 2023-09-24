@@ -39,7 +39,9 @@ export function useCreateFromFileDialog(
   const onUpload = useCallback(async () => {
     try {
       if (!file) throw new Error('please select a file')
-      return await upload(file)
+      let result = await upload(file)
+      result = { ...result, title: result.title || file.name }
+      return result
     } catch (error) {
       pushToast({
         type: 'warning',

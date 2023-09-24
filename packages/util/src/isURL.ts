@@ -6,3 +6,13 @@ export function isURL(url: string) {
     return false
   }
 }
+
+export function isBlobURL(url: string | null | undefined): url is string {
+  try {
+    if (!url) return false
+    const { protocol } = new URL(url)
+    return protocol === 'blob:'
+  } catch {
+    return false
+  }
+}

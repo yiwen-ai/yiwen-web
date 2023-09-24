@@ -12,10 +12,11 @@ import {
   type Extensions,
   type FocusPosition,
   type JSONContent,
+  type NodeViewProps,
 } from '@tiptap/core'
 import { Color } from '@tiptap/extension-color'
 import { FontFamily } from '@tiptap/extension-font-family'
-import { Image } from '@tiptap/extension-image'
+import { Image, type ImageOptions } from '@tiptap/extension-image'
 import { Link } from '@tiptap/extension-link'
 import { Mention } from '@tiptap/extension-mention'
 import { Placeholder } from '@tiptap/extension-placeholder'
@@ -32,15 +33,20 @@ import { TextStyle } from '@tiptap/extension-text-style'
 import { Typography } from '@tiptap/extension-typography'
 import { Underline } from '@tiptap/extension-underline'
 import { Youtube } from '@tiptap/extension-youtube'
+import { Plugin, PluginKey } from '@tiptap/pm/state' // eslint-disable-line import/named
 import {
   BubbleMenu,
   EditorContent,
   FloatingMenu,
+  NodeViewWrapper,
+  ReactNodeViewRenderer,
   useEditor,
   type BubbleMenuProps,
   type FloatingMenuProps,
 } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
+import { type UploadOutput } from '@yiwen-ai/store'
+import { isBlobURL } from '@yiwen-ai/util'
 import 'katex/dist/katex.min.css'
 import { nanoid } from 'nanoid'
 import {
@@ -50,21 +56,29 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useState,
 } from 'react'
 import { useIntl } from 'react-intl'
+import { concatMap, from, type Observable, type Subscription } from 'rxjs'
 import { IconButton, type IconButtonProps } from './Button'
 
-Mathematics.options.katexOptions = {}
+Mathematics.options.katexOptions = {} // required
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const getExtensions = (): Extensions => [
+export const getExtensions = ({
+  image,
+  placeholder,
+}: {
+  image?: Partial<ImageUploadOptions>
+  placeholder?: string
+} = {}): Extensions => [
   Color,
   Details.configure({ persist: true }),
   DetailsContent,
   DetailsSummary,
   Emoji.configure({ enableEmoticons: true }),
   FontFamily,
-  Image,
+  ImageUpload.configure(image),
   Link.configure({
     protocols: [],
     autolink: false,
@@ -75,6 +89,7 @@ export const getExtensions = (): Extensions => [
   }),
   Mathematics.configure({ katexOptions: { strict: false } }),
   Mention,
+  Placeholder.configure({ placeholder: placeholder ?? '' }),
   StarterKit.configure({ heading: { levels: [1, 2, 3, 4, 5, 6] } }),
   Subscript,
   Superscript,
@@ -116,6 +131,7 @@ export interface RichTextEditorProps {
   initialContent?: JSONContent | null | undefined
   content?: JSONContent | null | undefined
   onChange?: (content: JSONContent) => void
+  upload?: ((file: File) => Observable<UploadOutput>) | null | undefined
 }
 
 export const RichTextEditor = memo(
@@ -127,6 +143,7 @@ export const RichTextEditor = memo(
       initialContent = null,
       content,
       onChange,
+      upload,
       ...props
     }: RichTextEditorProps,
     ref: React.Ref<Editor | null>
@@ -135,14 +152,19 @@ export const RichTextEditor = memo(
     const theme = useTheme()
 
     const extensions = useMemo(() => {
-      return getExtensions().concat(
-        Placeholder.configure({
-          placeholder:
-            placeholder ??
-            intl.formatMessage({ defaultMessage: '输入内容开始创作' }),
-        })
-      )
-    }, [intl, placeholder])
+      return getExtensions({
+        image: {
+          inline: false,
+          placeholder: intl.formatMessage({
+            defaultMessage: '点击或拖拽图片上传',
+          }),
+          upload,
+        },
+        placeholder:
+          placeholder ??
+          intl.formatMessage({ defaultMessage: '输入内容开始创作' }),
+      })
+    }, [intl, placeholder, upload])
 
     const onUpdate = useCallback<EditorOptions['onUpdate']>(
       ({ editor }) => onChange?.(editor.getJSON()),
@@ -150,12 +172,15 @@ export const RichTextEditor = memo(
     )
 
     // TODO: update options when props change
-    const editor = useEditor({
-      ...props,
-      content: content ?? initialContent,
-      extensions,
-      onUpdate,
-    })
+    const editor = useEditor(
+      {
+        ...props,
+        content: content ?? initialContent,
+        extensions,
+        onUpdate,
+      },
+      [extensions]
+    )
 
     useEffect(() => {
       if (!editor || content === undefined) return
@@ -549,3 +574,186 @@ const BubbleMenuItem = memo(
     )
   })
 )
+
+interface ImageUploadOptions extends ImageOptions {
+  placeholder: string
+  upload?: ((file: File) => Observable<UploadOutput>) | null | undefined
+}
+
+function ImageWrapper({ updateAttributes, ...props }: NodeViewProps) {
+  const intl = useIntl()
+  const options = props.extension.options as ImageUploadOptions
+  const attrs = props.node.attrs as React.ImgHTMLAttributes<HTMLImageElement>
+  const src = attrs.src
+
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadError, setUploadError] = useState<unknown>()
+
+  const [retryCount, setRetryCount] = useState(1)
+  const retry = useCallback(() => setRetryCount((count) => count + 1), [])
+
+  useEffect(() => {
+    const upload = options.upload
+    let subscription: Subscription | undefined
+
+    if (retryCount && src && isBlobURL(src) && upload) {
+      setIsUploading(true)
+      let _result: UploadOutput | undefined
+      subscription = from(fetch(src))
+        .pipe(
+          concatMap((resp) => resp.blob()),
+          concatMap((blob) =>
+            upload(
+              new File(
+                [blob],
+                attrs.alt ||
+                  attrs.title ||
+                  intl.formatMessage({ defaultMessage: '图片' }),
+                { type: blob.type }
+              )
+            )
+          )
+        )
+        .subscribe({
+          next: (result) => {
+            _result = result
+            setUploadProgress(result.progress)
+          },
+          error: (error) => {
+            setUploadError(error)
+            setIsUploading(false)
+          },
+          complete: () => {
+            if (_result?.done) updateAttributes({ src: _result.value })
+            setUploadError(undefined)
+            setIsUploading(false)
+          },
+        })
+    }
+
+    return () => subscription?.unsubscribe()
+  }, [
+    attrs.alt,
+    attrs.title,
+    intl,
+    options.upload,
+    retryCount,
+    src,
+    updateAttributes,
+  ])
+
+  useEffect(() => {
+    return () => {
+      setTimeout(() => {
+        isBlobURL(src) && URL.revokeObjectURL(src)
+      }, 100)
+    }
+  }, [src])
+
+  return (
+    <NodeViewWrapper
+      className='image-wrapper'
+      css={css`
+        width: fit-content;
+        margin: auto;
+        position: relative;
+      `}
+    >
+      {/* eslint-disable-next-line jsx-a11y/alt-text */}
+      <img
+        {...attrs}
+        css={css`
+          max-width: 100%;
+          margin: auto;
+          display: block;
+        `}
+      />
+      {(isUploading || uploadError) && (
+        <div
+          css={css`
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            display: flex;
+            align-items: center;
+          `}
+        >
+          {isUploading ? (
+            <div
+              css={(theme) => css`
+                padding: 0 4px;
+                border-radius: 4px;
+                background: rgba(0, 0, 0, 0.1);
+                color: ${theme.color.body.secondary};
+                ${theme.typography.tooltip}
+              `}
+            >
+              {(uploadProgress * 100).toFixed(0) + '%'}
+            </div>
+          ) : uploadError ? (
+            <button
+              onClick={retry}
+              css={(theme) => css`
+                padding: 0 4px;
+                border-radius: 4px;
+                background: rgba(0, 0, 0, 0.1);
+                color: ${theme.color.body.danger};
+                ${theme.typography.tooltip}
+              `}
+            >
+              {intl.formatMessage({ defaultMessage: '上传失败，点击重试' })}
+            </button>
+          ) : null}
+        </div>
+      )}
+    </NodeViewWrapper>
+  )
+}
+
+const ImageUpload = Image.extend<ImageUploadOptions>({
+  name: 'image',
+
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      placeholder: '',
+    }
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ImageWrapper)
+  },
+
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('image'),
+        props: {
+          handlePaste: (view, ev) => {
+            const file = Array.from(ev.clipboardData?.files || []).find(
+              (item) => item.type.startsWith('image')
+            )
+            if (!file) return false
+            ev.preventDefault()
+            this.editor.commands.insertContent([
+              {
+                type: this.name,
+                attrs: {
+                  src: URL.createObjectURL(file),
+                  alt: file.name,
+                  title: file.name,
+                },
+              },
+              {
+                type: 'paragraph',
+                attrs: {},
+              },
+            ])
+            return true
+          },
+        },
+      }),
+    ]
+  },
+})

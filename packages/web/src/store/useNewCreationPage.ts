@@ -1,4 +1,5 @@
 import { GROUP_DETAIL_PATH } from '#/App'
+import { useUploadDocumentImages } from '#/shared'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   decode,
@@ -22,7 +23,9 @@ export function useNewCreationPage(
 ) {
   const intl = useIntl()
   const navigate = useNavigate()
-  const { createCreation } = useCreationAPI()
+  const { createCreation, readCreationUploadPolicy, updateCreation } =
+    useCreationAPI()
+  const uploadDocumentImages = useUploadDocumentImages()
 
   //#region draft
   const { locale } = useAuth().user ?? {}
@@ -89,7 +92,20 @@ export function useNewCreationPage(
   const onSave = useCallback(async () => {
     try {
       setIsSaving(true)
-      const result = await createCreation(draft)
+      let result = await createCreation(draft)
+      const content = await uploadDocumentImages(draft.content, () =>
+        readCreationUploadPolicy({
+          gid: Xid.fromValue(result.gid).toString(),
+          id: Xid.fromValue(result.id).toString(),
+          fields: undefined,
+        }).then(({ result }) => result)
+      )
+      if (content) {
+        result = await updateCreation(
+          { ...result, content } as CreationDraft,
+          true
+        )
+      }
       pushToast({
         type: 'success',
         message: intl.formatMessage({ defaultMessage: '保存成功' }),
@@ -104,7 +120,16 @@ export function useNewCreationPage(
     } finally {
       setIsSaving(false)
     }
-  }, [createCreation, draft, intl, navigateTo, pushToast])
+  }, [
+    createCreation,
+    draft,
+    intl,
+    navigateTo,
+    pushToast,
+    readCreationUploadPolicy,
+    updateCreation,
+    uploadDocumentImages,
+  ])
 
   const {
     close: closeCreateFromLinkDialog,
@@ -117,7 +142,7 @@ export function useNewCreationPage(
     if (!result) return
 
     const { title, content } = result
-    if (!title || !content) {
+    if (!title && !content) {
       pushToast({
         type: 'warning',
         message: intl.formatMessage({ defaultMessage: '无法从链接中获取内容' }),
@@ -126,7 +151,11 @@ export function useNewCreationPage(
       return
     }
 
-    updateDraft({ title, content: decode(content) })
+    const draft: Partial<CreationDraft> = {}
+    if (title) draft.title = title
+    if (content) draft.content = decode(content)
+    draft.original_url = result.url
+    updateDraft(draft)
     closeCreateFromLinkDialog()
   }, [closeCreateFromLinkDialog, intl, onCrawl, pushToast, updateDraft])
 
@@ -141,7 +170,7 @@ export function useNewCreationPage(
     if (!result) return
 
     const { title, content } = result
-    if (!title || !content) {
+    if (!title && !content) {
       pushToast({
         type: 'warning',
         message: intl.formatMessage({ defaultMessage: '无法从文件中获取内容' }),
@@ -150,7 +179,10 @@ export function useNewCreationPage(
       return
     }
 
-    updateDraft({ title, content: decode(content) })
+    const draft: Partial<CreationDraft> = {}
+    if (title) draft.title = title
+    if (content) draft.content = decode(content)
+    updateDraft(draft)
     closeCreateFromFileDialog()
   }, [closeCreateFromFileDialog, intl, onUpload, pushToast, updateDraft])
 

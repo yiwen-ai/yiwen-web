@@ -13,9 +13,10 @@ import {
   type GroupInfo,
   type Page,
   type Pagination,
+  type PostFilePolicy,
   type UserInfo,
 } from './common'
-import { RequestMethod, useFetcher } from './useFetcher'
+import { useFetcher } from './useFetcher'
 
 export enum PublicationStatus {
   Deleted = -2,
@@ -55,7 +56,7 @@ export interface QueryPublication {
   cid: Uint8Array
   language: string
   version: number
-  fields: readonly string[]
+  fields: string
 }
 
 export interface CreatePublicationInput {
@@ -155,12 +156,9 @@ export function usePublicationAPI(baseURL?: string) {
   const readPublication = useCallback(
     (
       params: Record<keyof QueryPublication, string | number | null>,
-      signal: AbortSignal | null = null
+      signal?: AbortSignal
     ) => {
-      return request<{ result: PublicationOutput }>(path, params, {
-        method: RequestMethod.GET,
-        signal,
-      })
+      return request.get<{ result: PublicationOutput }>(path, params, signal)
     },
     [request]
   )
@@ -216,6 +214,20 @@ export function usePublicationAPI(baseURL?: string) {
         `${path}/list_by_following`,
         body
       )
+    },
+    [request]
+  )
+
+  const readPublicationUploadPolicy = useCallback(
+    (params: Record<keyof QueryPublication, string | undefined>) => {
+      const body = {
+        gid: params.gid ? Xid.fromValue(params.gid) : undefined,
+        cid: params.cid ? Xid.fromValue(params.cid) : undefined,
+        language: params.language,
+        version: Number(params.version),
+        fields: params.fields,
+      } as QueryPublication
+      return request.post<{ result: PostFilePolicy }>(`${path}/upload`, body)
     },
     [request]
   )
@@ -364,6 +376,7 @@ export function usePublicationAPI(baseURL?: string) {
     readProcessingPublicationList,
     readRecommendedPublicationList,
     readFollowedPublicationList,
+    readPublicationUploadPolicy,
     estimatePublication,
     translatePublication,
     createPublication,
@@ -417,6 +430,45 @@ export function usePublication(
     isLoading: isValidating || isLoading,
     error,
     publication,
+    refresh,
+  } as const
+}
+
+export function usePublicationUploadPolicy(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined,
+  _language: string | null | undefined,
+  _version: number | string | null | undefined
+) {
+  const { readPublicationUploadPolicy } = usePublicationAPI()
+
+  const getKey = useCallback(() => {
+    if (!_gid || !_cid || !_language || _version == null) return null
+    const params: Record<keyof QueryPublication, string | undefined> = {
+      gid: _gid,
+      cid: _cid,
+      language: _language,
+      version: String(_version),
+      fields: undefined,
+    }
+    return [`${path}/upload`, params] as const
+  }, [_cid, _gid, _language, _version])
+
+  const { data, error, mutate, isValidating, isLoading } = useSWR(
+    getKey,
+    ([, params]) => readPublicationUploadPolicy(params),
+    { revalidateOnMount: false } as SWRConfiguration
+  )
+
+  const refresh = useCallback(
+    async () => getKey() && (await mutate())?.result,
+    [getKey, mutate]
+  )
+
+  return {
+    isLoading: isValidating || isLoading,
+    error,
+    uploadPolicy: data?.result,
     refresh,
   } as const
 }

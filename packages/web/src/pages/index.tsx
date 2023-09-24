@@ -1,9 +1,4 @@
-import {
-  BOOKMARK_PATH,
-  FOLLOWING_PATH,
-  NEW_CREATION_PATH,
-  SetHeaderProps,
-} from '#/App'
+import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
 import LargeDialog from '#/components/LargeDialog'
 import PublicationViewer from '#/components/PublicationViewer'
 import ResponsiveTabSection from '#/components/ResponsiveTabSection'
@@ -30,14 +25,12 @@ export default function Home() {
 
   const {
     onSearch,
-    onView,
     publicationViewer: {
       open: publicationViewerOpen,
       close: onPublicationViewerClose,
       ...publicationViewer
     },
-    followingList,
-    bookmarkList,
+    responsiveTabSection,
   } = useHomePage(pushToast)
 
   return (
@@ -90,25 +83,7 @@ export default function Home() {
             })}
           </div>
           <ResponsiveTabSection
-            tabs={[
-              {
-                key: 'following',
-                icon: 'wanchain',
-                title: followingList.title,
-                more: FOLLOWING_PATH,
-                isLoading: followingList.isLoading,
-                items: followingList.items,
-              },
-              {
-                key: 'bookmark',
-                icon: 'heart',
-                title: intl.formatMessage({ defaultMessage: '书签' }),
-                more: BOOKMARK_PATH,
-                isLoading: bookmarkList.isLoading,
-                items: bookmarkList.items,
-              },
-            ]}
-            onView={onView}
+            {...responsiveTabSection}
             css={css`
               margin-top: 48px;
             `}

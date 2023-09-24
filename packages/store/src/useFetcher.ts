@@ -65,7 +65,7 @@ export function createRequest(
         : resp.headers.get('Content-Type')?.startsWith(JSON_MIME_TYPE)
         ? await resp.json()
         : await resp.text()
-    if (status >= 200 && status < 300) {
+    if (resp.ok) {
       return body as T
     } else {
       const requestId = resp.headers.get('X-Request-Id')
@@ -137,7 +137,7 @@ export function createRequest(
   return request
 }
 
-export function useRequest(baseURL: string, options: RequestInit) {
+export function useRequest(baseURL: string, options: RequestInit = {}) {
   const logger = useLogger()
   const headers = Array.from(new Headers(options.headers).entries())
   const stringifiedOptions = JSON.stringify({ ...options, headers })

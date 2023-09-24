@@ -9,6 +9,7 @@ import {
   type GIDPagination,
   type GroupInfo,
   type Page,
+  type PostFilePolicy,
   type UserInfo,
 } from './common'
 import { RequestMethod, useFetcher } from './useFetcher'
@@ -30,7 +31,7 @@ export enum CreationStatus {
 export interface QueryCreation {
   gid: Uint8Array
   id: Uint8Array
-  fields: readonly string[]
+  fields: string
 }
 
 export interface CreateCreationInput {
@@ -38,7 +39,7 @@ export interface CreateCreationInput {
   title: string
   content: Uint8Array
   language: string
-  original_url?: string
+  original_url?: string | undefined
   genre?: string[]
   cover?: string
   keywords?: string[]
@@ -115,13 +116,14 @@ export interface ScrapingOutput {
 }
 
 export interface CreationDraft {
-  __isReady: boolean
+  __isReady?: boolean
   gid: Uint8Array | undefined
   id: Uint8Array | undefined
   language: string | undefined
   updated_at: number | undefined
   title: string
   content: JSONContent | undefined
+  original_url?: string | undefined
 }
 
 const path = '/v1/creation'
@@ -159,6 +161,18 @@ export function useCreationAPI() {
     [request]
   )
 
+  const readCreationUploadPolicy = useCallback(
+    async (params: Record<keyof QueryCreation, string | undefined>) => {
+      const body = {
+        gid: params.gid ? Xid.fromValue(params.gid) : undefined,
+        id: params.id ? Xid.fromValue(params.id) : undefined,
+        fields: params.fields,
+      } as QueryCreation
+      return request.post<{ result: PostFilePolicy }>(`${path}/upload`, body)
+    },
+    [request]
+  )
+
   const createCreation = useCallback(
     async (draft: CreationDraft) => {
       if (
@@ -180,7 +194,7 @@ export function useCreationAPI() {
       }
       const { result } = await request.post<{ result: CreationOutput }>(
         path,
-        body
+        omitBy(body, (val) => val == null)
       )
       return result
     },
@@ -188,7 +202,7 @@ export function useCreationAPI() {
   )
 
   const updateCreation = useCallback(
-    async (draft: CreationDraft) => {
+    async (draft: CreationDraft, contentOnly?: boolean) => {
       if (
         !draft.gid ||
         !draft.id ||
@@ -212,6 +226,7 @@ export function useCreationAPI() {
         `${path}/update_content`,
         body1
       )
+      if (contentOnly) return result1
       const body2: UpdateCreationInput = {
         ...draft,
         gid: result1.gid,
@@ -285,6 +300,7 @@ export function useCreationAPI() {
     readCreation,
     readCreationList,
     readArchivedCreationList,
+    readCreationUploadPolicy,
     createCreation,
     updateCreation,
     deleteCreation,
@@ -331,6 +347,41 @@ export function useCreation(
     creation,
     error,
     isLoading: isValidating || isLoading,
+    refresh,
+  } as const
+}
+
+export function useCreationUploadPolicy(
+  _gid: string | null | undefined,
+  _cid: string | null | undefined
+) {
+  const { readCreationUploadPolicy } = useCreationAPI()
+
+  const getKey = useCallback(() => {
+    if (!_gid || !_cid) return null
+    const params: Record<keyof QueryCreation, string | undefined> = {
+      gid: _gid,
+      id: _cid,
+      fields: undefined,
+    }
+    return [`${path}/upload`, params] as const
+  }, [_cid, _gid])
+
+  const { data, error, mutate, isValidating, isLoading } = useSWR(
+    getKey,
+    ([, params]) => readCreationUploadPolicy(params),
+    { revalidateOnMount: false } as SWRConfiguration
+  )
+
+  const refresh = useCallback(
+    async () => getKey() && (await mutate())?.result,
+    [getKey, mutate]
+  )
+
+  return {
+    isLoading: isValidating || isLoading,
+    error,
+    uploadPolicy: data?.result,
     refresh,
   } as const
 }

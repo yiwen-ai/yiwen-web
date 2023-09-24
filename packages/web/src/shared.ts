@@ -1,6 +1,11 @@
-import { joinURL } from '@yiwen-ai/util'
-import { useEffect, useState } from 'react'
+import { Editor, findChildren, type JSONContent } from '@tiptap/core'
+import { getExtensions } from '@yiwen-ai/component'
+import { useUploadAPI, type PostFilePolicy } from '@yiwen-ai/store'
+import { isBlobURL, joinURL } from '@yiwen-ai/util'
+import { useCallback, useEffect, useState, type ImgHTMLAttributes } from 'react'
+import { useIntl } from 'react-intl'
 import { generatePath } from 'react-router-dom'
+import { forkJoin, lastValueFrom, tap } from 'rxjs'
 import { Xid } from 'xid-ts'
 import { SHARE_PUBLICATION_PATH } from './App'
 
@@ -47,5 +52,52 @@ export function generatePublicationShareLink(
       version,
       by,
     }
+  )
+}
+
+export function useUploadDocumentImages() {
+  const intl = useIntl()
+  const { uploadFromBlobURL } = useUploadAPI()
+
+  return useCallback(
+    async (
+      content: JSONContent | null | undefined,
+      getUploadPolicy: () => Promise<PostFilePolicy>
+    ) => {
+      if (!content) return null
+
+      const editor = new Editor({ content, extensions: getExtensions() })
+      const imageNodes = findChildren(
+        editor.state.doc,
+        (node) =>
+          node.type.name === 'image' &&
+          isBlobURL((node.attrs as ImgHTMLAttributes<HTMLImageElement>).src)
+      )
+
+      if (imageNodes.length === 0) return null
+
+      const uploadPolicy = await getUploadPolicy()
+
+      await lastValueFrom(
+        forkJoin(
+          imageNodes.map(({ node, pos }) => {
+            const attrs = node.attrs as ImgHTMLAttributes<HTMLImageElement>
+            const src = attrs.src as string
+            const fileName =
+              attrs.alt ||
+              attrs.title ||
+              intl.formatMessage({ defaultMessage: '图片' })
+            return uploadFromBlobURL(uploadPolicy, src, fileName).pipe(
+              tap(({ value: url }) => {
+                attrs.src = url
+              })
+            )
+          })
+        )
+      )
+
+      return editor.getJSON()
+    },
+    [intl, uploadFromBlobURL]
   )
 }

@@ -12,6 +12,7 @@ export {
   isSystem,
   type ColorScheme,
   type GroupInfo,
+  type PostFilePolicy,
   type UserInfo,
 } from './common'
 export {
@@ -27,6 +28,7 @@ export {
   useCreation,
   useCreationAPI,
   useCreationList,
+  useCreationUploadPolicy,
   useUploadDocument,
   type CreateCreationInput,
   type CreationDraft,
@@ -68,6 +70,7 @@ export {
   usePublication,
   usePublicationAPI,
   usePublicationList,
+  usePublicationUploadPolicy,
   useRecommendedPublicationList,
   useTranslatedPublicationList,
   type ModelCost,
@@ -80,6 +83,7 @@ export {
   type SearchDocument,
   type SearchInput,
 } from './useSearch'
+export { useUploadAPI, type UploadOutput } from './useUpload'
 export {
   ChargeProvider,
   ChargeStatus,

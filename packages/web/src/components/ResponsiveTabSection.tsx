@@ -3,6 +3,10 @@ import OrderedList from '#/components/OrderedList'
 import PublicationLink from '#/components/PublicationLink'
 import Section, { SectionHeader, SectionTitle } from '#/components/Section'
 import { BREAKPOINT } from '#/shared'
+import {
+  type ResponsiveTabItem,
+  type ResponsiveTabKey,
+} from '#/store/useResponsiveTabSection'
 import { css } from '@emotion/react'
 import {
   IconButton,
@@ -10,147 +14,137 @@ import {
   TabList,
   TabPanel,
   TabSection,
-  type IconName,
 } from '@yiwen-ai/component'
 import {
   buildPublicationKey,
   type BookmarkOutput,
   type PublicationOutput,
 } from '@yiwen-ai/store'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
-import { Link, type To } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Loading from './Loading'
 
 const LIMIT = 6
 
-type TabKey = 'following' | 'bookmark'
-
 interface ResponsiveTabSectionProps {
   className?: string
-  tabs: {
-    key: TabKey
-    icon: IconName
-    title: string
-    more: To
-    isLoading: boolean
-    items: (PublicationOutput | BookmarkOutput)[]
-  }[]
+  value: ResponsiveTabKey
+  onChange: (value: ResponsiveTabKey) => void
+  items: ResponsiveTabItem[]
   onView: (item: PublicationOutput | BookmarkOutput) => void
 }
 
 export default function ResponsiveTabSection({
   className,
-  tabs,
+  value,
+  onChange,
+  items,
   onView,
 }: ResponsiveTabSectionProps) {
   const intl = useIntl()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const isNarrow = width <= BREAKPOINT.small
 
-  const [currentTab, setCurrentTab] = useState<TabKey>('following')
-
-  const currentTabMore = tabs.find((tab) => tab.key === currentTab)?.more
+  const currentTabMore = useMemo(
+    () => items.find((tab) => tab.key === value)?.more,
+    [items, value]
+  )
 
   const renderList = useCallback(
-    (items: (PublicationOutput | BookmarkOutput)[]) => (
-      <OrderedList
-        css={css`
-          grid-template-columns: repeat(
-            auto-fill,
-            minmax(min(240px, 100%), 1fr)
-          );
-          ${!isNarrow &&
-          css`
-            grid-auto-flow: column;
-            grid-template-rows: repeat(
-              ${Math.min(items.length, Math.ceil(LIMIT / 2))},
-              auto
+    (isLoading: boolean, items: (PublicationOutput | BookmarkOutput)[]) => {
+      return isLoading ? (
+        <Loading />
+      ) : (
+        <OrderedList
+          css={css`
+            grid-template-columns: repeat(
+              auto-fill,
+              minmax(min(240px, 100%), 1fr)
             );
-          `}
-          ${items.length === 0 &&
-          css`
-            display: block;
-          `}
-        `}
-      >
-        {items.length === 0 ? (
-          <div
-            css={(theme) => css`
-              padding: 20px;
-              text-align: center;
-              color: ${theme.color.body.secondary};
-              ${theme.typography.tooltip}
+            ${!isNarrow &&
+            css`
+              grid-auto-flow: column;
+              grid-template-rows: repeat(
+                ${Math.min(items.length, Math.ceil(LIMIT / 2))},
+                auto
+              );
             `}
-          >
-            {intl.formatMessage({ defaultMessage: '暂无数据' })}
-          </div>
-        ) : (
-          items.slice(0, LIMIT).map((item, index) => (
-            <PublicationLink
-              key={buildPublicationKey(item)}
-              gid={item.gid}
-              cid={item.cid}
-              language={item.language}
-              version={item.version}
-              onClick={() => onView(item)}
+            ${items.length === 0 &&
+            css`
+              display: block;
+            `}
+          `}
+        >
+          {items.length === 0 ? (
+            <div
+              css={(theme) => css`
+                padding: 20px;
+                text-align: center;
+                color: ${theme.color.body.secondary};
+                ${theme.typography.tooltip}
+              `}
             >
-              <OrderedItem index={index} primary={index < LIMIT / 2}>
-                {item.title}
-              </OrderedItem>
-            </PublicationLink>
-          ))
-        )}
-      </OrderedList>
-    ),
+              {intl.formatMessage({ defaultMessage: '暂无数据' })}
+            </div>
+          ) : (
+            items.slice(0, LIMIT).map((item, index) => (
+              <PublicationLink
+                key={buildPublicationKey(item)}
+                gid={item.gid}
+                cid={item.cid}
+                language={item.language}
+                version={item.version}
+                onClick={() => onView(item)}
+              >
+                <OrderedItem index={index} primary={index < LIMIT / 2}>
+                  {item.title}
+                </OrderedItem>
+              </PublicationLink>
+            ))
+          )}
+        </OrderedList>
+      )
+    },
     [intl, isNarrow, onView]
   )
 
   return (
-    <div className={className} ref={ref}>
+    <div
+      className={className}
+      ref={ref}
+      css={css`
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      `}
+    >
       {isNarrow ? (
-        <div
-          css={css`
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-          `}
-        >
-          {tabs.map(({ key, icon, title, more, isLoading, items }) => (
-            <Section
-              key={key}
-              header={
-                <SectionHeader
-                  css={
-                    !isNarrow &&
-                    css`
-                      padding: 0 20px 0 32px;
-                    `
-                  }
+        items.map(({ key, icon, title, more, isLoading, items }) => (
+          <Section
+            key={key}
+            header={
+              <SectionHeader>
+                <SectionTitle iconName={icon} label={title} active={true} />
+                <Link
+                  to={more}
+                  css={css`
+                    display: flex;
+                  `}
                 >
-                  <SectionTitle iconName={icon} label={title} active={true} />
-                  <Link
-                    to={more}
-                    css={css`
-                      display: flex;
-                    `}
-                  >
-                    {!isNarrow &&
-                      intl.formatMessage({ defaultMessage: '查看所有' })}
-                    <IconButton iconName='right' size='small' />
-                  </Link>
-                </SectionHeader>
-              }
-            >
-              {isLoading ? <Loading /> : renderList(items)}
-            </Section>
-          ))}
-        </div>
+                  <IconButton iconName='right' size='small' />
+                </Link>
+              </SectionHeader>
+            }
+          >
+            {renderList(isLoading, items)}
+          </Section>
+        ))
       ) : (
         <TabSection
-          value={currentTab}
-          onChange={setCurrentTab}
+          value={value}
+          onChange={onChange}
           css={css`
             display: flex;
             flex-direction: column;
@@ -164,7 +158,7 @@ export default function ResponsiveTabSection({
               border: unset;
             `}
           >
-            {tabs.map(({ key, icon, title }) => (
+            {items.map(({ key, icon, title }) => (
               <Tab
                 key={key}
                 value={key}
@@ -182,7 +176,7 @@ export default function ResponsiveTabSection({
                 <SectionTitle
                   iconName={icon}
                   label={title}
-                  active={key === currentTab}
+                  active={key === value}
                 />
               </Tab>
             ))}
@@ -205,9 +199,9 @@ export default function ResponsiveTabSection({
               </li>
             )}
           </TabList>
-          {tabs.map(({ key, title, more, isLoading, items }) => (
+          {items.map(({ key, isLoading, items }) => (
             <TabPanel key={key} value={key}>
-              {isLoading ? <Loading /> : renderList(items)}
+              {renderList(isLoading, items)}
             </TabPanel>
           ))}
         </TabSection>

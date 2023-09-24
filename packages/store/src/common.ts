@@ -69,6 +69,15 @@ export interface GroupInfo {
   _following?: boolean
 }
 
+export interface PostFilePolicy {
+  host: string
+  dir: string
+  access_key: string
+  policy: string
+  signature: string
+  base_url: string
+}
+
 export const isSystem = (info: UserInfo | undefined) => info?.cn === 'sys'
 
 export function usePagination<T>({
