@@ -41,7 +41,11 @@ export default function NewCreationPage() {
       close: closeCreateFromFileDialog,
       ...createFromFileDialog
     },
-  } = useNewCreationPage(pushToast, searchParams.get('gid'))
+  } = useNewCreationPage(
+    pushToast,
+    searchParams.get('gid'),
+    searchParams.get('scrapingOutput')
+  )
 
   return (
     <>

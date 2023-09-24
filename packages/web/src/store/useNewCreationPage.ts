@@ -3,11 +3,14 @@ import { useUploadDocumentImages } from '#/shared'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   decode,
+  parseBlobURL,
+  revokeBlobURL,
   toMessage,
   useAuth,
   useCreationAPI,
   useMyGroupList,
   type CreationDraft,
+  type ScrapingOutput,
 } from '@yiwen-ai/store'
 import { useCallback, useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
@@ -19,7 +22,8 @@ import { GroupViewType } from './useGroupDetailPage'
 
 export function useNewCreationPage(
   pushToast: ToastAPI['pushToast'],
-  _gid: string | null | undefined
+  _gid: string | null | undefined,
+  _scrapingOutput: string | null | undefined
 ) {
   const intl = useIntl()
   const navigate = useNavigate()
@@ -42,6 +46,27 @@ export function useNewCreationPage(
     title: '',
     content: undefined,
   }))
+
+  useEffect(() => {
+    if (!_scrapingOutput) return
+    let aborted = false
+    const url = _scrapingOutput
+    parseBlobURL<ScrapingOutput>(url)
+      .then((result) => {
+        if (!aborted && result) {
+          const draft: Partial<CreationDraft> = {}
+          if (result.title) draft.title = result.title
+          if (result.content) draft.content = decode(result.content)
+          if (result.url) draft.original_url = result.url
+          setDraft((prev) => ({ ...prev, ...draft }))
+        }
+      })
+      .catch(() => {})
+    return () => {
+      aborted = true
+      setTimeout(() => revokeBlobURL(url), 100)
+    }
+  }, [_scrapingOutput])
 
   useEffect(() => {
     refreshDefaultGroup()

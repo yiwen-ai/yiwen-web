@@ -1,4 +1,6 @@
 import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
+import CreateFromFileDialog from '#/components/CreateFromFileDialog'
+import CreateFromLinkDialog from '#/components/CreateFromLinkDialog'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import LargeDialog from '#/components/LargeDialog'
 import Loading from '#/components/Loading'
@@ -47,6 +49,18 @@ export default function SearchPage() {
       ...publicationViewer
     },
     responsiveTabSection,
+    createFromFileDialog: {
+      open: createFromFileDialogOpen,
+      show: onCreateFromFileDialogShow,
+      close: onCreateFromFileDialogClose,
+      ...createFromFileDialog
+    },
+    createFromLinkDialog: {
+      open: createFromLinkDialogOpen,
+      show: onCreateFromLinkDialogShow,
+      close: onCreateFromLinkDialogClose,
+      ...createFromLinkDialog
+    },
   } = useSearchPage(pushToast)
 
   const handleChange = useCallback(
@@ -185,8 +199,20 @@ export default function SearchPage() {
                   `}
                 />
               ) : null}
-              <IconButton iconName='upload' iconSize='medium' shape='rounded' />
-              <IconButton iconName='link2' iconSize='medium' shape='rounded' />
+              <IconButton
+                iconName='upload'
+                iconSize='medium'
+                shape='rounded'
+                disabled={createFromLinkDialog.isCrawling}
+                onClick={onCreateFromFileDialogShow}
+              />
+              <IconButton
+                iconName='link2'
+                iconSize='medium'
+                shape='rounded'
+                disabled={createFromFileDialog.isUploading}
+                onClick={onCreateFromLinkDialogShow}
+              />
             </div>
           )}
           autoFocus={true} // eslint-disable-line jsx-a11y/no-autofocus
@@ -212,6 +238,20 @@ export default function SearchPage() {
             {...publicationViewer}
           />
         </LargeDialog>
+      )}
+      {createFromFileDialogOpen && (
+        <CreateFromFileDialog
+          open={true}
+          onClose={onCreateFromFileDialogClose}
+          {...createFromFileDialog}
+        />
+      )}
+      {createFromLinkDialogOpen && (
+        <CreateFromLinkDialog
+          open={true}
+          onClose={onCreateFromLinkDialogClose}
+          {...createFromLinkDialog}
+        />
       )}
     </>
   )
