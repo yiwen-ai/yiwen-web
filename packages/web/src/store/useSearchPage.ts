@@ -1,20 +1,26 @@
+import { NEW_CREATION_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
+  createBlobURL,
   useSearch,
   type BookmarkOutput,
   type PublicationOutput,
+  type ScrapingOutput,
   type SearchDocument,
   type SearchInput,
 } from '@yiwen-ai/store'
 import { toURLSearchParams } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDebounce } from 'use-debounce'
+import { useCreateFromFileDialog } from './useCreateFromFileDialog'
+import { useCreateFromLinkDialog } from './useCreateFromLinkDialog'
 import { usePublicationViewer } from './usePublicationViewer'
 import { useResponsiveTabSection } from './useResponsiveTabSection'
 
 export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
 
   //#region params
   const [keyword, setKeyword] = useState(searchParams.get('q')?.trim() ?? '')
@@ -68,6 +74,7 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   )
   //#endregion
 
+  //#region following list & bookmark list
   const {
     refreshFollowedPublicationList,
     refreshRecommendedPublicationList,
@@ -84,6 +91,37 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
     await onPublicationRemoveFavorite()
     refreshBookmarkList()
   }, [onPublicationRemoveFavorite, refreshBookmarkList])
+  //#endregion
+
+  //#region create from file/link dialog
+  const navigateToCreate = useCallback(
+    (result: ScrapingOutput) => {
+      navigate({
+        pathname: NEW_CREATION_PATH,
+        search: toURLSearchParams({
+          scrapingOutput: createBlobURL(result),
+        }).toString(),
+      })
+    },
+    [navigate]
+  )
+
+  const { onUpload, ...createFromFileDialog } =
+    useCreateFromFileDialog(pushToast)
+
+  const { onCrawl, ...createFromLinkDialog } =
+    useCreateFromLinkDialog(pushToast)
+
+  const handleUpload = useCallback(async () => {
+    const result = await onUpload()
+    if (result) navigateToCreate(result)
+  }, [navigateToCreate, onUpload])
+
+  const handleCrawl = useCallback(async () => {
+    const result = await onCrawl()
+    if (result) navigateToCreate(result)
+  }, [navigateToCreate, onCrawl])
+  //#endregion
 
   return {
     isLoading,
@@ -100,6 +138,14 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
     responsiveTabSection: {
       onView,
       ...responsiveTabSection,
+    },
+    createFromFileDialog: {
+      onUpload: handleUpload,
+      ...createFromFileDialog,
+    },
+    createFromLinkDialog: {
+      onCrawl: handleCrawl,
+      ...createFromLinkDialog,
     },
   } as const
 }

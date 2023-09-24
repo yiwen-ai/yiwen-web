@@ -1,5 +1,10 @@
 import { type ToastAPI } from '@yiwen-ai/component'
-import { toMessage, useCrawlDocument, useMyGroupList } from '@yiwen-ai/store'
+import {
+  toMessage,
+  useCrawlDocument,
+  useEnsureAuthorized,
+  useMyGroupList,
+} from '@yiwen-ai/store'
 import { isURL } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
@@ -7,19 +12,31 @@ import { Xid } from 'xid-ts'
 
 export function useCreateFromLinkDialog(
   pushToast: ToastAPI['pushToast'],
-  _gid: Uint8Array | string | null | undefined
+  _gid?: Uint8Array | string | null | undefined
 ) {
   const intl = useIntl()
+  const ensureAuthorized = useEnsureAuthorized()
+
+  const [open, setOpen] = useState(false)
+  const show = useMemo(
+    () => ensureAuthorized(() => setOpen(true)),
+    [ensureAuthorized]
+  )
+  const close = useCallback(() => setOpen(false), [])
 
   const [gid, setGid] = useState(() =>
     _gid ? Xid.fromValue(_gid).toString() : undefined
   )
 
-  const { refreshDefaultGroup } = useMyGroupList()
+  const { defaultGroup, refreshDefaultGroup } = useMyGroupList()
+  const defaultGroupId = defaultGroup?.id
 
   useEffect(() => {
+    if (!open) return
     const controller = new AbortController()
-    Promise.resolve(_gid || refreshDefaultGroup().then((group) => group?.id))
+    Promise.resolve(
+      _gid || defaultGroupId || refreshDefaultGroup().then((group) => group?.id)
+    )
       .then((gid) => {
         if (!controller.signal.aborted && gid) {
           setGid(Xid.fromValue(gid).toString())
@@ -27,11 +44,7 @@ export function useCreateFromLinkDialog(
       })
       .catch(() => {})
     return () => controller.abort()
-  }, [_gid, refreshDefaultGroup])
-
-  const [open, setOpen] = useState(false)
-  const show = useCallback(() => setOpen(true), [])
-  const close = useCallback(() => setOpen(false), [])
+  }, [_gid, defaultGroupId, open, refreshDefaultGroup])
 
   const [link, setLink] = useState('')
   const disabled = useMemo(() => !isURL(link), [link])

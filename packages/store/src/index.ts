@@ -6,7 +6,13 @@ export {
   useEnsureAuthorizedCallback,
   type IdentityProvider,
 } from './AuthContext'
-export { decode, encode } from './CBOR'
+export {
+  createBlobURL,
+  decode,
+  encode,
+  parseBlobURL,
+  revokeBlobURL,
+} from './CBOR'
 export {
   UserStatus,
   isSystem,
@@ -34,6 +40,7 @@ export {
   type CreationDraft,
   type CreationOutput,
   type QueryCreation,
+  type ScrapingOutput,
   type UpdateCreationInput,
 } from './useCreation'
 export {
