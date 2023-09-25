@@ -518,7 +518,7 @@ function PublicationPart({
       css={css`
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 16px;
       `}
     >
       {!isLoading && error ? (
@@ -652,7 +652,7 @@ function CreationPart({
       css={css`
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 16px;
       `}
     >
       {!isLoading && error ? (

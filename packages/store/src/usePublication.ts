@@ -699,7 +699,7 @@ export function useReadPublicationByJob() {
         result: PublicationOutput | null
       }>(`${path}/by_job`, { job }, { signal })
       if (result) return result
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 2000))
       return poll(job, signal)
     },
     [controller?.signal, request]

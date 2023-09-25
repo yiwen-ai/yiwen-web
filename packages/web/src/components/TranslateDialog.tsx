@@ -46,7 +46,7 @@ export default function TranslateDialog({
                   defaultMessage:
                     '「{language}」正在翻译，请稍后。翻译好后可以在发布栏里进行修正和公开发布。',
                 },
-                { language: language.nativeName }
+                { language: language.nativeName + ` (${language.name})` }
               )}
             </div>
           </>

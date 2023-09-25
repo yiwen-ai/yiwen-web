@@ -70,7 +70,7 @@ export default function TranslateConfirmDialog({
     <SmallDialog
       title={intl.formatMessage(
         { defaultMessage: '翻译成 {language}' },
-        { language: language.nativeName }
+        { language: language.nativeName + ` (${language.name})` }
       )}
       open={open}
       onClose={onClose}

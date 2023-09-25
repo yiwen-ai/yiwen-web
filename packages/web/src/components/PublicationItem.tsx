@@ -58,7 +58,7 @@ export default function PublicationItem({
       onClick={handleClick}
       css={css`
         display: block;
-        padding: 24px;
+        padding: 16px 24px;
         border: 1px solid ${theme.color.divider.default};
         border-radius: 12px;
         cursor: pointer;
@@ -66,7 +66,7 @@ export default function PublicationItem({
           border-color: ${theme.color.button.primary.outlined.border};
         }
         @media (max-width: ${BREAKPOINT.small}px) {
-          padding: 16px;
+          padding: 12px 16px;
           border-radius: 8px;
         }
       `}

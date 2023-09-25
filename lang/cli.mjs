@@ -85,6 +85,7 @@ async function compile() {
       `${HOST}/v1/publication?gid=${GID}&cid=${CID}&language=${doc.language}&version=${doc.version}&fields=content`,
       { headers }
     )
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
     if (docRes.status !== 200) {
       throw new Error(docRes.text())
@@ -97,7 +98,8 @@ async function compile() {
       if (node.attrs?.id && node.content.length > 0) {
         const id = node.attrs.id
         const text = node.content[0].text
-        messages[id] = text
+        // https://formatjs.io/docs/core-concepts/icu-syntax#quoting--escaping
+        messages[id] = text.replace("'{", "''{").replace("}'", "}''")
       }
     }
 
@@ -108,4 +110,5 @@ async function compile() {
     )
     console.log(`Compiled ${lang}`)
   }
+  console.log('Done', docSet.size)
 }
