@@ -67,13 +67,14 @@ export interface UILanguageItem extends Language {
   isCurrent: boolean
   isTranslated: boolean
   isProcessing: boolean
+  version: number
 }
 
 export function useLanguageProcessor(
   _languageList: Language[] | undefined,
   originalLanguageCode: string | null | undefined,
   currentLanguageCode: string | null | undefined,
-  translatedLanguageCodeList: string[] | undefined,
+  translatedLanguageCodeList: [string, number][] | undefined,
   processingLanguageCodeList: string[] | undefined
 ) {
   const isOriginal = useCallback(
@@ -86,8 +87,19 @@ export function useLanguageProcessor(
     [currentLanguageCode]
   )
 
+  const translatedVersion = useCallback(
+    (lang: Language) => {
+      const v = (translatedLanguageCodeList ?? []).find(
+        ([code]) => code === lang.code
+      )
+      return v ? v[1] : 0
+    },
+    [translatedLanguageCodeList]
+  )
+
   const isTranslated = useCallback(
-    (lang: Language) => (translatedLanguageCodeList ?? []).includes(lang.code),
+    (lang: Language) =>
+      (translatedLanguageCodeList ?? []).some(([code]) => code === lang.code),
     [translatedLanguageCodeList]
   )
 
@@ -103,8 +115,16 @@ export function useLanguageProcessor(
       isCurrent: isCurrent(lang),
       isTranslated: isTranslated(lang),
       isProcessing: isProcessing(lang),
+      version: translatedVersion(lang),
     }))
-  }, [_languageList, isCurrent, isOriginal, isProcessing, isTranslated])
+  }, [
+    _languageList,
+    isCurrent,
+    isOriginal,
+    isProcessing,
+    isTranslated,
+    translatedVersion,
+  ])
 
   const originalLanguage = useMemo(
     () => languageList?.find(isOriginal),

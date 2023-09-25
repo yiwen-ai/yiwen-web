@@ -250,8 +250,8 @@ export function useGroupDetailPage(
   )
 
   const handlePublicationSwitch = useCallback(
-    async (language: UILanguageItem) => {
-      const publication = await onSwitch(language)
+    async (language: UILanguageItem, canTranslate: boolean) => {
+      const publication = await onSwitch(language, canTranslate)
       if (publication) navigateTo(publication)
     },
     [navigateTo, onSwitch]

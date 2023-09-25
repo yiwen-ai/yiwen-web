@@ -16,6 +16,7 @@ import {
   textEllipsis,
 } from '@yiwen-ai/component'
 import {
+  useAuth,
   type GPT_MODEL,
   type PublicationOutput,
   type UILanguageItem,
@@ -44,7 +45,7 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   pendingLanguageList: UILanguageItem[] | undefined
   onCharge: () => void
   onTranslate: (language: UILanguageItem, model: GPT_MODEL) => void
-  onSwitch: (language: UILanguageItem) => void
+  onSwitch: (language: UILanguageItem, canTranslate: boolean) => void
   shareLink: string | undefined
   onShare: () => void
   isFavorite: boolean
@@ -88,6 +89,7 @@ export default function PublicationViewer({
 }: PublicationViewerProps) {
   const intl = useIntl()
   const theme = useTheme()
+  const { user } = useAuth()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const isNarrow = responsive && width <= BREAKPOINT.small
 
@@ -129,6 +131,14 @@ export default function PublicationViewer({
         _pendingLanguageList?.some((item) => item.isProcessing)
     )
   }, [_pendingLanguageList, _translatedLanguageList])
+
+  const upateCurrent =
+    (originalLanguage &&
+      currentLanguage &&
+      !isProcessing &&
+      originalLanguage.version > currentLanguage.version &&
+      user) ||
+    false
 
   return (
     <div
@@ -179,7 +189,7 @@ export default function PublicationViewer({
                 disabled={!originalLanguage || originalLanguage.isCurrent}
                 onClick={
                   originalLanguage
-                    ? () => onSwitch(originalLanguage)
+                    ? () => onSwitch(originalLanguage, false)
                     : undefined
                 }
               >
@@ -188,13 +198,25 @@ export default function PublicationViewer({
               </Button>
               {!currentLanguage || currentLanguage.isOriginal ? null : (
                 <Button
-                  title={intl.formatMessage({ defaultMessage: '当前语言' })}
+                  title={
+                    upateCurrent
+                      ? intl.formatMessage({ defaultMessage: '更新版本' })
+                      : intl.formatMessage({
+                          defaultMessage: '当前语言',
+                        })
+                  }
                   color='primary'
                   variant='outlined'
                   size={isNarrow ? 'small' : 'large'}
-                  disabled={true}
+                  disabled={!upateCurrent}
+                  onClick={
+                    upateCurrent
+                      ? () => onSwitch(currentLanguage, true)
+                      : undefined
+                  }
                 >
                   {currentLanguage.nativeName}
+                  {!upateCurrent ? null : <Icon name='refresh' size='small' />}
                 </Button>
               )}
               {translatedLanguageList && pendingLanguageList && (
@@ -223,7 +245,7 @@ export default function PublicationViewer({
                     </Button>
                   )}
                   css={css`
-                    width: 280px;
+                    width: 360px;
                   `}
                 >
                   <li
@@ -263,7 +285,7 @@ export default function PublicationViewer({
                       )}
                       value={originalLanguage.code}
                       dir={originalLanguage.dir}
-                      onSelect={() => onSwitch(originalLanguage)}
+                      onSelect={() => onSwitch(originalLanguage, false)}
                     />
                   )}
                   {translatedLanguageList.length > 0 && (
@@ -277,12 +299,12 @@ export default function PublicationViewer({
                           label={`${item.nativeName} (${item.name})`}
                           value={item.code}
                           dir={item.dir}
-                          onSelect={() => onSwitch(item)}
+                          onSelect={() => onSwitch(item, false)}
                         />
                       ))}
                     </SelectOptionGroup>
                   )}
-                  {pendingLanguageList.length > 0 && (
+                  {originalLanguage && pendingLanguageList.length > 0 && (
                     <SelectOptionGroup
                       label={intl.formatMessage({ defaultMessage: '未翻译' })}
                     >
@@ -294,7 +316,7 @@ export default function PublicationViewer({
                           value={item.code}
                           dir={item.dir}
                           disabled={item.isProcessing}
-                          onSelect={() => onSwitch(item)}
+                          onSelect={() => onSwitch(item, true)}
                         />
                       ))}
                     </SelectOptionGroup>
