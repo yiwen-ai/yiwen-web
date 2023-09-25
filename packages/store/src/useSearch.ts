@@ -12,7 +12,9 @@ export interface SearchDocument {
   kind: number
   title: string
   summary: string
+  updated_at: number
   group?: GroupInfo
+  group_info?: GroupInfo
 }
 
 export interface SearchOutput {

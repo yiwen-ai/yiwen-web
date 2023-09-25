@@ -131,7 +131,9 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
 
   const translatedLanguageCodeList = useMemo(() => {
     if (!translatedList) return undefined
-    return uniq(translatedList.map((item) => item.language))
+    return translatedList.map(
+      (item) => [item.language, item.version] as [string, number]
+    )
   }, [translatedList])
 
   const processingLanguageCodeList = useMemo(() => {
@@ -269,16 +271,12 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   )
 
   const onSwitch = useCallback(
-    async (language: UILanguageItem) => {
+    async (language: UILanguageItem, canTranslate: boolean) => {
       const _language = language.code
       let publication = translatedList?.find(
-        (item) => item.language === _language && item.version === _version
+        (item) => item.language === _language
       )
-      if (!publication) {
-        publication = translatedList
-          ?.filter((item) => item.language === _language)
-          .sort((a, b) => b.version - a.version)[0] // latest version
-      }
+
       if (
         !publication &&
         language.isOriginal &&
@@ -325,10 +323,9 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
             }
           }
         }
-      } else if (!publication) {
+      } else if (!publication || canTranslate) {
         showTranslateConfirmDialog(language)
-      }
-      if (publication) {
+      } else if (publication) {
         show(
           publication.gid,
           publication.cid,

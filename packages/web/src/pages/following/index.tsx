@@ -1,3 +1,4 @@
+import CreatedBy from '#/components/CreatedBy'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import LargeDialog from '#/components/LargeDialog'
 import LoadMore from '#/components/LoadMore'
@@ -136,15 +137,27 @@ function PublicationItem({
           {item.title}
         </div>
       </div>
-      <div
-        css={css`
-          margin-top: 4px;
-          color: ${theme.color.body.secondary};
-          ${theme.typography.tooltip}
-        `}
-      >
-        {new Date(item.updated_at).toLocaleDateString()}
-      </div>
+      {item.summary && (
+        <div
+          dir={isRTL(item.language) ? 'rtl' : undefined}
+          css={css`
+            margin-top: 12px;
+          `}
+        >
+          {item.summary.length < 140
+            ? item.summary
+            : item.summary.slice(0, 140) + '...'}
+        </div>
+      )}
+      {item.group_info && (
+        <CreatedBy
+          item={item.group_info}
+          timestamp={item.updated_at}
+          css={css`
+            margin-top: 8px;
+          `}
+        />
+      )}
     </PublicationLink>
   )
 }

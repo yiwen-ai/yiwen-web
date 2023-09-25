@@ -1,22 +1,21 @@
 import { css, useTheme } from '@emotion/react'
 import { Avatar } from '@yiwen-ai/component'
-import {
-  useAuth,
-  type CreationOutput,
-  type PublicationOutput,
-} from '@yiwen-ai/store'
+import { useAuth, type GroupInfo } from '@yiwen-ai/store'
 
 export default function CreatedBy({
   item,
+  timestamp,
   ...props
 }: {
-  item: CreationOutput | PublicationOutput
+  item: GroupInfo
+  timestamp: number
 } & React.HTMLAttributes<HTMLDivElement>) {
   const theme = useTheme()
   const lang = useAuth().user?.locale
 
-  const creatorName = item.creator_info?.name || item.group_info?.name
-  const creatorAvatar = item.creator_info?.picture || item.group_info?.logo
+  const creatorName = item.name
+  const creatorAvatar = item.logo
+  const creatorCn = item.cn
 
   return (
     <div
@@ -29,19 +28,19 @@ export default function CreatedBy({
       `}
     >
       {creatorName && (
+        <Avatar
+          src={creatorAvatar}
+          name={creatorName}
+          cn={creatorCn}
+          size='small'
+        />
+      )}
+      {timestamp > 0 && (
         <>
-          <Avatar
-            src={creatorAvatar}
-            name={creatorName}
-            size='small'
-            css={css`
-              gap: 12px;
-            `}
-          />
           <i>·</i>
+          <span>{new Date(timestamp).toLocaleDateString(lang)}</span>
         </>
       )}
-      <span>{new Date(item.created_at).toLocaleDateString(lang)}</span>
     </div>
   )
 }

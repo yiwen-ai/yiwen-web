@@ -1,7 +1,13 @@
+import { WALLET_PATH } from '#/App'
 import { ReactComponent as SvgTranslate } from '#/assets/translate.svg'
 import { useModelLabelDict } from '#/store/useTranslateConfirmDialog'
 import { css } from '@emotion/react'
-import { Button, Select, type SelectOptionProps } from '@yiwen-ai/component'
+import {
+  Button,
+  Clickable,
+  Select,
+  type SelectOptionProps,
+} from '@yiwen-ai/component'
 import {
   type GPT_MODEL,
   type ModelCost,
@@ -9,6 +15,7 @@ import {
 } from '@yiwen-ai/store'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
+import { useNavigate } from 'react-router-dom'
 import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
 import SmallDialog from './SmallDialog'
@@ -45,12 +52,19 @@ export default function TranslateConfirmDialog({
   onTranslate,
 }: TranslateConfirmDialogProps) {
   const intl = useIntl()
+  const navigate = useNavigate()
   const modelLabelDict = useModelLabelDict()
   const handleTranslate = useCallback(
     () => language && currentModel && onTranslate(language, currentModel.id),
     [currentModel, language, onTranslate]
   )
   const balanceNotEnough = balance == null || balance <= 0
+
+  const navigateToWallet = useCallback(() => {
+    navigate({
+      pathname: WALLET_PATH,
+    })
+  }, [navigate])
 
   return language ? (
     <SmallDialog
@@ -116,6 +130,20 @@ export default function TranslateConfirmDialog({
                 max-width: 100%;
               `}
             />
+            {modelList.length <= 1 && (
+              <Clickable onClick={navigateToWallet}>
+                <span
+                  css={(theme) => css`
+                    color: ${theme.color.body.primary};
+                    ${theme.typography.tooltip}
+                  `}
+                >
+                  {intl.formatMessage({
+                    defaultMessage: 'LV2 以上会员可以使用 GPT-4 模型',
+                  })}
+                </span>
+              </Clickable>
+            )}
             {tokenCount != null && balance != null && (
               <div
                 css={(theme) => css`
@@ -123,7 +151,6 @@ export default function TranslateConfirmDialog({
                   ${theme.typography.body}
 
                   > strong {
-                    font-weight: normal;
                     color: ${theme.color.body.primary};
                   }
                 `}
@@ -134,7 +161,7 @@ export default function TranslateConfirmDialog({
                       '当前翻译约 {tokens} Tokens，预计花费 {cost} 文，钱包余额 {balance} 文',
                   },
                   {
-                    tokens: <strong>{tokenCount}</strong>,
+                    tokens: tokenCount,
                     cost: <strong>{currentModel.cost}</strong>,
                     balance,
                   }
@@ -150,7 +177,7 @@ export default function TranslateConfirmDialog({
               margin-top: 24px;
             `}
           >
-            {intl.formatMessage({ defaultMessage: '确定翻译' })}
+            {intl.formatMessage({ defaultMessage: '开始翻译' })}
           </Button>
           {balanceNotEnough && (
             <div

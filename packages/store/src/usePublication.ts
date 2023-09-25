@@ -189,11 +189,13 @@ export function usePublicationAPI(baseURL?: string) {
   )
 
   const readTranslatedPublicationList = useCallback(
-    (params: Record<keyof QueryPublication, string | number | null>) => {
-      return request.get<{ result: PublicationOutput[] }>(
+    async (params: Record<keyof QueryPublication, string | number | null>) => {
+      const res = await request.get<{ result: PublicationOutput[] }>(
         `${path}/publish`,
         params
       )
+      res.result.sort((a, b) => b.version - a.version)
+      return res
     },
     [request]
   )
@@ -546,7 +548,19 @@ export function useTranslatedPublicationList(
 
   const estimate = useCallback(
     async (language: string | undefined) => {
-      if (!_gid || !_cid || !_language || _version == null || !language) {
+      const original = translatedList?.result?.find(
+        (item) => item.language == item.from_language
+      )
+      const original_language = original?.language || _language
+      const original_version = original?.version || _version
+
+      if (
+        !_gid ||
+        !_cid ||
+        !original_language ||
+        !original_version ||
+        !language
+      ) {
         throw new Error(
           'group id, creation id, language, version, target group id and target language are required to translate a publication'
         )
@@ -556,8 +570,8 @@ export function useTranslatedPublicationList(
         const { result } = await estimatePublication({
           gid: Xid.fromValue(_gid),
           cid: Xid.fromValue(_cid),
-          language: _language,
-          version: _version,
+          language: original_language,
+          version: original_version,
           model: DEFAULT_MODEL,
           to_language: language,
         })
@@ -566,7 +580,15 @@ export function useTranslatedPublicationList(
         setEstimating(language, false)
       }
     },
-    [_cid, _gid, _language, _version, estimatePublication, setEstimating]
+    [
+      _cid,
+      _gid,
+      _language,
+      _version,
+      translatedList,
+      estimatePublication,
+      setEstimating,
+    ]
   )
   //#endregion
 
@@ -582,11 +604,16 @@ export function useTranslatedPublicationList(
       model: GPT_MODEL,
       signal: AbortSignal
     ) => {
+      const original = translatedList?.result?.find(
+        (item) => item.language == item.from_language
+      )
+      const original_language = original?.language || _language
+      const original_version = original?.version || _version
       if (
         !_gid ||
         !_cid ||
-        !_language ||
-        _version == null ||
+        !original_language ||
+        !original_version ||
         !gid ||
         !language
       ) {
@@ -599,8 +626,8 @@ export function useTranslatedPublicationList(
         const resp = await translatePublication({
           gid: Xid.fromValue(_gid),
           cid: Xid.fromValue(_cid),
-          language: _language,
-          version: _version,
+          language: original_language,
+          version: original_version,
           model,
           to_gid: gid,
           to_language: language,
@@ -622,6 +649,7 @@ export function useTranslatedPublicationList(
       _gid,
       _language,
       _version,
+      translatedList,
       mutateProcessingList,
       mutateTranslatedList,
       readPublicationByJob,

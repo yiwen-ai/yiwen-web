@@ -1,4 +1,4 @@
-import { css } from '@emotion/react'
+import { css, useTheme } from '@emotion/react'
 import {
   forwardRef,
   memo,
@@ -30,16 +30,21 @@ export interface AvatarProps extends HTMLAttributes<HTMLDivElement> {
    * optional name to display
    */
   name?: string
+  /**
+   * optional name to display
+   */
+  cn?: string
   size?: AvatarSize | number
 }
 
 export const Avatar = memo(
   forwardRef(function Avatar(
-    { src, alt, name, size = 'medium', ...props }: AvatarProps,
+    { src, alt, name, cn, size = 'medium', ...props }: AvatarProps,
     ref: React.Ref<HTMLDivElement>
   ) {
     const width = typeof size === 'number' ? size : SizeDict[size]
     const logger = useLogger()
+    const theme = useTheme()
 
     useEffect(() => {
       if (!name && !alt) {
@@ -86,7 +91,25 @@ export const Avatar = memo(
             `}
           />
         )}
-        {name && <span css={textEllipsis}>{name}</span>}
+        {name && (
+          <span
+            css={css`
+              max-width: 100px;
+              ${textEllipsis};
+            `}
+          >
+            {name}
+          </span>
+        )}
+        {cn && (
+          <span
+            css={css`
+              ${theme.typography.tooltip}
+            `}
+          >
+            @{cn}
+          </span>
+        )}
       </div>
     )
   })

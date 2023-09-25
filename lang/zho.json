@@ -41,11 +41,11 @@
   "1ZW8T8": {
     "defaultMessage": "{name} (创作语言)"
   },
-  "1a8j4U": {
-    "defaultMessage": "确定翻译"
-  },
   "1mxyUS": {
     "defaultMessage": "登录失败"
+  },
+  "1qoi3T": {
+    "defaultMessage": "图片"
   },
   "1tw6N7": {
     "defaultMessage": "1 {name} = {rate} 文"
@@ -73,6 +73,9 @@
   },
   "5FboZ/": {
     "defaultMessage": "类型"
+  },
+  "5d51OY": {
+    "defaultMessage": "上传失败，请重试"
   },
   "5elXzv": {
     "defaultMessage": "归档失败"
@@ -137,6 +140,9 @@
   "DdJaH+": {
     "defaultMessage": "智能搜索内容，用熟悉的语言来阅读"
   },
+  "DpClWS": {
+    "defaultMessage": "开始翻译"
+  },
   "DpnauN": {
     "defaultMessage": "时间"
   },
@@ -185,9 +191,6 @@
   "HLQK6J": {
     "defaultMessage": "充值"
   },
-  "HMexdi": {
-    "defaultMessage": "会员等级和信用分"
-  },
   "HcwfND": {
     "defaultMessage": "阅读并接受 {terms} 和 {privacy}"
   },
@@ -224,6 +227,12 @@
   "M7SXob": {
     "defaultMessage": "支付人"
   },
+  "MMfFsl": {
+    "defaultMessage": "{count} 篇公开内容"
+  },
+  "NIrePy": {
+    "defaultMessage": "从文件创作"
+  },
   "OA1lI2": {
     "defaultMessage": "取消失败"
   },
@@ -257,6 +266,12 @@
   "QsAe0/": {
     "defaultMessage": "保存失败"
   },
+  "R8Yt/D": {
+    "defaultMessage": "上传失败"
+  },
+  "R9QziI": {
+    "defaultMessage": "选择或拖拽图片上传"
+  },
   "RsyScM": {
     "defaultMessage": "取消中"
   },
@@ -274,6 +289,9 @@
   },
   "V0Tu6G": {
     "defaultMessage": "支付成功"
+  },
+  "V8czU2": {
+    "defaultMessage": "LV2 以上会员可以使用 GPT-4 模型"
   },
   "VtILvi": {
     "defaultMessage": "推荐"
@@ -311,14 +329,14 @@
   "YJAkVx": {
     "defaultMessage": "归档成功"
   },
+  "YNnYzN": {
+    "defaultMessage": "处理失败，请重试"
+  },
   "Yq7bo5": {
     "defaultMessage": "交易号"
   },
   "ZfHVmn": {
     "defaultMessage": "充值渠道"
-  },
-  "ZjpY1C": {
-    "defaultMessage": "{owner} · {count} 篇公开内容"
   },
   "a016zb": {
     "defaultMessage": "已取消关注"
@@ -332,6 +350,9 @@
   "aiBGBs": {
     "defaultMessage": "删除成功"
   },
+  "amVutm": {
+    "defaultMessage": "支持 PDF、Markdown、HTML、Text 格式，512 KB 以内"
+  },
   "ap5e13": {
     "defaultMessage": "系统审核中"
   },
@@ -343,6 +364,9 @@
   },
   "bc6368": {
     "defaultMessage": "声明："
+  },
+  "bosFVa": {
+    "defaultMessage": "请登录后再操作"
   },
   "c8WrBr": {
     "defaultMessage": "查看所有"
@@ -431,6 +455,9 @@
   "lIS+DP": {
     "defaultMessage": "已退款"
   },
+  "lJykMl": {
+    "defaultMessage": "处理失败"
+  },
   "lfgCg5": {
     "defaultMessage": "已删除：{title}"
   },
@@ -442,6 +469,9 @@
   },
   "mspiIV": {
     "defaultMessage": "我的亿文币"
+  },
+  "nqcU2v": {
+    "defaultMessage": "从链接创作"
   },
   "o2hVZY": {
     "defaultMessage": "信用分记录"
@@ -473,6 +503,9 @@
   "qkMpf9": {
     "defaultMessage": "归档"
   },
+  "r0/TUu": {
+    "defaultMessage": "确定"
+  },
   "rGsu2l": {
     "defaultMessage": "亿文币"
   },
@@ -491,8 +524,17 @@
   "tr2z/6": {
     "defaultMessage": "添加书签"
   },
+  "u926pB": {
+    "defaultMessage": "文章链接"
+  },
+  "uSeB4L": {
+    "defaultMessage": "正在处理，请稍后"
+  },
   "vCmahJ": {
     "defaultMessage": "无权限查看"
+  },
+  "vDCwZ9": {
+    "defaultMessage": "上传文件"
   },
   "vsIP7Y": {
     "defaultMessage": "「{language}」正在翻译，请稍后。翻译好后可以在发布栏里进行修正和公开发布。"

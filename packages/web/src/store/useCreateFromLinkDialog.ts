@@ -56,7 +56,7 @@ export function useCreateFromLinkDialog(
     } catch (error) {
       pushToast({
         type: 'warning',
-        message: intl.formatMessage({ defaultMessage: '抓取失败' }),
+        message: intl.formatMessage({ defaultMessage: '处理失败' }),
         description: toMessage(error),
       })
       return undefined

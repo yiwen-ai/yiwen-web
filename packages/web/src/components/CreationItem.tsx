@@ -1,3 +1,4 @@
+import { BREAKPOINT } from '#/shared'
 import { css, useTheme } from '@emotion/react'
 import {
   Button,
@@ -59,6 +60,10 @@ export default function CreationItem({
         :hover {
           border-color: ${theme.color.button.primary.outlined.border};
         }
+        @media (max-width: ${BREAKPOINT.small}px) {
+          padding: 16px;
+          border-radius: 8px;
+        }
       `}
     >
       <div
@@ -77,7 +82,9 @@ export default function CreationItem({
             margin-top: 12px;
           `}
         >
-          {item.summary}
+          {item.summary.length < 140
+            ? item.summary
+            : item.summary.slice(0, 140) + '...'}
         </div>
       )}
       <div
@@ -93,6 +100,7 @@ export default function CreationItem({
       >
         {hasWritePermission && item.status === CreationStatus.Draft ? (
           <Button
+            size='small'
             color='primary'
             variant='outlined'
             disabled={disabled}
@@ -108,6 +116,7 @@ export default function CreationItem({
         )}
         {hasWritePermission && (
           <Button
+            size='small'
             color='secondary'
             variant='text'
             disabled={disabled}

@@ -105,16 +105,19 @@ export default function SearchPage() {
       <div
         css={css`
           flex: 1;
-          padding: 60px 100px;
           overflow-y: auto;
           display: flex;
           flex-wrap: wrap;
           align-items: flex-start;
+          align-content: flex-start;
           justify-content: space-between;
-          gap: 60px 100px;
-          @media (max-width: ${BREAKPOINT.small}px) {
-            padding: 24px;
-            gap: 48px;
+          gap: 40px;
+          margin: 60px auto;
+          max-width: 1280px;
+          @media (max-width: ${BREAKPOINT.medium}px) {
+            margin: 30px auto;
+            padding: 0 24px;
+            gap: 24px;
           }
         `}
       >
@@ -124,6 +127,9 @@ export default function SearchPage() {
             max-width: ${MAX_WIDTH}px;
             display: flex;
             flex-direction: column;
+            @media (max-width: ${BREAKPOINT.large}px) {
+              max-width: 480px;
+            }
           `}
         >
           {isLoading ? (
@@ -155,8 +161,8 @@ export default function SearchPage() {
             display: flex;
             flex-direction: column;
             gap: 24px;
-            @media (max-width: ${BREAKPOINT.small}px) {
-              gap: 48px;
+            @media (max-width: ${BREAKPOINT.large}px) {
+              max-width: 320px;
             }
           `}
         >
@@ -171,9 +177,17 @@ export default function SearchPage() {
       </div>
       <div
         css={css`
-          padding: 44px 100px;
+          margin: 40px auto;
+          width: 100%;
+          max-width: 1080px;
+          @media (max-width: ${BREAKPOINT.large}px) {
+            max-width: 840px;
+          }
+          @media (max-width: ${BREAKPOINT.medium}px) {
+            max-width: 480px;
+          }
           @media (max-width: ${BREAKPOINT.small}px) {
-            padding: 24px;
+            max-width: 360px;
           }
         `}
       >
@@ -185,7 +199,7 @@ export default function SearchPage() {
               css={css`
                 display: flex;
                 align-items: center;
-                gap: 24px;
+                gap: 20px;
               `}
             >
               {keyword.length > 0 ? (
@@ -227,6 +241,7 @@ export default function SearchPage() {
             height: 48px;
             gap: 12px;
             border-radius: 20px;
+            padding: 0 20px;
           `}
         />
       </div>

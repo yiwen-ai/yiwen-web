@@ -69,7 +69,7 @@ export default function CreateFromFileDialog({
           >
             <span>
               {intl.formatMessage({
-                defaultMessage: '正在通过以下文件获取，请稍后',
+                defaultMessage: '正在处理，请稍后',
               })}
             </span>
             <Spinner />
@@ -85,7 +85,6 @@ export default function CreateFromFileDialog({
         </>
       ) : (
         <>
-          <div>{intl.formatMessage({ defaultMessage: '上传文件来获取' })}</div>
           <label
             htmlFor={id}
             css={css`
@@ -111,7 +110,7 @@ export default function CreateFromFileDialog({
               ref={buttonRef}
               css={(theme) => css`
                 width: 100%;
-                height: 48px;
+                height: 80px;
                 padding: 0 12px;
                 display: flex;
                 align-items: center;
@@ -124,20 +123,12 @@ export default function CreateFromFileDialog({
                 cursor: pointer;
                 :hover,
                 &[data-dragging] {
+                  border-color: ${theme.color.body.primaryHover};
                   background: ${theme.color.dialog.background};
                 }
               `}
             >
-              {isDragging ? (
-                <span
-                  css={(theme) => css`
-                    color: ${theme.color.body.secondary};
-                    ${theme.typography.tooltip}
-                  `}
-                >
-                  {intl.formatMessage({ defaultMessage: '松开鼠标以上传文件' })}
-                </span>
-              ) : file ? (
+              {file ? (
                 <span css={textEllipsis}>{file.name}</span>
               ) : (
                 <>
@@ -150,8 +141,8 @@ export default function CreateFromFileDialog({
                   />
                   <span
                     css={(theme) => css`
-                      color: ${theme.color.body.secondary};
-                      ${theme.typography.tooltip}
+                      color: ${theme.color.body.primary};
+                      ${theme.typography.body}
                     `}
                   >
                     {intl.formatMessage({ defaultMessage: '上传文件' })}
@@ -169,7 +160,7 @@ export default function CreateFromFileDialog({
           >
             {intl.formatMessage({
               defaultMessage:
-                '支持 PDF、Markdown、HTML、Text 格式，大小 512 KB 以内',
+                '支持 PDF、Markdown、HTML、Text 格式，512 KB 以内',
             })}
           </div>
           <Button

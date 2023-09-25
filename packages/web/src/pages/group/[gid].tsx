@@ -22,6 +22,7 @@ import {
   TabList,
   TabPanel,
   TabSection,
+  textEllipsis,
   useToast,
 } from '@yiwen-ai/component'
 import {
@@ -384,16 +385,6 @@ function GroupPart({
           padding: 36px 24px;
         `}
       >
-        {groupInfo.slogan && (
-          <h2
-            css={css`
-              margin-bottom: 12px;
-              ${theme.typography.h2}
-            `}
-          >
-            {groupInfo.slogan}
-          </h2>
-        )}
         <div
           css={css`
             display: flex;
@@ -404,19 +395,53 @@ function GroupPart({
         >
           <Avatar
             src={groupInfo.logo || groupInfo.owner?.picture}
-            name={groupInfo.name}
-            size={32}
+            alt={groupInfo.name}
+            size={80}
             css={css`
               gap: 12px;
             `}
           />
-          <i>·</i>
-          <span>
-            {intl.formatMessage(
-              { defaultMessage: '{count} 篇公开内容' },
-              { count: groupStatistic.publications }
+          <div
+            css={css`
+              margin-left: 8px;
+              line-height: 20px;
+            `}
+          >
+            <div>
+              <strong css={textEllipsis}>{groupInfo.name}</strong>
+              <span
+                css={css`
+                  margin-left: 8px;
+                  ${theme.typography.tooltip}
+                `}
+              >
+                @{groupInfo.cn}
+              </span>
+            </div>
+            {groupInfo.slogan && (
+              <div>
+                <span
+                  css={css`
+                    ${theme.typography.body}
+                  `}
+                >
+                  {groupInfo.slogan}
+                </span>
+              </div>
             )}
-          </span>
+            <div>
+              <span
+                css={css`
+                  ${theme.typography.tooltip}
+                `}
+              >
+                {intl.formatMessage(
+                  { defaultMessage: '{count} 篇公开内容' },
+                  { count: groupStatistic.publications }
+                )}
+              </span>
+            </div>
+          </div>
         </div>
         <div
           css={css`

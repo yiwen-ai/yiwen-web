@@ -84,8 +84,8 @@ export function useHomePage(pushToast: ToastAPI['pushToast']) {
   )
 
   const handlePublicationSwitch = useCallback(
-    async (language: UILanguageItem) => {
-      const publication = await onPublicationSwitch(language)
+    async (language: UILanguageItem, canTranslate: boolean) => {
+      const publication = await onPublicationSwitch(language, canTranslate)
       if (publication) navigateTo(publication)
     },
     [navigateTo, onPublicationSwitch]

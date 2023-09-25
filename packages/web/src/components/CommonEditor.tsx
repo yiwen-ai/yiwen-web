@@ -73,7 +73,7 @@ export default function CommonEditor({
         color: ${theme.color.body.secondary};
       `}
     >
-      {intl.formatMessage({ defaultMessage: '请登录后再进行创作' })}
+      {intl.formatMessage({ defaultMessage: '请登录后再操作' })}
     </div>
   ) : isLoading ? (
     <Loading />
