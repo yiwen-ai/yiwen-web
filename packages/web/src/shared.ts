@@ -70,7 +70,10 @@ export function useUploadDocumentImages() {
     ) => {
       if (!content) return null
 
-      const editor = new Editor({ content, extensions: getExtensions() })
+      const editor = new Editor({
+        content,
+        extensions: getExtensions(),
+      })
       const imageNodes = findChildren(
         editor.state.doc,
         (node) =>

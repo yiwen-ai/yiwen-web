@@ -7,7 +7,6 @@ import { Mathematics } from '@tiptap-pro/extension-mathematics'
 import { UniqueID } from '@tiptap-pro/extension-unique-id'
 import {
   createDocument,
-  type Editor,
   type EditorOptions,
   type Extensions,
   type FocusPosition,
@@ -135,304 +134,306 @@ export interface RichTextEditorProps {
 }
 
 export const RichTextEditor = memo(
-  forwardRef(function RichTextEditor(
-    {
-      className,
-      dir,
-      placeholder,
-      initialContent = null,
-      content,
-      onChange,
-      upload,
-      ...props
-    }: RichTextEditorProps,
-    ref: React.Ref<Editor | null>
-  ) {
-    const intl = useIntl()
-    const theme = useTheme()
-
-    const extensions = useMemo(() => {
-      return getExtensions({
-        image: {
-          inline: false,
-          placeholder: intl.formatMessage({
-            defaultMessage: '选择或拖拽图片上传',
-          }),
-          upload,
-        },
-        placeholder:
-          placeholder ??
-          intl.formatMessage({ defaultMessage: '输入内容开始创作' }),
-      })
-    }, [intl, placeholder, upload])
-
-    const onUpdate = useCallback<EditorOptions['onUpdate']>(
-      ({ editor }) => onChange?.(editor.getJSON()),
-      [onChange]
-    )
-
-    // TODO: update options when props change
-    const editor = useEditor(
+  forwardRef(
+    (
       {
-        ...props,
-        content: content ?? initialContent,
-        extensions,
-        onUpdate,
-      },
-      [extensions]
-    )
-
-    useEffect(() => {
-      if (!editor || content === undefined) return
-      const doc = createDocument(
+        className,
+        dir,
+        placeholder,
+        initialContent = null,
         content,
-        editor.schema,
-        editor.options.parseOptions
+        onChange,
+        upload,
+        ...props
+      }: RichTextEditorProps,
+      ref
+    ) => {
+      const intl = useIntl()
+      const theme = useTheme()
+
+      const extensions = useMemo(() => {
+        return getExtensions({
+          image: {
+            inline: false,
+            placeholder: intl.formatMessage({
+              defaultMessage: '选择或拖拽图片上传',
+            }),
+            upload,
+          },
+          placeholder:
+            placeholder ??
+            intl.formatMessage({ defaultMessage: '输入内容开始创作' }),
+        })
+      }, [intl, placeholder, upload])
+
+      const onUpdate = useCallback<EditorOptions['onUpdate']>(
+        ({ editor }) => onChange?.(editor.getJSON()),
+        [onChange]
       )
-      const eq = editor.state.doc.eq(doc)
-      if (!eq) editor.commands.setContent(content)
-    }, [content, editor])
 
-    useImperativeHandle(ref, () => editor, [editor])
+      // TODO: update options when props change
+      const editor = useEditor(
+        {
+          ...props,
+          content: content ?? initialContent,
+          extensions,
+          onUpdate,
+        },
+        [extensions]
+      )
 
-    //#region bubble menu & floating menu
-    const bubbleMenuItems: BubbleMenuItemProps[] | null = editor && [
-      {
-        iconName: 'h1',
-        active: editor.isActive('heading', { level: 1 }),
-        onClick: () => {
-          editor.chain().focus().toggleHeading({ level: 1 }).run()
-        },
-      },
-      {
-        iconName: 'h2',
-        active: editor.isActive('heading', { level: 2 }),
-        onClick: () => {
-          editor.chain().focus().toggleHeading({ level: 2 }).run()
-        },
-      },
-      {
-        iconName: 'h3',
-        active: editor.isActive('heading', { level: 3 }),
-        onClick: () => {
-          editor.chain().focus().toggleHeading({ level: 3 }).run()
-        },
-      },
-      {
-        iconName: 'bold',
-        active: editor.isActive('bold'),
-        onClick: () => {
-          editor.chain().focus().toggleBold().run()
-        },
-      },
-      {
-        iconName: 'underline',
-        active: editor.isActive('underline'),
-        onClick: () => {
-          editor.chain().focus().toggleUnderline().run()
-        },
-      },
-      {
-        iconName: 'italic',
-        active: editor.isActive('italic'),
-        onClick: () => {
-          editor.chain().focus().toggleItalic().run()
-        },
-      },
-    ]
+      useEffect(() => {
+        if (!editor || content === undefined) return
+        const doc = createDocument(
+          content,
+          editor.schema,
+          editor.options.parseOptions
+        )
+        const eq = editor.state.doc.eq(doc)
+        if (!eq) editor.commands.setContent(content)
+      }, [content, editor])
 
-    const bubbleMenuOptions = useMemo(
-      (): NonNullable<BubbleMenuProps['tippyOptions']> => ({
-        maxWidth: '246px',
-      }),
-      []
-    )
+      useImperativeHandle(ref, () => editor, [editor])
 
-    const floatingMenuItems: BubbleMenuItemProps[] | null = editor && [
-      {
-        iconName: 'h1',
-        active: editor.isActive('heading', { level: 1 }),
-        onClick: () => {
-          editor.chain().focus().toggleHeading({ level: 1 }).run()
+      //#region bubble menu & floating menu
+      const bubbleMenuItems: BubbleMenuItemProps[] | null = editor && [
+        {
+          iconName: 'h1',
+          active: editor.isActive('heading', { level: 1 }),
+          onClick: () => {
+            editor.chain().focus().toggleHeading({ level: 1 }).run()
+          },
         },
-      },
-      {
-        iconName: 'h2',
-        active: editor.isActive('heading', { level: 2 }),
-        onClick: () => {
-          editor.chain().focus().toggleHeading({ level: 2 }).run()
+        {
+          iconName: 'h2',
+          active: editor.isActive('heading', { level: 2 }),
+          onClick: () => {
+            editor.chain().focus().toggleHeading({ level: 2 }).run()
+          },
         },
-      },
-      {
-        iconName: 'h3',
-        active: editor.isActive('heading', { level: 3 }),
-        onClick: () => {
-          editor.chain().focus().toggleHeading({ level: 3 }).run()
+        {
+          iconName: 'h3',
+          active: editor.isActive('heading', { level: 3 }),
+          onClick: () => {
+            editor.chain().focus().toggleHeading({ level: 3 }).run()
+          },
         },
-      },
-      {
-        iconName: 'bold',
-        active: editor.isActive('bold'),
-        onClick: () => {
-          editor.chain().focus().toggleBold().run()
+        {
+          iconName: 'bold',
+          active: editor.isActive('bold'),
+          onClick: () => {
+            editor.chain().focus().toggleBold().run()
+          },
         },
-      },
-      {
-        iconName: 'underline',
-        active: editor.isActive('underline'),
-        onClick: () => {
-          editor.chain().focus().toggleUnderline().run()
+        {
+          iconName: 'underline',
+          active: editor.isActive('underline'),
+          onClick: () => {
+            editor.chain().focus().toggleUnderline().run()
+          },
         },
-      },
-      {
-        iconName: 'italic',
-        active: editor.isActive('italic'),
-        onClick: () => {
-          editor.chain().focus().toggleItalic().run()
+        {
+          iconName: 'italic',
+          active: editor.isActive('italic'),
+          onClick: () => {
+            editor.chain().focus().toggleItalic().run()
+          },
         },
-      },
-      {
-        iconName: 'ul',
-        active: editor.isActive('bulletList'),
-        onClick: () => {
-          editor.chain().focus().toggleBulletList().run()
-        },
-      },
-      {
-        iconName: 'ol',
-        active: editor.isActive('orderedList'),
-        onClick: () => {
-          editor.chain().focus().toggleOrderedList().run()
-        },
-      },
-      {
-        iconName: 'quote',
-        active: editor.isActive('blockquote'),
-        onClick: () => {
-          editor.chain().focus().toggleBlockquote().run()
-        },
-      },
-      {
-        iconName: 'horizontal',
-        active: editor.isActive('horizontalRule'),
-        onClick: () => {
-          editor.chain().focus().setHorizontalRule().run()
-        },
-      },
-    ]
+      ]
 
-    const floatingMenuOptions = useMemo(
-      (): NonNullable<FloatingMenuProps['tippyOptions']> => ({
-        maxWidth: '246px',
-        placement: 'bottom-start',
-        duration: 100,
-      }),
-      []
-    )
-    //#endregion
+      const bubbleMenuOptions = useMemo(
+        (): NonNullable<BubbleMenuProps['tippyOptions']> => ({
+          maxWidth: '246px',
+        }),
+        []
+      )
 
-    const menuCSS = css`
-      padding: 12px 16px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px 4px;
-      background: ${theme.color.menu.background};
-      border: 1px solid ${theme.color.menu.border};
-      border-radius: 12px;
-    `
+      const floatingMenuItems: BubbleMenuItemProps[] | null = editor && [
+        {
+          iconName: 'h1',
+          active: editor.isActive('heading', { level: 1 }),
+          onClick: () => {
+            editor.chain().focus().toggleHeading({ level: 1 }).run()
+          },
+        },
+        {
+          iconName: 'h2',
+          active: editor.isActive('heading', { level: 2 }),
+          onClick: () => {
+            editor.chain().focus().toggleHeading({ level: 2 }).run()
+          },
+        },
+        {
+          iconName: 'h3',
+          active: editor.isActive('heading', { level: 3 }),
+          onClick: () => {
+            editor.chain().focus().toggleHeading({ level: 3 }).run()
+          },
+        },
+        {
+          iconName: 'bold',
+          active: editor.isActive('bold'),
+          onClick: () => {
+            editor.chain().focus().toggleBold().run()
+          },
+        },
+        {
+          iconName: 'underline',
+          active: editor.isActive('underline'),
+          onClick: () => {
+            editor.chain().focus().toggleUnderline().run()
+          },
+        },
+        {
+          iconName: 'italic',
+          active: editor.isActive('italic'),
+          onClick: () => {
+            editor.chain().focus().toggleItalic().run()
+          },
+        },
+        {
+          iconName: 'ul',
+          active: editor.isActive('bulletList'),
+          onClick: () => {
+            editor.chain().focus().toggleBulletList().run()
+          },
+        },
+        {
+          iconName: 'ol',
+          active: editor.isActive('orderedList'),
+          onClick: () => {
+            editor.chain().focus().toggleOrderedList().run()
+          },
+        },
+        {
+          iconName: 'quote',
+          active: editor.isActive('blockquote'),
+          onClick: () => {
+            editor.chain().focus().toggleBlockquote().run()
+          },
+        },
+        {
+          iconName: 'horizontal',
+          active: editor.isActive('horizontalRule'),
+          onClick: () => {
+            editor.chain().focus().setHorizontalRule().run()
+          },
+        },
+      ]
 
-    return editor ? (
-      <EditorContent
-        className={className}
-        editor={editor}
-        dir={dir}
-        css={css`
-          flex: 1;
-          display: flex;
-          flex-direction: column;
+      const floatingMenuOptions = useMemo(
+        (): NonNullable<FloatingMenuProps['tippyOptions']> => ({
+          maxWidth: '246px',
+          placement: 'bottom-start',
+          duration: 100,
+        }),
+        []
+      )
+      //#endregion
 
-          .ProseMirror {
+      const menuCSS = css`
+        padding: 12px 16px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 4px;
+        background: ${theme.color.menu.background};
+        border: 1px solid ${theme.color.menu.border};
+        border-radius: 12px;
+      `
+
+      return editor ? (
+        <EditorContent
+          className={className}
+          editor={editor}
+          dir={dir}
+          css={css`
             flex: 1;
-            ${theme.typography.body};
+            display: flex;
+            flex-direction: column;
 
-            &:focus {
-              outline: none;
-            }
+            .ProseMirror {
+              flex: 1;
+              ${theme.typography.body};
 
-            > * {
-              margin-top: 0;
-              margin-bottom: 0;
-              + * {
-                margin-top: 20px;
+              &:focus {
+                outline: none;
               }
-            }
 
-            * > p {
-              margin-top: 0;
-              margin-bottom: 0;
-              + p {
-                margin-top: 20px;
+              > * {
+                margin-top: 0;
+                margin-bottom: 0;
+                + * {
+                  margin-top: 20px;
+                }
               }
-            }
 
-            h1 {
-              font-size: 28px;
-              font-weight: 600;
-              line-height: 36px;
-            }
+              * > p {
+                margin-top: 0;
+                margin-bottom: 0;
+                + p {
+                  margin-top: 20px;
+                }
+              }
 
-            h2 {
-              font-size: 24px;
-              font-weight: 600;
-              line-height: 32px;
-            }
+              h1 {
+                font-size: 28px;
+                font-weight: 600;
+                line-height: 36px;
+              }
 
-            h3 {
-              font-size: 20px;
-              font-weight: 600;
-              line-height: 28px;
-            }
+              h2 {
+                font-size: 24px;
+                font-weight: 600;
+                line-height: 32px;
+              }
 
-            blockquote {
-              margin-left: 0;
-              margin-right: 0;
-              padding: 0 16px;
-              border-left: 2px solid ${theme.color.divider.default};
-            }
+              h3 {
+                font-size: 20px;
+                font-weight: 600;
+                line-height: 28px;
+              }
 
-            pre {
-              padding: 20px 24px;
-              background: ${theme.color.codeBlock.background};
-            }
+              blockquote {
+                margin-left: 0;
+                margin-right: 0;
+                padding: 0 16px;
+                border-left: 2px solid ${theme.color.divider.default};
+              }
 
-            ul,
-            ol {
-              padding-left: 24px;
-            }
+              pre {
+                padding: 20px 24px;
+                background: ${theme.color.codeBlock.background};
+              }
 
-            li {
-              padding-left: 4px;
-            }
+              ul,
+              ol {
+                padding-left: 24px;
+              }
 
-            > ul {
-              list-style-type: disc;
-              > li > ul {
-                list-style-type: circle;
+              li {
+                padding-left: 4px;
+              }
+
+              > ul {
+                list-style-type: disc;
                 > li > ul {
-                  list-style-type: square;
+                  list-style-type: circle;
                   > li > ul {
-                    list-style-type: disc;
+                    list-style-type: square;
                     > li > ul {
-                      list-style-type: circle;
+                      list-style-type: disc;
                       > li > ul {
-                        list-style-type: square;
+                        list-style-type: circle;
                         > li > ul {
-                          list-style-type: disc;
+                          list-style-type: square;
                           > li > ul {
-                            list-style-type: circle;
+                            list-style-type: disc;
                             > li > ul {
-                              list-style-type: square;
+                              list-style-type: circle;
+                              > li > ul {
+                                list-style-type: square;
+                              }
                             }
                           }
                         }
@@ -441,26 +442,26 @@ export const RichTextEditor = memo(
                   }
                 }
               }
-            }
 
-            > ol {
-              list-style-type: decimal;
-              > li > ol {
-                list-style-type: lower-alpha;
+              > ol {
+                list-style-type: decimal;
                 > li > ol {
-                  list-style-type: lower-roman;
+                  list-style-type: lower-alpha;
                   > li > ol {
-                    list-style-type: decimal;
+                    list-style-type: lower-roman;
                     > li > ol {
-                      list-style-type: lower-alpha;
+                      list-style-type: decimal;
                       > li > ol {
-                        list-style-type: lower-roman;
+                        list-style-type: lower-alpha;
                         > li > ol {
-                          list-style-type: decimal;
+                          list-style-type: lower-roman;
                           > li > ol {
-                            list-style-type: lower-alpha;
+                            list-style-type: decimal;
                             > li > ol {
-                              list-style-type: lower-roman;
+                              list-style-type: lower-alpha;
+                              > li > ol {
+                                list-style-type: lower-roman;
+                              }
                             }
                           }
                         }
@@ -469,78 +470,80 @@ export const RichTextEditor = memo(
                   }
                 }
               }
-            }
 
-            hr {
-              border: none;
-              border-top: 1px solid ${theme.color.divider.default};
-            }
+              hr {
+                border: none;
+                border-top: 1px solid ${theme.color.divider.default};
+              }
 
-            a {
-              display: inline-block;
-              cursor: pointer;
-              color: ${theme.color.body.primary};
-              :hover {
-                color: ${theme.color.body.primaryHover};
+              a {
+                display: inline-block;
+                cursor: pointer;
+                color: ${theme.color.body.primary};
+                :hover {
+                  color: ${theme.color.body.primaryHover};
+                }
+              }
+
+              p.is-editor-empty::before,
+              p.is-empty:only-child::before,
+              style + p.is-empty:last-child::before {
+                color: ${theme.color.input.placeholder};
+                content: attr(data-placeholder);
+                float: left;
+                height: 0;
+                pointer-events: none;
+              }
+
+              .Tiptap-mathematics-render {
+                .latin_fallback,
+                .cyrillic_fallback,
+                .brahmic_fallback,
+                .georgian_fallback,
+                .cjk_fallback,
+                .hangul_fallback {
+                  font-style: italic;
+                }
               }
             }
-
-            p.is-editor-empty::before,
-            p.is-empty:only-child::before,
-            style + p.is-empty:last-child::before {
-              color: ${theme.color.input.placeholder};
-              content: attr(data-placeholder);
-              float: left;
-              height: 0;
-              pointer-events: none;
-            }
-
-            .Tiptap-mathematics-render {
-              .latin_fallback,
-              .cyrillic_fallback,
-              .brahmic_fallback,
-              .georgian_fallback,
-              .cjk_fallback,
-              .hangul_fallback {
-                font-style: italic;
-              }
-            }
-          }
-        `}
-      >
-        <FloatingMenu
-          editor={editor}
-          tippyOptions={floatingMenuOptions}
-          css={menuCSS}
+          `}
         >
-          {floatingMenuItems?.map(({ iconName, active, onClick, ...props }) => (
-            <BubbleMenuItem
-              key={iconName}
-              iconName={iconName}
-              active={active}
-              onClick={onClick}
-              {...props}
-            />
-          ))}
-        </FloatingMenu>
-        <BubbleMenu
-          editor={editor}
-          tippyOptions={bubbleMenuOptions}
-          css={menuCSS}
-        >
-          {bubbleMenuItems?.map(({ iconName, active, onClick, ...props }) => (
-            <BubbleMenuItem
-              key={iconName}
-              iconName={iconName}
-              active={active}
-              onClick={onClick}
-              {...props}
-            />
-          ))}
-        </BubbleMenu>
-      </EditorContent>
-    ) : null
-  })
+          <FloatingMenu
+            editor={editor}
+            tippyOptions={floatingMenuOptions}
+            css={menuCSS}
+          >
+            {floatingMenuItems?.map(
+              ({ iconName, active, onClick, ...props }) => (
+                <BubbleMenuItem
+                  key={iconName}
+                  iconName={iconName}
+                  active={active}
+                  onClick={onClick}
+                  {...props}
+                />
+              )
+            )}
+          </FloatingMenu>
+          <BubbleMenu
+            editor={editor}
+            tippyOptions={bubbleMenuOptions}
+            css={menuCSS}
+          >
+            {bubbleMenuItems?.map(({ iconName, active, onClick, ...props }) => (
+              <BubbleMenuItem
+                key={iconName}
+                iconName={iconName}
+                active={active}
+                onClick={onClick}
+                {...props}
+              />
+            ))}
+          </BubbleMenu>
+        </EditorContent>
+      ) : null
+    }
+  )
 )
 
 interface BubbleMenuItemProps extends IconButtonProps {
