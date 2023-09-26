@@ -1,3 +1,4 @@
+import { ThemeContext } from '#/App'
 import { BREAKPOINT } from '#/shared'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
@@ -22,7 +23,13 @@ import {
   type UILanguageItem,
 } from '@yiwen-ai/store'
 import { escapeRegExp } from 'lodash-es'
-import { useCallback, useMemo, useState, type HTMLAttributes } from 'react'
+import {
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type HTMLAttributes,
+} from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
 import ChargeDialog, { type ChargeDialogProps } from './ChargeDialog'
@@ -91,6 +98,7 @@ export default function PublicationViewer({
   const theme = useTheme()
   const { user } = useAuth()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
+  const setTheme = useContext(ThemeContext)
   const isNarrow = responsive && width <= BREAKPOINT.small
 
   const [keyword, setKeyword] = useState('')
@@ -345,6 +353,15 @@ export default function PublicationViewer({
                     <Icon name='compare' size='small' />
                     {intl.formatMessage({ defaultMessage: '对比原文' })}
                   </Button>
+                )}
+                {isNarrow && (
+                  <IconButton
+                    iconName='celo'
+                    onClick={setTheme}
+                    css={css`
+                      color: ${theme.color.body.default};
+                    `}
+                  />
                 )}
                 {isNarrow ? (
                   <IconButton

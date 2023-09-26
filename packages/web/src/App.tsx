@@ -442,9 +442,17 @@ function UserLocaleProvider(props: React.PropsWithChildren) {
   )
 }
 
+export const ThemeContext = createContext(() => undefined)
+
 function UserThemeProvider(props: React.PropsWithChildren) {
-  const { theme } = useUserTheme() // wait for user theme to be loaded
-  return <ThemeProvider theme={theme}>{props.children}</ThemeProvider>
+  const { theme, switchTheme } = useUserTheme() // wait for user theme to be loaded
+  return (
+    <ThemeProvider theme={theme}>
+      <ThemeContext.Provider value={switchTheme}>
+        {props.children}
+      </ThemeContext.Provider>
+    </ThemeProvider>
+  )
 }
 
 function LoggingUnhandledError() {

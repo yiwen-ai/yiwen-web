@@ -1,4 +1,4 @@
-import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
+import { NEW_CREATION_PATH, SetHeaderProps, ThemeContext } from '#/App'
 import LargeDialog from '#/components/LargeDialog'
 import PublicationViewer from '#/components/PublicationViewer'
 import ResponsiveTabSection from '#/components/ResponsiveTabSection'
@@ -9,17 +9,20 @@ import {
   Brand,
   Button,
   Icon,
+  IconButton,
   TextField,
   TileButton,
   useToast,
 } from '@yiwen-ai/component'
 import { useEnsureAuthorizedCallback } from '@yiwen-ai/store'
+import { useContext } from 'react'
 import { useIntl } from 'react-intl'
 import { Link } from 'react-router-dom'
 
 export default function Home() {
   const intl = useIntl()
   const theme = useTheme()
+  const setTheme = useContext(ThemeContext)
   const { renderToastContainer, pushToast } = useToast()
   const ensureAuthorized = useEnsureAuthorizedCallback()
 
@@ -44,7 +47,10 @@ export default function Home() {
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 36px;
+            gap: 32px;
+            @media (max-width: ${BREAKPOINT.small}px) {
+              gap: 16px;
+            }
           `}
         >
           <Link to={NEW_CREATION_PATH} onClick={ensureAuthorized}>
@@ -52,6 +58,20 @@ export default function Home() {
               {intl.formatMessage({ defaultMessage: '创作内容' })}
             </Button>
           </Link>
+          <IconButton
+            iconName='celo'
+            onClick={setTheme}
+            css={css`
+              height: 24px;
+              width: 48px;
+              border: 1px solid ${theme.palette.grayLight0};
+              background: ${theme.color.body.background};
+              color: ${theme.color.body.default};
+              @media (max-width: ${BREAKPOINT.small}px) {
+                width: 36px;
+              }
+            `}
+          />
         </div>
       </SetHeaderProps>
       <div

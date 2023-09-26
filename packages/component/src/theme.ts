@@ -446,16 +446,16 @@ export const darkTheme: Theme = {
         text: {
           border: 'transparent',
           background: '',
-          text: palette.primaryNormal,
+          text: palette.grayLight0,
           hover: {
             border: 'transparent',
             background: palette.grayNormal1,
-            text: palette.primaryNormal,
+            text: palette.grayLight1,
           },
           disabled: {
             border: 'transparent',
             background: '',
-            text: palette.primaryNormal,
+            text: palette.grayLight,
           },
         },
       },
@@ -604,19 +604,22 @@ export function useUserTheme() {
   const name: ColorScheme = user?.theme ?? 'auto'
   const darkMode = useIsDarkMode()
 
-  const theme = useMemo(() => {
-    switch (name) {
-      case 'light':
-        return lightTheme
-      case 'dark':
-        return darkTheme
-      default:
-        return darkMode ? darkTheme : lightTheme
-    }
-  }, [darkMode, name])
+  const [theme, setTheme] = useState(
+    useMemo(() => {
+      switch (name) {
+        case 'light':
+          return lightTheme
+        case 'dark':
+          return darkTheme
+        default:
+          return darkMode ? darkTheme : lightTheme
+      }
+    }, [darkMode, name])
+  )
 
-  const switchTheme = useCallback((name: ColorScheme) => {
-    // TODO: set user theme
+  const switchTheme = useCallback(() => {
+    setTheme((prev) => (prev.name === 'light' ? darkTheme : lightTheme))
+    return undefined
   }, [])
 
   return {
