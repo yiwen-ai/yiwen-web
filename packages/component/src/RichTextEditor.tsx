@@ -14,8 +14,8 @@ import {
   type JSONContent,
   type NodeViewProps,
 } from '@tiptap/core'
-import { Color } from '@tiptap/extension-color'
-import { FontFamily } from '@tiptap/extension-font-family'
+// import { FontFamily } from '@tiptap/extension-font-family'
+// import { Color } from '@tiptap/extension-color'
 import { Image, type ImageOptions } from '@tiptap/extension-image'
 import { Link } from '@tiptap/extension-link'
 import { Mention } from '@tiptap/extension-mention'
@@ -72,12 +72,12 @@ export const getExtensions = ({
   image?: Partial<ImageUploadOptions>
   placeholder?: string
 } = {}): Extensions => [
-  Color,
+  // Color, // should handle color in dark theme
   Details.configure({ persist: true }),
   DetailsContent,
   DetailsSummary,
   Emoji.configure({ enableEmoticons: true }),
-  FontFamily,
+  // FontFamily,
   ImageUpload.configure(image),
   Link.configure({
     protocols: [],

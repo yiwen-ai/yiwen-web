@@ -129,7 +129,19 @@ export default function CreateFromFileDialog({
               `}
             >
               {file ? (
-                <span css={textEllipsis}>{file.name}</span>
+                <span
+                  css={(theme) => css`
+                    color: ${disabled
+                      ? theme.color.alert.warning.border
+                      : 'inherit'};
+                    ${textEllipsis}
+                  `}
+                >
+                  {file.name +
+                    (disabled
+                      ? ' (' + (file.size / 1024).toFixed(2) + 'KB > 512KB)'
+                      : '')}
+                </span>
               ) : (
                 <>
                   <Icon

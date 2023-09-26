@@ -1,4 +1,4 @@
-import { NEW_CREATION_PATH, SetHeaderProps } from '#/App'
+import { NEW_CREATION_PATH, SetHeaderProps, ThemeContext } from '#/App'
 import CreateFromFileDialog from '#/components/CreateFromFileDialog'
 import CreateFromLinkDialog from '#/components/CreateFromLinkDialog'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
@@ -24,7 +24,7 @@ import {
   useEnsureAuthorizedCallback,
 } from '@yiwen-ai/store'
 import { RGBA } from '@yiwen-ai/util'
-import { useCallback } from 'react'
+import { useCallback, useContext } from 'react'
 import { useIntl } from 'react-intl'
 import { Link } from 'react-router-dom'
 
@@ -33,6 +33,7 @@ const MAX_WIDTH = 680
 export default function SearchPage() {
   const intl = useIntl()
   const theme = useTheme()
+  const setTheme = useContext(ThemeContext)
   const { renderToastContainer, pushToast } = useToast()
   const ensureAuthorized = useEnsureAuthorizedCallback()
 
@@ -100,6 +101,20 @@ export default function SearchPage() {
               {intl.formatMessage({ defaultMessage: '创作内容' })}
             </Button>
           </Link>
+          <IconButton
+            iconName='celo'
+            onClick={setTheme}
+            css={css`
+              height: 24px;
+              width: 48px;
+              border: 1px solid ${theme.palette.grayLight0};
+              background: ${theme.color.body.background};
+              color: ${theme.color.body.default};
+              @media (max-width: ${BREAKPOINT.small}px) {
+                width: 36px;
+              }
+            `}
+          />
         </div>
       </SetHeaderProps>
       <div

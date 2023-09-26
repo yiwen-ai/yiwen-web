@@ -445,7 +445,7 @@ function UserLocaleProvider(props: React.PropsWithChildren) {
 export const ThemeContext = createContext(() => undefined)
 
 function UserThemeProvider(props: React.PropsWithChildren) {
-  const { theme, switchTheme } = useUserTheme() // wait for user theme to be loaded
+  const { theme, switchTheme } = useUserTheme()
   return (
     <ThemeProvider theme={theme}>
       <ThemeContext.Provider value={switchTheme}>

@@ -1,5 +1,5 @@
 import { type CSSObject, type Theme } from '@emotion/react'
-import { useAuth, type ColorScheme } from '@yiwen-ai/store'
+import { type ColorScheme } from '@yiwen-ai/store'
 import { RGBA } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -600,22 +600,8 @@ const useIsDarkMode = () => {
 }
 
 export function useUserTheme() {
-  const { user } = useAuth()
-  const name: ColorScheme = user?.theme ?? 'auto'
   const darkMode = useIsDarkMode()
-
-  const [theme, setTheme] = useState(
-    useMemo(() => {
-      switch (name) {
-        case 'light':
-          return lightTheme
-        case 'dark':
-          return darkTheme
-        default:
-          return darkMode ? darkTheme : lightTheme
-      }
-    }, [darkMode, name])
-  )
+  const [theme, setTheme] = useState(darkMode ? darkTheme : lightTheme)
 
   const switchTheme = useCallback(() => {
     setTheme((prev) => (prev.name === 'light' ? darkTheme : lightTheme))
@@ -624,7 +610,6 @@ export function useUserTheme() {
 
   return {
     theme,
-    name,
     switchTheme,
   } as const
 }

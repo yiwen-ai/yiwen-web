@@ -1,4 +1,9 @@
-import { GROUP_DETAIL_PATH, NEW_CREATION_PATH, SetHeaderProps } from '#/App'
+import {
+  GROUP_DETAIL_PATH,
+  NEW_CREATION_PATH,
+  SetHeaderProps,
+  ThemeContext,
+} from '#/App'
 import CreationCompactItem from '#/components/CreationCompactItem'
 import CreationItem from '#/components/CreationItem'
 import CreationViewer from '#/components/CreationViewer'
@@ -11,12 +16,13 @@ import Placeholder from '#/components/Placeholder'
 import PublicationCompactItem from '#/components/PublicationCompactItem'
 import PublicationItem from '#/components/PublicationItem'
 import PublicationViewer from '#/components/PublicationViewer'
-import { MAX_WIDTH } from '#/shared'
+import { BREAKPOINT, MAX_WIDTH } from '#/shared'
 import { GroupViewType, useGroupDetailPage } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
   Avatar,
   Button,
+  IconButton,
   Spinner,
   Tab,
   TabList,
@@ -35,7 +41,7 @@ import {
   type PublicationOutput,
 } from '@yiwen-ai/store'
 import { joinURLPath, type AnchorProps } from '@yiwen-ai/util'
-import { useCallback } from 'react'
+import { useCallback, useContext } from 'react'
 import { useIntl } from 'react-intl'
 import {
   Link,
@@ -48,6 +54,8 @@ import { Xid } from 'xid-ts'
 
 export default function GroupDetailPage() {
   const intl = useIntl()
+  const theme = useTheme()
+  const setTheme = useContext(ThemeContext)
   const { renderToastContainer, pushToast } = useToast()
   const params = useParams<{ gid: string }>()
   const [searchParams] = useSearchParams()
@@ -199,6 +207,20 @@ export default function GroupDetailPage() {
                   {intl.formatMessage({ defaultMessage: '创作内容' })}
                 </Button>
               </Link>
+              <IconButton
+                iconName='celo'
+                onClick={setTheme}
+                css={css`
+                  height: 24px;
+                  width: 48px;
+                  border: 1px solid ${theme.palette.grayLight0};
+                  background: ${theme.color.body.background};
+                  color: ${theme.color.body.default};
+                  @media (max-width: ${BREAKPOINT.small}px) {
+                    width: 36px;
+                  }
+                `}
+              />
             </div>
           </SetHeaderProps>
           <GroupPart

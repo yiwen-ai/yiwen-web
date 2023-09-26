@@ -46,7 +46,7 @@ export function useCreateFromFileDialog(
   }, [_gid, defaultGroupId, open, refreshDefaultGroup])
 
   const [file, setFile] = useState<File>()
-  const disabled = !file
+  const disabled = !file || file.size > 512 * 1024
 
   const { isUploading, upload } = useUploadDocument(gid)
   const onUpload = useCallback(async () => {
