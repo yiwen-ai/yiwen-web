@@ -128,7 +128,8 @@ export default function Home() {
             placeholder={intl.formatMessage({
               defaultMessage: '搜索 yiwen.ai 的内容',
             })}
-            onSearch={onSearch}
+            inputtype='search'
+            onEnter={onSearch}
             css={css`
               flex: 1;
               height: 48px;

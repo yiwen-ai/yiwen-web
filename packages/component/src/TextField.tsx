@@ -33,10 +33,8 @@ export interface TextFieldProps
   size?: TextFieldSize | undefined
   before?: string | JSX.Element | (() => JSX.Element | null)
   after?: string | JSX.Element | (() => JSX.Element | null)
-  onSearch?: (
-    keyword: string,
-    ev: React.KeyboardEvent<HTMLInputElement>
-  ) => void
+  inputtype?: string
+  onEnter?: (value: string, ev: React.KeyboardEvent<HTMLInputElement>) => void
   onDismiss?: (ev: React.KeyboardEvent<HTMLInputElement>) => void
 }
 
@@ -48,7 +46,7 @@ export const TextField = memo(
       before,
       after,
       onKeyDown,
-      onSearch,
+      onEnter,
       onDismiss,
       ...props
     }: TextFieldProps,
@@ -59,18 +57,19 @@ export const TextField = memo(
     const _id = useId()
     const id = props.id ?? _id
     const sizeCSS = SizeDict[size]
+    const inputtype = props.inputtype ?? 'text'
 
     const handleKeyDown = useCallback(
       (ev: React.KeyboardEvent<HTMLInputElement>) => {
         onKeyDown?.(ev)
         if (ev.isDefaultPrevented()) return
         if (ev.key === 'Enter') {
-          onSearch?.(ev.currentTarget.value, ev)
+          onEnter?.(ev.currentTarget.value, ev)
         } else if (ev.key === 'Escape') {
           onDismiss?.(ev)
         }
       },
-      [onDismiss, onKeyDown, onSearch]
+      [onDismiss, onKeyDown, onEnter]
     )
 
     const ariaLabel = props['aria-label']
@@ -87,7 +86,7 @@ export const TextField = memo(
       <label
         htmlFor={id}
         className={className}
-        role={onSearch ? 'search' : undefined}
+        role={inputtype}
         css={css`
           ${sizeCSS}
           display: inline-flex;
@@ -122,7 +121,7 @@ export const TextField = memo(
         ) : null}
         <input
           id={id}
-          type={onSearch ? 'search' : 'text'}
+          type={inputtype}
           onKeyDown={handleKeyDown}
           {...props}
           ref={ref}

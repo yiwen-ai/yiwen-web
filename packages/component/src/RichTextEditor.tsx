@@ -15,6 +15,7 @@ import {
 } from '@tiptap/core'
 // import { FontFamily } from '@tiptap/extension-font-family'
 // import { Color } from '@tiptap/extension-color'
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { Image, type ImageOptions } from '@tiptap/extension-image'
 import { Link } from '@tiptap/extension-link'
 import { Mention } from '@tiptap/extension-mention'
@@ -46,7 +47,9 @@ import {
 import { StarterKit } from '@tiptap/starter-kit'
 import { shouldUpload, type UploadOutput } from '@yiwen-ai/store'
 import { isBlobURL } from '@yiwen-ai/util'
+import 'highlight.js/styles/github-dark.css'
 import 'katex/dist/katex.min.css'
+import { createLowlight, common as lowlightCommon } from 'lowlight'
 import { nanoid } from 'nanoid'
 import {
   forwardRef,
@@ -60,8 +63,10 @@ import {
 import { useIntl } from 'react-intl'
 import { concatMap, from, type Observable, type Subscription } from 'rxjs'
 import { IconButton, type IconButtonProps } from './Button'
+import { TextField } from './TextField'
 
 Mathematics.options.katexOptions = {} // required
+const lowlight = createLowlight(lowlightCommon)
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const getExtensions = ({
@@ -72,6 +77,10 @@ export const getExtensions = ({
   placeholder?: string
 } = {}): Extensions => [
   // Color, // should handle color in dark theme
+  CodeBlockLowlight.configure({
+    lowlight,
+    languageClassPrefix: 'language-',
+  }),
   Details.configure({ persist: true }),
   DetailsContent,
   DetailsSummary,
@@ -195,6 +204,51 @@ export const RichTextEditor = memo(
 
       useImperativeHandle(ref, () => editor, [editor])
 
+      // const [inSetLink, setInSetLink] = useState(false)
+
+      const setLink = useCallback(() => {
+        if (!editor || content === undefined) return
+        // setInSetLink(true)
+        const inputE = document.getElementById(
+          'editor-link-input'
+        ) as HTMLInputElement
+        if (inputE == null) {
+          return
+        }
+        const previousUrl = editor.getAttributes('link')['href'] ?? ''
+        inputE.setAttribute('value', previousUrl)
+        inputE.parentElement?.style.setProperty('display', 'inline-flex')
+        inputE.setSelectionRange(0, inputE.value.length)
+        inputE.focus()
+      }, [content, editor])
+
+      const handleLinkInputChange = useCallback(
+        (value: string, ev: React.KeyboardEvent<HTMLInputElement>) => {
+          if (!editor || content === undefined) return
+
+          if (value === '') {
+            editor.chain().focus().extendMarkRange('link').unsetLink().run()
+            return
+          }
+          if (!value.startsWith('https://')) {
+            return
+          }
+
+          // update link
+          editor
+            .chain()
+            .focus()
+            .extendMarkRange('link')
+            .setLink({ href: value })
+            .run()
+
+          ev.currentTarget.blur()
+          ev.currentTarget.setAttribute('value', '')
+          ev.currentTarget.parentElement?.style.setProperty('display', 'none')
+        },
+        [content, editor]
+      )
+
       //#region bubble menu & floating menu
       const bubbleMenuItems: BubbleMenuItemProps[] | null = editor && [
         {
@@ -219,10 +273,52 @@ export const RichTextEditor = memo(
           },
         },
         {
+          iconName: 'h4',
+          active: editor.isActive('heading', { level: 4 }),
+          onClick: () => {
+            editor.chain().focus().toggleHeading({ level: 4 }).run()
+          },
+        },
+        {
+          iconName: 'h5',
+          active: editor.isActive('heading', { level: 5 }),
+          onClick: () => {
+            editor.chain().focus().toggleHeading({ level: 5 }).run()
+          },
+        },
+        {
+          iconName: 'h6',
+          active: editor.isActive('heading', { level: 6 }),
+          onClick: () => {
+            editor.chain().focus().toggleHeading({ level: 6 }).run()
+          },
+        },
+        {
+          iconName: 'ul',
+          active: editor.isActive('bulletList'),
+          onClick: () => {
+            editor.chain().focus().toggleBulletList().run()
+          },
+        },
+        {
+          iconName: 'ol',
+          active: editor.isActive('orderedList'),
+          onClick: () => {
+            editor.chain().focus().toggleOrderedList().run()
+          },
+        },
+        {
           iconName: 'bold',
           active: editor.isActive('bold'),
           onClick: () => {
             editor.chain().focus().toggleBold().run()
+          },
+        },
+        {
+          iconName: 'italic',
+          active: editor.isActive('italic'),
+          onClick: () => {
+            editor.chain().focus().toggleItalic().run()
           },
         },
         {
@@ -233,17 +329,57 @@ export const RichTextEditor = memo(
           },
         },
         {
-          iconName: 'italic',
-          active: editor.isActive('italic'),
+          iconName: 'strike',
+          active: editor.isActive('strike'),
           onClick: () => {
-            editor.chain().focus().toggleItalic().run()
+            editor.chain().focus().toggleStrike().run()
+          },
+        },
+        {
+          iconName: 'subscript',
+          active: editor.isActive('subscript'),
+          onClick: () => {
+            editor.chain().focus().toggleSubscript().run()
+          },
+        },
+        {
+          iconName: 'superscript',
+          active: editor.isActive('superscript'),
+          onClick: () => {
+            editor.chain().focus().toggleSuperscript().run()
+          },
+        },
+        {
+          iconName: 'code',
+          active: editor.isActive('code'),
+          onClick: () => {
+            editor.chain().focus().toggleCode().run()
+          },
+        },
+        {
+          iconName: 'link',
+          active: editor.isActive('link'),
+          onClick: setLink,
+        },
+        {
+          iconName: 'quote',
+          active: editor.isActive('blockquote'),
+          onClick: () => {
+            editor.chain().focus().toggleBlockquote().run()
+          },
+        },
+        {
+          iconName: 'list-check',
+          active: editor.isActive('taskList'),
+          onClick: () => {
+            editor.chain().focus().toggleTaskList().run()
           },
         },
       ]
 
       const bubbleMenuOptions = useMemo(
         (): NonNullable<BubbleMenuProps['tippyOptions']> => ({
-          maxWidth: '246px',
+          maxWidth: '320px',
         }),
         []
       )
@@ -271,24 +407,24 @@ export const RichTextEditor = memo(
           },
         },
         {
-          iconName: 'bold',
-          active: editor.isActive('bold'),
+          iconName: 'h4',
+          active: editor.isActive('heading', { level: 4 }),
           onClick: () => {
-            editor.chain().focus().toggleBold().run()
+            editor.chain().focus().toggleHeading({ level: 4 }).run()
           },
         },
         {
-          iconName: 'underline',
-          active: editor.isActive('underline'),
+          iconName: 'h5',
+          active: editor.isActive('heading', { level: 5 }),
           onClick: () => {
-            editor.chain().focus().toggleUnderline().run()
+            editor.chain().focus().toggleHeading({ level: 5 }).run()
           },
         },
         {
-          iconName: 'italic',
-          active: editor.isActive('italic'),
+          iconName: 'h6',
+          active: editor.isActive('heading', { level: 6 }),
           onClick: () => {
-            editor.chain().focus().toggleItalic().run()
+            editor.chain().focus().toggleHeading({ level: 6 }).run()
           },
         },
         {
@@ -306,10 +442,45 @@ export const RichTextEditor = memo(
           },
         },
         {
+          iconName: 'bold',
+          active: editor.isActive('bold'),
+          onClick: () => {
+            editor.chain().focus().toggleBold().run()
+          },
+        },
+        {
+          iconName: 'italic',
+          active: editor.isActive('italic'),
+          onClick: () => {
+            editor.chain().focus().toggleItalic().run()
+          },
+        },
+        {
+          iconName: 'underline',
+          active: editor.isActive('underline'),
+          onClick: () => {
+            editor.chain().focus().toggleUnderline().run()
+          },
+        },
+        {
           iconName: 'quote',
           active: editor.isActive('blockquote'),
           onClick: () => {
             editor.chain().focus().toggleBlockquote().run()
+          },
+        },
+        {
+          iconName: 'list-check',
+          active: editor.isActive('taskList'),
+          onClick: () => {
+            editor.chain().focus().toggleTaskList().run()
+          },
+        },
+        {
+          iconName: 'codeblock',
+          active: editor.isActive('codeBlock'),
+          onClick: () => {
+            editor.chain().focus().toggleCodeBlock().run()
           },
         },
         {
@@ -323,7 +494,7 @@ export const RichTextEditor = memo(
 
       const floatingMenuOptions = useMemo(
         (): NonNullable<FloatingMenuProps['tippyOptions']> => ({
-          maxWidth: '246px',
+          maxWidth: '320px',
           placement: 'bottom-start',
           duration: 100,
         }),
@@ -339,7 +510,7 @@ export const RichTextEditor = memo(
         gap: 8px 4px;
         background: ${theme.color.menu.background};
         border: 1px solid ${theme.color.menu.border};
-        border-radius: 12px;
+        border-radius: 8px;
       `
 
       return editor ? (
@@ -377,19 +548,37 @@ export const RichTextEditor = memo(
               }
 
               h1 {
-                font-size: 28px;
+                font-size: 32px;
                 font-weight: 600;
                 line-height: 36px;
               }
 
               h2 {
+                font-size: 28px;
+                font-weight: 600;
+                line-height: 36px;
+              }
+
+              h3 {
                 font-size: 24px;
                 font-weight: 600;
                 line-height: 32px;
               }
 
-              h3 {
+              h4 {
                 font-size: 20px;
+                font-weight: 600;
+                line-height: 32px;
+              }
+
+              h5 {
+                font-size: 18px;
+                font-weight: 600;
+                line-height: 28px;
+              }
+
+              h6 {
+                font-size: 16px;
                 font-weight: 600;
                 line-height: 28px;
               }
@@ -402,8 +591,29 @@ export const RichTextEditor = memo(
               }
 
               pre {
-                padding: 20px 24px;
+                padding: 16px 24px;
+                border-radius: 8px;
                 background: ${theme.color.codeBlock.background};
+
+                code {
+                  background: ${theme.color.codeBlock.background};
+                }
+              }
+
+              code {
+                padding: 0.2em 0.4em;
+                border-radius: 4px;
+                background: ${theme.color.code.background};
+              }
+
+              sub {
+                vertical-align: sub;
+                font-size: 0.6em;
+              }
+
+              sup {
+                vertical-align: super;
+                font-size: 0.6em;
               }
 
               ul,
@@ -413,6 +623,20 @@ export const RichTextEditor = memo(
 
               li {
                 padding-left: 4px;
+              }
+
+              ul[data-type='taskList'] {
+                list-style: none;
+                padding: 0;
+              }
+              ul[data-type='taskList'] li {
+                display: flex;
+                label {
+                  margin-right: 0.5rem;
+                }
+                div {
+                  flex: 1 1 auto;
+                }
               }
 
               > ul {
@@ -539,6 +763,27 @@ export const RichTextEditor = memo(
                 {...props}
               />
             ))}
+            <TextField
+              size='medium'
+              id='editor-link-input'
+              inputtype='url'
+              placeholder='https://'
+              css={css`
+                display: none;
+                width: 100%;
+              `}
+              onEnter={handleLinkInputChange}
+              onDismiss={(ev) => {
+                ev.currentTarget.blur()
+              }}
+              onBlurCapture={(ev) => {
+                ev.currentTarget.setAttribute('value', '')
+                ev.currentTarget.parentElement?.style.setProperty(
+                  'display',
+                  'none'
+                )
+              }}
+            />
           </BubbleMenu>
         </EditorContent>
       ) : null
