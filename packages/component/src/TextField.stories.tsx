@@ -21,7 +21,7 @@ export const Default: Story = {
   args: {
     size: 'medium',
     placeholder: 'Placeholder',
-    onSearch: undefined as never,
+    onEnter: undefined as never,
   },
 }
 
