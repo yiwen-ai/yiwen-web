@@ -984,13 +984,17 @@ const ImageUpload = Image.extend<ImageUploadOptions>({
             )
             if (!file) return false
             ev.preventDefault()
+            const blob = file.slice(0, file.size, file.type)
+            const newFile = new File([blob], `${Date.now()}-${file.name}`, {
+              type: file.type,
+            })
             this.editor.commands.insertContent([
               {
                 type: this.name,
                 attrs: {
-                  src: URL.createObjectURL(file),
-                  alt: file.name,
-                  title: file.name,
+                  src: URL.createObjectURL(newFile),
+                  alt: newFile.name,
+                  title: newFile.name,
                 },
               },
               {
