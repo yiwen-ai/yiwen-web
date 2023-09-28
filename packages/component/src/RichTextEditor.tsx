@@ -1,4 +1,4 @@
-import { css, useTheme } from '@emotion/react'
+import { css, useTheme, type Theme } from '@emotion/react'
 import { Details } from '@tiptap-pro/extension-details'
 import { DetailsContent } from '@tiptap-pro/extension-details-content'
 import { DetailsSummary } from '@tiptap-pro/extension-details-summary'
@@ -79,7 +79,6 @@ export const getExtensions = ({
   // Color, // should handle color in dark theme
   CodeBlockLowlight.configure({
     lowlight,
-    languageClassPrefix: 'language-',
   }),
   Details.configure({ persist: true }),
   DetailsContent,
@@ -98,7 +97,10 @@ export const getExtensions = ({
   Mathematics.configure({ katexOptions: { strict: false } }),
   Mention,
   Placeholder.configure({ placeholder: placeholder ?? '' }),
-  StarterKit.configure({ heading: { levels: [1, 2, 3, 4, 5, 6] } }),
+  StarterKit.configure({
+    codeBlock: false,
+    heading: { levels: [1, 2, 3, 4, 5, 6] },
+  }),
   Subscript,
   Superscript,
   Table.configure({ resizable: true }),
@@ -164,6 +166,7 @@ export const RichTextViewer = memo(
       }: RichTextEditorProps,
       ref
     ) => {
+      const theme = useTheme()
       const editor = useEditor(
         {
           ...props,
@@ -181,7 +184,7 @@ export const RichTextViewer = memo(
           className={className}
           editor={editor}
           dir={dir}
-          css={EditorCSS()}
+          css={EditorCSS(theme)}
         ></EditorContent>
       ) : null
     }
@@ -641,7 +644,7 @@ export const RichTextEditor = memo(
           className={className}
           editor={editor}
           dir={dir}
-          css={EditorCSS()}
+          css={EditorCSS(theme)}
         >
           <FloatingMenu
             editor={editor}
@@ -702,9 +705,7 @@ export const RichTextEditor = memo(
   )
 )
 
-const EditorCSS = () => {
-  const theme = useTheme()
-
+const EditorCSS = (theme: Theme) => {
   return css`
     flex: 1;
     display: flex;
@@ -777,20 +778,24 @@ const EditorCSS = () => {
         border-left: 2px solid ${theme.color.divider.default};
       }
 
-      pre {
-        padding: 16px 24px;
-        border-radius: 8px;
-        background: ${theme.color.codeBlock.background};
-
-        code {
-          background: ${theme.color.codeBlock.background};
-        }
-      }
-
       code {
         padding: 0.2em 0.4em;
         border-radius: 4px;
         background: ${theme.color.code.background};
+      }
+
+      pre {
+        padding: 16px 24px;
+        border-radius: 8px;
+        border: 1px solid ${theme.palette.grayLight};
+        background: ${theme.color.codeBlock.background};
+
+        code {
+          padding: 0;
+          border-radius: 0;
+          color: ${theme.color.codeBlock.color};
+          background: ${theme.color.codeBlock.background};
+        }
       }
 
       sub {

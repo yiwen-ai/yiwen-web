@@ -128,6 +128,7 @@ declare module '@emotion/react' {
         background: string
       }
       codeBlock: {
+        color: string
         background: string
       }
     }
@@ -355,6 +356,7 @@ export const lightTheme: Theme = {
       background: palette.grayLight0,
     },
     codeBlock: {
+      color: palette.grayLight1,
       background: palette.grayNormal,
     },
   },
@@ -583,6 +585,7 @@ export const darkTheme: Theme = {
       background: palette.grayLight,
     },
     codeBlock: {
+      color: palette.grayLight1,
       background: palette.grayNormal,
     },
   },
