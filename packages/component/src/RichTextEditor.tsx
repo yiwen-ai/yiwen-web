@@ -151,6 +151,43 @@ export interface RichTextEditorProps {
   upload?: ((file: File) => Observable<UploadOutput>) | null | undefined
 }
 
+export const RichTextViewer = memo(
+  forwardRef(
+    (
+      {
+        className,
+        dir,
+        placeholder,
+        initialContent = null,
+        content,
+        ...props
+      }: RichTextEditorProps,
+      ref
+    ) => {
+      const editor = useEditor(
+        {
+          ...props,
+          editable: false,
+          content: content ?? initialContent,
+          extensions: getExtensions(),
+        },
+        []
+      )
+
+      useImperativeHandle(ref, () => editor, [editor])
+
+      return editor ? (
+        <EditorContent
+          className={className}
+          editor={editor}
+          dir={dir}
+          css={EditorCSS()}
+        ></EditorContent>
+      ) : null
+    }
+  )
+)
+
 export const RichTextEditor = memo(
   forwardRef(
     (
@@ -604,219 +641,7 @@ export const RichTextEditor = memo(
           className={className}
           editor={editor}
           dir={dir}
-          css={css`
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-
-            .ProseMirror {
-              flex: 1;
-              ${theme.typography.body};
-
-              &:focus {
-                outline: none;
-              }
-
-              > * {
-                margin-top: 0;
-                margin-bottom: 0;
-                + * {
-                  margin-top: 20px;
-                }
-              }
-
-              * > p {
-                margin-top: 0;
-                margin-bottom: 0;
-                + p {
-                  margin-top: 20px;
-                }
-              }
-
-              h1 {
-                font-size: 32px;
-                font-weight: 600;
-                line-height: 36px;
-              }
-
-              h2 {
-                font-size: 28px;
-                font-weight: 600;
-                line-height: 36px;
-              }
-
-              h3 {
-                font-size: 24px;
-                font-weight: 600;
-                line-height: 32px;
-              }
-
-              h4 {
-                font-size: 20px;
-                font-weight: 600;
-                line-height: 32px;
-              }
-
-              h5 {
-                font-size: 18px;
-                font-weight: 600;
-                line-height: 28px;
-              }
-
-              h6 {
-                font-size: 16px;
-                font-weight: 600;
-                line-height: 28px;
-              }
-
-              blockquote {
-                margin-left: 0;
-                margin-right: 0;
-                padding: 0 16px;
-                border-left: 2px solid ${theme.color.divider.default};
-              }
-
-              pre {
-                padding: 16px 24px;
-                border-radius: 8px;
-                background: ${theme.color.codeBlock.background};
-
-                code {
-                  background: ${theme.color.codeBlock.background};
-                }
-              }
-
-              code {
-                padding: 0.2em 0.4em;
-                border-radius: 4px;
-                background: ${theme.color.code.background};
-              }
-
-              sub {
-                vertical-align: sub;
-                font-size: 0.6em;
-              }
-
-              sup {
-                vertical-align: super;
-                font-size: 0.6em;
-              }
-
-              ul,
-              ol {
-                padding-left: 24px;
-              }
-
-              li {
-                padding-left: 4px;
-              }
-
-              ul[data-type='taskList'] {
-                list-style: none;
-                padding: 0;
-              }
-              ul[data-type='taskList'] li {
-                display: flex;
-                label {
-                  margin-right: 0.5rem;
-                }
-                div {
-                  flex: 1 1 auto;
-                }
-              }
-
-              > ul {
-                list-style-type: disc;
-                > li > ul {
-                  list-style-type: circle;
-                  > li > ul {
-                    list-style-type: square;
-                    > li > ul {
-                      list-style-type: disc;
-                      > li > ul {
-                        list-style-type: circle;
-                        > li > ul {
-                          list-style-type: square;
-                          > li > ul {
-                            list-style-type: disc;
-                            > li > ul {
-                              list-style-type: circle;
-                              > li > ul {
-                                list-style-type: square;
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-
-              > ol {
-                list-style-type: decimal;
-                > li > ol {
-                  list-style-type: lower-alpha;
-                  > li > ol {
-                    list-style-type: lower-roman;
-                    > li > ol {
-                      list-style-type: decimal;
-                      > li > ol {
-                        list-style-type: lower-alpha;
-                        > li > ol {
-                          list-style-type: lower-roman;
-                          > li > ol {
-                            list-style-type: decimal;
-                            > li > ol {
-                              list-style-type: lower-alpha;
-                              > li > ol {
-                                list-style-type: lower-roman;
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-
-              hr {
-                border: none;
-                border-top: 1px solid ${theme.color.divider.default};
-              }
-
-              a {
-                display: inline-block;
-                cursor: pointer;
-                color: ${theme.color.body.primary};
-                :hover {
-                  color: ${theme.color.body.primaryHover};
-                }
-              }
-
-              p.is-editor-empty::before,
-              p.is-empty:only-child::before,
-              style + p.is-empty:last-child::before {
-                color: ${theme.color.input.placeholder};
-                content: attr(data-placeholder);
-                float: left;
-                height: 0;
-                pointer-events: none;
-              }
-
-              .Tiptap-mathematics-render {
-                .latin_fallback,
-                .cyrillic_fallback,
-                .brahmic_fallback,
-                .georgian_fallback,
-                .cjk_fallback,
-                .hangul_fallback {
-                  font-style: italic;
-                }
-              }
-            }
-          `}
+          css={EditorCSS()}
         >
           <FloatingMenu
             editor={editor}
@@ -876,6 +701,224 @@ export const RichTextEditor = memo(
     }
   )
 )
+
+const EditorCSS = () => {
+  const theme = useTheme()
+
+  return css`
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .ProseMirror {
+      flex: 1;
+      ${theme.typography.body};
+
+      &:focus {
+        outline: none;
+      }
+
+      > * {
+        margin-top: 0;
+        margin-bottom: 0;
+        + * {
+          margin-top: 20px;
+        }
+      }
+
+      * > p {
+        margin-top: 0;
+        margin-bottom: 0;
+        + p {
+          margin-top: 20px;
+        }
+      }
+
+      h1 {
+        font-size: 32px;
+        font-weight: 600;
+        line-height: 36px;
+      }
+
+      h2 {
+        font-size: 28px;
+        font-weight: 600;
+        line-height: 36px;
+      }
+
+      h3 {
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 32px;
+      }
+
+      h4 {
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 32px;
+      }
+
+      h5 {
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 28px;
+      }
+
+      h6 {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 28px;
+      }
+
+      blockquote {
+        margin-left: 0;
+        margin-right: 0;
+        padding: 0 16px;
+        border-left: 2px solid ${theme.color.divider.default};
+      }
+
+      pre {
+        padding: 16px 24px;
+        border-radius: 8px;
+        background: ${theme.color.codeBlock.background};
+
+        code {
+          background: ${theme.color.codeBlock.background};
+        }
+      }
+
+      code {
+        padding: 0.2em 0.4em;
+        border-radius: 4px;
+        background: ${theme.color.code.background};
+      }
+
+      sub {
+        vertical-align: sub;
+        font-size: 0.6em;
+      }
+
+      sup {
+        vertical-align: super;
+        font-size: 0.6em;
+      }
+
+      ul,
+      ol {
+        padding-left: 24px;
+      }
+
+      li {
+        padding-left: 4px;
+      }
+
+      ul[data-type='taskList'] {
+        list-style: none;
+        padding: 0;
+      }
+      ul[data-type='taskList'] li {
+        display: flex;
+        label {
+          margin-right: 0.5rem;
+        }
+        div {
+          flex: 1 1 auto;
+        }
+      }
+
+      > ul {
+        list-style-type: disc;
+        > li > ul {
+          list-style-type: circle;
+          > li > ul {
+            list-style-type: square;
+            > li > ul {
+              list-style-type: disc;
+              > li > ul {
+                list-style-type: circle;
+                > li > ul {
+                  list-style-type: square;
+                  > li > ul {
+                    list-style-type: disc;
+                    > li > ul {
+                      list-style-type: circle;
+                      > li > ul {
+                        list-style-type: square;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      > ol {
+        list-style-type: decimal;
+        > li > ol {
+          list-style-type: lower-alpha;
+          > li > ol {
+            list-style-type: lower-roman;
+            > li > ol {
+              list-style-type: decimal;
+              > li > ol {
+                list-style-type: lower-alpha;
+                > li > ol {
+                  list-style-type: lower-roman;
+                  > li > ol {
+                    list-style-type: decimal;
+                    > li > ol {
+                      list-style-type: lower-alpha;
+                      > li > ol {
+                        list-style-type: lower-roman;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid ${theme.color.divider.default};
+      }
+
+      a {
+        display: inline-block;
+        cursor: pointer;
+        color: ${theme.color.body.primary};
+        :hover {
+          color: ${theme.color.body.primaryHover};
+        }
+      }
+
+      p.is-editor-empty::before,
+      p.is-empty:only-child::before,
+      style + p.is-empty:last-child::before {
+        color: ${theme.color.input.placeholder};
+        content: attr(data-placeholder);
+        float: left;
+        height: 0;
+        pointer-events: none;
+      }
+
+      .Tiptap-mathematics-render {
+        .latin_fallback,
+        .cyrillic_fallback,
+        .brahmic_fallback,
+        .georgian_fallback,
+        .cjk_fallback,
+        .hangul_fallback {
+          font-style: italic;
+        }
+      }
+    }
+  `
+}
 
 interface BubbleMenuItemProps extends IconButtonProps {
   active: boolean

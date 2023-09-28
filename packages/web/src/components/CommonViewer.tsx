@@ -3,7 +3,7 @@ import { MAX_WIDTH } from '#/shared'
 import { type GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import { type JSONContent } from '@tiptap/core'
-import { RichTextEditor } from '@yiwen-ai/component'
+import { RichTextViewer } from '@yiwen-ai/component'
 import {
   decode,
   isRTL,
@@ -87,8 +87,7 @@ export default function CommonViewer({
         )}
       </Link>
       {content && (
-        <RichTextEditor
-          editable={false}
+        <RichTextViewer
           content={content}
           css={css`
             margin-top: 24px;

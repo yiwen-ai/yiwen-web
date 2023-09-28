@@ -39,6 +39,7 @@ export { Menu, MenuItem, type MenuItemProps, type MenuProps } from './Menu'
 export { QRCode } from './QRCode'
 export {
   RichTextEditor,
+  RichTextViewer,
   getExtensions,
   type RichTextEditorProps,
 } from './RichTextEditor'
