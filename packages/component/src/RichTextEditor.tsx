@@ -107,7 +107,16 @@ export const getExtensions = ({
   TableRow,
   TaskItem.configure({ nested: true }),
   TaskList,
-  TextAlign,
+  TextAlign.configure({
+    types: [
+      'heading',
+      'paragraph',
+      'codeBlock',
+      'blockquote',
+      'table',
+      'tableCell',
+    ],
+  }),
   TextStyle,
   Typography,
   Underline,
@@ -249,6 +258,30 @@ export const RichTextEditor = memo(
         [content, editor]
       )
 
+      const handleFileInputChange = useCallback(
+        (ev: React.ChangeEvent<HTMLInputElement>) => {
+          const file = ev.currentTarget.files?.[0]
+          if (!file || !editor) return false
+          ev.preventDefault()
+          editor.commands.insertContent([
+            {
+              type: 'image',
+              attrs: {
+                src: URL.createObjectURL(file),
+                alt: file.name,
+                title: file.name,
+              },
+            },
+            {
+              type: 'paragraph',
+              attrs: {},
+            },
+          ])
+          return true
+        },
+        [editor]
+      )
+
       //#region bubble menu & floating menu
       const bubbleMenuItems: BubbleMenuItemProps[] | null = editor && [
         {
@@ -375,6 +408,42 @@ export const RichTextEditor = memo(
             editor.chain().focus().toggleTaskList().run()
           },
         },
+        {
+          iconName: 'align-center',
+          active: editor.isActive({ textAlign: 'center' }),
+          onClick: () => {
+            editor.isActive({ textAlign: 'center' })
+              ? editor.chain().focus().unsetTextAlign().run()
+              : editor.chain().focus().setTextAlign('center').run()
+          },
+        },
+        {
+          iconName: 'align-justify',
+          active: editor.isActive({ textAlign: 'justify' }),
+          onClick: () => {
+            editor.isActive({ textAlign: 'justify' })
+              ? editor.chain().focus().unsetTextAlign().run()
+              : editor.chain().focus().setTextAlign('justify').run()
+          },
+        },
+        {
+          iconName: 'align-left',
+          active: editor.isActive({ textAlign: 'left' }),
+          onClick: () => {
+            editor.isActive({ textAlign: 'left' })
+              ? editor.chain().focus().unsetTextAlign().run()
+              : editor.chain().focus().setTextAlign('left').run()
+          },
+        },
+        {
+          iconName: 'align-right',
+          active: editor.isActive({ textAlign: 'right' }),
+          onClick: () => {
+            editor.isActive({ textAlign: 'right' })
+              ? editor.chain().focus().unsetTextAlign().run()
+              : editor.chain().focus().setTextAlign('right').run()
+          },
+        },
       ]
 
       const bubbleMenuOptions = useMemo(
@@ -489,6 +558,23 @@ export const RichTextEditor = memo(
           onClick: () => {
             editor.chain().focus().setHorizontalRule().run()
           },
+        },
+        {
+          iconName: 'imgupload',
+          active: false,
+          onClick: undefined,
+          htmlFor: 'editor-file-input',
+          children: (
+            <input
+              type='file'
+              id='editor-file-input'
+              accept='.png,.jpg,.jpeg,.gif,.webp'
+              onChange={handleFileInputChange}
+              css={css`
+                display: none;
+              `}
+            />
+          ),
         },
       ]
 

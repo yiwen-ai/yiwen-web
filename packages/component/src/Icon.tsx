@@ -11,6 +11,10 @@ import {
 import { useLogger } from './logger'
 
 const SVG_LIST = {
+  'align-center': () => import('./icon/remixicon/align-center.svg'),
+  'align-justify': () => import('./icon/remixicon/align-justify.svg'),
+  'align-left': () => import('./icon/remixicon/align-left.svg'),
+  'align-right': () => import('./icon/remixicon/align-right.svg'),
   'archive': () => import('./icon/16/archive.svg'),
   'arrowcircleright': () => import('./icon/24/arrowcircleright.svg'),
   'backwarditem': () => import('./icon/16/backwarditem.svg'),

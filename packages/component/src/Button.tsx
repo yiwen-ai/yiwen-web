@@ -47,6 +47,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   shape?: ButtonShape
   size?: ButtonSize
   readOnly?: boolean
+  htmlFor?: string
 }
 
 export const Button = memo(
@@ -138,6 +139,7 @@ export const IconButton = memo(
       shape = 'circle',
       size = 'small',
       iconSize = size,
+      htmlFor,
       ...props
     }: IconButtonProps,
     ref: React.Ref<HTMLButtonElement>
@@ -160,13 +162,36 @@ export const IconButton = memo(
           border: 'none',
         }}
       >
-        <Icon
-          name={iconName}
-          size={iconSize}
-          css={css`
-            outline: none;
-          `}
-        />
+        {htmlFor ? (
+          <label
+            htmlFor={htmlFor}
+            css={css`
+              width: 100%;
+              cursor: pointer;
+              display: flex;
+              align-content: center;
+              justify-content: center;
+              align-items: center;
+            `}
+          >
+            <Icon
+              name={iconName}
+              size={iconSize}
+              css={css`
+                outline: none;
+              `}
+            />
+            {props.children}
+          </label>
+        ) : (
+          <Icon
+            name={iconName}
+            size={iconSize}
+            css={css`
+              outline: none;
+            `}
+          />
+        )}
       </Button>
     )
   })
