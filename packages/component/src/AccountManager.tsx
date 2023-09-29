@@ -1,5 +1,6 @@
 import { css, useTheme } from '@emotion/react'
 import { useAuth, type IdentityProvider } from '@yiwen-ai/store'
+import { stopPropagation } from '@yiwen-ai/util'
 import { memo, useCallback, useMemo } from 'react'
 import { FormattedMessage, useIntl } from 'react-intl'
 import { Icon, type IconName } from '.'
@@ -45,6 +46,7 @@ export const AccountManager = memo(function AccountManager({
     <AlertDialog
       open={dialog.open}
       onToggle={dialog.toggle}
+      onPointerUpCapture={stopPropagation}
       anchor={(props) => (
         <Button color='primary' {...props}>
           {intl.formatMessage({ defaultMessage: '登录' })}
@@ -65,6 +67,14 @@ export const AccountManager = memo(function AccountManager({
         `}
       >
         <ProviderItem
+          provider={'wechat'}
+          providerLogo={'wechat'}
+          providerName={intl.formatMessage({ defaultMessage: '微信' })}
+          isAuthorizing={authorizingProvider === 'wechat'}
+          disabled={!!authorizingProvider}
+          onAuthorize={authorize}
+        />
+        <ProviderItem
           provider={'github'}
           providerLogo={'github'}
           providerName={intl.formatMessage({ defaultMessage: 'GitHub' })}
@@ -77,14 +87,6 @@ export const AccountManager = memo(function AccountManager({
           providerLogo={'google'}
           providerName={intl.formatMessage({ defaultMessage: 'Google' })}
           isAuthorizing={authorizingProvider === 'google'}
-          disabled={!!authorizingProvider}
-          onAuthorize={authorize}
-        />
-        <ProviderItem
-          provider={'wechat'}
-          providerLogo={'wechat'}
-          providerName={intl.formatMessage({ defaultMessage: '微信' })}
-          isAuthorizing={authorizingProvider === 'wechat'}
           disabled={!!authorizingProvider}
           onAuthorize={authorize}
         />
