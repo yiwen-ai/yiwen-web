@@ -736,36 +736,48 @@ const EditorCSS = (theme: Theme) => {
       }
 
       h1 {
+        margin-top: 40px;
+        margin-bottom: 20px;
         font-size: 32px;
         font-weight: 600;
         line-height: 36px;
       }
 
       h2 {
+        margin-top: 32px;
+        margin-bottom: 16px;
         font-size: 28px;
         font-weight: 600;
         line-height: 36px;
       }
 
       h3 {
+        margin-top: 24px;
+        margin-bottom: 12px;
         font-size: 24px;
         font-weight: 600;
         line-height: 32px;
       }
 
       h4 {
+        margin-top: 24px;
+        margin-bottom: 12px;
         font-size: 20px;
         font-weight: 600;
         line-height: 32px;
       }
 
       h5 {
+        margin-top: 20px;
+        margin-bottom: 10px;
         font-size: 18px;
         font-weight: 600;
         line-height: 28px;
       }
 
       h6 {
+        margin-top: 20px;
+        margin-bottom: 10px;
         font-size: 16px;
         font-weight: 600;
         line-height: 28px;
