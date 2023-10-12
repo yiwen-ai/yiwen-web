@@ -4,7 +4,7 @@
     "extract": "formatjs extract 'packages/*/src/**/*.ts*' --ignore='**/*.d.ts' --out-file lang/zho.json --id-interpolation-pattern '[sha512:contenthash:base64:6]'",
     "prepare": "husky install",
     "tms-compile": "node lang/cli.mjs compile",
-    "tms-extract": "npm run extract && node lang/cli.mjs extract"
+    "tms-translate": "node lang/cli.mjs translate"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.1",

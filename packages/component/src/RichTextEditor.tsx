@@ -92,7 +92,7 @@ export const getExtensions = ({
     linkOnPaste: true,
     openOnClick: false,
     HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer' },
-    validate: (href) => /^https:\/\//.test(href),
+    validate: (href) => (href ? href.startsWith('https://') : false),
   }),
   Mathematics.configure({ katexOptions: { strict: false } }),
   Mention,
