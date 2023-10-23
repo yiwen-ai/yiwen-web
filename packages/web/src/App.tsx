@@ -143,7 +143,7 @@ function Layout() {
 
   const onError = useCallback<NonNullable<ErrorBoundaryProps['onError']>>(
     (error, { componentStack }) => {
-      logger.fatal('component error', { error, stack: componentStack })
+      logger.fatal('component error', { error, stack: String(componentStack) })
     },
     [logger]
   )

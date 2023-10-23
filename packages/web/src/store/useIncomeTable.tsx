@@ -1,5 +1,7 @@
 import { createColumnHelper, type ColumnDef } from '@tanstack/react-table'
 import {
+  TransactionKind,
+  TransactionRole,
   isSystem,
   useIncomeList,
   type Currency,
@@ -36,12 +38,26 @@ export function useIncomeTable(
         header: intl.formatMessage({ defaultMessage: '时间' }),
         size: 240,
       }),
-      columnHelper.accessor((row) => row.kind, {
-        cell: (props) => transactionKindLabelDict[props.getValue()],
+      columnHelper.accessor((row) => [row.kind, row.role], {
+        cell: (props) => {
+          const [kind, role] = props.getValue()
+          if (
+            kind != TransactionKind.Sponsor &&
+            kind != TransactionKind.Subscribe
+          ) {
+            return transactionKindLabelDict[kind as TransactionKind]
+          }
+
+          const txnRole =
+            role == TransactionRole.SubPayee
+              ? intl.formatMessage({ defaultMessage: '（分成）' })
+              : intl.formatMessage({ defaultMessage: '（收入）' })
+          return transactionKindLabelDict[kind as TransactionKind] + txnRole
+        },
         header: intl.formatMessage({ defaultMessage: '类型' }),
         size: 140,
       }),
-      columnHelper.accessor((row) => row.amount, {
+      columnHelper.accessor((row) => row.income || 0, {
         cell: (props) => props.getValue(),
         header: intl.formatMessage({ defaultMessage: '数量' }),
         size: 140,

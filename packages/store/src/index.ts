@@ -96,6 +96,7 @@ export {
   ChargeStatus,
   CreditKind,
   TransactionKind,
+  TransactionRole,
   TransactionStatus,
   YIWEN_COIN_RATE,
   formatChargeAmount,

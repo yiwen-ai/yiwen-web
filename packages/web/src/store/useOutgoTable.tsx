@@ -32,7 +32,7 @@ export function useTransactionKindLabelDict() {
         defaultMessage: '消费',
       }),
       [TransactionKind.Sponsor]: intl.formatMessage({
-        defaultMessage: '赞助',
+        defaultMessage: '赞赏',
       }),
       [TransactionKind.Subscribe]: intl.formatMessage({
         defaultMessage: '订阅',

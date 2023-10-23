@@ -72,6 +72,12 @@ export enum TransactionStatus {
   Committed = 3,
 }
 
+export enum TransactionRole {
+  Payer = 0,
+  Payee = 1,
+  SubPayee = 2,
+}
+
 export enum TransactionKind {
   Award = 'award',
   Topup = 'topup',
@@ -91,9 +97,11 @@ export interface TransactionOutput {
   sub_payee?: Uint8Array
   status: TransactionStatus
   kind: TransactionKind
+  role: TransactionRole
   amount: number
   sys_fee: number
   sub_shares: number
+  income?: number
   created_at: number
   description?: string
   payload?: Uint8Array
@@ -240,19 +248,6 @@ export function useWalletAPI() {
     [request]
   )
 
-  /**
-   * 分红记录
-   */
-  const readTransactionBonusList = useCallback(
-    (body: UIDPagination) => {
-      return request.post<Page<TransactionOutput>>(
-        '/v1/transaction/list_shares',
-        body
-      )
-    },
-    [request]
-  )
-
   const readChargeConfig = useCallback(() => {
     return request.get<{ result: CheckoutConfig }>('/v1/checkout/config')
   }, [request])
@@ -292,7 +287,6 @@ export function useWalletAPI() {
     readCreditList,
     readTransactionOutgoList,
     readTransactionIncomeList,
-    readTransactionBonusList,
     readChargeConfig,
     readChargeList,
     readCharge,
