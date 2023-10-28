@@ -83,11 +83,17 @@ export default function Home() {
           box-sizing: border-box;
           display: flex;
           flex-direction: column;
+          @media (max-width: ${BREAKPOINT.small}px) {
+            margin: 24px auto;
+          }
         `}
       >
         <div
           css={css`
             padding: 0 32px;
+            @media (max-width: ${BREAKPOINT.small}px) {
+              padding: 0 0;
+            }
           `}
         >
           <Brand size='large' />
@@ -120,6 +126,10 @@ export default function Home() {
             gap: 24px 36px;
             border-radius: 30px;
             background: ${theme.color.button.tile.background};
+            @media (max-width: ${BREAKPOINT.small}px) {
+              margin-top: 24px;
+              padding: 24px 24px;
+            }
           `}
         >
           <TextField
