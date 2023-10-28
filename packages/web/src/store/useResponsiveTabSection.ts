@@ -5,8 +5,7 @@ import {
   useBookmarkList,
   useFollowedPublicationList,
   useRecommendedPublicationList,
-  type BookmarkOutput,
-  type PublicationOutput,
+  type ObjectParams,
 } from '@yiwen-ai/store'
 import { useEffect, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
@@ -23,7 +22,7 @@ export interface ResponsiveTabItem {
   title: string
   more: To
   isLoading: boolean
-  items: (PublicationOutput | BookmarkOutput)[]
+  items: ObjectParams[]
 }
 
 export function useResponsiveTabSection() {

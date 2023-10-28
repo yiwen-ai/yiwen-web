@@ -1,6 +1,8 @@
 import { GROUP_DETAIL_PATH, ThemeContext } from '#/App'
-import { AutoLoadMore } from '#/components/LoadMore'
-import { BREAKPOINT } from '#/shared'
+import CreatedBy from '#/components/CreatedBy'
+import { LoadMore } from '#/components/LoadMore'
+import Placeholder from '#/components/Placeholder'
+import { BREAKPOINT, MAX_WIDTH } from '#/shared'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
@@ -19,11 +21,10 @@ import {
 } from '@yiwen-ai/component'
 import {
   ObjectKind,
+  getCollectionInfo,
   isRTL,
-  useAuth,
   type CollectionChildrenOutput,
-  type GPT_MODEL,
-  type PublicationOutput,
+  type CollectionOutput,
   type UILanguageItem,
 } from '@yiwen-ai/store'
 import { escapeRegExp } from 'lodash-es'
@@ -39,30 +40,22 @@ import { useResizeDetector } from 'react-resize-detector'
 import { Link, generatePath } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 import ChargeDialog, { type ChargeDialogProps } from './ChargeDialog'
-import CommonViewer from './CommonViewer'
 import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
-import TranslateConfirmDialog, {
-  type TranslateConfirmDialogProps,
-} from './TranslateConfirmDialog'
-import TranslateDialog, { type TranslateDialogProps } from './TranslateDialog'
 
-export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
+export interface CollectionViewerProps extends HTMLAttributes<HTMLDivElement> {
   responsive: boolean
   isLoading: boolean
+  isChildrenLoading: boolean
   error: unknown
-  publication: PublicationOutput | undefined
+  collection: CollectionOutput | undefined
+  childrenItems: CollectionChildrenOutput[] | undefined
   currentLanguage: UILanguageItem | undefined
   originalLanguage: UILanguageItem | undefined
   translatedLanguageList: UILanguageItem[] | undefined
   pendingLanguageList: UILanguageItem[] | undefined
-  collectionMenu: CollectionChildrenOutput[]
-  hasMore: boolean
-  isLoadingMore: boolean
-  loadMore: () => void
   onCharge: () => void
-  onTranslate: (language: UILanguageItem, model: GPT_MODEL) => void
-  onSwitch: (language: UILanguageItem, canTranslate: boolean) => void
+  onSwitch: (language: UILanguageItem) => void
   shareLink: string | undefined
   onShare: () => void
   isFavorite: boolean
@@ -71,29 +64,27 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   onAddFavorite: () => void
   onRemoveFavorite: () => void
   onClose?: () => void
-  translateConfirmDialog: Omit<
-    TranslateConfirmDialogProps,
-    'onCharge' | 'onTranslate'
-  >
-  translateDialog: TranslateDialogProps
   chargeDialog: ChargeDialogProps
+  hasMore: boolean
+  isLoadingMore: boolean
+  loadMore: () => void
 }
 
-export default function PublicationViewer({
+export default function CollectionViewer({
   responsive,
   isLoading,
+  isChildrenLoading,
   error,
-  publication,
+  collection,
+  childrenItems,
+  hasMore,
+  isLoadingMore,
+  loadMore,
   currentLanguage,
   originalLanguage,
   translatedLanguageList: _translatedLanguageList,
   pendingLanguageList: _pendingLanguageList,
-  collectionMenu,
-  hasMore,
-  isLoadingMore,
-  loadMore,
   onCharge,
-  onTranslate,
   onSwitch,
   shareLink,
   onShare,
@@ -103,22 +94,15 @@ export default function PublicationViewer({
   onAddFavorite,
   onRemoveFavorite,
   onClose,
-  translateConfirmDialog,
-  translateDialog,
   chargeDialog,
   ...props
-}: PublicationViewerProps) {
+}: CollectionViewerProps) {
   const intl = useIntl()
   const theme = useTheme()
-  const { user } = useAuth()
+  // const { user } = useAuth()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const setTheme = useContext(ThemeContext)
   const isNarrow = responsive && width <= BREAKPOINT.small
-  const [showMenu, setShowMenu] = useState(false)
-
-  useMemo(() => {
-    setShowMenu(collectionMenu.length > 0 && !isNarrow)
-  }, [isNarrow, collectionMenu.length])
 
   const [keyword, setKeyword] = useState('')
   const keywordRE = useMemo(
@@ -132,15 +116,6 @@ export default function PublicationViewer({
     []
   )
 
-  const { _cid, _gid, dir } = useMemo(() => {
-    if (!publication) return {}
-    return {
-      _gid: Xid.fromValue(publication.gid).toString(),
-      _cid: Xid.fromValue(publication.cid).toString(),
-      dir: isRTL(publication.language) ? 'rtl' : undefined,
-    }
-  }, [publication])
-
   const translatedLanguageList = useMemo(() => {
     return _translatedLanguageList?.filter((item) => {
       return (
@@ -150,50 +125,6 @@ export default function PublicationViewer({
       )
     })
   }, [_translatedLanguageList, keywordRE])
-
-  const pendingLanguageList = useMemo(() => {
-    return _pendingLanguageList?.filter((item) => {
-      return (
-        keywordRE.test(item.code) ||
-        keywordRE.test(item.name) ||
-        keywordRE.test(item.nativeName)
-      )
-    })
-  }, [_pendingLanguageList, keywordRE])
-
-  const isProcessing = useMemo(() => {
-    return Boolean(
-      _translatedLanguageList?.some((item) => item.isProcessing) ||
-        _pendingLanguageList?.some((item) => item.isProcessing)
-    )
-  }, [_pendingLanguageList, _translatedLanguageList])
-
-  const upateCurrent = useMemo(() => {
-    return Boolean(
-      originalLanguage &&
-        currentLanguage &&
-        !isProcessing &&
-        originalLanguage.version > currentLanguage.version &&
-        user
-    )
-  }, [originalLanguage, currentLanguage, isProcessing, user])
-
-  const [prevItem, nextItem] = useMemo(() => {
-    if (_cid && collectionMenu.length > 0) {
-      for (const [index, item] of collectionMenu.entries()) {
-        if (Xid.fromValue(item.cid).toString() === _cid) {
-          return [
-            index > 0 ? collectionMenu[index - 1] : null,
-            index < collectionMenu.length - 1
-              ? collectionMenu[index + 1]
-              : null,
-          ]
-        }
-      }
-    }
-
-    return [null, null]
-  }, [collectionMenu, _cid])
 
   return (
     <div
@@ -209,7 +140,7 @@ export default function PublicationViewer({
         <Loading />
       ) : error ? (
         <ErrorPlaceholder error={error} />
-      ) : publication ? (
+      ) : collection ? (
         <>
           <div
             css={css`
@@ -236,27 +167,6 @@ export default function PublicationViewer({
                 }
               `}
             >
-              {collectionMenu.length > 0 && (
-                <Button
-                  title={intl.formatMessage({ defaultMessage: '目录' })}
-                  color={showMenu ? 'primary' : 'secondary'}
-                  variant='outlined'
-                  size={isNarrow ? 'small' : 'large'}
-                  onClick={() => setShowMenu(!showMenu)}
-                >
-                  <Icon
-                    name={showMenu ? 'menu-unfold-line' : 'menu-fold-line'}
-                    size={isNarrow ? 'small' : 'medium'}
-                  />
-                  {isNarrow ? null : (
-                    <span>
-                      {intl.formatMessage({
-                        defaultMessage: '目录',
-                      })}
-                    </span>
-                  )}
-                </Button>
-              )}
               <Button
                 title={intl.formatMessage({ defaultMessage: '创作语言' })}
                 color='primary'
@@ -265,37 +175,26 @@ export default function PublicationViewer({
                 disabled={!originalLanguage || originalLanguage.isCurrent}
                 onClick={
                   originalLanguage
-                    ? () => onSwitch(originalLanguage, false)
+                    ? () => onSwitch(originalLanguage)
                     : undefined
                 }
               >
                 {!originalLanguage && <Spinner size='small' />}
-                {originalLanguage?.nativeName ?? publication.from_language}
+                {originalLanguage?.nativeName}
               </Button>
               {!currentLanguage || currentLanguage.isOriginal ? null : (
                 <Button
-                  title={
-                    upateCurrent
-                      ? intl.formatMessage({ defaultMessage: '更新版本' })
-                      : intl.formatMessage({
-                          defaultMessage: '当前语言',
-                        })
-                  }
+                  title={intl.formatMessage({
+                    defaultMessage: '当前语言',
+                  })}
                   color='primary'
                   variant='outlined'
                   size={isNarrow ? 'small' : 'large'}
-                  disabled={!upateCurrent}
-                  onClick={
-                    upateCurrent
-                      ? () => onSwitch(currentLanguage, true)
-                      : undefined
-                  }
                 >
                   {currentLanguage.nativeName}
-                  {!upateCurrent ? null : <Icon name='refresh' size='small' />}
                 </Button>
               )}
-              {translatedLanguageList && pendingLanguageList && (
+              {translatedLanguageList && (
                 <Select
                   anchor={(props) => (
                     <Button
@@ -303,14 +202,12 @@ export default function PublicationViewer({
                       size={isNarrow ? 'small' : 'large'}
                       {...props}
                     >
-                      {isProcessing ? (
-                        <Spinner size={isNarrow ? 'small' : 'medium'} />
-                      ) : (
-                        <Icon
-                          name='translate3'
-                          size={isNarrow ? 'small' : 'medium'}
-                        />
-                      )}
+                      (
+                      <Icon
+                        name='translate3'
+                        size={isNarrow ? 'small' : 'medium'}
+                      />
+                      )
                       {isNarrow ? null : (
                         <span css={textEllipsis}>
                           {intl.formatMessage({
@@ -321,21 +218,9 @@ export default function PublicationViewer({
                     </Button>
                   )}
                   css={css`
-                    width: 360px;
+                    width: 300px;
                   `}
                 >
-                  <li
-                    role='none'
-                    css={css`
-                      list-style: none;
-                      padding: 4px 8px;
-                    `}
-                  >
-                    {intl.formatMessage({
-                      defaultMessage:
-                        '对于未翻译语言，可创建翻译版本到自己的创作中心',
-                    })}
-                  </li>
                   <li
                     role='none'
                     css={css`
@@ -361,7 +246,7 @@ export default function PublicationViewer({
                       )}
                       value={originalLanguage.code}
                       dir={originalLanguage.dir}
-                      onSelect={() => onSwitch(originalLanguage, false)}
+                      onSelect={() => onSwitch(originalLanguage)}
                     />
                   )}
                   {translatedLanguageList.length > 0 && (
@@ -375,24 +260,7 @@ export default function PublicationViewer({
                           label={`${item.nativeName} (${item.name})`}
                           value={item.code}
                           dir={item.dir}
-                          onSelect={() => onSwitch(item, false)}
-                        />
-                      ))}
-                    </SelectOptionGroup>
-                  )}
-                  {originalLanguage && pendingLanguageList.length > 0 && (
-                    <SelectOptionGroup
-                      label={intl.formatMessage({ defaultMessage: '未翻译' })}
-                    >
-                      {pendingLanguageList.map((item) => (
-                        <SelectOption
-                          key={item.code}
-                          after={item.isProcessing && <Spinner size='small' />}
-                          label={`${item.nativeName} (${item.name})`}
-                          value={item.code}
-                          dir={item.dir}
-                          disabled={item.isProcessing}
-                          onSelect={() => onSwitch(item, true)}
+                          onSelect={() => onSwitch(item)}
                         />
                       ))}
                     </SelectOptionGroup>
@@ -410,17 +278,6 @@ export default function PublicationViewer({
                   }
                 `}
               >
-                {isNarrow ? null : (
-                  <Button
-                    color='secondary'
-                    css={css`
-                      display: none;
-                    `}
-                  >
-                    <Icon name='compare' size='small' />
-                    {intl.formatMessage({ defaultMessage: '对比原文' })}
-                  </Button>
-                )}
                 {isNarrow && (
                   <IconButton
                     iconName='celo'
@@ -521,123 +378,298 @@ export default function PublicationViewer({
               </div>
             )}
           </div>
-          <div
+          {collection && (
+            <CollectionDetail
+              collection={collection}
+              childrenItems={childrenItems}
+              isChildrenLoading={isChildrenLoading}
+              hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
+              loadMore={loadMore}
+              isNarrow={isNarrow}
+            ></CollectionDetail>
+          )}
+        </>
+      ) : null}
+      <ChargeDialog {...chargeDialog} />
+    </div>
+  )
+}
+
+function CollectionDetail({
+  collection,
+  childrenItems,
+  isChildrenLoading,
+  hasMore,
+  isLoadingMore,
+  loadMore,
+  isNarrow,
+}: {
+  collection: CollectionOutput
+  childrenItems: CollectionChildrenOutput[] | undefined
+  isChildrenLoading: boolean
+  hasMore: boolean
+  isLoadingMore: boolean
+  loadMore: () => void
+  isNarrow: boolean
+}) {
+  const intl = useIntl()
+  const theme = useTheme()
+  const [language, info] = useMemo(() => {
+    return getCollectionInfo(collection)
+  }, [collection])
+
+  const { _cid, _gid } = useMemo(() => {
+    if (!collection) return {}
+    return {
+      _gid: Xid.fromValue(collection.gid).toString(),
+      _cid: Xid.fromValue(collection.id).toString(),
+    }
+  }, [collection])
+
+  const dir = useMemo(() => {
+    return isRTL(language) ? 'rtl' : undefined
+  }, [language])
+
+  return (
+    info && (
+      <div
+        css={css`
+          width: 100%;
+          max-width: calc(${MAX_WIDTH} + 36px * 2);
+          margin: 0 auto;
+          padding: 0 36px;
+          box-sizing: border-box;
+          height: calc(100vh - 160px);
+          overflow-y: auto;
+          @media (max-width: ${BREAKPOINT.small}px) {
+            padding: 0 16px;
+            height: calc(100vh - 60px);
+          }
+        `}
+      >
+        <div
+          css={css`
+            margin-top: 60px;
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            @media (max-width: ${BREAKPOINT.small}px) {
+              margin-top: 24px;
+            }
+          `}
+        >
+          <img
+            src={
+              (collection.cover as string) ||
+              'https://cdn.yiwen.pub/yiwen.ai.png'
+            }
+            alt='Cover'
             css={css`
-              display: flex;
-              flex-direction: row-reverse;
-              padding: 0 36px;
+              display: block;
+              width: 160px;
+              height: 210px;
+              border-radius: 4px;
+              border: 1px solid ${theme.color.divider.secondary};
+              object-fit: contain;
+              background-color: ${theme.color.divider.secondary};
+              box-shadow: ${theme.effect.card};
               @media (max-width: ${BREAKPOINT.small}px) {
-                flex-direction: column;
-                align-items: center;
-                padding: 16px 0 0 0;
+                width: 120px;
+                height: 160px;
               }
             `}
+          ></img>
+          <div
+            css={css`
+              margin-left: 24px;
+              width: calc(${MAX_WIDTH} + 36px * 2 - 160px - 24px);
+            `}
           >
-            <CommonViewer
-              type={GroupViewType.Publication}
-              item={publication}
-              isNarrow={isNarrow}
-              prevItem={prevItem}
-              nextItem={nextItem}
-            />
-            {showMenu && collectionMenu.length > 0 && (
-              <ul
+            <div
+              dir={dir}
+              css={css`
+                ${theme.typography.h0}
+              `}
+            >
+              {info.title}
+            </div>
+            {info.summary && (
+              <div
+                dir={dir}
                 css={css`
+                  margin-top: 12px;
+                `}
+              >
+                {info.summary}
+              </div>
+            )}
+            {collection.group_info && (
+              <Link
+                to={{
+                  pathname: generatePath(GROUP_DETAIL_PATH, {
+                    gid: Xid.fromValue(collection.gid).toString(),
+                    type: GroupViewType.Collection,
+                  }),
+                }}
+                css={css`
+                  margin-top: 12px;
                   display: flex;
-                  flex-direction: column;
-                  gap: 16px;
-                  margin: 0;
-                  padding: 0;
-                  width: 300px;
-                  list-style: none;
-                  max-height: calc(100vh - 160px);
-                  overflow-y: auto;
-                  @media (max-width: ${BREAKPOINT.small}px) {
-                    position: fixed;
-                    bottom: 0;
-                    width: 100%;
-                    max-height: calc(100vh - 160px);
-                    padding: 16px;
-                    margin-bottom: 0;
-                    box-shadow: ${theme.effect.card};
-                    background-color: ${theme.color.body.background};
-                    box-sizing: border-box;
-                    border-radius: 12px 12px 0 0;
+                  width: fit-content;
+                  max-width: 100%;
+                `}
+              >
+                <CreatedBy
+                  item={collection.group_info}
+                  timestamp={collection.updated_at || 0}
+                />
+              </Link>
+            )}
+            {(collection.rfp || collection.subscription) && (
+              <Button
+                color={collection.rfp ? 'primary' : 'secondary'}
+                variant='contained'
+                disabled={!collection.rfp}
+                onClick={() => {}}
+                css={css`
+                  margin-top: 12px;
+                  :disabled {
+                    border-color: ${theme.color.alert.success.border};
+                    background-color: ${theme.color.alert.success.border};
+                    color: white;
                   }
                 `}
               >
-                {collectionMenu.map((item) => (
-                  <li
-                    key={Xid.fromValue(item.cid).toString()}
-                    css={css`
-                      padding: 0px;
-                      height: 32px;
-                      width: 100%;
-                    `}
-                  >
-                    <Link
-                      unstable_viewTransition={true}
-                      key={Xid.fromValue(item.cid).toString()}
-                      to={{
-                        pathname: generatePath(GROUP_DETAIL_PATH, {
-                          gid: _gid as string,
-                          type:
-                            item.kind === ObjectKind.Collection
-                              ? GroupViewType.Collection
-                              : GroupViewType.Publication,
-                        }),
-                        search:
-                          item.kind === ObjectKind.Collection
-                            ? new URLSearchParams({
-                                cid: Xid.fromValue(item.cid).toString(),
-                              }).toString()
-                            : new URLSearchParams({
-                                parent: Xid.fromValue(item.parent).toString(),
-                                cid: Xid.fromValue(item.cid).toString(),
-                                language: item.language,
-                                version: String(item.version),
-                              }).toString(),
-                      }}
-                      dir={dir}
+                {collection.rfp && collection.rfp.collection > 0 && (
+                  <>
+                    <span>
+                      {intl.formatMessage({ defaultMessage: '付费阅读' })}
+                    </span>
+                    <Icon name='coin' size='small' />
+                    <span
                       css={css`
-                        ${textEllipsis}
-                        display: inline-block;
-                        padding: 4px 12px;
-                        height: 28px;
-                        width: calc(100% - 12px * 2);
-                        border-radius: 8px;
-                        background-color: ${Xid.fromValue(
-                          item.cid
-                        ).toString() === _cid
-                          ? theme.color.button.secondary.contained.background
-                          : ''};
-                        :hover {
-                          background-color: ${theme.color.button.secondary
-                            .contained.background};
-                        }
+                        margin-left: -8px;
                       `}
                     >
-                      {item.title}
-                    </Link>
-                  </li>
-                ))}
-                <AutoLoadMore
-                  hasMore={hasMore}
-                  isLoadingMore={isLoading}
-                  onLoadMore={loadMore}
-                />
-              </ul>
+                      {collection.rfp.collection}
+                    </span>
+                  </>
+                )}
+                {collection.subscription &&
+                  collection.subscription.expire_at > 0 && (
+                    <>
+                      <span>
+                        {intl.formatMessage({
+                          defaultMessage: '已付费，有效期至',
+                        })}
+                      </span>
+                      <span>
+                        {new Date(
+                          collection.subscription.expire_at * 1000
+                        ).toLocaleDateString()}
+                      </span>
+                    </>
+                  )}
+              </Button>
             )}
           </div>
-        </>
-      ) : null}
-      <TranslateConfirmDialog
-        onCharge={onCharge}
-        onTranslate={onTranslate}
-        {...translateConfirmDialog}
-      />
-      <TranslateDialog {...translateDialog} />
-      <ChargeDialog {...chargeDialog} />
-    </div>
+        </div>
+        <div
+          css={css`
+            margin: 36px auto;
+            @media (max-width: ${BREAKPOINT.small}px) {
+              margin: 24px auto;
+            }
+          `}
+        >
+          {isChildrenLoading ? (
+            <Loading />
+          ) : childrenItems && childrenItems.length > 0 ? (
+            <ul
+              css={css`
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                gap: 16px;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                list-style: none;
+              `}
+            >
+              {childrenItems.map((item) => (
+                <li
+                  key={Xid.fromValue(item.cid).toString()}
+                  css={css`
+                    padding: 0px;
+                    height: 60px;
+                    width: 100%;
+                    @media (max-width: ${BREAKPOINT.small}px) {
+                      height: 48px;
+                    }
+                  `}
+                >
+                  <Link
+                    unstable_viewTransition={true}
+                    key={Xid.fromValue(item.cid).toString()}
+                    to={{
+                      pathname: generatePath(GROUP_DETAIL_PATH, {
+                        gid: _gid as string,
+                        type:
+                          item.kind === ObjectKind.Collection
+                            ? GroupViewType.Collection
+                            : GroupViewType.Publication,
+                      }),
+                      search:
+                        item.kind === ObjectKind.Collection
+                          ? new URLSearchParams({
+                              cid: Xid.fromValue(item.cid).toString(),
+                            }).toString()
+                          : new URLSearchParams({
+                              parent: _cid as string,
+                              cid: Xid.fromValue(item.cid).toString(),
+                              language: item.language,
+                              version: String(item.version),
+                            }).toString(),
+                    }}
+                    dir={dir}
+                    css={css`
+                      ${textEllipsis}
+                      display: inline-block;
+                      padding: 16px 24px;
+                      height: 28px;
+                      width: calc(100% - 24px * 2);
+                      border-radius: 12px;
+                      box-shadow: ${theme.effect.card};
+                      :hover {
+                        box-shadow: ${theme.effect.cardHover};
+                      }
+                      @media (max-width: ${BREAKPOINT.small}px) {
+                        padding: 10px 16px;
+                        border-radius: 8px;
+                        width: calc(100% - 16px * 2);
+                      }
+                    `}
+                  >
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+              <LoadMore
+                hasMore={hasMore}
+                isLoadingMore={isLoadingMore}
+                onLoadMore={loadMore}
+                css={css`
+                  width: 100%;
+                `}
+              />
+            </ul>
+          ) : (
+            <Placeholder />
+          )}
+        </div>
+      </div>
+    )
   )
 }

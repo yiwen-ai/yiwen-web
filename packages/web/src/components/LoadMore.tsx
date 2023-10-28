@@ -1,5 +1,6 @@
 import { css } from '@emotion/react'
 import { Button, Spinner } from '@yiwen-ai/component'
+import { useMemo } from 'react'
 import { useIntl } from 'react-intl'
 
 interface LoadMoreProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -8,7 +9,7 @@ interface LoadMoreProps extends React.HTMLAttributes<HTMLDivElement> {
   onLoadMore: React.MouseEventHandler<HTMLButtonElement>
 }
 
-export default function LoadMore({
+export function LoadMore({
   hasMore,
   isLoadingMore,
   onLoadMore,
@@ -23,6 +24,40 @@ export default function LoadMore({
       {intl.formatMessage({ defaultMessage: '加载更多' })}
     </Button>
   ) : null
+
+  return content ? (
+    <div
+      {...props}
+      css={css`
+        height: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      `}
+    >
+      {content}
+    </div>
+  ) : null
+}
+
+interface AutoLoadMoreProps extends React.HTMLAttributes<HTMLDivElement> {
+  hasMore: boolean
+  isLoadingMore: boolean
+  onLoadMore: () => void
+}
+
+export function AutoLoadMore({
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
+  ...props
+}: AutoLoadMoreProps) {
+  useMemo(() => {
+    hasMore && !isLoadingMore && onLoadMore()
+  }, [hasMore, isLoadingMore, onLoadMore])
+
+  const content = isLoadingMore ? <Spinner /> : null
 
   return content ? (
     <div

@@ -4,30 +4,38 @@ import {
   GROUP_DETAIL_PATH,
 } from '#/App'
 import { generatePublicationShareLink } from '#/shared'
+import { useEditCollectionDialog } from '#/store/useEditCollectionDialog'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
+  CollectionStatus,
   CreationStatus,
   PublicationStatus,
+  getCollectionTitle,
   toMessage,
   useAuth,
+  useCollectionList,
   useCreationList,
   useEnsureAuthorized,
   useFetcherConfig,
   useGroup,
   usePublicationList,
+  type CollectionOutput,
   type CreationOutput,
   type GPT_MODEL,
   type PublicationOutput,
   type UILanguageItem,
 } from '@yiwen-ai/store'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { Xid } from 'xid-ts'
+import { useCollectionViewer } from './useCollectionViewer'
+import { useCreateCollectionDialog } from './useCreateCollectionDialog'
 import { useCreationViewer } from './useCreationViewer'
 import { usePublicationViewer } from './usePublicationViewer'
 
 export enum GroupViewType {
+  Collection = 'collection',
   Publication = 'publication',
   Creation = 'creation',
 }
@@ -38,7 +46,8 @@ export function useGroupDetailPage(
   _cid: string | null | undefined,
   _language: string | null | undefined,
   _version: string | null | undefined,
-  _type: GroupViewType | null | undefined
+  _type: GroupViewType | null | undefined,
+  _parent: string | null | undefined
 ) {
   const intl = useIntl()
   const navigate = useNavigate()
@@ -107,9 +116,21 @@ export function useGroupDetailPage(
   }, [ensureAuthorized, intl, pushToast, unfollow])
   //#endregion
 
-  const [viewType, setViewType] = useState(_type ?? GroupViewType.Publication)
+  const { close: closeCreateCollectionDialog, ...createCollection } =
+    useCreateCollectionDialog(pushToast, _gid)
+
+  const { close: closeEditCollectionDialog, ...editCollection } =
+    useEditCollectionDialog(pushToast)
 
   //#region publication viewer & creation viewer
+  const {
+    show: showCollectionViewer,
+    refresh: refreshCollectionViewer,
+    ...collectionViewer
+  } = useCollectionViewer(pushToast)
+  const { open: collectionViewerOpen, close: closeCollectionViewer } =
+    collectionViewer
+
   const {
     show: showPublicationViewer,
     refresh: refreshPublicationViewer,
@@ -129,45 +150,107 @@ export function useGroupDetailPage(
     creationViewer
 
   useEffect(() => {
-    if (
-      viewType === GroupViewType.Publication &&
-      _gid &&
-      _cid &&
-      _language &&
-      _version != null
-    ) {
-      showPublicationViewer(_gid, _cid, _language, _version)
-    } else if (publicationViewerOpen) {
-      closePublicationViewer()
+    if (_type === GroupViewType.Collection) {
+      if (_gid && _cid) {
+        if (publicationViewerOpen) {
+          closePublicationViewer()
+        }
+        if (creationViewerOpen) {
+          closeCreationViewer()
+        }
+        showCollectionViewer(_gid, _cid, _language || undefined)
+      } else if (collectionViewerOpen) {
+        closeCollectionViewer()
+      }
     }
   }, [
+    _type,
+    _cid,
+    _gid,
+    _language,
+    showCollectionViewer,
+    collectionViewerOpen,
+    closeCollectionViewer,
+    publicationViewerOpen,
+    closePublicationViewer,
+    creationViewerOpen,
+    closeCreationViewer,
+  ])
+
+  useEffect(() => {
+    if (_type === GroupViewType.Publication) {
+      if (_gid && _cid && _language && _version != null) {
+        if (collectionViewerOpen) {
+          closeCollectionViewer()
+        }
+        if (creationViewerOpen) {
+          closeCreationViewer()
+        }
+
+        showPublicationViewer(_gid, _cid, _language, _version, _parent)
+      } else if (publicationViewerOpen) {
+        closePublicationViewer()
+      }
+    }
+  }, [
+    _type,
     _cid,
     _gid,
     _language,
     _version,
-    closePublicationViewer,
-    publicationViewerOpen,
+    _parent,
     showPublicationViewer,
-    viewType,
+    collectionViewerOpen,
+    closeCollectionViewer,
+    publicationViewerOpen,
+    closePublicationViewer,
+    creationViewerOpen,
+    closeCreationViewer,
   ])
 
   useEffect(() => {
-    if (viewType === GroupViewType.Creation && _gid && _cid) {
-      showCreationViewer(_gid, _cid)
-    } else if (creationViewerOpen) {
-      closeCreationViewer()
+    if (_type === GroupViewType.Creation) {
+      if (_gid && _cid) {
+        if (publicationViewerOpen) {
+          closePublicationViewer()
+        }
+        if (collectionViewerOpen) {
+          closeCollectionViewer()
+        }
+        showCreationViewer(_gid, _cid)
+      } else if (creationViewerOpen) {
+        closeCreationViewer()
+      }
     }
   }, [
+    _type,
     _cid,
     _gid,
-    closeCreationViewer,
-    creationViewerOpen,
     showCreationViewer,
-    viewType,
+    collectionViewerOpen,
+    closeCollectionViewer,
+    publicationViewerOpen,
+    closePublicationViewer,
+    creationViewerOpen,
+    closeCreationViewer,
   ])
   //#endregion
 
   //#region publication list & creation list
+  const {
+    archiveItem: archiveCollection,
+    refresh: refreshCollectionList,
+    ...collectionList
+  } = useCollectionList(_gid, undefined)
+
+  const {
+    restoreItem: restoreCollection,
+    deleteItem: deleteCollection,
+    publishItem: publishCollection,
+    refresh: refreshArchivedCollectionList,
+    ...archivedCollectionList
+  } = useCollectionList(_gid, CollectionStatus.Archived)
+
   const {
     publishItem: publishPublication,
     archiveItem: archivePublication,
@@ -200,27 +283,31 @@ export function useGroupDetailPage(
 
   useEffect(() => {
     if (
-      viewType === GroupViewType.Publication ||
+      _type === GroupViewType.Collection ||
+      (groupInfoLoaded && !hasGroupReadPermission)
+    ) {
+      refreshCollectionList()
+    }
+  }, [groupInfoLoaded, hasGroupReadPermission, refreshCollectionList, _type])
+
+  useEffect(() => {
+    if (
+      _type === GroupViewType.Publication ||
       (groupInfoLoaded && !hasGroupReadPermission)
     ) {
       refreshPublicationList()
     }
-  }, [
-    groupInfoLoaded,
-    hasGroupReadPermission,
-    refreshPublicationList,
-    viewType,
-  ])
+  }, [groupInfoLoaded, hasGroupReadPermission, refreshPublicationList, _type])
 
   useEffect(() => {
     if (
-      viewType === GroupViewType.Creation &&
+      _type === GroupViewType.Creation &&
       groupInfoLoaded &&
       hasGroupReadPermission
     ) {
       refreshCreationList()
     }
-  }, [groupInfoLoaded, hasGroupReadPermission, refreshCreationList, viewType])
+  }, [groupInfoLoaded, hasGroupReadPermission, refreshCreationList, _type])
   //#endregion
 
   //#region actions
@@ -229,12 +316,12 @@ export function useGroupDetailPage(
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(publication.gid).toString(),
+          type: GroupViewType.Publication,
         }),
         search: new URLSearchParams({
           cid: Xid.fromValue(publication.cid).toString(),
           language: publication.language,
           version: publication.version.toString(),
-          type: GroupViewType.Publication,
         }).toString(),
       })
     },
@@ -256,6 +343,99 @@ export function useGroupDetailPage(
     },
     [navigateTo, onSwitch]
   )
+
+  const onCollectionArchive = useCallback(
+    async (item: CollectionOutput) => {
+      try {
+        await archiveCollection(item)
+        pushToast({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '归档成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已归档：{title}' },
+            { title: getCollectionTitle(item) }
+          ),
+        })
+      } catch (error) {
+        pushToast({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '归档失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [archiveCollection, intl, pushToast]
+  )
+
+  const onCollectionRestore = useCallback(
+    async (item: CollectionOutput) => {
+      try {
+        await restoreCollection(item)
+        pushToast({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '恢复成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已恢复：{title}' },
+            { title: getCollectionTitle(item) }
+          ),
+        })
+        refreshCollectionList()
+      } catch (error) {
+        pushToast({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '恢复失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [intl, pushToast, refreshCollectionList, restoreCollection]
+  )
+
+  const onCollectionDelete = useCallback(
+    async (item: CollectionOutput) => {
+      try {
+        await deleteCollection(item)
+        pushToast({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '删除成功' }),
+          description: intl.formatMessage(
+            { defaultMessage: '已删除：{title}' },
+            { title: getCollectionTitle(item) }
+          ),
+        })
+      } catch (error) {
+        pushToast({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '删除失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [deleteCollection, intl, pushToast]
+  )
+
+  const onCollectionPublish = useCallback(
+    async (item: CollectionOutput) => {
+      try {
+        await publishCollection(item)
+        pushToast({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '发布成功' }),
+        })
+      } catch (error) {
+        pushToast({
+          type: 'warning',
+          message: intl.formatMessage({ defaultMessage: '发布失败' }),
+          description: toMessage(error),
+        })
+      }
+    },
+    [intl, publishCollection, pushToast]
+  )
+
+  const onArchivedCollectionDialogShow = useCallback(() => {
+    refreshArchivedCollectionList()
+  }, [refreshArchivedCollectionList])
 
   const onPublicationPublish = useCallback(
     async (item: PublicationOutput) => {
@@ -532,8 +712,30 @@ export function useGroupDetailPage(
     isUnfollowingGroup,
     onGroupFollow,
     onGroupUnfollow,
-    viewType: hasGroupReadPermission ? viewType : GroupViewType.Publication,
-    setViewType,
+    collectionViewer,
+    collectionList: {
+      createCollection: {
+        onClose: closeCreateCollectionDialog,
+        ...createCollection,
+      },
+      editCollection: {
+        onClose: closeEditCollectionDialog,
+        ...editCollection,
+      },
+      hasGroupWritePermission,
+      isEditing: collectionList.isRestoring,
+      ...collectionList,
+    },
+    archivedCollectionList: {
+      hasGroupWritePermission,
+      ...archivedCollectionList,
+    },
+    onCollectionArchive,
+    onCollectionRestore,
+    onCollectionPublish,
+    // onCollectionEdit,
+    onCollectionDelete,
+    onArchivedCollectionDialogShow,
     publicationViewer: {
       ...publicationViewer,
       onTranslate: handlePublicationTranslate,

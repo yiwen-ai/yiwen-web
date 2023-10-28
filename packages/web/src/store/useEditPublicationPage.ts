@@ -103,12 +103,12 @@ export function useEditPublicationPage(
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(result.gid).toString(),
+          type: GroupViewType.Publication,
         }),
         search: new URLSearchParams({
           cid: Xid.fromValue(result.cid).toString(),
           language: result.language,
           version: result.version.toString(),
-          type: GroupViewType.Publication,
         }).toString(),
       })
     } catch (error) {

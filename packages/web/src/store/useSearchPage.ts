@@ -1,18 +1,18 @@
 import { NEW_CREATION_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
+  ObjectKind,
   createBlobURL,
   useSearch,
-  type BookmarkOutput,
-  type PublicationOutput,
+  type ObjectParams,
   type ScrapingOutput,
-  type SearchDocument,
   type SearchInput,
 } from '@yiwen-ai/store'
 import { toURLSearchParams } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useDebounce } from 'use-debounce'
+import { useCollectionViewer } from './useCollectionViewer'
 import { useCreateFromFileDialog } from './useCreateFromFileDialog'
 import { useCreateFromLinkDialog } from './useCreateFromLinkDialog'
 import { usePublicationViewer } from './usePublicationViewer'
@@ -59,6 +59,14 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
 
   //#region publication viewer
   const {
+    show: showCollectionViewer,
+    refresh: refreshCollectionViewer,
+    onAddFavorite: onCollectionAddFavorite,
+    onRemoveFavorite: onCollectionRemoveFavorite,
+    ...collectionViewer
+  } = useCollectionViewer(pushToast)
+
+  const {
     show: showPublicationViewer,
     refresh: refreshPublicationViewer,
     onAddFavorite: onPublicationAddFavorite,
@@ -67,10 +75,14 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   } = usePublicationViewer(pushToast)
 
   const onView = useCallback(
-    (item: SearchDocument | PublicationOutput | BookmarkOutput) => {
-      showPublicationViewer(item.gid, item.cid, item.language, item.version)
+    (item: ObjectParams) => {
+      if (item.kind === ObjectKind.Collection) {
+        showCollectionViewer(item.gid, item.cid, item.language)
+      } else {
+        showPublicationViewer(item.gid, item.cid, item.language, item.version)
+      }
     },
-    [showPublicationViewer]
+    [showPublicationViewer, showCollectionViewer]
   )
   //#endregion
 
@@ -81,6 +93,16 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
     refreshBookmarkList,
     ...responsiveTabSection
   } = useResponsiveTabSection()
+
+  const handleCollectionAddFavorite = useCallback(async () => {
+    await onCollectionAddFavorite()
+    refreshBookmarkList()
+  }, [onCollectionAddFavorite, refreshBookmarkList])
+
+  const handleCollectionRemoveFavorite = useCallback(async () => {
+    await onCollectionRemoveFavorite()
+    refreshBookmarkList()
+  }, [onCollectionRemoveFavorite, refreshBookmarkList])
 
   const handlePublicationAddFavorite = useCallback(async () => {
     await onPublicationAddFavorite()
@@ -130,6 +152,11 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
     keyword,
     setKeyword,
     onView,
+    collectionViewer: {
+      onAddFavorite: handleCollectionAddFavorite,
+      onRemoveFavorite: handleCollectionRemoveFavorite,
+      ...collectionViewer,
+    },
     publicationViewer: {
       onAddFavorite: handlePublicationAddFavorite,
       onRemoveFavorite: handlePublicationRemoveFavorite,

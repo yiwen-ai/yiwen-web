@@ -1,6 +1,7 @@
 import { css, useTheme } from '@emotion/react'
-import { isRTL, type SearchDocument } from '@yiwen-ai/store'
+import { ObjectKind, isRTL, type SearchDocument } from '@yiwen-ai/store'
 import { useCallback } from 'react'
+import { useIntl } from 'react-intl'
 import CreatedBy from './CreatedBy'
 import PublicationLink from './PublicationLink'
 
@@ -11,8 +12,8 @@ export default function SearchItem({
   item: SearchDocument
   onClick: (item: SearchDocument) => void
 }) {
+  const intl = useIntl()
   const theme = useTheme()
-  const group_info = item.group || item.group_info
 
   const handleClick = useCallback(() => {
     onClick(item)
@@ -40,6 +41,21 @@ export default function SearchItem({
         `}
       >
         {item.title}
+        {item.kind === ObjectKind.Collection && (
+          <label
+            css={css`
+              display: inline-block;
+              padding: 1px 16px;
+              margin-left: 16px;
+              border-radius: 16px;
+              color: ${theme.color.button.primary.contained.text};
+              background-color: ${theme.color.alert.success.icon};
+              ${theme.typography.body}
+            `}
+          >
+            {intl.formatMessage({ defaultMessage: '合集' })}
+          </label>
+        )}
       </div>
       {item.summary && (
         <div
@@ -53,9 +69,9 @@ export default function SearchItem({
             : item.summary.slice(0, 140) + '...'}
         </div>
       )}
-      {group_info && (
+      {item.group_info && (
         <CreatedBy
-          item={group_info}
+          item={item.group_info}
           timestamp={item.updated_at}
           css={css`
             margin-top: 8px;

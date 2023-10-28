@@ -222,14 +222,7 @@ export function usePublicationAPI(baseURL?: string) {
 
   const readPublicationUploadPolicy = useCallback(
     (params: Record<keyof QueryPublication, string | undefined>) => {
-      const body = {
-        gid: params.gid ? Xid.fromValue(params.gid) : undefined,
-        cid: params.cid ? Xid.fromValue(params.cid) : undefined,
-        language: params.language,
-        version: Number(params.version),
-        fields: params.fields,
-      } as QueryPublication
-      return request.post<{ result: PostFilePolicy }>(`${path}/upload`, body)
+      return request.get<{ result: PostFilePolicy }>(`${path}/upload`, params)
     },
     [request]
   )
@@ -863,9 +856,9 @@ export function usePublicationList(
   }, [data])
 
   const hasMore = useMemo(() => {
-    if (!data) return false
+    if (!data || error) return false
     return !!data[data.length - 1]?.next_page_token
-  }, [data])
+  }, [data, error])
 
   const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
 

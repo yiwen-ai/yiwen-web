@@ -4,24 +4,28 @@ import { forwardRef, memo, useCallback, useMemo } from 'react'
 import { Link, generatePath, type LinkProps, type To } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
-interface GroupPublicationLinkProps extends Omit<LinkProps, 'to'> {
+interface CollectionLinkProps extends Omit<LinkProps, 'to'> {
   gid: Uint8Array | string
+  cid: Uint8Array | string
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
 export default memo(
-  forwardRef(function GroupPublicationLink(
-    { gid, onClick, ...props }: GroupPublicationLinkProps,
+  forwardRef(function CollectionLink(
+    { gid, cid, onClick, ...props }: CollectionLinkProps,
     ref: React.ForwardedRef<HTMLAnchorElement>
   ) {
     const to = useMemo<To>(
       () => ({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(gid).toString(),
-          type: GroupViewType.Publication,
+          type: GroupViewType.Collection,
         }),
+        search: new URLSearchParams({
+          cid: Xid.fromValue(cid).toString(),
+        }).toString(),
       }),
-      [gid]
+      [cid, gid]
     )
 
     const handleClick = useCallback(

@@ -98,10 +98,10 @@ export function useEditCreationPage(
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(result.gid).toString(),
+          type: GroupViewType.Creation,
         }),
         search: new URLSearchParams({
           cid: Xid.fromValue(result.id).toString(),
-          type: GroupViewType.Creation,
         }).toString(),
       })
     } catch (error) {

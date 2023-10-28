@@ -1,8 +1,10 @@
+import CollectionLink from '#/components/CollectionLink'
+import CollectionViewer from '#/components/CollectionViewer'
 import CreatedBy from '#/components/CreatedBy'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import { renderIconMoreAnchor } from '#/components/IconMoreAnchor'
 import LargeDialog from '#/components/LargeDialog'
-import LoadMore from '#/components/LoadMore'
+import { LoadMore } from '#/components/LoadMore'
 import Loading from '#/components/Loading'
 import Placeholder from '#/components/Placeholder'
 import PublicationLink from '#/components/PublicationLink'
@@ -18,7 +20,7 @@ import {
   textEllipsis,
   useToast,
 } from '@yiwen-ai/component'
-import { isRTL, type BookmarkOutput } from '@yiwen-ai/store'
+import { ObjectKind, isRTL, type BookmarkOutput } from '@yiwen-ai/store'
 import { preventDefaultStopPropagation } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
@@ -37,6 +39,11 @@ export default function BookmarkPage() {
     isRemoving,
     onView,
     onRemove,
+    collectionViewer: {
+      open: collectionViewerOpen,
+      close: onCollectionViewerClose,
+      ...collectionViewer
+    },
     publicationViewer: {
       open: publicationViewerOpen,
       close: onPublicationViewerClose,
@@ -94,6 +101,16 @@ export default function BookmarkPage() {
           />
         </LargeDialog>
       )}
+      {collectionViewerOpen && (
+        <LargeDialog open={true} onClose={onCollectionViewerClose}>
+          <CollectionViewer
+            onCharge={() => {}}
+            responsive={true}
+            onClose={onCollectionViewerClose}
+            {...collectionViewer}
+          />
+        </LargeDialog>
+      )}
     </>
   )
 }
@@ -120,23 +137,8 @@ function BookmarkItem({
     onRemove(item)
   }, [item, onRemove])
 
-  return (
-    <PublicationLink
-      gid={item.gid}
-      cid={item.cid}
-      language={item.language}
-      version={item.version}
-      onClick={handleClick}
-      css={css`
-        display: block;
-        padding: 16px 0;
-        border-bottom: 1px solid ${theme.color.divider.default};
-        cursor: pointer;
-        :hover {
-          color: ${theme.color.body.primaryHover};
-        }
-      `}
-    >
+  const inner = (
+    <>
       <div
         css={css`
           display: flex;
@@ -153,6 +155,21 @@ function BookmarkItem({
           `}
         >
           {item.title}
+          {item.kind === ObjectKind.Collection && (
+            <label
+              css={css`
+                display: inline-block;
+                padding: 1px 16px;
+                margin-left: 16px;
+                border-radius: 16px;
+                color: ${theme.color.button.primary.contained.text};
+                background-color: ${theme.color.alert.success.icon};
+                ${theme.typography.body}
+              `}
+            >
+              {intl.formatMessage({ defaultMessage: '合集' })}
+            </label>
+          )}
         </div>
         <div
           role='none'
@@ -189,6 +206,44 @@ function BookmarkItem({
           `}
         />
       )}
+    </>
+  )
+
+  return item.kind === ObjectKind.Collection ? (
+    <CollectionLink
+      gid={item.gid}
+      cid={item.cid}
+      onClick={handleClick}
+      css={css`
+        display: block;
+        padding: 16px 0;
+        border-bottom: 1px solid ${theme.color.divider.default};
+        cursor: pointer;
+        :hover {
+          color: ${theme.color.body.primaryHover};
+        }
+      `}
+    >
+      {inner}
+    </CollectionLink>
+  ) : (
+    <PublicationLink
+      gid={item.gid}
+      cid={item.cid}
+      language={item.language}
+      version={item.version}
+      onClick={handleClick}
+      css={css`
+        display: block;
+        padding: 16px 0;
+        border-bottom: 1px solid ${theme.color.divider.default};
+        cursor: pointer;
+        :hover {
+          color: ${theme.color.body.primaryHover};
+        }
+      `}
+    >
+      {inner}
     </PublicationLink>
   )
 }

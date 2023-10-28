@@ -21,12 +21,14 @@ export default function MediumDialog({
     <Dialog
       {...props}
       css={css`
+        margin-top: 120px;
         @media (max-width: ${BREAKPOINT.small}px) {
           width: unset;
           height: unset;
           max-width: unset;
           max-height: unset;
           border-radius: unset;
+          margin-top: 60px;
         }
       `}
     >

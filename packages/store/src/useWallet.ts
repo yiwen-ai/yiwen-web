@@ -168,6 +168,7 @@ export interface QueryId {
   fields?: string
 }
 
+// 1 港元 == 10 亿文币
 export const YIWEN_COIN_RATE = 10
 
 export function formatChargeCurrency(

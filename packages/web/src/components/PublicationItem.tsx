@@ -59,11 +59,11 @@ export default function PublicationItem({
       css={css`
         display: block;
         padding: 16px 24px;
-        border: 1px solid ${theme.color.divider.default};
         border-radius: 12px;
         cursor: pointer;
+        box-shadow: ${theme.effect.card};
         :hover {
-          border-color: ${theme.color.button.primary.outlined.border};
+          box-shadow: ${theme.effect.cardHover};
         }
         @media (max-width: ${BREAKPOINT.small}px) {
           padding: 12px 16px;
@@ -92,48 +92,51 @@ export default function PublicationItem({
             : item.summary.slice(0, 140) + '...'}
         </div>
       )}
-      <div
-        role='none'
-        onClick={preventDefaultStopPropagation}
-        css={css`
-          width: fit-content;
-          margin-top: 12px;
-          display: flex;
-          align-items: center;
-          gap: 24px;
-        `}
-      >
-        <PublicationItemStatus status={item.status} />
-        {hasWritePermission && item.status === PublicationStatus.Review && (
-          <Button
-            size='small'
-            color='secondary'
-            variant='text'
-            disabled={disabled}
-            onClick={handleEdit}
-          >
-            {isEditing ? (
-              <Spinner size={12} />
-            ) : (
-              <Icon name='edit' size='small' />
-            )}
-            <span>{intl.formatMessage({ defaultMessage: '修正' })}</span>
-          </Button>
-        )}
-        {hasWritePermission && item.status === PublicationStatus.Approved && (
-          <Button
-            size='small'
-            color='primary'
-            variant='outlined'
-            disabled={disabled}
-            onClick={handlePublish}
-          >
-            {isPublishing && <Spinner size={12} />}
-            <span>{intl.formatMessage({ defaultMessage: '公开发布' })}</span>
-          </Button>
-        )}
-        {hasWritePermission &&
-          (item.status === PublicationStatus.Review ||
+      {hasWritePermission && (
+        <div
+          role='none'
+          onClick={preventDefaultStopPropagation}
+          css={css`
+            width: fit-content;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            @media (max-width: ${BREAKPOINT.small}px) {
+              display: none;
+            }
+          `}
+        >
+          <PublicationItemStatus status={item.status} />
+          {item.status === PublicationStatus.Review && (
+            <Button
+              size='small'
+              color='secondary'
+              variant='text'
+              disabled={disabled}
+              onClick={handleEdit}
+            >
+              {isEditing ? (
+                <Spinner size={12} />
+              ) : (
+                <Icon name='edit' size='small' />
+              )}
+              <span>{intl.formatMessage({ defaultMessage: '修正' })}</span>
+            </Button>
+          )}
+          {item.status === PublicationStatus.Approved && (
+            <Button
+              size='small'
+              color='primary'
+              variant='outlined'
+              disabled={disabled}
+              onClick={handlePublish}
+            >
+              {isPublishing && <Spinner size={12} />}
+              <span>{intl.formatMessage({ defaultMessage: '公开发布' })}</span>
+            </Button>
+          )}
+          {(item.status === PublicationStatus.Review ||
             item.status === PublicationStatus.Approved) && (
             <Menu bringFocusBack={false} anchor={renderIconMoreAnchor}>
               <MenuItem
@@ -151,7 +154,8 @@ export default function PublicationItem({
               />
             </Menu>
           )}
-      </div>
+        </div>
+      )}
     </PublicationLink>
   )
 }

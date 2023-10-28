@@ -27,6 +27,10 @@ export interface GIDPagination {
   fields?: string[]
 }
 
+export interface IDGIDPagination extends GIDPagination {
+  id: Uint8Array
+}
+
 export interface Page<T> {
   next_page_token: Uint8Array | null
   result: readonly T[]
@@ -34,8 +38,9 @@ export interface Page<T> {
 
 export enum RoleLevel {
   OWNER = 2,
-  MEMBER = 1,
-  GUEST = 0,
+  ADMIN = 1,
+  MEMBER = 0,
+  GUEST = -1,
 }
 
 export enum UserStatus {
@@ -44,6 +49,22 @@ export enum UserStatus {
   Normal = 0,
   Verified = 1,
   Protected = 2,
+}
+
+export enum ObjectKind {
+  Creation = 0,
+  Publication = 1,
+  Collection = 2,
+}
+
+export interface ObjectParams {
+  cid: Uint8Array
+  gid?: Uint8Array
+  parent?: Uint8Array
+  language?: string
+  version?: number
+  kind?: ObjectKind
+  title?: string
 }
 
 export type ColorScheme = 'light' | 'dark' | 'auto'
@@ -67,6 +88,21 @@ export interface GroupInfo {
   _role?: RoleLevel
   owner?: UserInfo
   _following?: boolean
+}
+
+export interface SubscriptionOutput {
+  uid: Uint8Array
+  gid: Uint8Array
+  cid: Uint8Array
+  txn: Uint8Array
+  expire_at: number
+  updated_at: number
+}
+
+// Request for Payment
+export interface RFP {
+  creation: number
+  collection: number
 }
 
 export interface PostFilePolicy {
@@ -97,9 +133,9 @@ export function usePagination<T>({
   }, [data])
 
   const hasMore = useMemo(() => {
-    if (!data) return false
+    if (!data || error) return false
     return !!data[data.length - 1]?.next_page_token
-  }, [data])
+  }, [data, error])
 
   const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
 

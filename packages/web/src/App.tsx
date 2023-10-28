@@ -245,9 +245,10 @@ export const WALLET_PATH = '/wallet'
 export const NEW_CREATION_PATH = '/creation/new'
 export const EDIT_CREATION_PATH = '/creation/:cid'
 export const EDIT_PUBLICATION_PATH = '/publication/:cid'
+export const SHARE_COLLECTION_PATH = '/coll/:cid'
 export const SHARE_PUBLICATION_PATH = '/pub/:cid'
-export const DEFAULT_GROUP_PATH = '/group/default'
-export const GROUP_DETAIL_PATH = '/group/:gid'
+export const DEFAULT_GROUP_PATH = '/group/:gid'
+export const GROUP_DETAIL_PATH = '/group/:gid/:type'
 
 const router = createBrowserRouter(
   createRoutesFromElements(

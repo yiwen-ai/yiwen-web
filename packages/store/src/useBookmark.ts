@@ -6,11 +6,18 @@ import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
 import {
+  ObjectKind,
   usePagination,
   type GroupInfo,
   type Page,
   type Pagination,
 } from './common'
+import {
+  buildCollectionKey,
+  getCollectionInfo,
+  isSameCollection,
+  type CollectionOutput,
+} from './useCollection'
 import { useFetcher } from './useFetcher'
 import {
   buildPublicationKey,
@@ -24,6 +31,7 @@ export interface BookmarkOutput {
   cid: Uint8Array
   language: string
   version: number
+  kind: ObjectKind
   updated_at: number
   title: string
   labels?: string[]
@@ -62,7 +70,7 @@ const path = '/v1/bookmark'
 export function useBookmarkAPI() {
   const request = useFetcher()
 
-  const readCreationBookmarkList = useCallback(
+  const readObjectBookmarkList = useCallback(
     (params: Record<keyof QueryBookmarkByCid, string | undefined>) => {
       return request.get<Page<BookmarkOutput>>(`${path}/by_cid`, params)
     },
@@ -77,9 +85,10 @@ export function useBookmarkAPI() {
   )
 
   const addBookmark = useCallback(
-    (body: CreateBookmarkInput) => {
+    (kind: ObjectKind, body: CreateBookmarkInput) => {
+      const name = kind === 2 ? 'collection' : 'publication'
       return request.post<{ result: BookmarkOutput }>(
-        '/v1/publication/bookmark',
+        `/v1/${name}/bookmark`,
         body
       )
     },
@@ -94,16 +103,151 @@ export function useBookmarkAPI() {
   )
 
   return {
-    readCreationBookmarkList,
+    readObjectBookmarkList,
     readBookmarkList,
     addBookmark,
     removeBookmark,
   } as const
 }
 
-export function useCreationBookmarkList(_cid: string | null | undefined) {
+export function useCollectionBookmarkList(_cid: string | null | undefined) {
   const { isAuthorized } = useAuth()
-  const { readCreationBookmarkList, addBookmark, removeBookmark } =
+  const { readObjectBookmarkList, addBookmark, removeBookmark } =
+    useBookmarkAPI()
+
+  const getKey = useCallback(() => {
+    if (!isAuthorized || !_cid) return null
+
+    const params: Record<keyof QueryBookmarkByCid, string | undefined> = {
+      cid: _cid,
+      fields: 'gid,cid,language,version,kind',
+    }
+
+    return [`${path}/by_cid`, params] as const
+  }, [_cid, isAuthorized])
+
+  const { data, error, mutate, isValidating, isLoading } = useSWR(
+    getKey,
+    ([, params]) => readObjectBookmarkList(params),
+    {}
+  )
+
+  const refresh = useCallback(
+    async () => getKey() && (await mutate()),
+    [getKey, mutate]
+  )
+
+  const isAdded = useCallback(
+    (item: CollectionOutput) => {
+      return !!data?.result.some((v) => isSameCollection(v.cid, item.id))
+    },
+    [data?.result]
+  )
+
+  const [state, setState] = useState({
+    isAdding: {} as Record<string, boolean>,
+    isRemoving: {} as Record<string, boolean>,
+  })
+
+  const setAdding = useCallback((item: CollectionOutput, isAdding: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      isAdding: {
+        ...prev.isAdding,
+        [buildCollectionKey(item.gid, item.id)]: isAdding,
+      },
+    }))
+  }, [])
+
+  const setRemoving = useCallback(
+    (item: CollectionOutput, isRemoving: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        isRemoving: {
+          ...prev.isRemoving,
+          [buildCollectionKey(item.gid, item.id)]: isRemoving,
+        },
+      }))
+    },
+    []
+  )
+
+  const isAdding = useCallback(
+    (item: CollectionOutput) => {
+      return state.isAdding[buildCollectionKey(item.gid, item.id)] ?? false
+    },
+    [state.isAdding]
+  )
+
+  const isRemoving = useCallback(
+    (item: CollectionOutput) => {
+      return state.isRemoving[buildCollectionKey(item.gid, item.id)] ?? false
+    },
+    [state.isRemoving]
+  )
+
+  const add = useCallback(
+    async (item: CollectionOutput) => {
+      try {
+        setAdding(item, true)
+        const [language, info] = getCollectionInfo(item)
+        if (!language || !info) throw new Error('cannot add the bookmark')
+        const { result } = await addBookmark(ObjectKind.Collection, {
+          gid: item.gid,
+          cid: item.id,
+          language,
+          version: item.version,
+          title: info.title,
+        })
+        mutate((prev): typeof prev => ({
+          next_page_token: null,
+          result: (prev?.result ?? []).concat(result),
+        }))
+        return result
+      } finally {
+        setAdding(item, false)
+      }
+    },
+    [addBookmark, mutate, setAdding]
+  )
+
+  const remove = useCallback(
+    async (item: CollectionOutput) => {
+      try {
+        setRemoving(item, true)
+        const item2 = data?.result.find((v) => isSameCollection(v.cid, item.id))
+        if (!item2) throw new Error('cannot find the bookmark to be removed')
+        await removeBookmark({
+          id: Xid.fromValue(item2.id).toString(),
+          fields: undefined,
+        })
+        mutate((prev): typeof prev => ({
+          next_page_token: null,
+          result: without(prev?.result, item2),
+        }))
+      } finally {
+        setRemoving(item, false)
+      }
+    },
+    [data?.result, mutate, removeBookmark, setRemoving]
+  )
+
+  return {
+    isLoading: isValidating || isLoading,
+    error,
+    bookmarkList: data?.result,
+    refresh,
+    isAdded,
+    isAdding,
+    isRemoving,
+    add,
+    remove,
+  } as const
+}
+
+export function usePublicationBookmarkList(_cid: string | null | undefined) {
+  const { isAuthorized } = useAuth()
+  const { readObjectBookmarkList, addBookmark, removeBookmark } =
     useBookmarkAPI()
 
   const getKey = useCallback(() => {
@@ -119,7 +263,7 @@ export function useCreationBookmarkList(_cid: string | null | undefined) {
 
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
-    ([, params]) => readCreationBookmarkList(params),
+    ([, params]) => readObjectBookmarkList(params),
     { revalidateOnMount: false } as SWRConfiguration
   )
 
@@ -184,7 +328,7 @@ export function useCreationBookmarkList(_cid: string | null | undefined) {
     async (item: PublicationOutput) => {
       try {
         setAdding(item, true)
-        const { result } = await addBookmark({
+        const { result } = await addBookmark(ObjectKind.Publication, {
           gid: item.gid,
           cid: item.cid,
           language: item.language,

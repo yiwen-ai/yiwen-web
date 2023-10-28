@@ -1,7 +1,7 @@
 import CreatedBy from '#/components/CreatedBy'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import LargeDialog from '#/components/LargeDialog'
-import LoadMore from '#/components/LoadMore'
+import { LoadMore } from '#/components/LoadMore'
 import Loading from '#/components/Loading'
 import Placeholder from '#/components/Placeholder'
 import PublicationLink from '#/components/PublicationLink'

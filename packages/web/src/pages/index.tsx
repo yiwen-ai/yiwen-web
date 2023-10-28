@@ -1,4 +1,5 @@
 import { NEW_CREATION_PATH, SetHeaderProps, ThemeContext } from '#/App'
+import CollectionViewer from '#/components/CollectionViewer'
 import LargeDialog from '#/components/LargeDialog'
 import PublicationViewer from '#/components/PublicationViewer'
 import ResponsiveTabSection from '#/components/ResponsiveTabSection'
@@ -28,6 +29,11 @@ export default function Home() {
 
   const {
     onSearch,
+    collectionViewer: {
+      open: collectionViewerOpen,
+      close: onCollectionViewerClose,
+      ...collectionViewer
+    },
     publicationViewer: {
       open: publicationViewerOpen,
       close: onPublicationViewerClose,
@@ -78,7 +84,7 @@ export default function Home() {
         css={css`
           width: 100%;
           max-width: calc(820px + 24px * 2);
-          margin: 120px auto;
+          margin: 120px auto 0;
           padding: 0 24px;
           box-sizing: border-box;
           display: flex;
@@ -207,6 +213,16 @@ export default function Home() {
             responsive={true}
             onClose={onPublicationViewerClose}
             {...publicationViewer}
+          />
+        </LargeDialog>
+      )}
+      {collectionViewerOpen && (
+        <LargeDialog open={true} onClose={onCollectionViewerClose}>
+          <CollectionViewer
+            onCharge={() => {}}
+            responsive={true}
+            onClose={onCollectionViewerClose}
+            {...collectionViewer}
           />
         </LargeDialog>
       )}

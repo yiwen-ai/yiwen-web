@@ -158,10 +158,16 @@ export function useGroup(_gid: string | null | undefined) {
 
   const _role = groupInfo?.result._role
   const hasGroupReadPermission =
-    _role === RoleLevel.MEMBER || _role === RoleLevel.OWNER
-  const hasGroupWritePermission = _role === RoleLevel.OWNER
+    _role === RoleLevel.GUEST ||
+    _role === RoleLevel.MEMBER ||
+    _role === RoleLevel.ADMIN ||
+    _role === RoleLevel.OWNER
+  const hasGroupWritePermission =
+    _role === RoleLevel.ADMIN || _role === RoleLevel.OWNER
   const hasGroupAddCreationPermission =
-    _role === RoleLevel.MEMBER || _role === RoleLevel.OWNER
+    _role === RoleLevel.MEMBER ||
+    _role === RoleLevel.ADMIN ||
+    _role === RoleLevel.OWNER
 
   const isFollowed = !!groupInfo?.result._following
   const [isFollowing, setIsFollowing] = useState(false)

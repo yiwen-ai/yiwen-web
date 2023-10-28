@@ -35,8 +35,8 @@ export default function CommonEditor({
   const theme = useTheme()
   const { isAuthorized } = useAuth()
   const editorRef = useRef<Editor>(null)
-  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
-  const isNarrow = width <= BREAKPOINT.small
+  const { ref } = useResizeDetector<HTMLDivElement>()
+  // const isNarrow = width <= BREAKPOINT.small
 
   const handleTitleChange = useCallback(
     (ev: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -109,10 +109,9 @@ export default function CommonEditor({
               padding-top: 100px;
               border: none;
               ${theme.typography.h0}
-              ${isNarrow &&
-              css`
+              @media (max-width: ${BREAKPOINT.small}px) {
                 padding-top: 24px;
-              `}
+              }
             `}
           />
           <RichTextEditor
@@ -125,10 +124,9 @@ export default function CommonEditor({
               .ProseMirror {
                 padding-top: 24px;
                 padding-bottom: 100px;
-                ${isNarrow &&
-                css`
+                @media (max-width: ${BREAKPOINT.small}px) {
                   padding-bottom: 24px;
-                `}
+                }
               }
             `}
           />

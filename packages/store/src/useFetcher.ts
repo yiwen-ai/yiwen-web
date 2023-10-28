@@ -1,7 +1,7 @@
 import { joinURL, type URLSearchParamsInit } from '@yiwen-ai/util'
 import { compact } from 'lodash-es'
 import { createContext, useContext, useMemo } from 'react'
-import { useAuth } from './AuthContext'
+import { useAuth, xLanguage } from './AuthContext'
 import { decode, encode } from './CBOR'
 import { useLogger, type Logger } from './logger'
 
@@ -57,6 +57,7 @@ export function createRequest(
       headers.set(key, value)
     )
     if (!headers.has('Accept')) headers.set('Accept', CBOR_MIME_TYPE)
+    if (xLanguage.current) headers.set('X-Language', xLanguage.current)
     const resp = await fetch(url, { ...defaultOptions, ...options, headers })
     const { status } = resp
     const body =

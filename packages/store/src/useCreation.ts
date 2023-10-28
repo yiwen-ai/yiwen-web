@@ -163,12 +163,7 @@ export function useCreationAPI() {
 
   const readCreationUploadPolicy = useCallback(
     async (params: Record<keyof QueryCreation, string | undefined>) => {
-      const body = {
-        gid: params.gid ? Xid.fromValue(params.gid) : undefined,
-        id: params.id ? Xid.fromValue(params.id) : undefined,
-        fields: params.fields,
-      } as QueryCreation
-      return request.post<{ result: PostFilePolicy }>(`${path}/upload`, body)
+      return request.get<{ result: PostFilePolicy }>(`${path}/upload`, params)
     },
     [request]
   )
@@ -540,9 +535,9 @@ export function useCreationList(
   }, [data])
 
   const hasMore = useMemo(() => {
-    if (!data) return false
+    if (!data || error) return false
     return !!data[data.length - 1]?.next_page_token
-  }, [data])
+  }, [data, error])
 
   const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
 

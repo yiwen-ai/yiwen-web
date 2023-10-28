@@ -54,11 +54,11 @@ export default function CreationItem({
       css={css`
         display: block;
         padding: 16px 24px;
-        border: 1px solid ${theme.color.divider.default};
         border-radius: 12px;
         cursor: pointer;
+        box-shadow: ${theme.effect.card};
         :hover {
-          border-color: ${theme.color.button.primary.outlined.border};
+          box-shadow: ${theme.effect.cardHover};
         }
         @media (max-width: ${BREAKPOINT.small}px) {
           padding: 12px 16px;
@@ -87,34 +87,37 @@ export default function CreationItem({
             : item.summary.slice(0, 140) + '...'}
         </div>
       )}
-      <div
-        role='none'
-        onClick={preventDefaultStopPropagation}
-        css={css`
-          width: fit-content;
-          margin-top: 12px;
-          display: flex;
-          align-items: center;
-          gap: 24px;
-        `}
-      >
-        {hasWritePermission && item.status === CreationStatus.Draft ? (
-          <Button
-            size='small'
-            color='primary'
-            variant='outlined'
-            disabled={disabled}
-            onClick={handleRelease}
-          >
-            {isReleasing && <Spinner size={12} />}
-            <span>
-              {intl.formatMessage({ defaultMessage: '投稿，在发布栏翻译' })}
-            </span>
-          </Button>
-        ) : (
-          <CreationItemStatus status={item.status} />
-        )}
-        {hasWritePermission && (
+      {hasWritePermission && (
+        <div
+          role='none'
+          onClick={preventDefaultStopPropagation}
+          css={css`
+            width: fit-content;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            @media (max-width: ${BREAKPOINT.small}px) {
+              display: none;
+            }
+          `}
+        >
+          {item.status === CreationStatus.Draft ? (
+            <Button
+              size='small'
+              color='primary'
+              variant='outlined'
+              disabled={disabled}
+              onClick={handleRelease}
+            >
+              {isReleasing && <Spinner size={12} />}
+              <span>
+                {intl.formatMessage({ defaultMessage: '投稿，在发布栏翻译' })}
+              </span>
+            </Button>
+          ) : (
+            <CreationItemStatus status={item.status} />
+          )}
           <Button
             size='small'
             color='secondary'
@@ -135,8 +138,6 @@ export default function CreationItem({
                 : intl.formatMessage({ defaultMessage: '编辑' })}
             </span>
           </Button>
-        )}
-        {hasWritePermission && (
           <Menu bringFocusBack={false} anchor={renderIconMoreAnchor}>
             <MenuItem
               before={
@@ -152,8 +153,8 @@ export default function CreationItem({
               closeOnClick={3000}
             />
           </Menu>
-        )}
-      </div>
+        </div>
+      )}
     </CreationLink>
   )
 }

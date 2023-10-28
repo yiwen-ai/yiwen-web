@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import useSWR, { type SWRConfiguration } from 'swr'
 import { Xid } from 'xid-ts'
-import { type GroupInfo } from './common'
+import { type GroupInfo, type ObjectKind } from './common'
 import { useFetcher } from './useFetcher'
 
 export interface SearchDocument {
@@ -9,11 +9,10 @@ export interface SearchDocument {
   cid: Uint8Array
   language: string
   version: number
-  kind: number
+  kind: ObjectKind
   title: string
   summary: string
   updated_at: number
-  group?: GroupInfo
   group_info?: GroupInfo
 }
 
@@ -26,6 +25,18 @@ export interface SearchInput {
   q: string
   language?: string
   gid?: Uint8Array
+}
+
+export function buildSearchKey(
+  item: Pick<SearchDocument, 'kind' | 'gid' | 'cid' | 'language' | 'version'>
+) {
+  return [
+    item.kind,
+    Xid.fromValue(item.gid).toString(),
+    Xid.fromValue(item.cid).toString(),
+    item.language,
+    item.version,
+  ].join(':')
 }
 
 const path = '/search'

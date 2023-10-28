@@ -1,5 +1,5 @@
 import { BREAKPOINT } from '#/shared'
-import { css } from '@emotion/react'
+import { css, useTheme } from '@emotion/react'
 import { Dialog, DialogBody, type DialogProps } from '@yiwen-ai/component'
 
 interface LargeDialogProps extends DialogProps {}
@@ -9,6 +9,7 @@ export default function LargeDialog({
   children,
   ...props
 }: LargeDialogProps) {
+  const theme = useTheme()
   return (
     <Dialog
       {...props}
@@ -20,6 +21,7 @@ export default function LargeDialog({
         margin: 36px 80px 0;
         border-bottom-left-radius: unset;
         border-bottom-right-radius: unset;
+        background-color: ${theme.color.body.background};
         @media (max-width: ${BREAKPOINT.small}px) {
           margin-top: 0;
           border-radius: unset;

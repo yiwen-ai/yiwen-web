@@ -11,7 +11,7 @@ import { useIntl } from 'react-intl'
 import { generatePath } from 'react-router-dom'
 import { forkJoin, lastValueFrom, tap } from 'rxjs'
 import { Xid } from 'xid-ts'
-import { SHARE_PUBLICATION_PATH } from './App'
+import { SHARE_COLLECTION_PATH, SHARE_PUBLICATION_PATH } from './App'
 
 export const MAX_WIDTH = '800px'
 
@@ -54,6 +54,24 @@ export function generatePublicationShareLink(
       gid: gid && Xid.fromValue(gid).toString(),
       language,
       version,
+      by,
+    }
+  )
+}
+
+export function generateCollectionShareLink(
+  SHARE_URL: string,
+  gid: Uint8Array | string | null | undefined,
+  cid: Uint8Array | string,
+  by: string | null | undefined
+) {
+  return joinURL(
+    SHARE_URL,
+    generatePath(SHARE_COLLECTION_PATH, {
+      cid: Xid.fromValue(cid).toString(),
+    }),
+    {
+      gid: gid && Xid.fromValue(gid).toString(),
       by,
     }
   )

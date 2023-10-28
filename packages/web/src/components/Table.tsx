@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-table'
 import { useMemo } from 'react'
 import ErrorPlaceholder from './ErrorPlaceholder'
-import LoadMore from './LoadMore'
+import { LoadMore } from './LoadMore'
 import Loading from './Loading'
 
 // eslint-disable-next-line react-refresh/only-export-components

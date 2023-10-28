@@ -1,9 +1,11 @@
 export {
   AuthProvider,
   authorized,
+  setXLanguage,
   useAuth,
   useEnsureAuthorized,
   useEnsureAuthorizedCallback,
+  xLanguage,
   type IdentityProvider,
 } from './AuthContext'
 export {
@@ -14,19 +16,43 @@ export {
   revokeBlobURL,
 } from './CBOR'
 export {
+  ObjectKind,
   UserStatus,
   isSystem,
   type ColorScheme,
   type GroupInfo,
+  type ObjectParams,
   type PostFilePolicy,
   type UserInfo,
 } from './common'
 export {
   useBookmarkAPI,
   useBookmarkList,
-  useCreationBookmarkList,
+  useCollectionBookmarkList,
+  usePublicationBookmarkList,
   type BookmarkOutput,
 } from './useBookmark'
+export {
+  CollectionStatus,
+  buildCollectionKey,
+  getCollectionInfo,
+  getCollectionTitle,
+  useCollection,
+  useCollectionAPI,
+  useCollectionChildren,
+  useCollectionList,
+  useCollectionUploadPolicy,
+  type AddCollectionChildrenInput,
+  type CollectionChildrenOutput,
+  type CollectionDraft,
+  type CollectionInfo,
+  type CollectionOutput,
+  type CreateCollectionInput,
+  type QueryCollection,
+  type UpdateCollectionChildInput,
+  type UpdateCollectionInput,
+  type UpdateCollectionStatusInput,
+} from './useCollection'
 export {
   CreationStatus,
   buildCreationKey,
@@ -68,6 +94,12 @@ export {
   type UILanguageItem,
 } from './useLanguageList'
 export {
+  usePaymentAPI,
+  type PaymentCodeOutput,
+  type PaymentInput,
+  type QueryPaymentCode,
+} from './usePayment'
+export {
   DEFAULT_MODEL,
   GPT_MODEL,
   PublicationJobStatus,
@@ -85,6 +117,7 @@ export {
   type PublicationOutput,
 } from './usePublication'
 export {
+  buildSearchKey,
   useSearch,
   useSearchAPI,
   type SearchDocument,
