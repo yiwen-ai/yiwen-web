@@ -65,12 +65,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   })
 
   //#region fetch
-  const {
-    isLoading,
-    error,
-    publication,
-    refresh: refreshPublication,
-  } = usePublication(
+  const { isLoading, error, publication } = usePublication(
     params._gid,
     params._cid,
     params._language,
@@ -226,43 +221,16 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     hasMore: menuHasMore,
     loadMore: menuLoadMore,
     items: collectionMenu,
-    refresh: refreshCollectionMenu,
   } = useCollectionChildren(_gid, params._parent)
 
   const refresh = useCallback(async () => {
     const [publication] = await Promise.all([
-      refreshPublication(),
       refreshTranslatedList(),
       refreshProcessingList(),
       refreshBookmarkList(),
     ])
     return publication
-  }, [
-    refreshBookmarkList,
-    refreshProcessingList,
-    refreshPublication,
-    refreshTranslatedList,
-  ])
-
-  useEffect(() => {
-    open && refreshPublication()
-  }, [open, refreshPublication])
-
-  useEffect(() => {
-    open && refreshTranslatedList()
-  }, [open, refreshTranslatedList])
-
-  useEffect(() => {
-    open && refreshProcessingList()
-  }, [open, refreshProcessingList])
-
-  useEffect(() => {
-    open && refreshBookmarkList()
-  }, [open, refreshBookmarkList])
-
-  useEffect(() => {
-    open && _gid && params._parent && refreshCollectionMenu()
-  }, [open, _gid, params._parent, refreshCollectionMenu])
+  }, [refreshBookmarkList, refreshProcessingList, refreshTranslatedList])
   //#endregion
 
   //#region translate

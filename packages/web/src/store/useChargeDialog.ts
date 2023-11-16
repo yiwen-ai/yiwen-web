@@ -22,7 +22,6 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
     isLoading: isLoadingCurrencyList,
     error: currencyListError,
     currencyList,
-    refresh: refreshCurrencyList,
   } = useCurrencyList()
 
   const [currentCurrencyCode, setCurrentCurrencyCode] = useState(
@@ -39,10 +38,6 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
     (currency: Currency) => setCurrentCurrencyCode(currency.alpha),
     []
   )
-
-  useEffect(() => {
-    if (open && !currencyList) refreshCurrencyList()
-  }, [currencyList, open, refreshCurrencyList])
 
   useEffect(() => {
     setCurrentCurrencyCode((prev) => prev || currencyList?.[0]?.alpha)

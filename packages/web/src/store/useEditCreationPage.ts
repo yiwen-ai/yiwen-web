@@ -61,10 +61,6 @@ export function useEditCreationPage(
     return () => controller.abort()
   }, [refresh])
 
-  useEffect(() => {
-    refreshUploadPolicy()
-  }, [refreshUploadPolicy])
-
   const updateDraft = useCallback((draft: Partial<CreationDraft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
   }, [])

@@ -7,7 +7,7 @@ import {
   useRecommendedPublicationList,
   type ObjectParams,
 } from '@yiwen-ai/store'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { type To } from 'react-router-dom'
 
@@ -46,11 +46,6 @@ export function useResponsiveTabSection() {
     refresh: refreshRecommendedPublicationList,
   } = useRecommendedPublicationList()
 
-  useEffect(() => {
-    refreshFollowedPublicationList()
-    refreshRecommendedPublicationList()
-  }, [refreshFollowedPublicationList, refreshRecommendedPublicationList])
-
   const followingList = useMemo(
     () => ({
       title:
@@ -81,10 +76,6 @@ export function useResponsiveTabSection() {
     remove,
     ...bookmarkList
   } = useBookmarkList()
-
-  useEffect(() => {
-    refreshBookmarkList()
-  }, [refreshBookmarkList])
   //#endregion
 
   const items = useMemo<ResponsiveTabItem[]>(

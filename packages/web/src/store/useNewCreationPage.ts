@@ -34,7 +34,7 @@ export function useNewCreationPage(
   //#region draft
   const { locale } = useAuth().user ?? {}
 
-  const { defaultGroup, refreshDefaultGroup } = useMyGroupList()
+  const { defaultGroup } = useMyGroupList()
   const defaultGroupId = defaultGroup?.id
 
   const [draft, setDraft] = useState<CreationDraft>(() => ({
@@ -67,10 +67,6 @@ export function useNewCreationPage(
       setTimeout(() => revokeBlobURL(url), 100)
     }
   }, [_scrapingOutput])
-
-  useEffect(() => {
-    refreshDefaultGroup()
-  }, [refreshDefaultGroup])
 
   useEffect(() => {
     const gid = draft.gid || defaultGroupId

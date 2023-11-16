@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import useSWR, { type SWRConfiguration } from 'swr'
+import useSWR from 'swr'
 import { Xid } from 'xid-ts'
 import { type GroupInfo, type ObjectKind } from './common'
 import { useFetcher } from './useFetcher'
@@ -79,7 +79,7 @@ export function useSearch(
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
     ([path, params]) => search(params),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const refresh = useCallback(

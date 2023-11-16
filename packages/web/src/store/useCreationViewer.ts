@@ -1,5 +1,5 @@
 import { useCreation, useLanguageList } from '@yiwen-ai/store'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Xid } from 'xid-ts'
 
 interface Params {
@@ -43,10 +43,6 @@ export function useCreationViewer() {
       _cid: undefined,
     })
   }, [])
-
-  useEffect(() => {
-    open && refresh()
-  }, [open, refresh])
 
   return {
     isLoading,

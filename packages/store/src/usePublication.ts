@@ -412,9 +412,11 @@ export function usePublication(
     mutate,
     isValidating,
     isLoading,
-  } = useSWR(getKey, ([path, params]) => readPublication(params), {
-    revalidateOnMount: false,
-  } as SWRConfiguration)
+  } = useSWR(
+    getKey,
+    ([path, params]) => readPublication(params),
+    {} as SWRConfiguration
+  )
 
   const refresh = useCallback(
     async () => getKey() && (await mutate())?.result,
@@ -452,7 +454,7 @@ export function usePublicationUploadPolicy(
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
     ([, params]) => readPublicationUploadPolicy(params),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const refresh = useCallback(
@@ -504,7 +506,7 @@ export function useTranslatedPublicationList(
   } = useSWR(
     getTranslatedListKey,
     ([path, params]) => readTranslatedPublicationList(params),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const refreshTranslatedList = useCallback(
@@ -526,7 +528,7 @@ export function useTranslatedPublicationList(
   } = useSWR(
     getProcessingListKey,
     ([path]) => readProcessingPublicationList(),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const refreshProcessingList = useCallback(
@@ -757,7 +759,7 @@ export function usePublicationList(
         path === '/v1/publication/list_archived'
           ? readArchivedPublicationList(params)
           : readPublicationList(params),
-      { revalidateOnMount: false, revalidateFirstPage: false }
+      { revalidateFirstPage: true }
     )
 
   //#region processing state
@@ -1008,7 +1010,7 @@ export function useFollowedPublicationList() {
   const response = useSWRInfinite(
     getKey,
     ([, body]) => readFollowedPublicationList(body),
-    { revalidateOnMount: false, revalidateFirstPage: false }
+    { revalidateFirstPage: false } as SWRConfiguration
   )
 
   return usePagination({
@@ -1027,7 +1029,7 @@ export function useRecommendedPublicationList() {
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
     () => readRecommendedPublicationList(),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const refresh = useCallback(

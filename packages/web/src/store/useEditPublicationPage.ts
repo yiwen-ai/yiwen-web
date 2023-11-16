@@ -34,8 +34,12 @@ export function useEditPublicationPage(
   const { locale } = useAuth().user ?? {}
 
   const { refresh } = usePublication(_gid, _cid, _language, _version)
-  const { uploadPolicy, refresh: refreshUploadPolicy } =
-    usePublicationUploadPolicy(_gid, _cid, _language, _version)
+  const { uploadPolicy } = usePublicationUploadPolicy(
+    _gid,
+    _cid,
+    _language,
+    _version
+  )
 
   const [draft, setDraft] = useState<PublicationDraft>(() => ({
     __isReady: false,
@@ -67,10 +71,6 @@ export function useEditPublicationPage(
       aborted = true
     }
   }, [refresh])
-
-  useEffect(() => {
-    refreshUploadPolicy()
-  }, [refreshUploadPolicy])
 
   const updateDraft = useCallback((draft: Partial<PublicationDraft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
@@ -124,9 +124,7 @@ export function useEditPublicationPage(
 
   const upload = useCallback(
     (file: File) => {
-      const uploadPolicy$ = from(
-        Promise.resolve(uploadPolicy || refreshUploadPolicy())
-      )
+      const uploadPolicy$ = from(Promise.resolve(uploadPolicy))
       return uploadPolicy$.pipe(
         concatMap((uploadPolicy) => {
           if (!uploadPolicy) {
@@ -138,7 +136,7 @@ export function useEditPublicationPage(
         })
       )
     },
-    [_upload, intl, pushToast, refreshUploadPolicy, uploadPolicy]
+    [_upload, intl, pushToast, uploadPolicy]
   )
 
   return {

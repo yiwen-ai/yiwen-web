@@ -4,7 +4,7 @@ import {
   useBookmarkList,
   type BookmarkOutput,
 } from '@yiwen-ai/store'
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { useCollectionViewer } from './useCollectionViewer'
 import { usePublicationViewer } from './usePublicationViewer'
 
@@ -14,10 +14,6 @@ export function useBookmarkPage(pushToast: ToastAPI['pushToast']) {
     remove,
     ...bookmarkList
   } = useBookmarkList()
-
-  useEffect(() => {
-    refreshBookmarkList()
-  }, [refreshBookmarkList])
 
   const {
     show: showCollectionViewer,

@@ -3,18 +3,11 @@ import {
   useFollowedPublicationList,
   type PublicationOutput,
 } from '@yiwen-ai/store'
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { usePublicationViewer } from './usePublicationViewer'
 
 export function useFollowingPage(pushToast: ToastAPI['pushToast']) {
-  const {
-    refresh: refreshFollowedPublicationList,
-    ...followedPublicationList
-  } = useFollowedPublicationList()
-
-  useEffect(() => {
-    refreshFollowedPublicationList()
-  }, [refreshFollowedPublicationList])
+  const { ...followedPublicationList } = useFollowedPublicationList()
 
   const {
     show: showPublicationViewer,

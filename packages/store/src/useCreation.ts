@@ -1,7 +1,7 @@
 import { type JSONContent } from '@tiptap/core'
 import { omitBy } from 'lodash-es'
 import { useCallback, useMemo, useState } from 'react'
-import useSWR, { type SWRConfiguration } from 'swr'
+import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { encode } from './CBOR'
@@ -329,9 +329,7 @@ export function useCreation(
     mutate,
     isValidating,
     isLoading,
-  } = useSWR(getKey, ([path, params]) => readCreation(params), {
-    revalidateOnMount: false,
-  } as SWRConfiguration)
+  } = useSWR(getKey, ([path, params]) => readCreation(params), {})
 
   const refresh = useCallback(
     async () => getKey() && (await mutate())?.result,
@@ -365,7 +363,7 @@ export function useCreationUploadPolicy(
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
     ([, params]) => readCreationUploadPolicy(params),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const refresh = useCallback(
@@ -436,7 +434,7 @@ export function useCreationList(
         path === '/v1/creation/list_archived'
           ? readArchivedCreationList(params)
           : readCreationList(params),
-      { revalidateOnMount: false, revalidateFirstPage: false }
+      { revalidateFirstPage: true }
     )
 
   //#region processing state

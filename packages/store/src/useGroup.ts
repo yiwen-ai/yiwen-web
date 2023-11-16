@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
-import useSWR, { type SWRConfiguration } from 'swr'
+import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
@@ -132,9 +132,7 @@ export function useGroup(_gid: string | null | undefined) {
     mutate: mutateGroupInfo,
     isValidating: isValidatingGroupInfo,
     isLoading: isLoadingGroupInfo,
-  } = useSWR(getInfoKey, ([_, params]) => readGroupInfo(params), {
-    revalidateOnMount: false,
-  } as SWRConfiguration)
+  } = useSWR(getInfoKey, ([_, params]) => readGroupInfo(params), {})
 
   const {
     data: groupStatistic,
@@ -142,9 +140,7 @@ export function useGroup(_gid: string | null | undefined) {
     mutate: mutateGroupStatistic,
     isValidating: isValidatingGroupStatistic,
     isLoading: isLoadingGroupStatistic,
-  } = useSWR(getStatisticKey, ([_, params]) => readGroupStatistic(params), {
-    revalidateOnMount: false,
-  } as SWRConfiguration)
+  } = useSWR(getStatisticKey, ([_, params]) => readGroupStatistic(params), {})
 
   const refreshGroupInfo = useCallback(
     async () => getInfoKey() && (await mutateGroupInfo()),
@@ -228,7 +224,7 @@ export function useMyGroupList() {
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
     ([_]) => readMyGroupList(),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const defaultGroup = useMemo(
@@ -277,7 +273,7 @@ export function useFollowedGroupList() {
   const response = useSWRInfinite(
     getKey,
     ([, body]) => readFollowedGroupList(body),
-    { revalidateOnMount: false, revalidateFirstPage: false }
+    { revalidateFirstPage: true }
   )
 
   return usePagination({

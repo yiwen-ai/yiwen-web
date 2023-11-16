@@ -11,7 +11,7 @@ import {
   takeUntil,
   timer,
 } from 'rxjs'
-import useSWR, { type SWRConfiguration } from 'swr'
+import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import {
@@ -305,7 +305,7 @@ export function useCurrencyList() {
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
     () => readCurrencyList(),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const refresh = useCallback(
@@ -331,7 +331,7 @@ export function useMyWallet() {
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
     ([path]) => readMyWallet(),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const wallet = useMemo(() => {
@@ -435,7 +435,7 @@ export function useChargeList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readChargeList(body),
-    { revalidateOnMount: false, revalidateFirstPage: false }
+    { revalidateFirstPage: true }
   )
 
   return usePagination({
@@ -461,7 +461,7 @@ export function useOutgoList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readTransactionOutgoList(body),
-    { revalidateOnMount: false, revalidateFirstPage: false }
+    { revalidateFirstPage: true }
   )
 
   return usePagination({
@@ -487,7 +487,7 @@ export function useIncomeList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readTransactionIncomeList(body),
-    { revalidateOnMount: false, revalidateFirstPage: false }
+    { revalidateFirstPage: true }
   )
 
   return usePagination({
@@ -513,7 +513,7 @@ export function useCreditList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readCreditList(body),
-    { revalidateOnMount: false, revalidateFirstPage: false }
+    { revalidateFirstPage: true }
   )
 
   return usePagination({

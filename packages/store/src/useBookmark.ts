@@ -1,7 +1,7 @@
 import { useLoading } from '@yiwen-ai/util'
 import { without } from 'lodash-es'
 import { useCallback, useState } from 'react'
-import useSWR, { type SWRConfiguration } from 'swr'
+import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
@@ -264,7 +264,7 @@ export function usePublicationBookmarkList(_cid: string | null | undefined) {
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
     ([, params]) => readObjectBookmarkList(params),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const refresh = useCallback(
@@ -401,7 +401,7 @@ export function useBookmarkList() {
   const { mutate, ...response } = useSWRInfinite(
     getKey,
     ([, body]) => readBookmarkList(body),
-    { revalidateOnMount: false, revalidateFirstPage: false }
+    { revalidateFirstPage: true }
   )
 
   const [setRemoving, isRemoving] = useLoading((item: BookmarkOutput) =>

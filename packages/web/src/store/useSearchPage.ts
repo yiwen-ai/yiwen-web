@@ -37,15 +37,11 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   //#endregion
 
   //#region search
-  const { isLoading, error, data, refresh } = useSearch(
+  const { isLoading, error, data } = useSearch(
     params.q,
     params.language,
     params.gid
   )
-
-  useEffect(() => {
-    refresh()
-  }, [refresh])
 
   useEffect(() => {
     setSearchParams(

@@ -19,16 +19,7 @@ export default function DefaultGroupPage() {
     }
   }
 
-  const {
-    isLoading,
-    error,
-    defaultGroup: { id: gid } = {},
-    refreshDefaultGroup,
-  } = useMyGroupList()
-
-  useEffect(() => {
-    refreshDefaultGroup()
-  }, [refreshDefaultGroup])
+  const { isLoading, error, defaultGroup: { id: gid } = {} } = useMyGroupList()
 
   return (
     <div
