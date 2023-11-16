@@ -33,21 +33,30 @@ export default function PublicationItem({
 }: {
   item: PublicationOutput
   hasWritePermission: boolean
-  isPublishing: boolean
-  isEditing: boolean
-  isArchiving: boolean
-  onClick: (item: PublicationOutput) => void
-  onPublish: (item: PublicationOutput) => void
-  onEdit: (item: PublicationOutput) => void
-  onArchive: (item: PublicationOutput) => void
+  isPublishing?: boolean
+  isEditing?: boolean
+  isArchiving?: boolean
+  onClick?: (item: PublicationOutput) => void
+  onPublish?: (item: PublicationOutput) => void
+  onEdit?: (item: PublicationOutput) => void
+  onArchive?: (item: PublicationOutput) => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
   const disabled = isPublishing || isEditing || isArchiving
-  const handleClick = useCallback(() => onClick(item), [item, onClick])
-  const handleEdit = useCallback(() => onEdit(item), [item, onEdit])
-  const handlePublish = useCallback(() => onPublish(item), [item, onPublish])
-  const handleArchive = useCallback(() => onArchive(item), [item, onArchive])
+  const handleClick = useCallback(
+    () => onClick && onClick(item),
+    [item, onClick]
+  )
+  const handleEdit = useCallback(() => onEdit && onEdit(item), [item, onEdit])
+  const handlePublish = useCallback(
+    () => onPublish && onPublish(item),
+    [item, onPublish]
+  )
+  const handleArchive = useCallback(
+    () => onArchive && onArchive(item),
+    [item, onArchive]
+  )
 
   return (
     <PublicationLink

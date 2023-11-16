@@ -113,7 +113,7 @@ export interface UpdateCollectionChildInput {
   gid: Uint8Array
   id: Uint8Array
   cid: Uint8Array
-  Ord: number
+  ord: number
 }
 
 export interface CollectionChildrenOutput {
@@ -121,7 +121,7 @@ export interface CollectionChildrenOutput {
   gid: Uint8Array
   cid: Uint8Array
   kind: ObjectKind
-  Ord: number
+  ord: number
   status: number // (-2, 2]
   rating: number
   updated_at: number
@@ -408,7 +408,8 @@ export function useCollection(
   return {
     collection: data?.result,
     error,
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     refresh,
   } as const
 }
@@ -442,7 +443,8 @@ export function useCollectionUploadPolicy(
   )
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     uploadPolicy: data?.result,
     refresh,
@@ -700,7 +702,8 @@ export function useCollectionList(
   //#endregion
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     items,
     hasMore,
@@ -801,6 +804,7 @@ export function useCollectionChildren(
   //#endregion
 
   return {
+    error,
     isLoading,
     isValidating,
     items,

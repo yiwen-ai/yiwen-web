@@ -88,7 +88,8 @@ export function useSearch(
   )
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     data: data?.result,
     refresh,

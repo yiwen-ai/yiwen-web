@@ -45,6 +45,7 @@ export function useNewCreationPage(
     updated_at: undefined,
     title: '',
     content: undefined,
+    parent: undefined,
   }))
 
   useEffect(() => {

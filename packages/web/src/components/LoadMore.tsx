@@ -1,4 +1,4 @@
-import { css } from '@emotion/react'
+import { css, useTheme } from '@emotion/react'
 import { Button, Spinner } from '@yiwen-ai/component'
 import { useMemo } from 'react'
 import { useIntl } from 'react-intl'
@@ -16,11 +16,23 @@ export function LoadMore({
   ...props
 }: LoadMoreProps) {
   const intl = useIntl()
+  const theme = useTheme()
 
   const content = isLoadingMore ? (
     <Spinner />
   ) : hasMore ? (
-    <Button color='primary' variant='outlined' onClick={onLoadMore}>
+    <Button
+      color='primary'
+      variant='outlined'
+      onClick={onLoadMore}
+      css={css`
+        border: none;
+        box-shadow: ${theme.effect.card};
+        :hover {
+          box-shadow: ${theme.effect.shadow};
+        }
+      `}
+    >
       {intl.formatMessage({ defaultMessage: '加载更多' })}
     </Button>
   ) : null

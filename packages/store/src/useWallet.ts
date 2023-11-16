@@ -314,7 +314,8 @@ export function useCurrencyList() {
   )
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     currencyList: data?.result,
     refresh,
@@ -349,7 +350,8 @@ export function useMyWallet() {
   )
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     wallet,
     refresh,

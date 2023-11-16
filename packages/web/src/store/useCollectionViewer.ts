@@ -8,7 +8,6 @@ import {
   useAuth,
   useCollection,
   useCollectionBookmarkList,
-  useCollectionChildren,
   useEnsureAuthorized,
   useFetcherConfig,
   useLanguageList,
@@ -66,15 +65,6 @@ export function useCollectionViewer(pushToast: ToastAPI['pushToast']) {
     remove: _removeFavorite,
     refresh: refreshBookmarkList,
   } = useCollectionBookmarkList(params._cid)
-
-  const {
-    isLoading: isChildrenLoading,
-    isValidating: isLoadingMore,
-    hasMore,
-    loadMore,
-    items: childrenItems,
-    refresh: refreshCollectionChildren,
-  } = useCollectionChildren(params._gid, params._cid)
 
   const language = useMemo(() => {
     if (!collection) return undefined
@@ -150,10 +140,9 @@ export function useCollectionViewer(pushToast: ToastAPI['pushToast']) {
     const [collection] = await Promise.all([
       refreshCollection(),
       refreshBookmarkList(),
-      refreshCollectionChildren(),
     ])
     return collection
-  }, [refreshCollection, refreshBookmarkList, refreshCollectionChildren])
+  }, [refreshCollection, refreshBookmarkList])
 
   //#endregion
 
@@ -263,11 +252,6 @@ export function useCollectionViewer(pushToast: ToastAPI['pushToast']) {
     show,
     close,
     refresh,
-    isChildrenLoading,
-    childrenItems,
-    hasMore,
-    isLoadingMore,
-    loadMore,
     currentLanguage,
     originalLanguage,
     translatedLanguageList,

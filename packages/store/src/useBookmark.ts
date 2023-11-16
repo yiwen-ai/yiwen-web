@@ -233,7 +233,8 @@ export function useCollectionBookmarkList(_cid: string | null | undefined) {
   )
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     bookmarkList: data?.result,
     refresh,
@@ -369,7 +370,8 @@ export function usePublicationBookmarkList(_cid: string | null | undefined) {
   )
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     bookmarkList: data?.result,
     refresh,

@@ -424,7 +424,8 @@ export function usePublication(
   )
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     publication,
     refresh,
@@ -463,7 +464,8 @@ export function usePublicationUploadPolicy(
   )
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     uploadPolicy: data?.result,
     refresh,
@@ -974,7 +976,8 @@ export function usePublicationList(
   //#endregion
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     items,
     hasMore,

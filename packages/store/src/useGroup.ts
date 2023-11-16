@@ -284,7 +284,8 @@ export function useMyGroupList() {
   }, [refresh])
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     groupList: data?.result,
     defaultGroup,

@@ -1,12 +1,16 @@
 import { GROUP_DETAIL_PATH, ThemeContext } from '#/App'
 import CreatedBy from '#/components/CreatedBy'
+import { LargeDialogContext } from '#/components/LargeDialog'
 import { LoadMore } from '#/components/LoadMore'
 import Placeholder from '#/components/Placeholder'
+import PublicationSelector from '#/components/PublicationSelector'
 import { BREAKPOINT, MAX_WIDTH } from '#/shared'
+import { useCollectionChildrenViewer } from '#/store/useCollectionChildrenViewer'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
   Button,
+  Clickable,
   Icon,
   IconButton,
   Menu,
@@ -18,6 +22,7 @@ import {
   Spinner,
   TextField,
   textEllipsis,
+  type ToastAPI,
 } from '@yiwen-ai/component'
 import {
   ObjectKind,
@@ -27,6 +32,7 @@ import {
   type CollectionOutput,
   type UILanguageItem,
 } from '@yiwen-ai/store'
+import { preventDefaultStopPropagation } from '@yiwen-ai/util'
 import { escapeRegExp } from 'lodash-es'
 import {
   useCallback,
@@ -35,6 +41,14 @@ import {
   useState,
   type HTMLAttributes,
 } from 'react'
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  type DraggableProvided,
+  type DraggableStateSnapshot,
+  type OnDragEndResponder,
+} from 'react-beautiful-dnd'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
 import { Link, generatePath } from 'react-router-dom'
@@ -44,13 +58,12 @@ import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
 
 export interface CollectionViewerProps extends HTMLAttributes<HTMLDivElement> {
+  pushToast: ToastAPI['pushToast']
   responsive: boolean
   isLoading: boolean
-  isChildrenLoading: boolean
   hasGroupAdminPermission?: boolean
   error: unknown
   collection: CollectionOutput | undefined
-  childrenItems: CollectionChildrenOutput[] | undefined
   currentLanguage: UILanguageItem | undefined
   originalLanguage: UILanguageItem | undefined
   translatedLanguageList: UILanguageItem[] | undefined
@@ -66,22 +79,15 @@ export interface CollectionViewerProps extends HTMLAttributes<HTMLDivElement> {
   onRemoveFavorite: () => void
   onClose?: () => void
   chargeDialog: ChargeDialogProps
-  hasMore: boolean
-  isLoadingMore: boolean
-  loadMore: () => void
 }
 
 export default function CollectionViewer({
+  pushToast,
   responsive,
   isLoading,
-  isChildrenLoading,
   hasGroupAdminPermission,
   error,
   collection,
-  childrenItems,
-  hasMore,
-  isLoadingMore,
-  loadMore,
   currentLanguage,
   originalLanguage,
   translatedLanguageList: _translatedLanguageList,
@@ -382,12 +388,9 @@ export default function CollectionViewer({
           </div>
           {collection && (
             <CollectionDetail
+              pushToast={pushToast}
               collection={collection}
-              childrenItems={childrenItems}
-              isChildrenLoading={isChildrenLoading}
-              hasMore={hasMore}
-              isLoadingMore={isLoadingMore}
-              loadMore={loadMore}
+              hasGroupAdminPermission={hasGroupAdminPermission || false}
               isNarrow={isNarrow}
             ></CollectionDetail>
           )}
@@ -399,39 +402,32 @@ export default function CollectionViewer({
 }
 
 function CollectionDetail({
+  pushToast,
   collection,
-  childrenItems,
-  isChildrenLoading,
-  hasMore,
-  isLoadingMore,
-  loadMore,
+  hasGroupAdminPermission,
   isNarrow,
 }: {
+  pushToast: ToastAPI['pushToast']
   collection: CollectionOutput
-  childrenItems: CollectionChildrenOutput[] | undefined
-  isChildrenLoading: boolean
-  hasMore: boolean
-  isLoadingMore: boolean
-  loadMore: () => void
+  hasGroupAdminPermission: boolean
   isNarrow: boolean
 }) {
   const intl = useIntl()
   const theme = useTheme()
+  const switchFullScreen = useContext(LargeDialogContext)
+  const [isEditing, setIsEditing] = useState(false)
   const [language, info] = useMemo(() => {
     return getCollectionInfo(collection)
-  }, [collection])
-
-  const { _cid, _gid } = useMemo(() => {
-    if (!collection) return {}
-    return {
-      _gid: Xid.fromValue(collection.gid).toString(),
-      _cid: Xid.fromValue(collection.id).toString(),
-    }
   }, [collection])
 
   const dir = useMemo(() => {
     return isRTL(language) ? 'rtl' : undefined
   }, [language])
+
+  const handleEditChildrenClick = useCallback(() => {
+    setIsEditing(!isEditing)
+    switchFullScreen(!isEditing)
+  }, [isEditing, setIsEditing, switchFullScreen])
 
   return (
     info && (
@@ -484,6 +480,9 @@ function CollectionDetail({
           ></img>
           <div
             css={css`
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
               margin-left: 24px;
               width: calc(${MAX_WIDTH} + 36px * 2 - 160px - 24px);
             `}
@@ -496,16 +495,7 @@ function CollectionDetail({
             >
               {info.title}
             </div>
-            {info.summary && (
-              <div
-                dir={dir}
-                css={css`
-                  margin-top: 12px;
-                `}
-              >
-                {info.summary}
-              </div>
-            )}
+            {info.summary && <div dir={dir}>{info.summary}</div>}
             {collection.group_info && (
               <Link
                 to={{
@@ -515,7 +505,6 @@ function CollectionDetail({
                   }),
                 }}
                 css={css`
-                  margin-top: 12px;
                   display: flex;
                   width: fit-content;
                   max-width: 100%;
@@ -534,7 +523,6 @@ function CollectionDetail({
                 disabled={!collection.rfp}
                 onClick={() => {}}
                 css={css`
-                  margin-top: 12px;
                   :disabled {
                     border-color: ${theme.color.alert.success.border};
                     background-color: ${theme.color.alert.success.border};
@@ -574,104 +562,410 @@ function CollectionDetail({
                   )}
               </Button>
             )}
-          </div>
-        </div>
-        <div
-          css={css`
-            margin: 36px auto;
-            @media (max-width: ${BREAKPOINT.small}px) {
-              margin: 24px auto;
-            }
-          `}
-        >
-          {isChildrenLoading ? (
-            <Loading />
-          ) : childrenItems && childrenItems.length > 0 ? (
-            <ul
-              css={css`
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: space-between;
-                gap: 16px;
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                list-style: none;
-              `}
-            >
-              {childrenItems.map((item) => (
-                <li
-                  key={Xid.fromValue(item.cid).toString()}
+            {hasGroupAdminPermission && !isNarrow && (
+              <>
+                <Button
+                  color='primary'
+                  variant='outlined'
+                  onClick={handleEditChildrenClick}
                   css={css`
-                    padding: 0px;
-                    height: 60px;
-                    width: 100%;
-                    @media (max-width: ${BREAKPOINT.small}px) {
-                      height: 48px;
-                    }
+                    width: fit-content;
                   `}
                 >
-                  <Link
-                    unstable_viewTransition={true}
-                    key={Xid.fromValue(item.cid).toString()}
-                    to={{
-                      pathname: generatePath(GROUP_DETAIL_PATH, {
-                        gid: _gid as string,
-                        type:
-                          item.kind === ObjectKind.Collection
-                            ? GroupViewType.Collection
-                            : GroupViewType.Publication,
-                      }),
-                      search:
-                        item.kind === ObjectKind.Collection
-                          ? new URLSearchParams({
-                              cid: Xid.fromValue(item.cid).toString(),
-                            }).toString()
-                          : new URLSearchParams({
-                              parent: _cid as string,
-                              cid: Xid.fromValue(item.cid).toString(),
-                              language: item.language,
-                              version: String(item.version),
-                            }).toString(),
-                    }}
-                    dir={dir}
-                    css={css`
-                      ${textEllipsis}
-                      display: inline-block;
-                      padding: 16px 24px;
-                      height: 28px;
-                      width: calc(100% - 24px * 2);
-                      border-radius: 12px;
-                      box-shadow: ${theme.effect.card};
-                      :hover {
-                        box-shadow: ${theme.effect.cardHover};
-                      }
-                      @media (max-width: ${BREAKPOINT.small}px) {
-                        padding: 10px 16px;
-                        border-radius: 8px;
-                        width: calc(100% - 16px * 2);
-                      }
-                    `}
-                  >
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-              <LoadMore
-                hasMore={hasMore}
-                isLoadingMore={isLoadingMore}
-                onLoadMore={loadMore}
-                css={css`
-                  width: 100%;
-                `}
-              />
-            </ul>
-          ) : (
-            <Placeholder />
-          )}
+                  {isEditing
+                    ? intl.formatMessage({ defaultMessage: '退出管理模式' })
+                    : intl.formatMessage({ defaultMessage: '进入管理模式' })}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
+        <CollectionChildren
+          pushToast={pushToast}
+          collection={collection}
+          dir={dir}
+          isEditing={isEditing}
+        ></CollectionChildren>
       </div>
     )
+  )
+}
+
+function CollectionChildren({
+  pushToast,
+  collection,
+  dir,
+  isEditing,
+}: {
+  pushToast: ToastAPI['pushToast']
+  collection: CollectionOutput
+  dir: string | undefined
+  isEditing: boolean
+}) {
+  const intl = useIntl()
+  const theme = useTheme()
+
+  const parent = Xid.fromValue(collection.id).toString()
+  const gid = Xid.fromValue(collection.gid).toString()
+
+  const {
+    items,
+    isLoading,
+    isValidating,
+    hasMore,
+    loadMore,
+    refresh,
+    addChildren,
+    updateChild,
+    removeChild,
+  } = useCollectionChildrenViewer(pushToast, gid, parent)
+
+  const excludes = useMemo(() => {
+    return items.map((item) => Xid.fromValue(item.cid).toString())
+  }, [items])
+
+  const onRemove = useCallback(
+    (item: CollectionChildrenOutput) => {
+      removeChild({
+        gid: Xid.fromValue(item.gid).toString(),
+        id: Xid.fromValue(item.parent).toString(),
+        cid: Xid.fromValue(item.cid).toString(),
+      })
+    },
+    [removeChild]
+  )
+
+  const handleLoadMore = useCallback(() => {
+    loadMore()
+  }, [loadMore])
+
+  const handleDragEnd: OnDragEndResponder = useCallback(
+    (result) => {
+      const { source, destination } = result
+      // dropped outside the list
+      if (!destination) {
+        return
+      }
+
+      const src = items[source.index]
+      const dest = items[destination.index]
+      if (!src || !dest || source.index == destination.index) {
+        return
+      }
+
+      // update order to view
+      if (source.index < destination.index) {
+        for (let i = source.index; i < destination.index; i++) {
+          items[i] = items[i + 1] as CollectionChildrenOutput
+        }
+      } else {
+        for (let i = source.index; i > destination.index; i--) {
+          items[i] = items[i - 1] as CollectionChildrenOutput
+        }
+      }
+      items[destination.index] = src
+
+      // update order to server
+      const prevOrder =
+        items[destination.index - 1]?.ord ||
+        (items[destination.index + 1]?.ord || 1) - 1
+      const nextOrder = items[destination.index + 1]?.ord || prevOrder + 1
+      updateChild({
+        gid: src.gid,
+        id: src.parent,
+        cid: src.cid,
+        ord: (prevOrder + nextOrder) / 2,
+      })
+    },
+    [items, updateChild]
+  )
+
+  const [openPublicationSelector, setOpenPublicationSelector] = useState(false)
+  const [selected, setSelected] = useState<string[]>([])
+
+  const showPublicationSelector = useCallback(() => {
+    setOpenPublicationSelector(true)
+  }, [setOpenPublicationSelector])
+
+  const handlePublicationSelectorClose = useCallback(() => {
+    setOpenPublicationSelector(false)
+    setSelected([])
+  }, [setOpenPublicationSelector])
+
+  const [isSaving, setIsSaving] = useState(false)
+  const handlePublicationSelectorSubmit = useCallback(async () => {
+    setIsSaving(true)
+    try {
+      await addChildren({
+        gid: collection.gid,
+        id: collection.id,
+        cids: selected.map((id) => Xid.fromValue(id).toBytes()),
+        kind: ObjectKind.Publication,
+      })
+    } finally {
+      setOpenPublicationSelector(false)
+      setIsSaving(false)
+      setSelected([])
+      refresh()
+    }
+  }, [collection, selected, setIsSaving, addChildren, refresh])
+
+  const containerCss = useMemo(
+    () => css`
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      gap: 16px;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      list-style: none;
+      li {
+        padding: 0px;
+        height: 60px;
+        width: 100%;
+        transition: height 0.4s ease-in-out;
+        @media (max-width: ${BREAKPOINT.small}px) {
+          height: 48px;
+        }
+        ${isEditing &&
+        css`
+          height: 40px;
+        `}
+      }
+      li > a {
+        position: relative;
+        ${textEllipsis}
+        display: inline-block;
+        padding: 0 24px;
+        height: 100%;
+        line-height: 60px;
+        width: calc(100% - 24px * 2);
+        border-radius: 12px;
+        box-shadow: ${theme.effect.card};
+        :hover {
+          box-shadow: ${theme.effect.cardHover};
+        }
+        @media (max-width: ${BREAKPOINT.small}px) {
+          padding: 0 16px;
+          border-radius: 8px;
+          width: calc(100% - 16px * 2);
+        }
+        ${isEditing &&
+        css`
+          padding: 0 24px 0 20px;
+          line-height: 40px;
+        `}
+      }
+    `,
+    [isEditing, theme]
+  )
+
+  return (
+    <div
+      css={css`
+        margin: 36px auto;
+        @media (max-width: ${BREAKPOINT.small}px) {
+          margin: 24px auto;
+        }
+      `}
+    >
+      {isLoading ? (
+        <Loading />
+      ) : items ? (
+        <>
+          {isEditing ? (
+            <>
+              <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable
+                  key={parent}
+                  droppableId={parent}
+                  ignoreContainerClipping={true}
+                >
+                  {(draProvided, _draSnapshot) => (
+                    <ul
+                      dir={dir}
+                      ref={draProvided.innerRef}
+                      {...draProvided.droppableProps}
+                      css={containerCss}
+                    >
+                      {items.map((item, index) => {
+                        const cid = Xid.fromValue(item.cid).toString()
+                        return (
+                          <Draggable key={cid} draggableId={cid} index={index}>
+                            {(provided, snapshot) => (
+                              <ChildItem
+                                item={item}
+                                gid={gid}
+                                parent={parent}
+                                isEditing={isEditing}
+                                onRemove={onRemove}
+                                provided={provided}
+                                snapshot={snapshot}
+                              ></ChildItem>
+                            )}
+                          </Draggable>
+                        )
+                      })}
+                      {draProvided.placeholder}
+                    </ul>
+                  )}
+                </Droppable>
+              </DragDropContext>
+              <Clickable
+                onClick={showPublicationSelector}
+                css={css`
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin-top: 12px;
+                  padding: 12px 0px;
+                  color: ${theme.color.body.primary};
+                `}
+              >
+                <Icon name='add' size='medium' />
+                <span>
+                  {intl.formatMessage({
+                    defaultMessage: '添加内容',
+                  })}
+                </span>
+              </Clickable>
+              <PublicationSelector
+                open={openPublicationSelector}
+                gid={gid}
+                excludes={excludes}
+                selected={selected}
+                setSelected={setSelected}
+                isSaving={isSaving}
+                onClose={handlePublicationSelectorClose}
+                onSave={handlePublicationSelectorSubmit}
+              />
+            </>
+          ) : (
+            <ul dir={dir} css={containerCss}>
+              {items.map((item) => (
+                <ChildItem
+                  key={Xid.fromValue(item.cid).toString()}
+                  item={item}
+                  gid={gid}
+                  parent={parent}
+                  isEditing={isEditing}
+                ></ChildItem>
+              ))}
+            </ul>
+          )}
+          <LoadMore
+            hasMore={hasMore}
+            isLoadingMore={isValidating}
+            onLoadMore={handleLoadMore}
+            css={css`
+              width: 100%;
+            `}
+          />
+        </>
+      ) : (
+        <Placeholder />
+      )}
+    </div>
+  )
+}
+
+function ChildItem({
+  item,
+  gid,
+  parent,
+  isEditing,
+  onRemove,
+  provided,
+  snapshot,
+}: {
+  item: CollectionChildrenOutput
+  gid: string
+  parent: string
+  isEditing: boolean
+  onRemove?: (item: CollectionChildrenOutput) => void
+  provided?: DraggableProvided
+  snapshot?: DraggableStateSnapshot
+}) {
+  const theme = useTheme()
+  const cid = Xid.fromValue(item.cid).toString()
+  const [isRemove, setIsRemove] = useState(false)
+  const handleRemove = useCallback(() => {
+    if (onRemove) {
+      setIsRemove(true)
+      setTimeout(() => onRemove(item), 200)
+    }
+  }, [item, onRemove, setIsRemove])
+
+  return (
+    <li
+      key={cid}
+      ref={provided?.innerRef}
+      {...provided?.draggableProps}
+      {...provided?.dragHandleProps}
+      css={
+        isRemove &&
+        css`
+          transform: scale(0);
+          height: 0px !important;
+        `
+      }
+    >
+      <Link
+        unstable_viewTransition={true}
+        key={cid}
+        onClick={isEditing ? preventDefaultStopPropagation : undefined}
+        to={{
+          pathname: generatePath(GROUP_DETAIL_PATH, {
+            gid: gid as string,
+            type:
+              item.kind === ObjectKind.Collection
+                ? GroupViewType.Collection
+                : GroupViewType.Publication,
+          }),
+          search:
+            item.kind === ObjectKind.Collection
+              ? new URLSearchParams(cid).toString()
+              : new URLSearchParams({
+                  parent: parent as string,
+                  cid,
+                  language: item.language,
+                  version: String(item.version),
+                }).toString(),
+        }}
+        style={{
+          backgroundColor: snapshot?.isDragging
+            ? theme.palette.grayLight0
+            : undefined,
+        }}
+      >
+        {isEditing && (
+          <Icon
+            name='draggable'
+            size='small'
+            css={css`
+              position: absolute;
+              left: 4px;
+              top: 12px;
+            `}
+          />
+        )}
+        {item.title}
+        {isEditing && (
+          <IconButton
+            iconName='delete'
+            size='medium'
+            onClick={handleRemove}
+            css={css`
+              position: absolute;
+              right: 4px;
+              top: 4px;
+              color: ${theme.color.body.default};
+            `}
+          />
+        )}
+      </Link>
+    </li>
   )
 }

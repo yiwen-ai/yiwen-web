@@ -283,6 +283,7 @@ export default function SearchPage() {
       {collectionViewerOpen && (
         <LargeDialog open={true} onClose={onCollectionViewerClose}>
           <CollectionViewer
+            pushToast={pushToast}
             onCharge={() => {}}
             responsive={true}
             onClose={onCollectionViewerClose}

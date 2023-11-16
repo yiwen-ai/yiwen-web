@@ -11,6 +11,7 @@ import {
 import { useLogger } from './logger'
 
 const SVG_LIST = {
+  'add': () => import('./icon/remixicon/add-line.svg'),
   'align-center': () => import('./icon/remixicon/align-center.svg'),
   'align-justify': () => import('./icon/remixicon/align-justify.svg'),
   'align-left': () => import('./icon/remixicon/align-left.svg'),
@@ -37,6 +38,7 @@ const SVG_LIST = {
   'directright2': () => import('./icon/24/directright.svg'),
   'documentcopy': () => import('./icon/16/documentcopy.svg'),
   'dropdown': () => import('./icon/16/dropdown.svg'),
+  'draggable': () => import('./icon/remixicon/draggable.svg'),
   'edit': () => import('./icon/16/edit.svg'),
   'gallery': () => import('./icon/bulk/gallery.svg'),
   'github': () => import('./icon/provider/github.svg'),
@@ -68,6 +70,7 @@ const SVG_LIST = {
   'refresh': () => import('./icon/16/refresh.svg'),
   'right': () => import('./icon/16/right.svg'),
   'search': () => import('./icon/24/searchnormal1.svg'),
+  'settings': () => import('./icon/remixicon/settings-5-line.svg'),
   'strike': () => import('./icon/remixicon/strikethrough-2.svg'),
   'subscript': () => import('./icon/remixicon/subscript-2.svg'),
   'superscript': () => import('./icon/remixicon/superscript-2.svg'),

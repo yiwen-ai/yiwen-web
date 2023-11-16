@@ -124,6 +124,7 @@ export interface CreationDraft {
   title: string
   content: JSONContent | undefined
   original_url?: string | undefined
+  parent?: Uint8Array | undefined
 }
 
 const path = '/v1/creation'
@@ -339,7 +340,8 @@ export function useCreation(
   return {
     creation,
     error,
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     refresh,
   } as const
 }
@@ -372,7 +374,8 @@ export function useCreationUploadPolicy(
   )
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     uploadPolicy: data?.result,
     refresh,
@@ -643,7 +646,8 @@ export function useCreationList(
   //#endregion
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     items,
     hasMore,

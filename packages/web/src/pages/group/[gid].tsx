@@ -36,6 +36,7 @@ import {
   TabSection,
   textEllipsis,
   useToast,
+  type ToastAPI,
 } from '@yiwen-ai/component'
 import {
   buildCollectionKey,
@@ -314,6 +315,7 @@ export default function GroupDetailPage() {
             </div>
           </SetHeaderProps>
           <GroupPart
+            pushToast={pushToast}
             groupInfo={groupInfo}
             groupStatistic={groupStatistic}
             hasGroupAdminPermission={hasGroupAdminPermission}
@@ -490,6 +492,7 @@ export default function GroupDetailPage() {
       {collectionViewerOpen && (
         <LargeDialog open={true} onClose={handleCollectionDialogClose}>
           <CollectionViewer
+            pushToast={pushToast}
             hasGroupAdminPermission={hasGroupAdminPermission}
             onCharge={() => {}}
             responsive={true}
@@ -521,6 +524,7 @@ export default function GroupDetailPage() {
 }
 
 function GroupPart({
+  pushToast,
   groupInfo,
   groupStatistic,
   hasGroupAdminPermission,
@@ -530,6 +534,7 @@ function GroupPart({
   onFollow,
   onUnfollow,
 }: {
+  pushToast: ToastAPI['pushToast']
   groupInfo: GroupInfo
   groupStatistic: GroupStatisticOutput
   hasGroupAdminPermission: boolean
@@ -541,7 +546,6 @@ function GroupPart({
 }) {
   const intl = useIntl()
   const theme = useTheme()
-  const { pushToast } = useToast()
   const {
     show: showEditGroupDialog,
     close: closeEditGroupDialog,
