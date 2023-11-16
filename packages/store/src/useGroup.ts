@@ -1,3 +1,4 @@
+import { omitBy } from 'lodash-es'
 import { useCallback, useMemo, useState } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
@@ -9,6 +10,7 @@ import {
   type GroupInfo,
   type Page,
   type Pagination,
+  type PostFilePolicy,
   type UserInfo,
 } from './common'
 import { useFetcher } from './useFetcher'
@@ -34,6 +36,13 @@ export interface Group {
   owner?: UserInfo
 }
 
+export interface GroupDraft {
+  name: string
+  logo: string
+  slogan?: string
+  __logo_name?: string
+}
+
 export interface GroupStatisticOutput {
   publications: number
   members: number
@@ -43,6 +52,14 @@ export interface QueryIdCn {
   id?: Uint8Array
   cn?: string
   fields?: string
+}
+
+export interface UpdateGroupInput {
+  id: Uint8Array
+  name?: string
+  logo?: string
+  slogan?: string
+  website?: string
 }
 
 const path = '/v1/group'
@@ -92,6 +109,27 @@ export function useGroupAPI() {
     [request]
   )
 
+  const updateGroupInfo = useCallback(
+    async (body: UpdateGroupInput) => {
+      const { result } = await request.patch<{ result: Group }>(
+        path,
+        omitBy(body, (val) => val == null)
+      )
+      return result
+    },
+    [request]
+  )
+
+  const readGroupLogoUploadPolicy = useCallback(
+    async (params: Record<keyof QueryIdCn, string | undefined>) => {
+      return request.get<{ result: PostFilePolicy }>(
+        `${path}/upload_logo`,
+        params
+      )
+    },
+    [request]
+  )
+
   return {
     readGroupInfo,
     readGroupStatistic,
@@ -99,6 +137,8 @@ export function useGroupAPI() {
     readFollowedGroupList,
     followGroup,
     unfollowGroup,
+    updateGroupInfo,
+    readGroupLogoUploadPolicy,
   } as const
 }
 
@@ -158,9 +198,9 @@ export function useGroup(_gid: string | null | undefined) {
     _role === RoleLevel.MEMBER ||
     _role === RoleLevel.ADMIN ||
     _role === RoleLevel.OWNER
-  const hasGroupWritePermission =
+  const hasGroupAdminPermission =
     _role === RoleLevel.ADMIN || _role === RoleLevel.OWNER
-  const hasGroupAddCreationPermission =
+  const hasGroupMemberPermission =
     _role === RoleLevel.MEMBER ||
     _role === RoleLevel.ADMIN ||
     _role === RoleLevel.OWNER
@@ -200,8 +240,8 @@ export function useGroup(_gid: string | null | undefined) {
     groupInfo: groupInfo?.result,
     groupStatistic: groupStatistic?.result,
     hasGroupReadPermission,
-    hasGroupWritePermission,
-    hasGroupAddCreationPermission,
+    hasGroupAdminPermission,
+    hasGroupMemberPermission,
     refreshGroupInfo,
     refreshGroupStatistic,
     isFollowed,

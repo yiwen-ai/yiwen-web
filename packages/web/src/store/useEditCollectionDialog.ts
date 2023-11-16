@@ -171,7 +171,7 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
           uploadFromBlobURL(
             uploadPolicy,
             draft.cover,
-            draft._cover_name as string
+            draft.__cover_name as string
           )
         )
 

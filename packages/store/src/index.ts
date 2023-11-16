@@ -84,7 +84,9 @@ export {
   useGroupAPI,
   useMyGroupList,
   type Group,
+  type GroupDraft,
   type GroupStatisticOutput,
+  type UpdateGroupInput,
 } from './useGroup'
 export {
   isRTL,

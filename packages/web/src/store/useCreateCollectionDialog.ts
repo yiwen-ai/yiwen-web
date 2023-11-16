@@ -4,6 +4,7 @@ import {
   toMessage,
   useAuth,
   useCollectionAPI,
+  useCollectionList,
   useUploadAPI,
   type CollectionDraft,
   type CreateCollectionInput,
@@ -50,6 +51,11 @@ export function useCreateCollectionDialog(
     creation_price: 0,
   }))
 
+  const { refresh: refreshCollectionList } = useCollectionList(
+    open ? _gid : null,
+    undefined
+  )
+
   const navigateTo = useCallback(
     (gid: Uint8Array, cid: Uint8Array) => {
       navigate({
@@ -73,7 +79,7 @@ export function useCreateCollectionDialog(
         ...draft,
       } as CreateCollectionInput
       delete input.cover
-      delete input._cover_name
+      delete input.__cover_name
 
       const result = await createCollection(input)
       if (isBlobURL(draft.cover)) {
@@ -88,7 +94,7 @@ export function useCreateCollectionDialog(
           uploadFromBlobURL(
             uploadPolicy,
             draft.cover,
-            draft._cover_name as string
+            draft.__cover_name as string
           )
         )
         const res = await updateCollection({
@@ -102,6 +108,7 @@ export function useCreateCollectionDialog(
         result.updated_at = res.updated_at as number
       }
 
+      refreshCollectionList()
       close()
       pushToast({
         type: 'success',
@@ -128,6 +135,7 @@ export function useCreateCollectionDialog(
     createCollection,
     updateCollection,
     readCollectionUploadPolicy,
+    refreshCollectionList,
     uploadFromBlobURL,
   ])
   //#endregion

@@ -11,6 +11,7 @@ import CreateCollectionDialog from '#/components/CreateCollectionDialog'
 import CreationCompactItem from '#/components/CreationCompactItem'
 import CreationItem from '#/components/CreationItem'
 import CreationViewer from '#/components/CreationViewer'
+import EditGroupDialog from '#/components/EditGroupDialog'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import LargeDialog from '#/components/LargeDialog'
 import { LoadMore } from '#/components/LoadMore'
@@ -21,6 +22,7 @@ import PublicationCompactItem from '#/components/PublicationCompactItem'
 import PublicationItem from '#/components/PublicationItem'
 import PublicationViewer from '#/components/PublicationViewer'
 import { BREAKPOINT, MAX_WIDTH } from '#/shared'
+import { useEditGroupDialog } from '#/store/useEditGroupDialog'
 import { GroupViewType, useGroupDetailPage } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
@@ -81,8 +83,8 @@ export default function GroupDetailPage() {
     groupInfo,
     groupStatistic,
     hasGroupReadPermission,
-    hasGroupWritePermission,
-    hasGroupAddCreationPermission,
+    hasGroupAdminPermission,
+    hasGroupMemberPermission,
     isGroupFollowed,
     isFollowingGroup,
     isUnfollowingGroup,
@@ -282,7 +284,7 @@ export default function GroupDetailPage() {
             >
               <Link
                 to={
-                  hasGroupAddCreationPermission
+                  hasGroupMemberPermission
                     ? joinURLPath(NEW_CREATION_PATH, { gid: _gid })
                     : joinURLPath(NEW_CREATION_PATH, { gid: undefined })
                 }
@@ -314,6 +316,7 @@ export default function GroupDetailPage() {
           <GroupPart
             groupInfo={groupInfo}
             groupStatistic={groupStatistic}
+            hasGroupAdminPermission={hasGroupAdminPermission}
             isFollowed={isGroupFollowed}
             isFollowing={isFollowingGroup}
             isUnfollowing={isUnfollowingGroup}
@@ -374,7 +377,7 @@ export default function GroupDetailPage() {
                         }
                       `}
                     >
-                      {hasGroupWritePermission &&
+                      {hasGroupAdminPermission &&
                         _type == GroupViewType.Collection && (
                           <>
                             <Button
@@ -487,6 +490,7 @@ export default function GroupDetailPage() {
       {collectionViewerOpen && (
         <LargeDialog open={true} onClose={handleCollectionDialogClose}>
           <CollectionViewer
+            hasGroupAdminPermission={hasGroupAdminPermission}
             onCharge={() => {}}
             responsive={true}
             onClose={handleCollectionDialogClose}
@@ -519,6 +523,7 @@ export default function GroupDetailPage() {
 function GroupPart({
   groupInfo,
   groupStatistic,
+  hasGroupAdminPermission,
   isFollowed,
   isFollowing,
   isUnfollowing,
@@ -527,6 +532,7 @@ function GroupPart({
 }: {
   groupInfo: GroupInfo
   groupStatistic: GroupStatisticOutput
+  hasGroupAdminPermission: boolean
   isFollowed: boolean
   isFollowing: boolean
   isUnfollowing: boolean
@@ -535,10 +541,15 @@ function GroupPart({
 }) {
   const intl = useIntl()
   const theme = useTheme()
-
-  // TODO
-  // const handleDelete = useCallback(() => {
-  // }, [])
+  const { pushToast } = useToast()
+  const {
+    show: showEditGroupDialog,
+    close: closeEditGroupDialog,
+    ...editGroup
+  } = useEditGroupDialog(pushToast)
+  const handleEditGroupClick = useCallback(() => {
+    showEditGroupDialog(groupInfo.id)
+  }, [showEditGroupDialog, groupInfo])
 
   return (
     <div
@@ -619,15 +630,18 @@ function GroupPart({
             gap: 24px;
           `}
         >
-          <Button
-            color='primary'
-            variant='outlined'
-            css={css`
-              display: none;
-            `}
-          >
-            {intl.formatMessage({ defaultMessage: '编辑简介' })}
-          </Button>
+          {hasGroupAdminPermission && (
+            <>
+              <Button
+                color='primary'
+                variant='outlined'
+                onClick={handleEditGroupClick}
+              >
+                {intl.formatMessage({ defaultMessage: '设置' })}
+              </Button>
+              <EditGroupDialog {...editGroup} />
+            </>
+          )}
           <Button
             color='primary'
             variant='outlined'
@@ -652,14 +666,14 @@ function GroupPart({
   )
 }
 
-// hasGroupWritePermission, isEditing, onPublish
+// hasGroupAdminPermission, isEditing, onPublish
 function CollectionPart({
   isLoading,
   error,
   items,
   hasMore,
   loadMore,
-  hasGroupWritePermission,
+  hasGroupAdminPermission,
   isPublishing,
   isEditing,
   isArchiving,
@@ -673,7 +687,7 @@ function CollectionPart({
   items: CollectionOutput[]
   hasMore: boolean
   loadMore: () => void
-  hasGroupWritePermission: boolean
+  hasGroupAdminPermission: boolean
   isPublishing: (item: CollectionOutput) => boolean
   isEditing: (item: CollectionOutput) => boolean
   isArchiving: (item: CollectionOutput) => boolean
@@ -682,12 +696,6 @@ function CollectionPart({
   onPublish: (item: CollectionOutput) => void
   onClick: (item: CollectionOutput) => void
 }) {
-  console.log(
-    'CollectionPart',
-    items.map((item) => {
-      return [item.status, item.info?.title]
-    })
-  )
   return (
     <div
       css={css`
@@ -706,7 +714,7 @@ function CollectionPart({
             <CollectionItem
               key={buildCollectionKey(item.gid, item.id)}
               item={item}
-              hasWritePermission={hasGroupWritePermission}
+              hasWritePermission={hasGroupAdminPermission}
               isPublishing={isPublishing(item)}
               isEditing={isEditing(item)}
               isArchiving={isArchiving(item)}
@@ -733,7 +741,7 @@ function ArchivedCollectionPart({
   items,
   hasMore,
   loadMore,
-  hasGroupWritePermission,
+  hasGroupAdminPermission,
   isRestoring,
   isDeleting,
   onRestore,
@@ -744,7 +752,7 @@ function ArchivedCollectionPart({
   items: CollectionOutput[]
   hasMore: boolean
   loadMore: () => void
-  hasGroupWritePermission: boolean
+  hasGroupAdminPermission: boolean
   isRestoring: (item: CollectionOutput) => boolean
   isDeleting: (item: CollectionOutput) => boolean
   onRestore: (item: CollectionOutput) => void
@@ -772,7 +780,7 @@ function ArchivedCollectionPart({
             <CollectionCompactItem
               key={buildCollectionKey(item.gid, item.id)}
               item={item}
-              hasWritePermission={hasGroupWritePermission}
+              hasWritePermission={hasGroupAdminPermission}
               isRestoring={isRestoring(item)}
               isDeleting={isDeleting(item)}
               onRestore={onRestore}
@@ -799,7 +807,7 @@ function PublicationPart({
   items,
   hasMore,
   loadMore,
-  hasGroupWritePermission,
+  hasGroupAdminPermission,
   isPublishing,
   isEditing,
   isArchiving,
@@ -813,7 +821,7 @@ function PublicationPart({
   items: PublicationOutput[]
   hasMore: boolean
   loadMore: () => void
-  hasGroupWritePermission: boolean
+  hasGroupAdminPermission: boolean
   isPublishing: (item: PublicationOutput) => boolean
   isEditing: (item: PublicationOutput) => boolean
   isArchiving: (item: PublicationOutput) => boolean
@@ -840,7 +848,7 @@ function PublicationPart({
             <PublicationItem
               key={buildPublicationKey(item)}
               item={item}
-              hasWritePermission={hasGroupWritePermission}
+              hasWritePermission={hasGroupAdminPermission}
               isPublishing={isPublishing(item)}
               isEditing={isEditing(item)}
               isArchiving={isArchiving(item)}
@@ -867,7 +875,7 @@ function ArchivedPublicationPart({
   items,
   hasMore,
   loadMore,
-  hasGroupWritePermission,
+  hasGroupAdminPermission,
   isRestoring,
   isDeleting,
   onRestore,
@@ -878,7 +886,7 @@ function ArchivedPublicationPart({
   items: PublicationOutput[]
   hasMore: boolean
   loadMore: () => void
-  hasGroupWritePermission: boolean
+  hasGroupAdminPermission: boolean
   isRestoring: (item: PublicationOutput) => boolean
   isDeleting: (item: PublicationOutput) => boolean
   onRestore: (item: PublicationOutput) => void
@@ -906,7 +914,7 @@ function ArchivedPublicationPart({
             <PublicationCompactItem
               key={buildPublicationKey(item)}
               item={item}
-              hasWritePermission={hasGroupWritePermission}
+              hasWritePermission={hasGroupAdminPermission}
               isRestoring={isRestoring(item)}
               isDeleting={isDeleting(item)}
               onRestore={onRestore}
@@ -933,7 +941,7 @@ function CreationPart({
   items,
   hasMore,
   loadMore,
-  hasGroupWritePermission,
+  hasGroupAdminPermission,
   isEditing,
   isReleasing,
   isArchiving,
@@ -947,7 +955,7 @@ function CreationPart({
   items: CreationOutput[]
   hasMore: boolean
   loadMore: () => void
-  hasGroupWritePermission: boolean
+  hasGroupAdminPermission: boolean
   isEditing: (item: CreationOutput) => boolean
   isReleasing: (item: CreationOutput) => boolean
   isArchiving: (item: CreationOutput) => boolean
@@ -974,7 +982,7 @@ function CreationPart({
             <CreationItem
               key={buildCreationKey(item)}
               item={item}
-              hasWritePermission={hasGroupWritePermission}
+              hasWritePermission={hasGroupAdminPermission}
               isEditing={isEditing(item)}
               isReleasing={isReleasing(item)}
               isArchiving={isArchiving(item)}
@@ -1001,7 +1009,7 @@ function ArchivedCreationPart({
   items,
   hasMore,
   loadMore,
-  hasGroupWritePermission,
+  hasGroupAdminPermission,
   isRestoring,
   isDeleting,
   onRestore,
@@ -1012,7 +1020,7 @@ function ArchivedCreationPart({
   items: CreationOutput[]
   hasMore: boolean
   loadMore: () => void
-  hasGroupWritePermission: boolean
+  hasGroupAdminPermission: boolean
   isRestoring: (item: CreationOutput) => boolean
   isDeleting: (item: CreationOutput) => boolean
   onRestore: (item: CreationOutput) => void
@@ -1040,7 +1048,7 @@ function ArchivedCreationPart({
             <CreationCompactItem
               key={buildCreationKey(item)}
               item={item}
-              hasWritePermission={hasGroupWritePermission}
+              hasWritePermission={hasGroupAdminPermission}
               isRestoring={isRestoring(item)}
               isDeleting={isDeleting(item)}
               onRestore={onRestore}

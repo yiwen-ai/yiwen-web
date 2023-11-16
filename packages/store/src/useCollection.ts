@@ -39,7 +39,7 @@ export interface CollectionDraft {
   price: number
   creation_price: number
   cover?: string
-  _cover_name?: string
+  __cover_name?: string
 }
 
 export interface CreateCollectionInput extends CollectionDraft {
@@ -616,7 +616,6 @@ export function useCollectionList(
               if (isSameCollection(item.id, result.id)) {
                 item.status = result.status
                 item.updated_at = result.updated_at as number
-                console.log('update cache', item)
               }
               return item
             }),

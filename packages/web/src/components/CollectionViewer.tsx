@@ -47,6 +47,7 @@ export interface CollectionViewerProps extends HTMLAttributes<HTMLDivElement> {
   responsive: boolean
   isLoading: boolean
   isChildrenLoading: boolean
+  hasGroupAdminPermission?: boolean
   error: unknown
   collection: CollectionOutput | undefined
   childrenItems: CollectionChildrenOutput[] | undefined
@@ -74,6 +75,7 @@ export default function CollectionViewer({
   responsive,
   isLoading,
   isChildrenLoading,
+  hasGroupAdminPermission,
   error,
   collection,
   childrenItems,

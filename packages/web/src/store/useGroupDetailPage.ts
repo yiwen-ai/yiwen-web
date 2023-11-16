@@ -63,8 +63,8 @@ export function useGroupDetailPage(
     groupInfo,
     groupStatistic,
     hasGroupReadPermission,
-    hasGroupWritePermission,
-    hasGroupAddCreationPermission,
+    hasGroupAdminPermission,
+    hasGroupMemberPermission,
     refreshGroupInfo,
     refreshGroupStatistic,
     isFollowed: isGroupFollowed,
@@ -249,7 +249,10 @@ export function useGroupDetailPage(
     publishItem: publishCollection,
     refresh: refreshArchivedCollectionList,
     ...archivedCollectionList
-  } = useCollectionList(_gid, CollectionStatus.Archived)
+  } = useCollectionList(
+    hasGroupAdminPermission ? _gid : null,
+    CollectionStatus.Archived
+  )
 
   const {
     publishItem: publishPublication,
@@ -263,21 +266,27 @@ export function useGroupDetailPage(
     deleteItem: deletePublication,
     refresh: refreshArchivedPublicationList,
     ...archivedPublicationList
-  } = usePublicationList(_gid, PublicationStatus.Archived)
+  } = usePublicationList(
+    hasGroupAdminPermission ? _gid : null,
+    PublicationStatus.Archived
+  )
 
   const {
     releaseItem: releaseCreation,
     archiveItem: archiveCreation,
     refresh: refreshCreationList,
     ...creationList
-  } = useCreationList(_gid, undefined)
+  } = useCreationList(hasGroupReadPermission ? _gid : null, undefined)
 
   const {
     restoreItem: restoreCreation,
     deleteItem: deleteCreation,
     refresh: refreshArchivedCreationList,
     ...archivedCreationList
-  } = useCreationList(_gid, CreationStatus.Archived)
+  } = useCreationList(
+    hasGroupAdminPermission ? _gid : null,
+    CreationStatus.Archived
+  )
 
   const groupInfoLoaded = !!groupInfo
 
@@ -705,8 +714,8 @@ export function useGroupDetailPage(
     groupInfo,
     groupStatistic,
     hasGroupReadPermission,
-    hasGroupWritePermission,
-    hasGroupAddCreationPermission,
+    hasGroupAdminPermission,
+    hasGroupMemberPermission,
     isGroupFollowed,
     isFollowingGroup,
     isUnfollowingGroup,
@@ -722,12 +731,12 @@ export function useGroupDetailPage(
         onClose: closeEditCollectionDialog,
         ...editCollection,
       },
-      hasGroupWritePermission,
+      hasGroupAdminPermission,
       isEditing: collectionList.isRestoring,
       ...collectionList,
     },
     archivedCollectionList: {
-      hasGroupWritePermission,
+      hasGroupAdminPermission,
       ...archivedCollectionList,
     },
     onCollectionArchive,
@@ -742,12 +751,12 @@ export function useGroupDetailPage(
       onSwitch: handlePublicationSwitch,
     },
     publicationList: {
-      hasGroupWritePermission,
+      hasGroupAdminPermission,
       isEditing: publicationList.isRestoring,
       ...publicationList,
     },
     archivedPublicationList: {
-      hasGroupWritePermission,
+      hasGroupAdminPermission,
       ...archivedPublicationList,
     },
     onPublicationPublish,
@@ -758,12 +767,12 @@ export function useGroupDetailPage(
     onArchivedPublicationDialogShow,
     creationViewer,
     creationList: {
-      hasGroupWritePermission,
+      hasGroupAdminPermission,
       isEditing: creationList.isRestoring,
       ...creationList,
     },
     archivedCreationList: {
-      hasGroupWritePermission,
+      hasGroupAdminPermission,
       ...archivedCreationList,
     },
     onCreationRelease,

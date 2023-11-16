@@ -97,7 +97,6 @@ export default function CreateCollectionDialog({
         setDraft({ ...draft, price })
       }
 
-      ev.currentTarget['creation_price'].reportValidity()
       const creation_price = Number(
         (ev.currentTarget['creation_price'] as unknown as HTMLFormElement)[
           'value'
@@ -117,13 +116,16 @@ export default function CreateCollectionDialog({
   const handleCoverInputChange = useCallback(
     (ev: React.ChangeEvent<HTMLInputElement>) => {
       const file = ev.currentTarget.files?.[0]
-      if (!file || !file.type) return false
+      if (!file || !file.name) return false
       ev.preventDefault()
       ev.stopPropagation()
+      const arr = file.name.split('.')
+      const filename =
+        arr.length > 1 ? `${Date.now()}.${arr.pop()?.toLowerCase()}` : file.name
       setDraft({
         ...draft,
         cover: URL.createObjectURL(file),
-        _cover_name: file.name,
+        __cover_name: filename,
       })
       setDisabled(false)
       return true
