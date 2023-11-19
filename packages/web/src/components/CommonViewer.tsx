@@ -22,6 +22,8 @@ export default function CommonViewer({
   type,
   item,
   isNarrow,
+  gid,
+  parent,
   prevItem,
   nextItem,
   ...props
@@ -29,6 +31,8 @@ export default function CommonViewer({
   type: GroupViewType
   item: CreationOutput | PublicationOutput | undefined
   isNarrow: boolean
+  gid?: string | null | undefined
+  parent?: string | null | undefined
   prevItem?: CollectionChildrenOutput | null | undefined
   nextItem?: CollectionChildrenOutput | null | undefined
 }) {
@@ -153,13 +157,41 @@ export default function CommonViewer({
                 color='secondary'
                 variant='outlined'
                 size={isNarrow ? 'small' : 'large'}
-                onClick={() => {}}
               >
                 <Icon
                   name='arrow-up-s-line'
                   size={isNarrow ? 'small' : 'medium'}
                 />
                 <span>{intl.formatMessage({ defaultMessage: '上一篇' })}</span>
+              </Button>
+            </Link>
+          )}
+          {gid && parent && isNarrow && (
+            <Link
+              reloadDocument={false}
+              unstable_viewTransition={true}
+              key={parent}
+              to={{
+                pathname: generatePath(GROUP_DETAIL_PATH, {
+                  gid,
+                  type: GroupViewType.Collection,
+                }),
+                search: new URLSearchParams({
+                  cid: parent,
+                }).toString(),
+              }}
+              css={css`
+                display: block;
+              `}
+            >
+              <Button
+                title={intl.formatMessage({ defaultMessage: '目录' })}
+                color='secondary'
+                variant='outlined'
+                size={'small'}
+              >
+                <Icon name='menu-line' size={'small'} />
+                <span>{intl.formatMessage({ defaultMessage: '目录' })}</span>
               </Button>
             </Link>
           )}
@@ -197,7 +229,6 @@ export default function CommonViewer({
                 color='secondary'
                 variant='outlined'
                 size={isNarrow ? 'small' : 'large'}
-                onClick={() => {}}
               >
                 <Icon
                   name='arrow-down-s-line'

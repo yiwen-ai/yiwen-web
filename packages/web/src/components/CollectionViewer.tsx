@@ -30,6 +30,7 @@ import {
   isRTL,
   type CollectionChildrenOutput,
   type CollectionOutput,
+  type QueryPaymentCode,
   type UILanguageItem,
 } from '@yiwen-ai/store'
 import { preventDefaultStopPropagation } from '@yiwen-ai/util'
@@ -56,6 +57,7 @@ import { Xid } from 'xid-ts'
 import ChargeDialog, { type ChargeDialogProps } from './ChargeDialog'
 import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
+import PaymentConfirmDialog from './PaymentConfirmDialog'
 
 export interface CollectionViewerProps extends HTMLAttributes<HTMLDivElement> {
   pushToast: ToastAPI['pushToast']
@@ -68,6 +70,7 @@ export interface CollectionViewerProps extends HTMLAttributes<HTMLDivElement> {
   originalLanguage: UILanguageItem | undefined
   translatedLanguageList: UILanguageItem[] | undefined
   pendingLanguageList: UILanguageItem[] | undefined
+  refreshCollection: () => void
   onCharge: () => void
   onSwitch: (language: UILanguageItem) => void
   shareLink: string | undefined
@@ -92,6 +95,7 @@ export default function CollectionViewer({
   originalLanguage,
   translatedLanguageList: _translatedLanguageList,
   pendingLanguageList: _pendingLanguageList,
+  refreshCollection,
   onCharge,
   onSwitch,
   shareLink,
@@ -390,6 +394,8 @@ export default function CollectionViewer({
             <CollectionDetail
               pushToast={pushToast}
               collection={collection}
+              refreshCollection={refreshCollection}
+              onCharge={onCharge}
               hasGroupAdminPermission={hasGroupAdminPermission || false}
               isNarrow={isNarrow}
             ></CollectionDetail>
@@ -404,11 +410,15 @@ export default function CollectionViewer({
 function CollectionDetail({
   pushToast,
   collection,
+  refreshCollection,
+  onCharge,
   hasGroupAdminPermission,
   isNarrow,
 }: {
   pushToast: ToastAPI['pushToast']
   collection: CollectionOutput
+  refreshCollection: () => void
+  onCharge: () => void
   hasGroupAdminPermission: boolean
   isNarrow: boolean
 }) {
@@ -428,6 +438,29 @@ function CollectionDetail({
     setIsEditing(!isEditing)
     switchFullScreen(!isEditing)
   }, [isEditing, setIsEditing, switchFullScreen])
+
+  const [payFor, setPayFor] = useState<Record<
+    keyof QueryPaymentCode,
+    string
+  > | null>(null)
+  const [paymentDisabled, setPaymentDisabled] = useState(false)
+
+  const handlePaymentClose = useCallback(() => {
+    setPayFor(null)
+  }, [setPayFor])
+
+  const handlePayForCollection = useCallback(() => {
+    if (!collection || !collection?.rfp?.collection) return
+    setPayFor({
+      gid: Xid.fromValue(collection.gid).toString(),
+      cid: Xid.fromValue(collection.id).toString(),
+      kind: '2', // pay for collection
+    })
+  }, [collection, setPayFor])
+
+  const handleCheckSubscription = useCallback(() => {
+    refreshCollection()
+  }, [refreshCollection])
 
   return (
     info && (
@@ -490,7 +523,7 @@ function CollectionDetail({
             <div
               dir={dir}
               css={css`
-                ${theme.typography.h0}
+                ${theme.typography.h2}
               `}
             >
               {info.title}
@@ -517,50 +550,66 @@ function CollectionDetail({
               </Link>
             )}
             {(collection.rfp || collection.subscription) && (
-              <Button
-                color={collection.rfp ? 'primary' : 'secondary'}
-                variant='contained'
-                disabled={!collection.rfp}
-                onClick={() => {}}
-                css={css`
-                  :disabled {
-                    border-color: ${theme.color.alert.success.border};
-                    background-color: ${theme.color.alert.success.border};
-                    color: white;
-                  }
-                `}
-              >
-                {collection.rfp && collection.rfp.collection > 0 && (
-                  <>
-                    <span>
-                      {intl.formatMessage({ defaultMessage: '付费阅读' })}
-                    </span>
-                    <Icon name='coin' size='small' />
-                    <span
-                      css={css`
-                        margin-left: -8px;
-                      `}
-                    >
-                      {collection.rfp.collection}
-                    </span>
-                  </>
-                )}
-                {collection.subscription &&
-                  collection.subscription.expire_at > 0 && (
+              <>
+                <Button
+                  color={collection.rfp ? 'primary' : 'secondary'}
+                  variant='contained'
+                  disabled={!collection.rfp}
+                  size={isNarrow ? 'small' : 'medium'}
+                  onClick={handlePayForCollection}
+                  css={css`
+                    width: fit-content;
+                    :disabled {
+                      border-color: ${theme.color.alert.success.border};
+                      background-color: ${theme.color.alert.success.border};
+                      color: white;
+                    }
+                  `}
+                >
+                  {collection.rfp?.collection && (
                     <>
                       <span>
-                        {intl.formatMessage({
-                          defaultMessage: '已付费，有效期至',
-                        })}
+                        {intl.formatMessage({ defaultMessage: '付费阅读' })}
                       </span>
                       <span>
-                        {new Date(
-                          collection.subscription.expire_at * 1000
-                        ).toLocaleDateString()}
+                        {intl.formatMessage(
+                          { defaultMessage: '{amount} 文' },
+                          { amount: collection.rfp.collection.price }
+                        )}
                       </span>
                     </>
                   )}
-              </Button>
+                  {collection.subscription &&
+                    collection.subscription.expire_at > 0 && (
+                      <>
+                        <span>
+                          {intl.formatMessage({
+                            defaultMessage: '已付费',
+                          })}
+                        </span>
+                        <span>
+                          {intl.formatMessage({
+                            defaultMessage: '有效期至',
+                          }) +
+                            new Date(
+                              collection.subscription.expire_at * 1000
+                            ).toLocaleDateString()}
+                        </span>
+                      </>
+                    )}
+                </Button>
+                {collection.rfp?.collection && (
+                  <PaymentConfirmDialog
+                    pushToast={pushToast}
+                    onClose={handlePaymentClose}
+                    disabled={paymentDisabled}
+                    setDisabled={setPaymentDisabled}
+                    payFor={payFor}
+                    onCharge={onCharge}
+                    checkSubscription={handleCheckSubscription}
+                  />
+                )}
+              </>
             )}
             {hasGroupAdminPermission && !isNarrow && (
               <>
@@ -751,6 +800,7 @@ function CollectionChildren({
           padding: 0 16px;
           border-radius: 8px;
           width: calc(100% - 16px * 2);
+          line-height: 48px;
         }
         ${isEditing &&
         css`

@@ -65,7 +65,12 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   })
 
   //#region fetch
-  const { isLoading, error, publication } = usePublication(
+  const {
+    isLoading,
+    error,
+    publication,
+    refresh: refreshPublication,
+  } = usePublication(
     params._gid,
     params._cid,
     params._language,
@@ -423,6 +428,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   //#endregion
 
   return {
+    pushToast,
     translateConfirmDialog: {
       onClose: closeTranslateConfirmDialog,
       ...translateConfirmDialog,
@@ -447,6 +453,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     show,
     close,
     refresh,
+    refreshPublication,
     currentLanguage,
     originalLanguage,
     translatedLanguageList,

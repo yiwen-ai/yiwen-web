@@ -242,7 +242,7 @@ export function useCollectionViewer(pushToast: ToastAPI['pushToast']) {
   return {
     chargeDialog: {
       onClose: closeChargeDialog,
-      onCharge: () => {},
+      onCharge,
       ...chargeDialog,
     },
     isLoading,
@@ -252,6 +252,7 @@ export function useCollectionViewer(pushToast: ToastAPI['pushToast']) {
     show,
     close,
     refresh,
+    refreshCollection,
     currentLanguage,
     originalLanguage,
     translatedLanguageList,
@@ -259,6 +260,7 @@ export function useCollectionViewer(pushToast: ToastAPI['pushToast']) {
     shareLink,
     onShare,
     onSwitch,
+    onCharge: showChargeDialog,
     isFavorite,
     isAddingFavorite,
     isRemovingFavorite,

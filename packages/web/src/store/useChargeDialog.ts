@@ -2,6 +2,7 @@ import { type ToastAPI } from '@yiwen-ai/component'
 import {
   toMessage,
   useCurrencyList,
+  useMyWallet,
   useNewCharge,
   type Currency,
 } from '@yiwen-ai/store'
@@ -16,6 +17,8 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
   const show = useCallback(() => setOpen(true), [])
   const close = useCallback(() => setOpen(false), [])
   //#endregion
+
+  const { refresh } = useMyWallet()
 
   //#region Currency
   const {
@@ -83,6 +86,7 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
           type: 'success',
           message: intl.formatMessage({ defaultMessage: '充值完成' }),
         })
+        refresh()
         close()
       }
       return result
@@ -96,7 +100,7 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
       }
       return undefined
     }
-  }, [charge, chargeAmount, close, currentCurrency, intl, pushToast])
+  }, [refresh, charge, chargeAmount, close, currentCurrency, intl, pushToast])
   //#endregion
 
   return {

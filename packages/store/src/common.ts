@@ -99,10 +99,15 @@ export interface SubscriptionOutput {
   updated_at: number
 }
 
+export interface RFPInfo {
+  id: Uint8Array
+  price: number
+}
+
 // Request for Payment
 export interface RFP {
-  creation: number
-  collection: number
+  creation?: RFPInfo
+  collection?: RFPInfo
 }
 
 export interface PostFilePolicy {

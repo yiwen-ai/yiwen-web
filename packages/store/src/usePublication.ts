@@ -14,6 +14,8 @@ import {
   type Page,
   type Pagination,
   type PostFilePolicy,
+  type RFP,
+  type SubscriptionOutput,
   type UserInfo,
 } from './common'
 import { useFetcher } from './useFetcher'
@@ -49,6 +51,8 @@ export interface PublicationOutput {
   license?: string
   creator_info?: UserInfo
   group_info?: GroupInfo
+  subscription?: SubscriptionOutput
+  rfp?: RFP
 }
 
 export interface QueryPublication {
@@ -57,6 +61,8 @@ export interface QueryPublication {
   language: string
   version: number
   fields: string
+  // parent?: Uint8Array
+  // subtoken?: string
 }
 
 export interface CreatePublicationInput {

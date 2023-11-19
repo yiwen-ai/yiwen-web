@@ -494,7 +494,6 @@ export default function GroupDetailPage() {
           <CollectionViewer
             pushToast={pushToast}
             hasGroupAdminPermission={hasGroupAdminPermission}
-            onCharge={() => {}}
             responsive={true}
             onClose={handleCollectionDialogClose}
             {...collectionViewer}

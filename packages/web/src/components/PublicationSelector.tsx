@@ -237,7 +237,7 @@ export default function PublicationSelector({
               variant='contained'
               disabled={disabled || isSaving}
             >
-              {intl.formatMessage({ defaultMessage: '提交' })}
+              {intl.formatMessage({ defaultMessage: '保存' })}
             </Button>
           </div>
         </Form>

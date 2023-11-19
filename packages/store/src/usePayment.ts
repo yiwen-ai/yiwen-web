@@ -32,8 +32,8 @@ export function usePaymentAPI() {
   const request = useFetcher()
 
   const getPaymentCode = useCallback(
-    (params: Record<keyof QueryPaymentCode, string | undefined>) => {
-      return request.get<{ result: PaymentCodeOutput }>(`${path}`, params)
+    (params: Record<keyof QueryPaymentCode, string>) => {
+      return request.get<{ result: PaymentCodeOutput[] }>(`${path}`, params)
     },
     [request]
   )

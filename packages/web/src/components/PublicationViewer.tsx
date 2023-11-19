@@ -16,6 +16,7 @@ import {
   Spinner,
   TextField,
   textEllipsis,
+  type ToastAPI,
 } from '@yiwen-ai/component'
 import {
   ObjectKind,
@@ -24,12 +25,15 @@ import {
   type CollectionChildrenOutput,
   type GPT_MODEL,
   type PublicationOutput,
+  type QueryPaymentCode,
   type UILanguageItem,
 } from '@yiwen-ai/store'
+import { RGBA } from '@yiwen-ai/util'
 import { escapeRegExp } from 'lodash-es'
 import {
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type HTMLAttributes,
@@ -42,12 +46,14 @@ import ChargeDialog, { type ChargeDialogProps } from './ChargeDialog'
 import CommonViewer from './CommonViewer'
 import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
+import PaymentConfirmDialog from './PaymentConfirmDialog'
 import TranslateConfirmDialog, {
   type TranslateConfirmDialogProps,
 } from './TranslateConfirmDialog'
 import TranslateDialog, { type TranslateDialogProps } from './TranslateDialog'
 
 export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
+  pushToast: ToastAPI['pushToast']
   responsive: boolean
   isLoading: boolean
   error: unknown
@@ -59,6 +65,7 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   collectionMenu: CollectionChildrenOutput[]
   hasMore: boolean
   isLoadingMore: boolean
+  refreshPublication: () => void
   loadMore: () => void
   onCharge: () => void
   onTranslate: (language: UILanguageItem, model: GPT_MODEL) => void
@@ -80,6 +87,7 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export default function PublicationViewer({
+  pushToast,
   responsive,
   isLoading,
   error,
@@ -91,6 +99,7 @@ export default function PublicationViewer({
   collectionMenu,
   hasMore,
   isLoadingMore,
+  refreshPublication,
   loadMore,
   onCharge,
   onTranslate,
@@ -116,10 +125,6 @@ export default function PublicationViewer({
   const isNarrow = responsive && width <= BREAKPOINT.small
   const [showMenu, setShowMenu] = useState(false)
 
-  useMemo(() => {
-    setShowMenu(collectionMenu.length > 0 && !isNarrow)
-  }, [isNarrow, collectionMenu.length])
-
   const [keyword, setKeyword] = useState('')
   const keywordRE = useMemo(
     () => new RegExp(escapeRegExp(keyword), 'i'),
@@ -132,6 +137,7 @@ export default function PublicationViewer({
     []
   )
 
+  const [prevCid, setPrevCid] = useState<string>('')
   const { _cid, _gid, dir } = useMemo(() => {
     if (!publication) return {}
     return {
@@ -140,6 +146,17 @@ export default function PublicationViewer({
       dir: isRTL(publication.language) ? 'rtl' : undefined,
     }
   }, [publication])
+
+  useEffect(() => {
+    if (isNarrow) {
+      if (_cid && prevCid != _cid) {
+        setPrevCid(_cid)
+        setShowMenu(false)
+      }
+    } else {
+      setShowMenu(collectionMenu.length > 0)
+    }
+  }, [isNarrow, _cid, prevCid, setPrevCid, setShowMenu, collectionMenu.length])
 
   const translatedLanguageList = useMemo(() => {
     return _translatedLanguageList?.filter((item) => {
@@ -178,11 +195,13 @@ export default function PublicationViewer({
     )
   }, [originalLanguage, currentLanguage, isProcessing, user])
 
-  const [prevItem, nextItem] = useMemo(() => {
+  const [parent, prevItem, nextItem] = useMemo(() => {
     if (_cid && collectionMenu.length > 0) {
+      const parent = collectionMenu[0]?.parent || null
       for (const [index, item] of collectionMenu.entries()) {
         if (Xid.fromValue(item.cid).toString() === _cid) {
           return [
+            parent && Xid.fromValue(parent).toString(),
             index > 0 ? collectionMenu[index - 1] : null,
             index < collectionMenu.length - 1
               ? collectionMenu[index + 1]
@@ -192,8 +211,44 @@ export default function PublicationViewer({
       }
     }
 
-    return [null, null]
+    return [null, null, null]
   }, [collectionMenu, _cid])
+
+  const handleShowMenu = useCallback(() => {
+    setShowMenu((v) => !v)
+  }, [setShowMenu])
+
+  const [payFor, setPayFor] = useState<Record<
+    keyof QueryPaymentCode,
+    string
+  > | null>(null)
+  const [paymentDisabled, setPaymentDisabled] = useState(false)
+
+  const handlePaymentClose = useCallback(() => {
+    setPayFor(null)
+  }, [setPayFor])
+
+  const handlePayForPublication = useCallback(() => {
+    if (!publication || !publication?.rfp?.creation) return
+    setPayFor({
+      gid: Xid.fromValue(publication.gid).toString(),
+      cid: Xid.fromValue(publication.cid).toString(),
+      kind: '0', // pay for creation
+    })
+  }, [publication, setPayFor])
+
+  const handlePayForCollection = useCallback(() => {
+    if (!publication || !publication?.rfp?.collection) return
+    setPayFor({
+      gid: Xid.fromValue(publication.gid).toString(),
+      cid: Xid.fromValue(publication?.rfp?.collection.id).toString(),
+      kind: '2', // pay for collection
+    })
+  }, [publication, setPayFor])
+
+  const handleCheckSubscription = useCallback(() => {
+    refreshPublication()
+  }, [refreshPublication])
 
   return (
     <div
@@ -242,7 +297,7 @@ export default function PublicationViewer({
                   color={showMenu ? 'primary' : 'secondary'}
                   variant='outlined'
                   size={isNarrow ? 'small' : 'large'}
-                  onClick={() => setShowMenu(!showMenu)}
+                  onClick={handleShowMenu}
                 >
                   <Icon
                     name={showMenu ? 'menu-unfold-line' : 'menu-fold-line'}
@@ -537,6 +592,8 @@ export default function PublicationViewer({
               type={GroupViewType.Publication}
               item={publication}
               isNarrow={isNarrow}
+              gid={_gid}
+              parent={parent}
               prevItem={prevItem}
               nextItem={nextItem}
             />
@@ -638,6 +695,109 @@ export default function PublicationViewer({
       />
       <TranslateDialog {...translateDialog} />
       <ChargeDialog {...chargeDialog} />
+      {publication?.rfp && (
+        <div
+          css={css`
+            position: fixed;
+            height: 140px;
+            width: 100%;
+            bottom: 0;
+            left: 0;
+            background-color: ${RGBA(theme.palette.white, 0.94)};
+            box-shadow: ${theme.effect.card};
+            :hover {
+              box-shadow: ${theme.effect.cardHover};
+            }
+          `}
+        >
+          <div
+            css={css`
+              width: 100%;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 24px 36px;
+              @media (max-width: ${BREAKPOINT.small}px) {
+                padding: 12px 24px;
+              }
+            `}
+          >
+            <p
+              css={css`
+                width: 100%;
+                color: ${theme.color.body.primary};
+                text-align: center;
+                ${theme.typography.bodyBold}
+              `}
+            >
+              {intl.formatMessage({
+                defaultMessage: '付费后即可阅读剩余 38% 的内容',
+              })}
+            </p>
+            <div
+              css={css`
+                display: flex;
+                flex-direction: row;
+                margin-top: 16px;
+                gap: 16px;
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+                align-items: center;
+              `}
+            >
+              {publication.rfp.collection && (
+                <Button
+                  color='primary'
+                  variant='contained'
+                  onClick={handlePayForCollection}
+                  css={css`
+                    width: fit-content;
+                  `}
+                >
+                  <span>
+                    {intl.formatMessage({ defaultMessage: '为合集付费' })}
+                  </span>
+                  <span>
+                    {intl.formatMessage(
+                      { defaultMessage: '{amount} 文' },
+                      { amount: publication.rfp.collection.price }
+                    )}
+                  </span>
+                </Button>
+              )}
+              {publication.rfp.creation && (
+                <Button
+                  color='secondary'
+                  variant='outlined'
+                  onClick={handlePayForPublication}
+                  css={css`
+                    width: fit-content;
+                  `}
+                >
+                  <span>
+                    {intl.formatMessage({ defaultMessage: '为作品付费' })}
+                  </span>
+                  <span>
+                    {intl.formatMessage(
+                      { defaultMessage: '{amount} 文' },
+                      { amount: publication.rfp.creation.price }
+                    )}
+                  </span>
+                </Button>
+              )}
+            </div>
+          </div>
+          <PaymentConfirmDialog
+            pushToast={pushToast}
+            onClose={handlePaymentClose}
+            disabled={paymentDisabled}
+            setDisabled={setPaymentDisabled}
+            payFor={payFor}
+            onCharge={onCharge}
+            checkSubscription={handleCheckSubscription}
+          />
+        </div>
+      )}
     </div>
   )
 }
