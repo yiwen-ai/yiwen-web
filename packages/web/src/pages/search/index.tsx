@@ -1,4 +1,5 @@
 import { NEW_CREATION_PATH, SetHeaderProps, ThemeContext } from '#/App'
+import CollectionViewer from '#/components/CollectionViewer'
 import CreateFromFileDialog from '#/components/CreateFromFileDialog'
 import CreateFromLinkDialog from '#/components/CreateFromLinkDialog'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
@@ -19,10 +20,7 @@ import {
   TextField,
   useToast,
 } from '@yiwen-ai/component'
-import {
-  buildPublicationKey,
-  useEnsureAuthorizedCallback,
-} from '@yiwen-ai/store'
+import { buildSearchKey, useEnsureAuthorizedCallback } from '@yiwen-ai/store'
 import { RGBA } from '@yiwen-ai/util'
 import { useCallback, useContext } from 'react'
 import { useIntl } from 'react-intl'
@@ -44,6 +42,11 @@ export default function SearchPage() {
     keyword,
     setKeyword,
     onView,
+    collectionViewer: {
+      open: collectionViewerOpen,
+      close: onCollectionViewerClose,
+      ...collectionViewer
+    },
     publicationViewer: {
       open: publicationViewerOpen,
       close: onPublicationViewerClose,
@@ -93,7 +96,12 @@ export default function SearchPage() {
             flex: 1;
             margin: 0 36px;
             display: flex;
+            align-items: center;
             justify-content: flex-end;
+            gap: 32px;
+            @media (max-width: ${BREAKPOINT.small}px) {
+              gap: 16px;
+            }
           `}
         >
           <Link to={NEW_CREATION_PATH} onClick={ensureAuthorized}>
@@ -140,10 +148,12 @@ export default function SearchPage() {
           css={css`
             flex: 1 100%;
             max-width: ${MAX_WIDTH}px;
+            width: ${MAX_WIDTH}px;
             display: flex;
             flex-direction: column;
             @media (max-width: ${BREAKPOINT.large}px) {
               max-width: 480px;
+              width: 100%;
             }
           `}
         >
@@ -161,7 +171,7 @@ export default function SearchPage() {
             >
               {data.hits.map((item) => (
                 <SearchItem
-                  key={buildPublicationKey(item)}
+                  key={buildSearchKey(item)}
                   item={item}
                   onClick={onView}
                 />
@@ -171,6 +181,7 @@ export default function SearchPage() {
         </div>
         <div
           css={css`
+            flex: 1;
             width: 100%;
             max-width: 360px;
             display: flex;
@@ -266,6 +277,16 @@ export default function SearchPage() {
             responsive={true}
             onClose={onPublicationViewerClose}
             {...publicationViewer}
+          />
+        </LargeDialog>
+      )}
+      {collectionViewerOpen && (
+        <LargeDialog open={true} onClose={onCollectionViewerClose}>
+          <CollectionViewer
+            pushToast={pushToast}
+            responsive={true}
+            onClose={onCollectionViewerClose}
+            {...collectionViewer}
           />
         </LargeDialog>
       )}

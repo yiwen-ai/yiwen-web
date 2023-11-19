@@ -102,10 +102,10 @@ export default function ChargeDialog({
               `}
             >
               {intl.formatMessage(
-                { defaultMessage: '1 {name} = {rate} 文' },
+                { defaultMessage: '1 {name} = {amount} 文' },
                 {
                   name: currentCurrency.name,
-                  rate: currencyFormatter(
+                  amount: currencyFormatter(
                     (1 * YIWEN_COIN_RATE) / currentCurrency.exchange_rate,
                     currentCurrency.decimals
                   ),
@@ -193,7 +193,10 @@ function Choice({
       `}
     >
       <span>
-        {intl.formatMessage({ defaultMessage: '{value} 文' }, { value })}
+        {intl.formatMessage(
+          { defaultMessage: '{amount} 文' },
+          { amount: value }
+        )}
       </span>
       <span
         css={(theme) => css`

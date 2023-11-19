@@ -8,6 +8,9 @@
   "+NljH7": {
     "defaultMessage": "请稍后重试"
   },
+  "+qLJ79": {
+    "defaultMessage": "为合集付费"
+  },
   "/Ul/o/": {
     "defaultMessage": "原文不存在"
   },
@@ -17,11 +20,23 @@
   "/oHshG": {
     "defaultMessage": "我的关注"
   },
+  "065e3a": {
+    "defaultMessage": "合集"
+  },
+  "09dHW+": {
+    "defaultMessage": "付费设置"
+  },
+  "0SDhwt": {
+    "defaultMessage": "输入群组名"
+  },
   "0YCes0": {
     "defaultMessage": "关注"
   },
   "0aAIbo": {
     "defaultMessage": "Yiwen AI"
+  },
+  "0cT8Hl": {
+    "defaultMessage": "添加内容"
   },
   "0fjz1L": {
     "defaultMessage": "已登录成功，请关闭此页面"
@@ -31,6 +46,9 @@
   },
   "0m1taa": {
     "defaultMessage": "退款"
+  },
+  "0slCn2": {
+    "defaultMessage": "群组设置"
   },
   "0uoQ8a": {
     "defaultMessage": "已投稿，在发布栏翻译"
@@ -47,9 +65,6 @@
   "1qoi3T": {
     "defaultMessage": "图片"
   },
-  "1tw6N7": {
-    "defaultMessage": "1 {name} = {rate} 文"
-  },
   "2Ieuj3": {
     "defaultMessage": "收款人"
   },
@@ -59,11 +74,11 @@
   "2MdY3g": {
     "defaultMessage": "对比原文"
   },
+  "30m31L": {
+    "defaultMessage": "进入管理模式"
+  },
   "32hDtj": {
     "defaultMessage": "距离下一个等级还需 {point} 分"
-  },
-  "3hBL3l": {
-    "defaultMessage": "{value} 文"
   },
   "47GdDb": {
     "defaultMessage": "关闭"
@@ -89,6 +104,9 @@
   "5kP9bk": {
     "defaultMessage": "修正"
   },
+  "5n2ZiP": {
+    "defaultMessage": "群内可见"
+  },
   "5xv1MA": {
     "defaultMessage": "分享失败"
   },
@@ -103,6 +121,9 @@
   },
   "70m0td": {
     "defaultMessage": "当前语言"
+  },
+  "84pd2a": {
+    "defaultMessage": "1 {name} = {amount} 文"
   },
   "8Dh6XH": {
     "defaultMessage": "提现"
@@ -119,6 +140,9 @@
   "9Ioii4": {
     "defaultMessage": "已恢复：{title}"
   },
+  "9i8dxz": {
+    "defaultMessage": "已付费"
+  },
   "9n8bNu": {
     "defaultMessage": "支付中"
   },
@@ -130,6 +154,12 @@
   },
   "B6j+TA": {
     "defaultMessage": "约 {value} {name}"
+  },
+  "C2I1m7": {
+    "defaultMessage": "赞赏"
+  },
+  "CD8c8b": {
+    "defaultMessage": "下一篇"
   },
   "CLqPBU": {
     "defaultMessage": "编辑"
@@ -155,8 +185,14 @@
   "EHkC32": {
     "defaultMessage": "使用 {provider} 登录"
   },
+  "EMoM3S": {
+    "defaultMessage": "付费后即可阅读剩余 38% 的内容"
+  },
   "ENWxyt": {
     "defaultMessage": "消费"
+  },
+  "EUzrNm": {
+    "defaultMessage": "{amount} 文"
   },
   "EtBE5C": {
     "defaultMessage": "翻译成 {language}"
@@ -166,6 +202,9 @@
   },
   "F8z/CD": {
     "defaultMessage": "Yiwen AI — 跨语言的知识网络"
+  },
+  "FRmGfD": {
+    "defaultMessage": "有效期至"
   },
   "FThwWd": {
     "defaultMessage": "发生错误，请稍后再试"
@@ -188,6 +227,9 @@
   "GoFUI2": {
     "defaultMessage": "书签"
   },
+  "Gru4sD": {
+    "defaultMessage": "退出管理模式"
+  },
   "HLQK6J": {
     "defaultMessage": "充值"
   },
@@ -206,8 +248,17 @@
   "IMlqQ+": {
     "defaultMessage": "GPT-4（质量高，适用于内容复杂、要求专业的翻译）"
   },
+  "IVCPkO": {
+    "defaultMessage": "支付完成"
+  },
   "IVRBji": {
     "defaultMessage": "已公开发布不可编辑，可在文稿栏更新"
+  },
+  "IcJKB9": {
+    "defaultMessage": "付费阅读"
+  },
+  "IiXojE": {
+    "defaultMessage": "合集设置"
   },
   "J6OmSY": {
     "defaultMessage": "选择 AI 模型"
@@ -220,9 +271,6 @@
   },
   "Lcuu+S": {
     "defaultMessage": "更新版本"
-  },
-  "Lu39ZE": {
-    "defaultMessage": "编辑简介"
   },
   "M7SXob": {
     "defaultMessage": "支付人"
@@ -281,6 +329,9 @@
   "TaaAgz": {
     "defaultMessage": "评审中"
   },
+  "UDRR6+": {
+    "defaultMessage": "输入群组口号"
+  },
   "Ud46We": {
     "defaultMessage": "访问的内容不存在"
   },
@@ -289,6 +340,9 @@
   },
   "V0Tu6G": {
     "defaultMessage": "支付成功"
+  },
+  "V6owMI": {
+    "defaultMessage": "将花费 {cost} 文，钱包余额 {balance} 文"
   },
   "V8czU2": {
     "defaultMessage": "LV2 以上会员可以使用 GPT-4 模型"
@@ -302,6 +356,12 @@
   "VzrSDH": {
     "defaultMessage": "出错了，请稍后再试"
   },
+  "W0JM72": {
+    "defaultMessage": "选择文章"
+  },
+  "WrTRyQ": {
+    "defaultMessage": "（分成）"
+  },
   "X8fPpI": {
     "defaultMessage": "已归档"
   },
@@ -310,6 +370,9 @@
   },
   "XI/sng": {
     "defaultMessage": "复制链接"
+  },
+  "XNpmSJ": {
+    "defaultMessage": "创建合集"
   },
   "Xhn2gT": {
     "defaultMessage": "请选择"
@@ -356,14 +419,23 @@
   "ap5e13": {
     "defaultMessage": "系统审核中"
   },
+  "az7RZG": {
+    "defaultMessage": "合集可用于组合书籍、小说、论文、相同主题文章等。"
+  },
   "b1H+Hx": {
     "defaultMessage": "已删除"
   },
   "b5l2vN": {
     "defaultMessage": "保存"
   },
+  "bOjxOK": {
+    "defaultMessage": "（收入）"
+  },
   "bc6368": {
     "defaultMessage": "声明："
+  },
+  "blrJqt": {
+    "defaultMessage": "合集中单篇内容的的亿文币价格，-1 为永久免费，0 为当前免费"
   },
   "bosFVa": {
     "defaultMessage": "请登录后再操作"
@@ -374,11 +446,26 @@
   "cDZ00w": {
     "defaultMessage": "查看"
   },
+  "d2xhPz": {
+    "defaultMessage": "GPT 提示上下文（可选）"
+  },
+  "dHBtWR": {
+    "defaultMessage": "选择合集"
+  },
   "dKMxz8": {
     "defaultMessage": "修订失败"
   },
   "e+VcOA": {
     "defaultMessage": "返回首页"
+  },
+  "eBjloU": {
+    "defaultMessage": "归属合集："
+  },
+  "eDwVsW": {
+    "defaultMessage": "已归档的合集"
+  },
+  "eQ8Jjg": {
+    "defaultMessage": "永久免费"
   },
   "er7lkB": {
     "defaultMessage": "金额"
@@ -394,6 +481,9 @@
   },
   "frqra4": {
     "defaultMessage": "转出记录"
+  },
+  "fs3016": {
+    "defaultMessage": "为作品付费"
   },
   "g6V3he": {
     "defaultMessage": "微信"
@@ -446,6 +536,9 @@
   "kXaBbd": {
     "defaultMessage": "关注成功"
   },
+  "kplaln": {
+    "defaultMessage": "目录"
+  },
   "ktD156": {
     "defaultMessage": "文稿"
   },
@@ -460,6 +553,9 @@
   },
   "lfgCg5": {
     "defaultMessage": "已删除：{title}"
+  },
+  "lmChay": {
+    "defaultMessage": "当前免费"
   },
   "lzgH40": {
     "defaultMessage": "Google"
@@ -479,14 +575,17 @@
   "oOQ1Wl": {
     "defaultMessage": "已发布审核中：{title}"
   },
-  "oZO9me": {
-    "defaultMessage": "关键词："
-  },
   "ofES7j": {
     "defaultMessage": "取消关注"
   },
-  "pEcVK/": {
-    "defaultMessage": "赞助"
+  "ohasSn": {
+    "defaultMessage": "向作者付费"
+  },
+  "p6tgtU": {
+    "defaultMessage": "合集的亿文币价格，-1 为永久免费，0 为当前免费"
+  },
+  "pV2t/S": {
+    "defaultMessage": "基本信息"
   },
   "pZUDXc": {
     "defaultMessage": "原创"
@@ -503,11 +602,20 @@
   "qkMpf9": {
     "defaultMessage": "归档"
   },
+  "qm0Lfq": {
+    "defaultMessage": "群管理员可见"
+  },
   "r0/TUu": {
     "defaultMessage": "确定"
   },
   "rGsu2l": {
     "defaultMessage": "亿文币"
+  },
+  "rusl8O": {
+    "defaultMessage": "输入合集名称"
+  },
+  "s+0toM": {
+    "defaultMessage": "已公开，外部可见"
   },
   "sRPg4f": {
     "defaultMessage": "创作内容"
@@ -530,6 +638,9 @@
   "uSeB4L": {
     "defaultMessage": "正在处理，请稍后"
   },
+  "udtnTl": {
+    "defaultMessage": "上一篇"
+  },
   "vCmahJ": {
     "defaultMessage": "无权限查看"
   },
@@ -548,11 +659,17 @@
   "wbtiQC": {
     "defaultMessage": "PayPal"
   },
+  "xE1H+X": {
+    "defaultMessage": "设置"
+  },
   "xNQwL+": {
     "defaultMessage": "已翻译"
   },
   "xNeD5U": {
     "defaultMessage": "已取消"
+  },
+  "yDh91k": {
+    "defaultMessage": "输入合集简介"
   },
   "yz5G/I": {
     "defaultMessage": "微信支付"

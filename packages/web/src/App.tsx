@@ -13,6 +13,7 @@ import {
   FetcherConfigProvider,
   authorized,
   useAuth,
+  useMyGroupList,
   type FetcherConfig,
 } from '@yiwen-ai/store'
 import {
@@ -49,10 +50,12 @@ import {
   RouterProvider,
   createBrowserRouter,
   createRoutesFromElements,
+  generatePath,
   useLocation,
   useNavigate,
 } from 'react-router-dom'
 import { SWRConfig, type SWRConfiguration } from 'swr'
+import { Xid } from 'xid-ts'
 import AuthorizedFallback from './components/AuthorizedFallback'
 import Loading from './components/Loading'
 import { useLogger } from './logger'
@@ -117,7 +120,10 @@ function Fallback({
 function Layout() {
   const logger = useLogger()
   const intl = useIntl()
+  const { dialog } = useAuth()
   const navigate = useNavigate()
+
+  const { defaultGroup: { id: gid } = {} } = useMyGroupList()
 
   useEffect(() => {
     document.title = intl.formatMessage({
@@ -127,7 +133,7 @@ function Layout() {
 
   //#region close auth dialog on location change
   const location = useLocation()
-  const closeAuthDialog = useAuth().dialog.close
+  const closeAuthDialog = dialog.close
   useLayoutEffect(() => closeAuthDialog(), [closeAuthDialog, location])
   //#endregion
 
@@ -165,7 +171,12 @@ function Layout() {
         },
         {
           label: intl.formatMessage({ defaultMessage: '创作中心' }),
-          onClick: () => navigate(DEFAULT_GROUP_PATH),
+          onClick: () =>
+            navigate({
+              pathname: generatePath(DEFAULT_GROUP_PATH, {
+                gid: gid ? Xid.fromValue(gid).toString() : 'default',
+              }),
+            }),
         },
         {
           label: intl.formatMessage({ defaultMessage: '我的书签' }),
@@ -177,7 +188,7 @@ function Layout() {
         },
       ],
     }),
-    [intl, navigate]
+    [intl, navigate, gid]
   )
   //#endregion
 
@@ -245,9 +256,10 @@ export const WALLET_PATH = '/wallet'
 export const NEW_CREATION_PATH = '/creation/new'
 export const EDIT_CREATION_PATH = '/creation/:cid'
 export const EDIT_PUBLICATION_PATH = '/publication/:cid'
+export const SHARE_COLLECTION_PATH = '/coll/:cid'
 export const SHARE_PUBLICATION_PATH = '/pub/:cid'
-export const DEFAULT_GROUP_PATH = '/group/default'
-export const GROUP_DETAIL_PATH = '/group/:gid'
+export const DEFAULT_GROUP_PATH = '/group/:gid'
+export const GROUP_DETAIL_PATH = '/group/:gid/:type'
 
 const router = createBrowserRouter(
   createRoutesFromElements(

@@ -4,15 +4,17 @@ import {
   PublicationJobStatus,
   PublicationStatus,
   RequestError,
+  setXLanguage,
   toMessage,
   useAuth,
-  useCreationBookmarkList,
+  useCollectionChildren,
   useEnsureAuthorized,
   useFetcherConfig,
   useLanguageList,
   useLanguageProcessor,
   usePublication,
   usePublicationAPI,
+  usePublicationBookmarkList,
   useTranslatedPublicationList,
   useWechat,
   type GPT_MODEL,
@@ -33,6 +35,7 @@ interface Params {
   open: boolean
   _gid: string | undefined
   _cid: string | undefined
+  _parent: string | undefined
   _language: string | undefined
   _version: number | undefined
   _by: string | undefined
@@ -55,6 +58,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     open: false,
     _gid: undefined,
     _cid: undefined,
+    _parent: undefined,
     _language: undefined,
     _version: undefined,
     _by: undefined,
@@ -125,7 +129,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     isRemoving: _isRemovingFavorite,
     add: _addFavorite,
     remove: _removeFavorite,
-  } = useCreationBookmarkList(_cid)
+  } = usePublicationBookmarkList(_cid)
 
   const { languageList } = useLanguageList()
 
@@ -168,11 +172,13 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       _cid: Uint8Array | string | null | undefined,
       _language: string | null | undefined,
       _version: number | string | null | undefined,
+      _parent?: Uint8Array | string | null | undefined,
       _by?: string | null | undefined
     ) => {
       setParams((params) => {
         const gid = _gid ? Xid.fromValue(_gid).toString() : undefined
         const cid = _cid ? Xid.fromValue(_cid).toString() : undefined
+        const parent = _parent ? Xid.fromValue(_parent).toString() : undefined
         const language = _language ? _language : undefined
         const version = _version != null ? Number(_version) : undefined
         const by = _by || params._by
@@ -195,6 +201,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
           _language: language,
           _version: version,
           _by: by,
+          _parent: parent,
         }
       })
     },
@@ -209,39 +216,26 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       _language: undefined,
       _version: undefined,
       _by: undefined,
+      _parent: undefined,
     })
   }, [])
 
+  const {
+    isLoading: isMenuLoading,
+    isValidating: isMenuLoadingMore,
+    hasMore: menuHasMore,
+    loadMore: menuLoadMore,
+    items: collectionMenu,
+  } = useCollectionChildren(_gid, params._parent)
+
   const refresh = useCallback(async () => {
     const [publication] = await Promise.all([
-      refreshPublication(),
       refreshTranslatedList(),
       refreshProcessingList(),
       refreshBookmarkList(),
     ])
     return publication
-  }, [
-    refreshBookmarkList,
-    refreshProcessingList,
-    refreshPublication,
-    refreshTranslatedList,
-  ])
-
-  useEffect(() => {
-    open && refreshPublication()
-  }, [open, refreshPublication])
-
-  useEffect(() => {
-    open && refreshTranslatedList()
-  }, [open, refreshTranslatedList])
-
-  useEffect(() => {
-    open && refreshProcessingList()
-  }, [open, refreshProcessingList])
-
-  useEffect(() => {
-    open && refreshBookmarkList()
-  }, [open, refreshBookmarkList])
+  }, [refreshBookmarkList, refreshProcessingList, refreshTranslatedList])
   //#endregion
 
   //#region translate
@@ -326,6 +320,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       } else if (!publication || canTranslate) {
         showTranslateConfirmDialog(language)
       } else if (publication) {
+        setXLanguage(publication.language)
         show(
           publication.gid,
           publication.cid,
@@ -433,6 +428,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   //#endregion
 
   return {
+    pushToast,
     translateConfirmDialog: {
       onClose: closeTranslateConfirmDialog,
       ...translateConfirmDialog,
@@ -449,10 +445,15 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     isLoading,
     error,
     publication,
+    collectionMenu,
+    hasMore: menuHasMore,
+    isLoadingMore: isMenuLoading || isMenuLoadingMore,
+    loadMore: menuLoadMore,
     open,
     show,
     close,
     refresh,
+    refreshPublication,
     currentLanguage,
     originalLanguage,
     translatedLanguageList,

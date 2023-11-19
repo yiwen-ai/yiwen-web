@@ -1,6 +1,6 @@
 import { BREAKPOINT } from '#/shared'
 import { GroupViewType } from '#/store/useGroupDetailPage'
-import { css } from '@emotion/react'
+import { css, useTheme } from '@emotion/react'
 import { Button, IconButton } from '@yiwen-ai/component'
 import { type CreationOutput, type Language } from '@yiwen-ai/store'
 import { type HTMLAttributes } from 'react'
@@ -29,6 +29,7 @@ export default function CreationViewer({
   ...props
 }: CreationViewerProps) {
   const intl = useIntl()
+  const theme = useTheme()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const isNarrow = responsive && width <= BREAKPOINT.small
 
@@ -54,11 +55,11 @@ export default function CreationViewer({
               display: flex;
               align-items: flex-start;
               gap: 24px;
-              ${isNarrow &&
-              css`
-                padding: 24px 16px;
+              @media (max-width: ${BREAKPOINT.small}px) {
+                padding: 16px;
                 gap: 16px;
-              `}
+                box-shadow: ${theme.effect.card};
+              }
             `}
           >
             <div

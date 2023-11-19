@@ -155,6 +155,8 @@ declare module '@emotion/react' {
      */
     effect: {
       divider: string
+      card: string
+      cardHover: string
       shadow: string
     }
   }
@@ -397,7 +399,9 @@ export const lightTheme: Theme = {
     },
   },
   effect: {
-    divider: `0px 2px 0px 0px ${RGBA(palette.grayLight0, 0.25)}`,
+    divider: `0px 0px 3px 2px ${RGBA(palette.grayLight0, 0.75)}`,
+    card: `0px 0px 3px 2px ${RGBA(palette.grayLight0, 0.75)}`,
+    cardHover: `0px 0px 4px 2px ${RGBA(palette.primaryLight, 0.5)}`,
     // TODO: wait for design
     shadow: '0px 4px 20px rgba(31, 30, 64, 0.1)',
   },

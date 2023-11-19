@@ -14,7 +14,7 @@ export default function YiwenCoin(props: React.HTMLAttributes<HTMLElement>) {
     _version: null,
   })
 
-  const { isLoading, error, publication, refresh } = usePublication(
+  const { isLoading, error, publication } = usePublication(
     params._gid,
     params._cid,
     params._language,
@@ -30,10 +30,6 @@ export default function YiwenCoin(props: React.HTMLAttributes<HTMLElement>) {
       }))
     }
   }, [error, isLoading])
-
-  useEffect(() => {
-    refresh()
-  }, [refresh])
 
   return (
     <CommonViewer

@@ -2,6 +2,7 @@ import { type ToastAPI } from '@yiwen-ai/component'
 import {
   toMessage,
   useCurrencyList,
+  useMyWallet,
   useNewCharge,
   type Currency,
 } from '@yiwen-ai/store'
@@ -17,12 +18,13 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
   const close = useCallback(() => setOpen(false), [])
   //#endregion
 
+  const { refresh } = useMyWallet()
+
   //#region Currency
   const {
     isLoading: isLoadingCurrencyList,
     error: currencyListError,
     currencyList,
-    refresh: refreshCurrencyList,
   } = useCurrencyList()
 
   const [currentCurrencyCode, setCurrentCurrencyCode] = useState(
@@ -39,10 +41,6 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
     (currency: Currency) => setCurrentCurrencyCode(currency.alpha),
     []
   )
-
-  useEffect(() => {
-    if (open && !currencyList) refreshCurrencyList()
-  }, [currencyList, open, refreshCurrencyList])
 
   useEffect(() => {
     setCurrentCurrencyCode((prev) => prev || currencyList?.[0]?.alpha)
@@ -88,6 +86,7 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
           type: 'success',
           message: intl.formatMessage({ defaultMessage: '充值完成' }),
         })
+        refresh()
         close()
       }
       return result
@@ -101,7 +100,7 @@ export function useChargeDialog(pushToast: ToastAPI['pushToast']) {
       }
       return undefined
     }
-  }, [charge, chargeAmount, close, currentCurrency, intl, pushToast])
+  }, [refresh, charge, chargeAmount, close, currentCurrency, intl, pushToast])
   //#endregion
 
   return {

@@ -125,6 +125,7 @@ export default function NewCreationPage() {
         type={GroupViewType.Creation}
         draft={draft}
         updateDraft={updateDraft}
+        withParent={true}
         isLoading={isLoading}
         isSaving={isSaving}
       />

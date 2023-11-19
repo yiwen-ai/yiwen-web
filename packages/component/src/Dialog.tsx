@@ -82,11 +82,14 @@ const DialogContext = createContext<ModalRef | undefined>(undefined)
 export const DialogHead = memo(function DialogHead(
   props: HTMLAttributes<HTMLDivElement>
 ) {
+  const theme = useTheme()
+
   return (
     <div
       data-dialog-head={true}
       {...props}
       css={css`
+        ${theme.typography.bodyBold}
         padding: 24px;
         text-align: center;
       `}
@@ -103,7 +106,7 @@ export const DialogBody = memo(function DialogBody(
       {...props}
       css={css`
         flex: 1;
-        padding: 24px;
+        padding: 0 36px 24px;
         overflow-y: auto;
       `}
     />

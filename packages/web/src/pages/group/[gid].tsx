@@ -4,12 +4,17 @@ import {
   SetHeaderProps,
   ThemeContext,
 } from '#/App'
+import CollectionCompactItem from '#/components/CollectionCompactItem'
+import CollectionItem from '#/components/CollectionItem'
+import CollectionViewer from '#/components/CollectionViewer'
+import CreateCollectionDialog from '#/components/CreateCollectionDialog'
 import CreationCompactItem from '#/components/CreationCompactItem'
 import CreationItem from '#/components/CreationItem'
 import CreationViewer from '#/components/CreationViewer'
+import EditGroupDialog from '#/components/EditGroupDialog'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import LargeDialog from '#/components/LargeDialog'
-import LoadMore from '#/components/LoadMore'
+import { LoadMore } from '#/components/LoadMore'
 import Loading from '#/components/Loading'
 import MediumDialog from '#/components/MediumDialog'
 import Placeholder from '#/components/Placeholder'
@@ -17,6 +22,7 @@ import PublicationCompactItem from '#/components/PublicationCompactItem'
 import PublicationItem from '#/components/PublicationItem'
 import PublicationViewer from '#/components/PublicationViewer'
 import { BREAKPOINT, MAX_WIDTH } from '#/shared'
+import { useEditGroupDialog } from '#/store/useEditGroupDialog'
 import { GroupViewType, useGroupDetailPage } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import {
@@ -30,18 +36,21 @@ import {
   TabSection,
   textEllipsis,
   useToast,
+  type ToastAPI,
 } from '@yiwen-ai/component'
 import {
+  buildCollectionKey,
   buildCreationKey,
   buildPublicationKey,
   useEnsureAuthorizedCallback,
+  type CollectionOutput,
   type CreationOutput,
   type GroupInfo,
   type GroupStatisticOutput,
   type PublicationOutput,
 } from '@yiwen-ai/store'
 import { joinURLPath, type AnchorProps } from '@yiwen-ai/util'
-import { useCallback, useContext } from 'react'
+import { useCallback, useContext, useEffect } from 'react'
 import { useIntl } from 'react-intl'
 import {
   Link,
@@ -57,16 +66,17 @@ export default function GroupDetailPage() {
   const theme = useTheme()
   const setTheme = useContext(ThemeContext)
   const { renderToastContainer, pushToast } = useToast()
-  const params = useParams<{ gid: string }>()
+  const params = useParams<{ gid: string; type: string }>()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const ensureAuthorized = useEnsureAuthorizedCallback()
 
   const _gid = params.gid ?? null
+  const _type = params.type as GroupViewType | GroupViewType.Publication
   const _cid = searchParams.get('cid')
   const _language = searchParams.get('language')
   const _version = searchParams.get('version')
-  const _type = searchParams.get('type') as GroupViewType | null
+  const _parent = searchParams.get('parent')
 
   const {
     isLoading,
@@ -74,14 +84,32 @@ export default function GroupDetailPage() {
     groupInfo,
     groupStatistic,
     hasGroupReadPermission,
-    hasGroupAddCreationPermission,
+    hasGroupAdminPermission,
+    hasGroupMemberPermission,
     isGroupFollowed,
     isFollowingGroup,
     isUnfollowingGroup,
     onGroupFollow,
     onGroupUnfollow,
-    viewType,
-    setViewType,
+    collectionViewer: {
+      open: collectionViewerOpen,
+      close: onCollectionViewerClose,
+      ...collectionViewer
+    },
+    collectionList: {
+      createCollection: {
+        show: showCreateCollectionDialog,
+        ...createCollection
+      },
+      editCollection: { show: showEditCollectionDialog, ...editCollection },
+      ...collectionList
+    },
+    archivedCollectionList,
+    onCollectionArchive,
+    onCollectionRestore,
+    onCollectionDelete,
+    onCollectionPublish,
+    onArchivedCollectionDialogShow,
     publicationViewer: {
       open: publicationViewerOpen,
       close: onPublicationViewerClose,
@@ -108,50 +136,109 @@ export default function GroupDetailPage() {
     onCreationEdit,
     onCreationDelete,
     onArchivedCreationDialogShow,
-  } = useGroupDetailPage(pushToast, _gid, _cid, _language, _version, _type)
+  } = useGroupDetailPage(
+    pushToast,
+    _gid,
+    _cid,
+    _language,
+    _version,
+    _type,
+    _parent
+  )
 
   const handleViewTypeChange = useCallback(
     (type: GroupViewType) => {
-      setViewType(type)
       navigate({
-        pathname: generatePath(GROUP_DETAIL_PATH, { gid: _gid }),
-        search: new URLSearchParams({ type }).toString(),
+        pathname: generatePath(GROUP_DETAIL_PATH, { gid: _gid, type }),
       })
     },
-    [_gid, navigate, setViewType]
+    [_gid, navigate]
   )
+
+  useEffect(() => {
+    if (!params.type) {
+      handleViewTypeChange(GroupViewType.Publication)
+    } else if (
+      !hasGroupReadPermission &&
+      params.type === GroupViewType.Creation
+    ) {
+      handleViewTypeChange(GroupViewType.Publication)
+    }
+  }, [hasGroupReadPermission, params.type, handleViewTypeChange])
+
+  const handleCollectionEdit = useCallback(
+    (item: CollectionOutput) => {
+      showEditCollectionDialog(item.gid, item.id)
+    },
+    [showEditCollectionDialog]
+  )
+
+  const handleCollectionDialogClose = useCallback(() => {
+    onCollectionViewerClose()
+    navigate({
+      pathname: generatePath(GROUP_DETAIL_PATH, {
+        gid: _gid,
+        type: GroupViewType.Collection,
+      }),
+      search: _parent
+        ? new URLSearchParams({
+            cid: _parent,
+          }).toString()
+        : '',
+    })
+  }, [_gid, _parent, navigate, onCollectionViewerClose])
 
   const handlePublicationDialogClose = useCallback(() => {
     onPublicationViewerClose()
     navigate({
-      pathname: generatePath(GROUP_DETAIL_PATH, { gid: _gid }),
-      search: new URLSearchParams({
-        type: GroupViewType.Publication,
-      }).toString(),
+      pathname: generatePath(GROUP_DETAIL_PATH, {
+        gid: _gid,
+        type: _parent ? GroupViewType.Collection : GroupViewType.Publication,
+      }),
+      search: _parent
+        ? new URLSearchParams({
+            cid: _parent,
+          }).toString()
+        : '',
     })
-  }, [_gid, navigate, onPublicationViewerClose])
+  }, [_gid, _parent, navigate, onPublicationViewerClose])
 
   const handleCreationDialogClose = useCallback(() => {
     onCreationViewerClose()
     navigate({
-      pathname: generatePath(GROUP_DETAIL_PATH, { gid: _gid }),
-      search: new URLSearchParams({
+      pathname: generatePath(GROUP_DETAIL_PATH, {
+        gid: _gid,
         type: GroupViewType.Creation,
-      }).toString(),
+      }),
     })
   }, [_gid, navigate, onCreationViewerClose])
+
+  const handleCollectionClick = useCallback(
+    (item: CollectionOutput) => {
+      navigate({
+        pathname: generatePath(GROUP_DETAIL_PATH, {
+          gid: Xid.fromValue(item.gid).toString(),
+          type: GroupViewType.Collection,
+        }),
+        search: new URLSearchParams({
+          cid: Xid.fromValue(item.id).toString(),
+        }).toString(),
+      })
+    },
+    [navigate]
+  )
 
   const handlePublicationClick = useCallback(
     (item: PublicationOutput) => {
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(item.gid).toString(),
+          type: GroupViewType.Publication,
         }),
         search: new URLSearchParams({
           cid: Xid.fromValue(item.cid).toString(),
           language: item.language,
           version: item.version.toString(),
-          type: GroupViewType.Publication,
         }).toString(),
       })
     },
@@ -163,10 +250,10 @@ export default function GroupDetailPage() {
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(item.gid).toString(),
+          type: GroupViewType.Creation,
         }),
         search: new URLSearchParams({
           cid: Xid.fromValue(item.id).toString(),
-          type: GroupViewType.Creation,
         }).toString(),
       })
     },
@@ -186,15 +273,19 @@ export default function GroupDetailPage() {
             <div
               css={css`
                 flex: 1;
-                margin: 0 40px 0 12px;
+                margin: 0 36px;
                 display: flex;
                 align-items: center;
-                gap: 40px;
+                justify-content: flex-end;
+                gap: 32px;
+                @media (max-width: ${BREAKPOINT.small}px) {
+                  gap: 16px;
+                }
               `}
             >
               <Link
                 to={
-                  hasGroupAddCreationPermission
+                  hasGroupMemberPermission
                     ? joinURLPath(NEW_CREATION_PATH, { gid: _gid })
                     : joinURLPath(NEW_CREATION_PATH, { gid: undefined })
                 }
@@ -224,8 +315,10 @@ export default function GroupDetailPage() {
             </div>
           </SetHeaderProps>
           <GroupPart
+            pushToast={pushToast}
             groupInfo={groupInfo}
             groupStatistic={groupStatistic}
+            hasGroupAdminPermission={hasGroupAdminPermission}
             isFollowed={isGroupFollowed}
             isFollowing={isFollowingGroup}
             isUnfollowing={isUnfollowingGroup}
@@ -238,94 +331,142 @@ export default function GroupDetailPage() {
             `}
           >
             <TabSection
-              value={viewType}
+              value={_type}
               onChange={handleViewTypeChange}
               css={css`
                 max-width: ${MAX_WIDTH};
                 margin: 0 auto;
-                padding-top: ${hasGroupReadPermission ? undefined : '24px'};
                 padding-bottom: 24px;
               `}
             >
-              {hasGroupReadPermission && (
-                <TabList
-                  css={(theme) => css`
-                    padding: 16px;
-                    border: unset;
+              <TabList
+                css={(theme) => css`
+                  padding: 16px;
+                  border: unset;
 
-                    > [role='tab'] {
-                      padding: 8px;
-                      &,
-                      &[data-selected] {
-                        ${theme.typography.h2}
-                      }
-                      &[data-selected] {
-                        ::after {
-                          bottom: -3px;
-                        }
+                  > [role='tab'] {
+                    padding: 8px;
+                    &,
+                    &[data-selected] {
+                      ${theme.typography.h2}
+                    }
+                    &[data-selected] {
+                      ::after {
+                        bottom: -3px;
                       }
                     }
-                  `}
-                >
-                  <Tab value={GroupViewType.Publication}>
-                    {intl.formatMessage({ defaultMessage: '发布' })}
-                  </Tab>
-                  <Tab value={GroupViewType.Creation}>
-                    {intl.formatMessage({ defaultMessage: '文稿' })}
-                  </Tab>
-                  <div
-                    css={css`
-                      margin-left: auto;
-                      display: flex;
-                      align-items: center;
-                    `}
-                  >
-                    {(() => {
-                      const anchor = (props: AnchorProps) => (
-                        <Button color='secondary' variant='text' {...props}>
-                          {intl.formatMessage({
-                            defaultMessage: '查看已归档',
-                          })}
-                        </Button>
-                      )
-                      switch (viewType) {
-                        case GroupViewType.Publication:
-                          return (
-                            <MediumDialog
-                              anchor={anchor}
-                              title={intl.formatMessage({
-                                defaultMessage: '已归档的发布',
-                              })}
-                              onShow={onArchivedPublicationDialogShow}
+                  }
+                `}
+              >
+                <Tab value={GroupViewType.Collection}>
+                  {intl.formatMessage({ defaultMessage: '合集' })}
+                </Tab>
+                <Tab value={GroupViewType.Publication}>
+                  {intl.formatMessage({ defaultMessage: '发布' })}
+                </Tab>
+                {hasGroupReadPermission && (
+                  <>
+                    <Tab value={GroupViewType.Creation}>
+                      {intl.formatMessage({ defaultMessage: '文稿' })}
+                    </Tab>
+                    <div
+                      css={css`
+                        margin-left: auto;
+                        display: flex;
+                        align-items: center;
+                        @media (max-width: ${BREAKPOINT.small}px) {
+                          display: none;
+                        }
+                      `}
+                    >
+                      {hasGroupAdminPermission &&
+                        _type == GroupViewType.Collection && (
+                          <>
+                            <Button
+                              color='secondary'
+                              variant='text'
+                              onClick={showCreateCollectionDialog}
                             >
-                              <ArchivedPublicationPart
-                                {...archivedPublicationList}
-                                onRestore={onPublicationRestore}
-                                onDelete={onPublicationDelete}
-                              />
-                            </MediumDialog>
-                          )
-                        case GroupViewType.Creation:
-                          return (
-                            <MediumDialog
-                              anchor={anchor}
-                              title={intl.formatMessage({
-                                defaultMessage: '已归档的文稿',
+                              {intl.formatMessage({
+                                defaultMessage: '创建合集',
                               })}
-                              onShow={onArchivedCreationDialogShow}
-                            >
-                              <ArchivedCreationPart
-                                {...archivedCreationList}
-                                onRestore={onCreationRestore}
-                                onDelete={onCreationDelete}
-                              />
-                            </MediumDialog>
-                          )
-                      }
-                    })()}
-                  </div>
-                </TabList>
-              )}
+                            </Button>
+                            <CreateCollectionDialog {...createCollection} />
+                            <CreateCollectionDialog {...editCollection} />
+                          </>
+                        )}
+                      {(() => {
+                        const anchor = (props: AnchorProps) => (
+                          <Button color='secondary' variant='text' {...props}>
+                            {intl.formatMessage({
+                              defaultMessage: '查看已归档',
+                            })}
+                          </Button>
+                        )
+                        switch (_type) {
+                          case GroupViewType.Collection:
+                            return (
+                              <MediumDialog
+                                anchor={anchor}
+                                title={intl.formatMessage({
+                                  defaultMessage: '已归档的合集',
+                                })}
+                                onShow={onArchivedCollectionDialogShow}
+                              >
+                                <ArchivedCollectionPart
+                                  {...archivedCollectionList}
+                                  onRestore={onCollectionRestore}
+                                  onDelete={onCollectionDelete}
+                                />
+                              </MediumDialog>
+                            )
+                          case GroupViewType.Publication:
+                            return (
+                              <MediumDialog
+                                anchor={anchor}
+                                title={intl.formatMessage({
+                                  defaultMessage: '已归档的发布',
+                                })}
+                                onShow={onArchivedPublicationDialogShow}
+                              >
+                                <ArchivedPublicationPart
+                                  {...archivedPublicationList}
+                                  onRestore={onPublicationRestore}
+                                  onDelete={onPublicationDelete}
+                                />
+                              </MediumDialog>
+                            )
+                          case GroupViewType.Creation:
+                            return (
+                              <MediumDialog
+                                anchor={anchor}
+                                title={intl.formatMessage({
+                                  defaultMessage: '已归档的文稿',
+                                })}
+                                onShow={onArchivedCreationDialogShow}
+                              >
+                                <ArchivedCreationPart
+                                  {...archivedCreationList}
+                                  onRestore={onCreationRestore}
+                                  onDelete={onCreationDelete}
+                                />
+                              </MediumDialog>
+                            )
+                        }
+                      })()}
+                    </div>
+                  </>
+                )}
+              </TabList>
+              <TabPanel value={GroupViewType.Collection}>
+                <CollectionPart
+                  {...collectionList}
+                  onArchive={onCollectionArchive}
+                  onPublish={onCollectionPublish}
+                  onEdit={handleCollectionEdit}
+                  onClick={handleCollectionClick}
+                />
+              </TabPanel>
               <TabPanel value={GroupViewType.Publication}>
                 <PublicationPart
                   {...publicationList}
@@ -348,6 +489,17 @@ export default function GroupDetailPage() {
           </div>
         </>
       ) : null}
+      {collectionViewerOpen && (
+        <LargeDialog open={true} onClose={handleCollectionDialogClose}>
+          <CollectionViewer
+            pushToast={pushToast}
+            hasGroupAdminPermission={hasGroupAdminPermission}
+            responsive={true}
+            onClose={handleCollectionDialogClose}
+            {...collectionViewer}
+          />
+        </LargeDialog>
+      )}
       {publicationViewerOpen && (
         <LargeDialog open={true} onClose={handlePublicationDialogClose}>
           <PublicationViewer
@@ -371,16 +523,20 @@ export default function GroupDetailPage() {
 }
 
 function GroupPart({
+  pushToast,
   groupInfo,
   groupStatistic,
+  hasGroupAdminPermission,
   isFollowed,
   isFollowing,
   isUnfollowing,
   onFollow,
   onUnfollow,
 }: {
+  pushToast: ToastAPI['pushToast']
   groupInfo: GroupInfo
   groupStatistic: GroupStatisticOutput
+  hasGroupAdminPermission: boolean
   isFollowed: boolean
   isFollowing: boolean
   isUnfollowing: boolean
@@ -389,15 +545,19 @@ function GroupPart({
 }) {
   const intl = useIntl()
   const theme = useTheme()
-
-  // TODO
-  // const handleDelete = useCallback(() => {
-  // }, [])
+  const {
+    show: showEditGroupDialog,
+    close: closeEditGroupDialog,
+    ...editGroup
+  } = useEditGroupDialog(pushToast)
+  const handleEditGroupClick = useCallback(() => {
+    showEditGroupDialog(groupInfo.id)
+  }, [showEditGroupDialog, groupInfo])
 
   return (
     <div
       css={css`
-        border-bottom: 1px solid ${theme.color.divider.default};
+        box-shadow: ${theme.effect.divider};
       `}
     >
       <div
@@ -473,15 +633,18 @@ function GroupPart({
             gap: 24px;
           `}
         >
-          <Button
-            color='primary'
-            variant='outlined'
-            css={css`
-              display: none;
-            `}
-          >
-            {intl.formatMessage({ defaultMessage: '编辑简介' })}
-          </Button>
+          {hasGroupAdminPermission && (
+            <>
+              <Button
+                color='primary'
+                variant='outlined'
+                onClick={handleEditGroupClick}
+              >
+                {intl.formatMessage({ defaultMessage: '设置' })}
+              </Button>
+              <EditGroupDialog {...editGroup} />
+            </>
+          )}
           <Button
             color='primary'
             variant='outlined'
@@ -506,13 +669,148 @@ function GroupPart({
   )
 }
 
+// hasGroupAdminPermission, isEditing, onPublish
+function CollectionPart({
+  isLoading,
+  error,
+  items,
+  hasMore,
+  loadMore,
+  hasGroupAdminPermission,
+  isPublishing,
+  isEditing,
+  isArchiving,
+  onEdit,
+  onArchive,
+  onPublish,
+  onClick,
+}: {
+  isLoading: boolean
+  error: unknown
+  items: CollectionOutput[]
+  hasMore: boolean
+  loadMore: () => void
+  hasGroupAdminPermission: boolean
+  isPublishing: (item: CollectionOutput) => boolean
+  isEditing: (item: CollectionOutput) => boolean
+  isArchiving: (item: CollectionOutput) => boolean
+  onEdit: (item: CollectionOutput) => void
+  onArchive: (item: CollectionOutput) => void
+  onPublish: (item: CollectionOutput) => void
+  onClick: (item: CollectionOutput) => void
+}) {
+  return (
+    <div
+      css={css`
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      `}
+    >
+      {!isLoading && error ? (
+        <ErrorPlaceholder error={error} />
+      ) : !isLoading && items.length === 0 ? (
+        <Placeholder />
+      ) : (
+        <>
+          {items.map((item) => (
+            <CollectionItem
+              key={buildCollectionKey(item.gid, item.id)}
+              item={item}
+              hasWritePermission={hasGroupAdminPermission}
+              isPublishing={isPublishing(item)}
+              isEditing={isEditing(item)}
+              isArchiving={isArchiving(item)}
+              onClick={onClick}
+              onPublish={onPublish}
+              onEdit={onEdit}
+              onArchive={onArchive}
+            />
+          ))}
+          <LoadMore
+            hasMore={hasMore}
+            isLoadingMore={isLoading}
+            onLoadMore={loadMore}
+          />
+        </>
+      )}
+    </div>
+  )
+}
+
+function ArchivedCollectionPart({
+  isLoading,
+  error,
+  items,
+  hasMore,
+  loadMore,
+  hasGroupAdminPermission,
+  isRestoring,
+  isDeleting,
+  onRestore,
+  onDelete,
+}: {
+  isLoading: boolean
+  error: unknown
+  items: CollectionOutput[]
+  hasMore: boolean
+  loadMore: () => void
+  hasGroupAdminPermission: boolean
+  isRestoring: (item: CollectionOutput) => boolean
+  isDeleting: (item: CollectionOutput) => boolean
+  onRestore: (item: CollectionOutput) => void
+  onDelete: (item: CollectionOutput) => void
+}) {
+  return (
+    <div
+      css={css`
+        padding: 0 24px 24px;
+        display: flex;
+        flex-direction: column;
+      `}
+    >
+      {!isLoading && error ? (
+        <ErrorPlaceholder error={error} />
+      ) : !isLoading && items.length === 0 ? (
+        <Placeholder
+          css={css`
+            margin: 12px;
+          `}
+        />
+      ) : (
+        <>
+          {items.map((item) => (
+            <CollectionCompactItem
+              key={buildCollectionKey(item.gid, item.id)}
+              item={item}
+              hasWritePermission={hasGroupAdminPermission}
+              isRestoring={isRestoring(item)}
+              isDeleting={isDeleting(item)}
+              onRestore={onRestore}
+              onDelete={onDelete}
+            />
+          ))}
+          <LoadMore
+            hasMore={hasMore}
+            isLoadingMore={isLoading}
+            onLoadMore={loadMore}
+            css={css`
+              margin-bottom: -24px;
+            `}
+          />
+        </>
+      )}
+    </div>
+  )
+}
+
 function PublicationPart({
   isLoading,
   error,
   items,
   hasMore,
   loadMore,
-  hasGroupWritePermission,
+  hasGroupAdminPermission,
   isPublishing,
   isEditing,
   isArchiving,
@@ -526,7 +824,7 @@ function PublicationPart({
   items: PublicationOutput[]
   hasMore: boolean
   loadMore: () => void
-  hasGroupWritePermission: boolean
+  hasGroupAdminPermission: boolean
   isPublishing: (item: PublicationOutput) => boolean
   isEditing: (item: PublicationOutput) => boolean
   isArchiving: (item: PublicationOutput) => boolean
@@ -553,7 +851,7 @@ function PublicationPart({
             <PublicationItem
               key={buildPublicationKey(item)}
               item={item}
-              hasWritePermission={hasGroupWritePermission}
+              hasWritePermission={hasGroupAdminPermission}
               isPublishing={isPublishing(item)}
               isEditing={isEditing(item)}
               isArchiving={isArchiving(item)}
@@ -580,7 +878,7 @@ function ArchivedPublicationPart({
   items,
   hasMore,
   loadMore,
-  hasGroupWritePermission,
+  hasGroupAdminPermission,
   isRestoring,
   isDeleting,
   onRestore,
@@ -591,7 +889,7 @@ function ArchivedPublicationPart({
   items: PublicationOutput[]
   hasMore: boolean
   loadMore: () => void
-  hasGroupWritePermission: boolean
+  hasGroupAdminPermission: boolean
   isRestoring: (item: PublicationOutput) => boolean
   isDeleting: (item: PublicationOutput) => boolean
   onRestore: (item: PublicationOutput) => void
@@ -619,7 +917,7 @@ function ArchivedPublicationPart({
             <PublicationCompactItem
               key={buildPublicationKey(item)}
               item={item}
-              hasWritePermission={hasGroupWritePermission}
+              hasWritePermission={hasGroupAdminPermission}
               isRestoring={isRestoring(item)}
               isDeleting={isDeleting(item)}
               onRestore={onRestore}
@@ -646,7 +944,7 @@ function CreationPart({
   items,
   hasMore,
   loadMore,
-  hasGroupWritePermission,
+  hasGroupAdminPermission,
   isEditing,
   isReleasing,
   isArchiving,
@@ -660,7 +958,7 @@ function CreationPart({
   items: CreationOutput[]
   hasMore: boolean
   loadMore: () => void
-  hasGroupWritePermission: boolean
+  hasGroupAdminPermission: boolean
   isEditing: (item: CreationOutput) => boolean
   isReleasing: (item: CreationOutput) => boolean
   isArchiving: (item: CreationOutput) => boolean
@@ -687,7 +985,7 @@ function CreationPart({
             <CreationItem
               key={buildCreationKey(item)}
               item={item}
-              hasWritePermission={hasGroupWritePermission}
+              hasWritePermission={hasGroupAdminPermission}
               isEditing={isEditing(item)}
               isReleasing={isReleasing(item)}
               isArchiving={isArchiving(item)}
@@ -714,7 +1012,7 @@ function ArchivedCreationPart({
   items,
   hasMore,
   loadMore,
-  hasGroupWritePermission,
+  hasGroupAdminPermission,
   isRestoring,
   isDeleting,
   onRestore,
@@ -725,7 +1023,7 @@ function ArchivedCreationPart({
   items: CreationOutput[]
   hasMore: boolean
   loadMore: () => void
-  hasGroupWritePermission: boolean
+  hasGroupAdminPermission: boolean
   isRestoring: (item: CreationOutput) => boolean
   isDeleting: (item: CreationOutput) => boolean
   onRestore: (item: CreationOutput) => void
@@ -753,7 +1051,7 @@ function ArchivedCreationPart({
             <CreationCompactItem
               key={buildCreationKey(item)}
               item={item}
-              hasWritePermission={hasGroupWritePermission}
+              hasWritePermission={hasGroupAdminPermission}
               isRestoring={isRestoring(item)}
               isDeleting={isDeleting(item)}
               onRestore={onRestore}

@@ -1,6 +1,11 @@
 import { type ToastAPI } from '@yiwen-ai/component'
-import { useBookmarkList, type BookmarkOutput } from '@yiwen-ai/store'
-import { useCallback, useEffect } from 'react'
+import {
+  ObjectKind,
+  useBookmarkList,
+  type BookmarkOutput,
+} from '@yiwen-ai/store'
+import { useCallback } from 'react'
+import { useCollectionViewer } from './useCollectionViewer'
 import { usePublicationViewer } from './usePublicationViewer'
 
 export function useBookmarkPage(pushToast: ToastAPI['pushToast']) {
@@ -10,9 +15,13 @@ export function useBookmarkPage(pushToast: ToastAPI['pushToast']) {
     ...bookmarkList
   } = useBookmarkList()
 
-  useEffect(() => {
-    refreshBookmarkList()
-  }, [refreshBookmarkList])
+  const {
+    show: showCollectionViewer,
+    refresh: refreshCollectionViewer,
+    onAddFavorite: onCollectionAddFavorite,
+    onRemoveFavorite: onCollectionRemoveFavorite,
+    ...collectionViewer
+  } = useCollectionViewer(pushToast)
 
   const {
     show: showPublicationViewer,
@@ -24,12 +33,26 @@ export function useBookmarkPage(pushToast: ToastAPI['pushToast']) {
 
   const onView = useCallback(
     (item: BookmarkOutput) => {
-      showPublicationViewer(item.gid, item.cid, item.language, item.version)
+      if (item.kind === ObjectKind.Collection) {
+        showCollectionViewer(item.gid, item.cid, item.language)
+      } else {
+        showPublicationViewer(item.gid, item.cid, item.language, item.version)
+      }
     },
-    [showPublicationViewer]
+    [showCollectionViewer, showPublicationViewer]
   )
 
   const onRemove = useCallback((item: BookmarkOutput) => remove(item), [remove])
+
+  const handleCollectionAddFavorite = useCallback(async () => {
+    await onCollectionAddFavorite()
+    refreshBookmarkList()
+  }, [onCollectionAddFavorite, refreshBookmarkList])
+
+  const handleCollectionRemoveFavorite = useCallback(async () => {
+    await onCollectionRemoveFavorite()
+    refreshBookmarkList()
+  }, [onCollectionRemoveFavorite, refreshBookmarkList])
 
   const handlePublicationAddFavorite = useCallback(async () => {
     await onPublicationAddFavorite()
@@ -45,6 +68,11 @@ export function useBookmarkPage(pushToast: ToastAPI['pushToast']) {
     ...bookmarkList,
     onView,
     onRemove,
+    collectionViewer: {
+      onAddFavorite: handleCollectionAddFavorite,
+      onRemoveFavorite: handleCollectionRemoveFavorite,
+      ...collectionViewer,
+    },
     publicationViewer: {
       onAddFavorite: handlePublicationAddFavorite,
       onRemoveFavorite: handlePublicationRemoveFavorite,

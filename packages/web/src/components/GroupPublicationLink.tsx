@@ -18,10 +18,8 @@ export default memo(
       () => ({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(gid).toString(),
-        }),
-        search: new URLSearchParams({
           type: GroupViewType.Publication,
-        }).toString(),
+        }),
       }),
       [gid]
     )

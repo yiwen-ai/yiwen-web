@@ -21,12 +21,12 @@ export default memo(
       () => ({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(gid).toString(),
+          type: GroupViewType.Publication,
         }),
         search: new URLSearchParams({
           cid: Xid.fromValue(cid).toString(),
           language,
           version: version.toString(),
-          type: GroupViewType.Publication,
         }).toString(),
       }),
       [cid, gid, language, version]

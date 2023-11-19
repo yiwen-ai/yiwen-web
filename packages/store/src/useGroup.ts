@@ -1,5 +1,6 @@
+import { omitBy } from 'lodash-es'
 import { useCallback, useMemo, useState } from 'react'
-import useSWR, { type SWRConfiguration } from 'swr'
+import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
@@ -9,6 +10,7 @@ import {
   type GroupInfo,
   type Page,
   type Pagination,
+  type PostFilePolicy,
   type UserInfo,
 } from './common'
 import { useFetcher } from './useFetcher'
@@ -34,6 +36,13 @@ export interface Group {
   owner?: UserInfo
 }
 
+export interface GroupDraft {
+  name: string
+  logo: string
+  slogan?: string
+  __logo_name?: string
+}
+
 export interface GroupStatisticOutput {
   publications: number
   members: number
@@ -43,6 +52,14 @@ export interface QueryIdCn {
   id?: Uint8Array
   cn?: string
   fields?: string
+}
+
+export interface UpdateGroupInput {
+  id: Uint8Array
+  name?: string
+  logo?: string
+  slogan?: string
+  website?: string
 }
 
 const path = '/v1/group'
@@ -92,6 +109,27 @@ export function useGroupAPI() {
     [request]
   )
 
+  const updateGroupInfo = useCallback(
+    async (body: UpdateGroupInput) => {
+      const { result } = await request.patch<{ result: Group }>(
+        path,
+        omitBy(body, (val) => val == null)
+      )
+      return result
+    },
+    [request]
+  )
+
+  const readGroupLogoUploadPolicy = useCallback(
+    async (params: Record<keyof QueryIdCn, string | undefined>) => {
+      return request.get<{ result: PostFilePolicy }>(
+        `${path}/upload_logo`,
+        params
+      )
+    },
+    [request]
+  )
+
   return {
     readGroupInfo,
     readGroupStatistic,
@@ -99,6 +137,8 @@ export function useGroupAPI() {
     readFollowedGroupList,
     followGroup,
     unfollowGroup,
+    updateGroupInfo,
+    readGroupLogoUploadPolicy,
   } as const
 }
 
@@ -132,9 +172,7 @@ export function useGroup(_gid: string | null | undefined) {
     mutate: mutateGroupInfo,
     isValidating: isValidatingGroupInfo,
     isLoading: isLoadingGroupInfo,
-  } = useSWR(getInfoKey, ([_, params]) => readGroupInfo(params), {
-    revalidateOnMount: false,
-  } as SWRConfiguration)
+  } = useSWR(getInfoKey, ([_, params]) => readGroupInfo(params), {})
 
   const {
     data: groupStatistic,
@@ -142,9 +180,7 @@ export function useGroup(_gid: string | null | undefined) {
     mutate: mutateGroupStatistic,
     isValidating: isValidatingGroupStatistic,
     isLoading: isLoadingGroupStatistic,
-  } = useSWR(getStatisticKey, ([_, params]) => readGroupStatistic(params), {
-    revalidateOnMount: false,
-  } as SWRConfiguration)
+  } = useSWR(getStatisticKey, ([_, params]) => readGroupStatistic(params), {})
 
   const refreshGroupInfo = useCallback(
     async () => getInfoKey() && (await mutateGroupInfo()),
@@ -158,10 +194,16 @@ export function useGroup(_gid: string | null | undefined) {
 
   const _role = groupInfo?.result._role
   const hasGroupReadPermission =
-    _role === RoleLevel.MEMBER || _role === RoleLevel.OWNER
-  const hasGroupWritePermission = _role === RoleLevel.OWNER
-  const hasGroupAddCreationPermission =
-    _role === RoleLevel.MEMBER || _role === RoleLevel.OWNER
+    _role === RoleLevel.GUEST ||
+    _role === RoleLevel.MEMBER ||
+    _role === RoleLevel.ADMIN ||
+    _role === RoleLevel.OWNER
+  const hasGroupAdminPermission =
+    _role === RoleLevel.ADMIN || _role === RoleLevel.OWNER
+  const hasGroupMemberPermission =
+    _role === RoleLevel.MEMBER ||
+    _role === RoleLevel.ADMIN ||
+    _role === RoleLevel.OWNER
 
   const isFollowed = !!groupInfo?.result._following
   const [isFollowing, setIsFollowing] = useState(false)
@@ -198,8 +240,8 @@ export function useGroup(_gid: string | null | undefined) {
     groupInfo: groupInfo?.result,
     groupStatistic: groupStatistic?.result,
     hasGroupReadPermission,
-    hasGroupWritePermission,
-    hasGroupAddCreationPermission,
+    hasGroupAdminPermission,
+    hasGroupMemberPermission,
     refreshGroupInfo,
     refreshGroupStatistic,
     isFollowed,
@@ -222,7 +264,7 @@ export function useMyGroupList() {
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
     ([_]) => readMyGroupList(),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const defaultGroup = useMemo(
@@ -242,7 +284,8 @@ export function useMyGroupList() {
   }, [refresh])
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     groupList: data?.result,
     defaultGroup,
@@ -271,7 +314,7 @@ export function useFollowedGroupList() {
   const response = useSWRInfinite(
     getKey,
     ([, body]) => readFollowedGroupList(body),
-    { revalidateOnMount: false, revalidateFirstPage: false }
+    { revalidateFirstPage: true }
   )
 
   return usePagination({

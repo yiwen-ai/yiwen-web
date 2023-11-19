@@ -5,20 +5,21 @@ import { BREAKPOINT } from '#/shared'
 import { css } from '@emotion/react'
 import { useMyGroupList } from '@yiwen-ai/store'
 import { useEffect } from 'react'
-import { generatePath, useNavigate } from 'react-router-dom'
+import { generatePath, useNavigate, useParams } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 
 export default function DefaultGroupPage() {
-  const {
-    isLoading,
-    error,
-    defaultGroup: { id: gid } = {},
-    refreshDefaultGroup,
-  } = useMyGroupList()
+  const params = useParams<{ gid: string; type: string }>()
+  let _gid: Xid | undefined = undefined
+  if (params.gid) {
+    try {
+      _gid = Xid.fromValue(params.gid || '')
+    } catch (_) {
+      // ignore
+    }
+  }
 
-  useEffect(() => {
-    refreshDefaultGroup()
-  }, [refreshDefaultGroup])
+  const { isLoading, error, defaultGroup: { id: gid } = {} } = useMyGroupList()
 
   return (
     <div
@@ -38,19 +39,24 @@ export default function DefaultGroupPage() {
         <Loading />
       ) : error ? (
         <ErrorPlaceholder error={error} />
-      ) : gid ? (
-        <Redirect gid={gid} />
-      ) : null}
+      ) : (
+        <Redirect gid={_gid || gid} />
+      )}
     </div>
   )
 }
 
-function Redirect({ gid }: { gid: Uint8Array }) {
+function Redirect({ gid }: { gid: Xid | Uint8Array | undefined }) {
   const navigate = useNavigate()
 
   useEffect(() => {
     navigate(
-      generatePath(GROUP_DETAIL_PATH, { gid: Xid.fromValue(gid).toString() }),
+      gid
+        ? generatePath(GROUP_DETAIL_PATH, {
+            gid: Xid.fromValue(gid).toString(),
+            type: 'publication',
+          })
+        : generatePath('/'),
       { replace: true }
     )
   }, [gid, navigate])

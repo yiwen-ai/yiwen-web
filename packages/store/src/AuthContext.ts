@@ -152,6 +152,7 @@ class AuthAPI {
 interface State {
   isInitialized: boolean
   isAuthorized: boolean
+  language: string
   user?: UserInfo | undefined
   accessToken?: string | undefined
   refreshInterval?: number | undefined
@@ -165,6 +166,7 @@ interface State {
 const Context = createContext<Readonly<State>>({
   isInitialized: false,
   isAuthorized: false,
+  language: '',
   dialog: {
     open: false,
     show: () => {},
@@ -178,6 +180,12 @@ const Context = createContext<Readonly<State>>({
 
 export function useAuth() {
   return useContext(Context)
+}
+
+export const xLanguage = { current: '' }
+
+export function setXLanguage(language: string) {
+  xLanguage.current = language
 }
 
 export function useEnsureAuthorized() {

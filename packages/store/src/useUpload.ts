@@ -13,8 +13,6 @@ export interface UploadOutput {
   value: string
 }
 
-const UPLOAD_CDN = 'https://ywfs.oss-cn-hangzhou.aliyuncs.com/'
-
 export function useUploadAPI() {
   const upload = useCallback((policy: PostFilePolicy, file: File) => {
     const body = new FormData()
@@ -27,7 +25,7 @@ export function useUploadAPI() {
     body.append('file', file)
 
     return ajax({
-      url: UPLOAD_CDN,
+      url: policy.host,
       body,
       method: RequestMethod.POST,
       includeUploadProgress: true,

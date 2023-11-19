@@ -1,7 +1,7 @@
 import { type JSONContent } from '@tiptap/core'
 import { omitBy } from 'lodash-es'
 import { useCallback, useMemo, useState } from 'react'
-import useSWR, { type SWRConfiguration } from 'swr'
+import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { encode } from './CBOR'
@@ -124,6 +124,7 @@ export interface CreationDraft {
   title: string
   content: JSONContent | undefined
   original_url?: string | undefined
+  parent?: Uint8Array | undefined
 }
 
 const path = '/v1/creation'
@@ -163,12 +164,7 @@ export function useCreationAPI() {
 
   const readCreationUploadPolicy = useCallback(
     async (params: Record<keyof QueryCreation, string | undefined>) => {
-      const body = {
-        gid: params.gid ? Xid.fromValue(params.gid) : undefined,
-        id: params.id ? Xid.fromValue(params.id) : undefined,
-        fields: params.fields,
-      } as QueryCreation
-      return request.post<{ result: PostFilePolicy }>(`${path}/upload`, body)
+      return request.get<{ result: PostFilePolicy }>(`${path}/upload`, params)
     },
     [request]
   )
@@ -334,9 +330,7 @@ export function useCreation(
     mutate,
     isValidating,
     isLoading,
-  } = useSWR(getKey, ([path, params]) => readCreation(params), {
-    revalidateOnMount: false,
-  } as SWRConfiguration)
+  } = useSWR(getKey, ([path, params]) => readCreation(params), {})
 
   const refresh = useCallback(
     async () => getKey() && (await mutate())?.result,
@@ -346,7 +340,8 @@ export function useCreation(
   return {
     creation,
     error,
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     refresh,
   } as const
 }
@@ -370,7 +365,7 @@ export function useCreationUploadPolicy(
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     getKey,
     ([, params]) => readCreationUploadPolicy(params),
-    { revalidateOnMount: false } as SWRConfiguration
+    {}
   )
 
   const refresh = useCallback(
@@ -379,7 +374,8 @@ export function useCreationUploadPolicy(
   )
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     uploadPolicy: data?.result,
     refresh,
@@ -441,7 +437,7 @@ export function useCreationList(
         path === '/v1/creation/list_archived'
           ? readArchivedCreationList(params)
           : readCreationList(params),
-      { revalidateOnMount: false, revalidateFirstPage: false }
+      { revalidateFirstPage: true }
     )
 
   //#region processing state
@@ -540,9 +536,9 @@ export function useCreationList(
   }, [data])
 
   const hasMore = useMemo(() => {
-    if (!data) return false
+    if (!data || error) return false
     return !!data[data.length - 1]?.next_page_token
-  }, [data])
+  }, [data, error])
 
   const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
 
@@ -650,7 +646,8 @@ export function useCreationList(
   //#endregion
 
   return {
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
     error,
     items,
     hasMore,

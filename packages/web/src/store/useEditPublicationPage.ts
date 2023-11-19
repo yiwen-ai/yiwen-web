@@ -34,8 +34,12 @@ export function useEditPublicationPage(
   const { locale } = useAuth().user ?? {}
 
   const { refresh } = usePublication(_gid, _cid, _language, _version)
-  const { uploadPolicy, refresh: refreshUploadPolicy } =
-    usePublicationUploadPolicy(_gid, _cid, _language, _version)
+  const { uploadPolicy } = usePublicationUploadPolicy(
+    _gid,
+    _cid,
+    _language,
+    _version
+  )
 
   const [draft, setDraft] = useState<PublicationDraft>(() => ({
     __isReady: false,
@@ -68,10 +72,6 @@ export function useEditPublicationPage(
     }
   }, [refresh])
 
-  useEffect(() => {
-    refreshUploadPolicy()
-  }, [refreshUploadPolicy])
-
   const updateDraft = useCallback((draft: Partial<PublicationDraft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
   }, [])
@@ -103,12 +103,12 @@ export function useEditPublicationPage(
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(result.gid).toString(),
+          type: GroupViewType.Publication,
         }),
         search: new URLSearchParams({
           cid: Xid.fromValue(result.cid).toString(),
           language: result.language,
           version: result.version.toString(),
-          type: GroupViewType.Publication,
         }).toString(),
       })
     } catch (error) {
@@ -124,9 +124,7 @@ export function useEditPublicationPage(
 
   const upload = useCallback(
     (file: File) => {
-      const uploadPolicy$ = from(
-        Promise.resolve(uploadPolicy || refreshUploadPolicy())
-      )
+      const uploadPolicy$ = from(Promise.resolve(uploadPolicy))
       return uploadPolicy$.pipe(
         concatMap((uploadPolicy) => {
           if (!uploadPolicy) {
@@ -138,7 +136,7 @@ export function useEditPublicationPage(
         })
       )
     },
-    [_upload, intl, pushToast, refreshUploadPolicy, uploadPolicy]
+    [_upload, intl, pushToast, uploadPolicy]
   )
 
   return {

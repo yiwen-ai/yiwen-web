@@ -71,7 +71,9 @@ export const Popover = memo(
             padding: 8,
             apply: ({ availableWidth, availableHeight, elements }) => {
               // elements.floating.style.maxWidth = `${availableWidth}px`
-              elements.floating.style.maxHeight = `${availableHeight}px`
+              elements.floating.style.maxHeight = `${
+                availableHeight > 800 ? 800 : availableHeight
+              }px`
             },
           }),
         ],

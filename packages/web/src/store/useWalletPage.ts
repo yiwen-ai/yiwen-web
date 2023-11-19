@@ -25,10 +25,6 @@ export function useWalletPage(pushToast: ToastAPI['pushToast']) {
 
   //#region Wallet
   const { refresh: refreshWallet, ...wallet } = useMyWallet()
-
-  useEffect(() => {
-    refreshWallet()
-  }, [refreshWallet])
   //#endregion
 
   const [currentTab, setCurrentTab] = useState(WalletPageTab.Coin)

@@ -1,3 +1,4 @@
+import CollectionLink from '#/components/CollectionLink'
 import OrderedItem from '#/components/OrderedItem'
 import OrderedList from '#/components/OrderedList'
 import PublicationLink from '#/components/PublicationLink'
@@ -16,8 +17,10 @@ import {
   TabSection,
 } from '@yiwen-ai/component'
 import {
+  ObjectKind,
+  buildCollectionKey,
   buildPublicationKey,
-  type BookmarkOutput,
+  type ObjectParams,
   type PublicationOutput,
 } from '@yiwen-ai/store'
 import { useCallback, useMemo } from 'react'
@@ -33,7 +36,7 @@ interface ResponsiveTabSectionProps {
   value: ResponsiveTabKey
   onChange: (value: ResponsiveTabKey) => void
   items: ResponsiveTabItem[]
-  onView: (item: PublicationOutput | BookmarkOutput) => void
+  onView: (item: ObjectParams) => void
 }
 
 export default function ResponsiveTabSection({
@@ -53,7 +56,7 @@ export default function ResponsiveTabSection({
   )
 
   const renderList = useCallback(
-    (isLoading: boolean, items: (PublicationOutput | BookmarkOutput)[]) => {
+    (isLoading: boolean, items: ObjectParams[]) => {
       return isLoading ? (
         <Loading />
       ) : (
@@ -89,20 +92,39 @@ export default function ResponsiveTabSection({
               {intl.formatMessage({ defaultMessage: '暂无数据' })}
             </div>
           ) : (
-            items.slice(0, LIMIT).map((item, index) => (
-              <PublicationLink
-                key={buildPublicationKey(item)}
-                gid={item.gid}
-                cid={item.cid}
-                language={item.language}
-                version={item.version}
-                onClick={() => onView(item)}
-              >
-                <OrderedItem index={index} primary={index < LIMIT / 2}>
-                  {item.title}
-                </OrderedItem>
-              </PublicationLink>
-            ))
+            items.slice(0, LIMIT).map((item, index) =>
+              item.kind === ObjectKind.Collection ? (
+                <CollectionLink
+                  key={buildCollectionKey(
+                    item.gid as Uint8Array,
+                    item.cid as Uint8Array
+                  )}
+                  gid={item.gid as Uint8Array}
+                  cid={item.cid as Uint8Array}
+                  onClick={() => onView(item)}
+                >
+                  <OrderedItem index={index} primary={index < LIMIT / 2}>
+                    {'#' +
+                      intl.formatMessage({ defaultMessage: '合集' }) +
+                      ' ' +
+                      item.title}
+                  </OrderedItem>
+                </CollectionLink>
+              ) : (
+                <PublicationLink
+                  key={buildPublicationKey(item as PublicationOutput)}
+                  gid={item.gid as Uint8Array}
+                  cid={item.cid as Uint8Array}
+                  language={item.language as string}
+                  version={item.version as number}
+                  onClick={() => onView(item)}
+                >
+                  <OrderedItem index={index} primary={index < LIMIT / 2}>
+                    {item.title}
+                  </OrderedItem>
+                </PublicationLink>
+              )
+            )
           )}
         </OrderedList>
       )

@@ -33,7 +33,7 @@ export function useSharePublicationPage(
   } = usePublicationViewer(pushToast)
 
   useEffect(
-    () => show(_gid, _cid, _language, _version, _by),
+    () => show(_gid, _cid, _language, _version, undefined, _by),
     [_by, _cid, _gid, _language, _version, show]
   )
 

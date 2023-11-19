@@ -13,7 +13,7 @@ import {
   type ModelCost,
   type UILanguageItem,
 } from '@yiwen-ai/store'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useIntl } from 'react-intl'
 import { useNavigate } from 'react-router-dom'
 import ErrorPlaceholder from './ErrorPlaceholder'
@@ -58,7 +58,10 @@ export default function TranslateConfirmDialog({
     () => language && currentModel && onTranslate(language, currentModel.id),
     [currentModel, language, onTranslate]
   )
-  const balanceNotEnough = balance == null || balance <= 0
+  const balanceNotEnough = useMemo(
+    () => balance == null || !currentModel || balance < currentModel.cost,
+    [balance, currentModel]
+  )
 
   const navigateToWallet = useCallback(() => {
     navigate({
@@ -88,12 +91,12 @@ export default function TranslateConfirmDialog({
           <SvgTranslate
             css={css`
               display: block;
-              margin: 36px auto 0;
+              margin: 12px auto 0;
             `}
           />
           <div
             css={css`
-              margin-top: 36px;
+              margin-top: 24px;
             `}
           >
             {intl.formatMessage({

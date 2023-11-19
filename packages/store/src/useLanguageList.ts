@@ -58,7 +58,8 @@ export function useLanguageList() {
   return {
     languageList,
     error,
-    isLoading: isValidating || isLoading,
+    isLoading,
+    isValidating,
   }
 }
 

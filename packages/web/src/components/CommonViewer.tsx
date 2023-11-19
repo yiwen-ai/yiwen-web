@@ -1,16 +1,19 @@
 import { GROUP_DETAIL_PATH } from '#/App'
-import { MAX_WIDTH } from '#/shared'
-import { type GroupViewType } from '#/store/useGroupDetailPage'
+import { BREAKPOINT, MAX_WIDTH } from '#/shared'
+import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
 import { type JSONContent } from '@tiptap/core'
-import { RichTextViewer } from '@yiwen-ai/component'
+import { Button, Icon, RichTextViewer } from '@yiwen-ai/component'
 import {
+  ObjectKind,
   decode,
   isRTL,
+  type CollectionChildrenOutput,
   type CreationOutput,
   type PublicationOutput,
 } from '@yiwen-ai/store'
 import { useMemo } from 'react'
+import { useIntl } from 'react-intl'
 import { Link, generatePath } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 import CreatedBy from './CreatedBy'
@@ -19,12 +22,21 @@ export default function CommonViewer({
   type,
   item,
   isNarrow,
+  gid,
+  parent,
+  prevItem,
+  nextItem,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & {
   type: GroupViewType
   item: CreationOutput | PublicationOutput | undefined
   isNarrow: boolean
+  gid?: string | null | undefined
+  parent?: string | null | undefined
+  prevItem?: CollectionChildrenOutput | null | undefined
+  nextItem?: CollectionChildrenOutput | null | undefined
 }) {
+  const intl = useIntl()
   const theme = useTheme()
 
   const content = useMemo(
@@ -42,10 +54,12 @@ export default function CommonViewer({
         margin: 0 auto;
         padding: 0 36px;
         box-sizing: border-box;
-        ${isNarrow &&
-        css`
+        max-height: calc(100vh - 160px);
+        overflow-y: auto;
+        @media (max-width: ${BREAKPOINT.small}px) {
           padding: 0 16px;
-        `}
+          max-height: calc(100vh - 80px);
+        }
       `}
     >
       <div
@@ -54,10 +68,9 @@ export default function CommonViewer({
         css={css`
           ${theme.typography.h1}
           overflow-wrap: break-word;
-          ${isNarrow &&
-          css`
+          @media (max-width: ${BREAKPOINT.small}px) {
             ${theme.typography.h2}
-          `}
+          }
         `}
       >
         {item.title}
@@ -66,8 +79,8 @@ export default function CommonViewer({
         to={{
           pathname: generatePath(GROUP_DETAIL_PATH, {
             gid: Xid.fromValue(item.gid).toString(),
+            type,
           }),
-          search: new URLSearchParams({ type }).toString(),
         }}
         css={css`
           margin-top: 12px;
@@ -92,13 +105,140 @@ export default function CommonViewer({
           css={css`
             margin-top: 24px;
             margin-bottom: 48px;
-            ${isNarrow &&
-            css`
+            @media (max-width: ${BREAKPOINT.small}px) {
               margin-top: 20px;
               margin-bottom: 24px;
-            `}
+            }
           `}
         />
+      )}
+      {(prevItem || nextItem) && (
+        <div
+          css={css`
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            width: 100%;
+            gap: 24px;
+            margin-bottom: 48px;
+          `}
+        >
+          {prevItem && (
+            <Link
+              reloadDocument={prevItem.kind === ObjectKind.Collection}
+              unstable_viewTransition={true}
+              key={Xid.fromValue(prevItem.cid).toString()}
+              to={{
+                pathname: generatePath(GROUP_DETAIL_PATH, {
+                  gid: Xid.fromValue(prevItem.gid).toString(),
+                  type:
+                    prevItem.kind === ObjectKind.Collection
+                      ? GroupViewType.Collection
+                      : GroupViewType.Publication,
+                }),
+                search:
+                  prevItem.kind === ObjectKind.Collection
+                    ? new URLSearchParams({
+                        cid: Xid.fromValue(prevItem.cid).toString(),
+                      }).toString()
+                    : new URLSearchParams({
+                        parent: Xid.fromValue(prevItem.parent).toString(),
+                        cid: Xid.fromValue(prevItem.cid).toString(),
+                        language: prevItem.language,
+                        version: String(prevItem.version),
+                      }).toString(),
+              }}
+              css={css`
+                display: block;
+              `}
+            >
+              <Button
+                title={intl.formatMessage({ defaultMessage: '上一篇' })}
+                color='secondary'
+                variant='outlined'
+                size={isNarrow ? 'small' : 'large'}
+              >
+                <Icon
+                  name='arrow-up-s-line'
+                  size={isNarrow ? 'small' : 'medium'}
+                />
+                <span>{intl.formatMessage({ defaultMessage: '上一篇' })}</span>
+              </Button>
+            </Link>
+          )}
+          {gid && parent && isNarrow && (
+            <Link
+              reloadDocument={false}
+              unstable_viewTransition={true}
+              key={parent}
+              to={{
+                pathname: generatePath(GROUP_DETAIL_PATH, {
+                  gid,
+                  type: GroupViewType.Collection,
+                }),
+                search: new URLSearchParams({
+                  cid: parent,
+                }).toString(),
+              }}
+              css={css`
+                display: block;
+              `}
+            >
+              <Button
+                title={intl.formatMessage({ defaultMessage: '目录' })}
+                color='secondary'
+                variant='outlined'
+                size={'small'}
+              >
+                <Icon name='menu-line' size={'small'} />
+                <span>{intl.formatMessage({ defaultMessage: '目录' })}</span>
+              </Button>
+            </Link>
+          )}
+          {nextItem && (
+            <Link
+              reloadDocument={nextItem.kind === ObjectKind.Collection}
+              unstable_viewTransition={true}
+              key={Xid.fromValue(nextItem.cid).toString()}
+              to={{
+                pathname: generatePath(GROUP_DETAIL_PATH, {
+                  gid: Xid.fromValue(nextItem.gid).toString(),
+                  type:
+                    nextItem.kind === ObjectKind.Collection
+                      ? GroupViewType.Collection
+                      : GroupViewType.Publication,
+                }),
+                search:
+                  nextItem.kind === ObjectKind.Collection
+                    ? new URLSearchParams({
+                        cid: Xid.fromValue(nextItem.cid).toString(),
+                      }).toString()
+                    : new URLSearchParams({
+                        parent: Xid.fromValue(nextItem.parent).toString(),
+                        cid: Xid.fromValue(nextItem.cid).toString(),
+                        language: nextItem.language,
+                        version: String(nextItem.version),
+                      }).toString(),
+              }}
+              css={css`
+                display: block;
+              `}
+            >
+              <Button
+                title={intl.formatMessage({ defaultMessage: '下一篇' })}
+                color='secondary'
+                variant='outlined'
+                size={isNarrow ? 'small' : 'large'}
+              >
+                <Icon
+                  name='arrow-down-s-line'
+                  size={isNarrow ? 'small' : 'medium'}
+                />
+                <span>{intl.formatMessage({ defaultMessage: '下一篇' })}</span>
+              </Button>
+            </Link>
+          )}
+        </div>
       )}
     </div>
   ) : null

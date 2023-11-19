@@ -174,7 +174,7 @@ export const RichTextViewer = memo(
           content: content ?? initialContent,
           extensions: getExtensions(),
         },
-        []
+        [content]
       )
 
       useImperativeHandle(ref, () => editor, [editor])

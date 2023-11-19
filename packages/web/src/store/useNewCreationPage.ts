@@ -34,7 +34,7 @@ export function useNewCreationPage(
   //#region draft
   const { locale } = useAuth().user ?? {}
 
-  const { defaultGroup, refreshDefaultGroup } = useMyGroupList()
+  const { defaultGroup } = useMyGroupList()
   const defaultGroupId = defaultGroup?.id
 
   const [draft, setDraft] = useState<CreationDraft>(() => ({
@@ -45,6 +45,7 @@ export function useNewCreationPage(
     updated_at: undefined,
     title: '',
     content: undefined,
+    parent: undefined,
   }))
 
   useEffect(() => {
@@ -67,10 +68,6 @@ export function useNewCreationPage(
       setTimeout(() => revokeBlobURL(url), 100)
     }
   }, [_scrapingOutput])
-
-  useEffect(() => {
-    refreshDefaultGroup()
-  }, [refreshDefaultGroup])
 
   useEffect(() => {
     const gid = draft.gid || defaultGroupId
@@ -104,10 +101,10 @@ export function useNewCreationPage(
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(gid).toString(),
+          type: GroupViewType.Creation,
         }),
         search: new URLSearchParams({
           cid: Xid.fromValue(cid).toString(),
-          type: GroupViewType.Creation,
         }).toString(),
       })
     },

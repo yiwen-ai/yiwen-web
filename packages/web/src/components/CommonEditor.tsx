@@ -1,3 +1,4 @@
+import CollectionSelector from '#/components/CollectionSelector'
 import Loading from '#/components/Loading'
 import { BREAKPOINT, MAX_WIDTH } from '#/shared'
 import { type GroupViewType } from '#/store/useGroupDetailPage'
@@ -11,10 +12,11 @@ import {
   type PublicationDraft,
   type UploadOutput,
 } from '@yiwen-ai/store'
-import { useCallback, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
 import { type Observable } from 'rxjs'
+import { Xid } from 'xid-ts'
 
 export default function CommonEditor({
   type,
@@ -22,6 +24,7 @@ export default function CommonEditor({
   updateDraft,
   isLoading,
   isSaving,
+  withParent,
   upload,
 }: {
   type: GroupViewType
@@ -29,14 +32,15 @@ export default function CommonEditor({
   updateDraft: (draft: Partial<CreationDraft | PublicationDraft>) => void
   isLoading: boolean
   isSaving: boolean
+  withParent?: boolean
   upload?: (file: File) => Observable<UploadOutput>
 }) {
   const intl = useIntl()
   const theme = useTheme()
   const { isAuthorized } = useAuth()
   const editorRef = useRef<Editor>(null)
-  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
-  const isNarrow = width <= BREAKPOINT.small
+  const { ref } = useResizeDetector<HTMLDivElement>()
+  // const isNarrow = width <= BREAKPOINT.small
 
   const handleTitleChange = useCallback(
     (ev: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -58,6 +62,16 @@ export default function CommonEditor({
   const handleContentChange = useCallback(
     (content: JSONContent) => updateDraft({ content }),
     [updateDraft]
+  )
+
+  const handleParent = useCallback(
+    (parent: string) => updateDraft({ parent: Xid.fromValue(parent) }),
+    [updateDraft]
+  )
+
+  const gid = useMemo(
+    () => (withParent && draft.gid ? Xid.fromValue(draft.gid).toString() : ''),
+    [withParent, draft.gid]
   )
 
   const lang = document.documentElement.lang || window.navigator.language
@@ -109,10 +123,9 @@ export default function CommonEditor({
               padding-top: 100px;
               border: none;
               ${theme.typography.h0}
-              ${isNarrow &&
-              css`
+              @media (max-width: ${BREAKPOINT.small}px) {
                 padding-top: 24px;
-              `}
+              }
             `}
           />
           <RichTextEditor
@@ -125,10 +138,9 @@ export default function CommonEditor({
               .ProseMirror {
                 padding-top: 24px;
                 padding-bottom: 100px;
-                ${isNarrow &&
-                css`
+                @media (max-width: ${BREAKPOINT.small}px) {
                   padding-bottom: 24px;
-                `}
+                }
               }
             `}
           />
@@ -140,13 +152,23 @@ export default function CommonEditor({
           border-top: 1px solid ${theme.color.divider.secondary};
         `}
       >
-        <ArticleSettings />
+        <ArticleSettings gid={gid} updateParent={handleParent} />
       </div>
     </>
   )
 }
 
-function ArticleSettings(props: React.HTMLAttributes<HTMLDivElement>) {
+export interface ArticleSettingsProps
+  extends React.HTMLAttributes<HTMLDivElement> {
+  gid?: string
+  updateParent?: ((parent: string) => void) | undefined
+}
+
+function ArticleSettings({
+  gid,
+  updateParent,
+  ...props
+}: ArticleSettingsProps) {
   const intl = useIntl()
   const theme = useTheme()
 
@@ -156,12 +178,10 @@ function ArticleSettings(props: React.HTMLAttributes<HTMLDivElement>) {
       css={css`
         max-width: ${MAX_WIDTH};
         margin: auto;
-        padding: 16px 0;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        /* TODO */
+        padding: 36px 0;
         display: none;
+        flex-direction: column;
+        gap: 24px;
       `}
     >
       <div
@@ -171,7 +191,11 @@ function ArticleSettings(props: React.HTMLAttributes<HTMLDivElement>) {
       >
         {intl.formatMessage({ defaultMessage: '文稿设置' })}
       </div>
-      <Field label={intl.formatMessage({ defaultMessage: '关键词：' })} />
+      {gid && updateParent && (
+        <Field label={intl.formatMessage({ defaultMessage: '归属合集：' })}>
+          <CollectionSelector gid={gid} onSelect={updateParent} />
+        </Field>
+      )}
       <Field label={intl.formatMessage({ defaultMessage: '声明：' })}>
         <Select
           placeholder={intl.formatMessage({ defaultMessage: '请选择' })}
