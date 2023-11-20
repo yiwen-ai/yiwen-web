@@ -145,14 +145,17 @@ export default function PaymentConfirmDialog({
                   ? intl.formatMessage({ defaultMessage: '为合集付费' })
                   : intl.formatMessage({ defaultMessage: '为作品付费' })}
               </div>
-              <blockquote
+              <div
                 css={css`
                   ${textEllipsis}
                   ${theme.typography.h2}
+                  padding: 16px 24px;
+                  border-radius: 12px;
+                  box-shadow: ${theme.effect.card};
                 `}
               >
                 {paymentInfo.title}
-              </blockquote>
+              </div>
               <div
                 css={(theme) => css`
                   color: ${theme.color.body.default};

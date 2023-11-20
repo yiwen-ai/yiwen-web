@@ -8,6 +8,7 @@ import {
   type UpdateCollectionInput,
 } from '@yiwen-ai/store'
 import { isBlobURL } from '@yiwen-ai/util'
+import { isEqual } from 'lodash-es'
 import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
@@ -152,10 +153,7 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
         input.creation_price = draft.creation_price
       }
 
-      if (
-        draft.info.title !== collection.info.title ||
-        draft.info.summary !== collection.info.summary
-      ) {
+      if (!isEqual(input.info, draft.info)) {
         input.info = { ...draft.info }
       }
 

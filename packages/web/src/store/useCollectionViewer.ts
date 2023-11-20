@@ -167,7 +167,7 @@ export function useCollectionViewer(pushToast: ToastAPI['pushToast']) {
     if (!info) return
     const link = document.location.href.split('#')[0] as string
     const title = info.title || document.title
-    const imgUrl = collection?.cover || 'https://cdn.yiwen.pub/yiwen.ai.jpg'
+    const imgUrl = collection?.cover || 'https://cdn.yiwen.pub/yiwen.cover.jpg'
     let desc = info.summary || link
     if (desc.length > 100) {
       desc = desc.substring(0, 100) + '...'

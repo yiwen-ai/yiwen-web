@@ -493,7 +493,7 @@ function CollectionDetail({
           <img
             src={
               (collection.cover as string) ||
-              'https://cdn.yiwen.pub/yiwen.ai.png'
+              'https://cdn.yiwen.pub/yiwen.cover.png'
             }
             alt='Cover'
             css={css`

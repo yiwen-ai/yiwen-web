@@ -82,7 +82,9 @@ export default function CollectionItem({
         `}
       >
         <img
-          src={(item.cover as string) || 'https://cdn.yiwen.pub/yiwen.ai.png'}
+          src={
+            (item.cover as string) || 'https://cdn.yiwen.pub/yiwen.cover.png'
+          }
           alt='Cover'
           css={css`
             display: block;

@@ -1,6 +1,6 @@
 import { BREAKPOINT } from '#/shared'
 import { css, useTheme } from '@emotion/react'
-import { Button, Icon } from '@yiwen-ai/component'
+import { Button, Icon, TagsField, TextareaAutosize } from '@yiwen-ai/component'
 import { type CollectionDraft } from '@yiwen-ai/store'
 import { useCallback, useState } from 'react'
 import { useIntl } from 'react-intl'
@@ -38,7 +38,7 @@ export default function CreateCollectionDialog({
   const disablePrice = draft.price === -1
 
   const handleSave = useCallback(
-    (ev: React.FormEvent<HTMLFormElement>) => {
+    (ev: React.MouseEvent<HTMLButtonElement>) => {
       ev.preventDefault()
       ev.stopPropagation()
 
@@ -54,9 +54,9 @@ export default function CreateCollectionDialog({
       ev.preventDefault()
       ev.stopPropagation()
 
-      let _disabled = true
+      let _disabled = disabled
       if (!ev.currentTarget.reportValidity()) {
-        setDisabled(_disabled)
+        setDisabled(true)
         return false
       }
 
@@ -64,7 +64,7 @@ export default function CreateCollectionDialog({
         (ev.currentTarget['title'] as unknown as HTMLFormElement)['value']
       ).trim()
       if (!title) {
-        setDisabled(_disabled)
+        setDisabled(true)
         return false
       }
 
@@ -102,7 +102,9 @@ export default function CreateCollectionDialog({
           'value'
         ]
       )
-      if (creation_price !== draft.creation_price) {
+      if (creation_price > price) {
+        ev.currentTarget['creation_price'].value = price
+      } else if (creation_price !== draft.creation_price) {
         _disabled = false
         setDraft({ ...draft, creation_price })
       }
@@ -110,7 +112,7 @@ export default function CreateCollectionDialog({
       setDisabled(_disabled)
       return true
     },
-    [draft, setDraft, setDisabled]
+    [draft, setDraft, disabled, setDisabled]
   )
 
   const handleCoverInputChange = useCallback(
@@ -119,6 +121,7 @@ export default function CreateCollectionDialog({
       if (!file || !file.name) return false
       ev.preventDefault()
       ev.stopPropagation()
+
       const arr = file.name.split('.')
       const filename =
         arr.length > 1 ? `${Date.now()}.${arr.pop()?.toLowerCase()}` : file.name
@@ -129,6 +132,25 @@ export default function CreateCollectionDialog({
       })
       setDisabled(false)
       return true
+    },
+    [draft, setDraft, setDisabled]
+  )
+
+  const handleKeywordsChange = useCallback(
+    (keywords: string[]) => {
+      if (JSON.stringify(keywords) === JSON.stringify(draft.info.keywords))
+        return
+      setDraft({ ...draft, info: { ...draft.info, keywords } })
+      setDisabled(false)
+    },
+    [draft, setDraft, setDisabled]
+  )
+
+  const handleAuthorsChange = useCallback(
+    (authors: string[]) => {
+      if (JSON.stringify(authors) === JSON.stringify(draft.info.authors)) return
+      setDraft({ ...draft, info: { ...draft.info, authors } })
+      setDisabled(false)
     },
     [draft, setDraft, setDisabled]
   )
@@ -181,7 +203,6 @@ export default function CreateCollectionDialog({
       ) : (
         <Form
           onChange={handleChange}
-          onSubmit={handleSave}
           css={css`
             h2 {
               ${theme.typography.h2}
@@ -189,8 +210,9 @@ export default function CreateCollectionDialog({
               margin: 24px 0 12px;
             }
             label {
-              display: block;
+              display: flex;
               align-items: center;
+              flex-wrap: wrap;
               padding: 8px 12px;
               border: 1px solid ${theme.color.input.border};
               border-radius: 8px;
@@ -321,6 +343,7 @@ export default function CreateCollectionDialog({
                   type='text'
                   name='title'
                   aria-label='Collection title'
+                  data-1p-ignore={true}
                   placeholder={intl.formatMessage({
                     defaultMessage: '输入合集名称',
                   })}
@@ -330,13 +353,16 @@ export default function CreateCollectionDialog({
                 />
               </label>
               <label
+                htmlFor='collection-dialog-summary'
                 css={css`
                   cursor: text;
                 `}
               >
-                <textarea
+                <TextareaAutosize
+                  id='collection-dialog-summary'
                   name='summary'
-                  rows={3}
+                  minRows={2}
+                  maxRows={6}
                   aria-label='Collection summary'
                   placeholder={intl.formatMessage({
                     defaultMessage: '输入合集简介',
@@ -346,6 +372,24 @@ export default function CreateCollectionDialog({
                   defaultValue={draft.info.summary}
                 />
               </label>
+              <TagsField
+                id='collection-dialog-keywords'
+                defaultValue={draft.info.keywords}
+                onEnter={handleKeywordsChange}
+                placeholder={'输入合集关键词，按回车键添加'}
+                css={css`
+                  height: fit-content;
+                `}
+              />
+              <TagsField
+                id='collection-dialog-authors'
+                defaultValue={draft.info.authors}
+                onEnter={handleAuthorsChange}
+                placeholder={'输入合集作者，按回车键添加'}
+                css={css`
+                  height: fit-content;
+                `}
+              />
             </div>
           </div>
           <div
@@ -364,14 +408,20 @@ export default function CreateCollectionDialog({
               })}
             </p>
             <label
+              htmlFor='collection-dialog-context'
               css={css`
                 cursor: text;
               `}
             >
-              <textarea
+              <TextareaAutosize
+                id='collection-dialog-context'
                 name='context'
-                rows={2}
+                minRows={2}
+                maxRows={6}
                 aria-label='Context for GPT translating'
+                placeholder={intl.formatMessage({
+                  defaultMessage: 'GPT 提示词追加的上下文',
+                })}
                 minLength={0}
                 maxLength={1024}
                 defaultValue={draft.context}
@@ -410,6 +460,7 @@ export default function CreateCollectionDialog({
             </p>
             <label
               css={css`
+                width: fit-content;
                 cursor: ${disablePrice ? 'not-allowed' : 'text'};
               `}
             >
@@ -432,6 +483,7 @@ export default function CreateCollectionDialog({
             </p>
             <label
               css={css`
+                width: fit-content;
                 cursor: text;
               `}
             >
@@ -452,11 +504,12 @@ export default function CreateCollectionDialog({
             `}
           >
             <Button
-              type='submit'
+              type='button'
               size='large'
               color={'primary'}
               variant='contained'
               disabled={disabled || isSaving}
+              onClick={handleSave}
             >
               {intl.formatMessage({ defaultMessage: '保存' })}
             </Button>

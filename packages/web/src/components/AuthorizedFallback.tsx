@@ -29,7 +29,8 @@ export default function AuthorizedFallback({
     >
       <span
         css={(theme) => css`
-          color: ${theme.color.body.secondary};
+          ${theme.typography.h2}
+          color: ${theme.color.body.primary};
         `}
       >
         {description ||
@@ -45,7 +46,7 @@ export default function AuthorizedFallback({
         <Button
           color='primary'
           variant='outlined'
-          size='small'
+          size='large'
           onClick={showAuthDialog}
         >
           {intl.formatMessage({ defaultMessage: '登录' })}
@@ -56,7 +57,7 @@ export default function AuthorizedFallback({
             display: flex;
           `}
         >
-          <Button color='secondary' variant='outlined' size='small'>
+          <Button color='secondary' variant='outlined' size='large'>
             {intl.formatMessage({ defaultMessage: '返回首页' })}
           </Button>
         </Link>

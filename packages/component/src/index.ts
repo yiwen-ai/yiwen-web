@@ -52,6 +52,7 @@ export {
 } from './Select'
 export { Spinner, type SpinnerProps, type SpinnerSize } from './Spinner'
 export { Tab, TabList, TabPanel, TabSection } from './TabSection'
+export { TagsField, type TagsFieldProps, type TagsFieldSize } from './TagsField'
 export { TextField, type TextFieldProps, type TextFieldSize } from './TextField'
 export { TextareaAutosize } from './TextareaAutosize'
 export {
