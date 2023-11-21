@@ -314,7 +314,7 @@ export function useFollowedGroupList() {
   const response = useSWRInfinite(
     getKey,
     ([, body]) => readFollowedGroupList(body),
-    { revalidateFirstPage: true }
+    { revalidateFirstPage: false }
   )
 
   return usePagination({

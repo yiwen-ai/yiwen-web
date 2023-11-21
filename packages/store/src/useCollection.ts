@@ -207,7 +207,7 @@ export function useCollectionAPI() {
       const body: GIDPagination = {
         gid: Xid.fromValue(params.gid),
         page_token: params.page_token,
-        fields: ['info', 'updated_at', 'cover', 'price', 'creation_price'],
+        fields: ['info', 'updated_at'],
       }
       return request.post<Page<CollectionOutput>>(`${path}/list`, body)
     },
@@ -249,7 +249,7 @@ export function useCollectionAPI() {
       const body: GIDPagination = {
         gid: Xid.fromValue(params.gid),
         page_token: params.page_token,
-        fields: ['info', 'updated_at', 'cover'],
+        fields: ['info', 'updated_at'],
       }
       return request.post<Page<CollectionOutput>>(`${path}/list_archived`, body)
     },
@@ -394,7 +394,7 @@ export function useCollection(
       readCollection({
         gid: _gid as string,
         id: params.id,
-        fields: 'info',
+        fields: undefined,
         language: _language,
       }),
     {}
@@ -489,7 +489,7 @@ export function useCollectionList(
         path === '/v1/collection/list_archived'
           ? readArchivedCollectionList(params)
           : readCollectionList(params),
-      { revalidateFirstPage: true }
+      { revalidateFirstPage: false }
     )
 
   //#region processing state
@@ -611,17 +611,20 @@ export function useCollectionList(
           updated_at: item.updated_at ?? 0,
           status: CollectionStatus.Public,
         })
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.map((item) => {
-              if (isSameCollection(item.id, result.id)) {
-                item.status = result.status
-                item.updated_at = result.updated_at as number
-              }
-              return item
-            }),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.map((item) =>
+                isSameCollection(item.id, result.id)
+                  ? { ...item, ...result }
+                  : item
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setPublishing(item, false)
@@ -640,13 +643,18 @@ export function useCollectionList(
           updated_at: item.updated_at ?? 0,
           status: CollectionStatus.Archived,
         })
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.filter(
-              (item) => !isSameCollection(item.id, result.id)
-            ),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.filter(
+                (item) => !isSameCollection(item.id, result.id)
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setArchiving(item, false)
@@ -665,13 +673,18 @@ export function useCollectionList(
           updated_at: item.updated_at ?? 0,
           status: CollectionStatus.Private,
         })
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.filter(
-              (item) => !isSameCollection(item.id, result.id)
-            ),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.filter(
+                (item) => !isSameCollection(item.id, result.id)
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setRestoring(item, false)
@@ -685,13 +698,18 @@ export function useCollectionList(
       try {
         setDeleting(item, true)
         await deleteCollection(item.gid, item.id)
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.filter(
-              (_item) => !isSameCollection(_item.id, item.id)
-            ),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.filter(
+                (_item) => !isSameCollection(_item.id, item.id)
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setDeleting(item, false)
@@ -775,9 +793,9 @@ export function useCollectionChildren(
   const addChildren = useCallback(
     async (body: AddCollectionChildrenInput) => {
       await addCollectionChildren(body)
-      refresh()
+      loadMore()
     },
-    [addCollectionChildren, refresh]
+    [addCollectionChildren, loadMore]
   )
 
   const updateChild = useCallback(
@@ -790,13 +808,19 @@ export function useCollectionChildren(
   const removeChild = useCallback(
     async (params: { gid: string; id: string; cid: string }) => {
       await removeCollectionChild(params)
-      mutate((prev) =>
-        prev?.map((page): typeof page => ({
-          ...page,
-          result: page.result.filter(
-            (item) => !Xid.fromValue(item.cid).equals(Xid.fromValue(params.cid))
-          ),
-        }))
+      mutate(
+        (prev) =>
+          prev?.map((page): typeof page => ({
+            ...page,
+            result: page.result.filter(
+              (item) =>
+                !Xid.fromValue(item.cid).equals(Xid.fromValue(params.cid))
+            ),
+          })),
+        {
+          revalidate: false,
+          populateCache: true,
+        }
       )
     },
     [removeCollectionChild, mutate]

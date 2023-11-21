@@ -437,7 +437,7 @@ export function useCreationList(
         path === '/v1/creation/list_archived'
           ? readArchivedCreationList(params)
           : readCreationList(params),
-      { revalidateFirstPage: true }
+      { revalidateFirstPage: false }
     )
 
   //#region processing state
@@ -565,13 +565,18 @@ export function useCreationList(
           id: Xid.fromValue(item.id).toString(),
           fields: undefined,
         })
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.map((item) =>
-              isSameCreation(item, result) ? result : item
-            ),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.map((item) =>
+                isSameCreation(item, result) ? { ...item, ...result } : item
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setReleasing(item, false)
@@ -590,11 +595,18 @@ export function useCreationList(
           updated_at: item.updated_at,
           status: CreationStatus.Archived,
         })
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.filter((item) => !isSameCreation(item, result)),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.filter(
+                (item) => !isSameCreation(item, result)
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setArchiving(item, false)
@@ -613,11 +625,18 @@ export function useCreationList(
           updated_at: item.updated_at,
           status: CreationStatus.Draft,
         })
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.filter((item) => !isSameCreation(item, result)),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.filter(
+                (item) => !isSameCreation(item, result)
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setRestoring(item, false)
@@ -631,11 +650,18 @@ export function useCreationList(
       try {
         setDeleting(item, true)
         await deleteCreation(item.gid, item.id)
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.filter((_item) => !isSameCreation(_item, item)),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.filter(
+                (_item) => !isSameCreation(_item, item)
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setDeleting(item, false)

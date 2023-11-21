@@ -238,6 +238,7 @@ export function useGroupDetailPage(
 
   //#region publication list & creation list
   const {
+    publishItem: publishCollection,
     archiveItem: archiveCollection,
     refresh: refreshCollectionList,
     ...collectionList
@@ -246,7 +247,6 @@ export function useGroupDetailPage(
   const {
     restoreItem: restoreCollection,
     deleteItem: deleteCollection,
-    publishItem: publishCollection,
     refresh: refreshArchivedCollectionList,
     ...archivedCollectionList
   } = useCollectionList(

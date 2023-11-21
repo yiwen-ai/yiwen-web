@@ -54,7 +54,7 @@ function Redirect({ gid }: { gid: Xid | Uint8Array | undefined }) {
       gid
         ? generatePath(GROUP_DETAIL_PATH, {
             gid: Xid.fromValue(gid).toString(),
-            type: 'publication',
+            type: 'collection',
           })
         : generatePath('/'),
       { replace: true }

@@ -773,7 +773,9 @@ function CollectionChildren({
       li {
         padding: 0px;
         height: 60px;
-        width: 100%;
+        width: max-content;
+        min-width: 23%;
+        max-width: 100%;
         transition: height 0.4s ease-in-out;
         @media (max-width: ${BREAKPOINT.small}px) {
           height: 48px;

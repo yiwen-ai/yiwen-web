@@ -767,7 +767,7 @@ export function usePublicationList(
         path === '/v1/publication/list_archived'
           ? readArchivedPublicationList(params)
           : readPublicationList(params),
-      { revalidateFirstPage: true }
+      { revalidateFirstPage: false }
     )
 
   //#region processing state
@@ -891,13 +891,18 @@ export function usePublicationList(
           updated_at: item.updated_at,
           status: PublicationStatus.Published,
         })
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.map((item) =>
-              isSamePublication(item, result) ? result : item
-            ),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.map((item) =>
+                isSamePublication(item, result) ? { ...item, ...result } : item
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setPublishing(item, false)
@@ -918,13 +923,18 @@ export function usePublicationList(
           updated_at: item.updated_at,
           status: PublicationStatus.Archived,
         })
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.filter(
-              (item) => !isSamePublication(item, result)
-            ),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.filter(
+                (item) => !isSamePublication(item, result)
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setArchiving(item, false)
@@ -945,13 +955,18 @@ export function usePublicationList(
           updated_at: item.updated_at,
           status: PublicationStatus.Review,
         })
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.filter(
-              (item) => !isSamePublication(item, result)
-            ),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.filter(
+                (item) => !isSamePublication(item, result)
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setRestoring(item, false)
@@ -965,13 +980,18 @@ export function usePublicationList(
       try {
         setDeleting(item, true)
         await deletePublication(item.gid, item.cid, item.language, item.version)
-        mutate((prev) =>
-          prev?.map((page): typeof page => ({
-            ...page,
-            result: page.result.filter(
-              (_item) => !isSamePublication(_item, item)
-            ),
-          }))
+        mutate(
+          (prev) =>
+            prev?.map((page): typeof page => ({
+              ...page,
+              result: page.result.filter(
+                (_item) => !isSamePublication(_item, item)
+              ),
+            })),
+          {
+            revalidate: false,
+            populateCache: true,
+          }
         )
       } finally {
         setDeleting(item, false)

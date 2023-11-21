@@ -157,12 +157,12 @@ export default function GroupDetailPage() {
 
   useEffect(() => {
     if (!params.type) {
-      handleViewTypeChange(GroupViewType.Publication)
-    } else if (
-      !hasGroupReadPermission &&
-      params.type === GroupViewType.Creation
-    ) {
-      handleViewTypeChange(GroupViewType.Publication)
+      handleViewTypeChange(GroupViewType.Collection)
+      // } else if (
+      //   !hasGroupReadPermission &&
+      //   params.type === GroupViewType.Creation
+      // ) {
+      //   handleViewTypeChange(GroupViewType.Publication)
     }
   }, [hasGroupReadPermission, params.type, handleViewTypeChange])
 
