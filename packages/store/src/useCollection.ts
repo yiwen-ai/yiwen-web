@@ -1,7 +1,7 @@
 import { omitBy } from 'lodash-es'
 import { useCallback, useMemo, useState } from 'react'
-import useSWR from 'swr'
-import useSWRInfinite from 'swr/infinite'
+import useSWR, { useSWRConfig } from 'swr'
+import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { xLanguage } from './AuthContext'
 import {
@@ -138,6 +138,22 @@ export interface UpdateCollectionStatusInput {
   id: Uint8Array
   updated_at: number
   status: CollectionStatus
+}
+
+export function initialCollectionDraft(): CollectionDraft {
+  return {
+    language: '',
+    context: '',
+    info: {
+      title: '',
+      summary: '',
+      keywords: [],
+      authors: [],
+    },
+    cover: '',
+    price: 0,
+    creation_price: 0,
+  }
 }
 
 export function isSameCollection(a: Uint8Array, b: Uint8Array) {
@@ -377,6 +393,7 @@ export function useCollection(
   _cid: string | null | undefined,
   _language?: string | undefined
 ) {
+  const { mutate: mutateGobal } = useSWRConfig()
   const { readCollection } = useCollectionAPI()
 
   const getKey = useCallback(() => {
@@ -400,10 +417,46 @@ export function useCollection(
     {}
   )
 
-  const refresh = useCallback(
-    async () => getKey() && (await mutate())?.result,
-    [getKey, mutate]
+  const getListKey = useCallback(
+    (_: unknown, prevPage: Page<CollectionOutput> | null) => {
+      if (!_gid) return null
+      if (prevPage && !prevPage.next_page_token) return null
+
+      const params = {
+        gid: _gid,
+        page_token: prevPage?.next_page_token,
+      }
+
+      return [`${path}/list`, params] as const
+    },
+    [_gid]
   )
+
+  const refresh = useCallback(async () => {
+    if (!getKey()) return
+
+    const result = await mutate()
+    if (result) {
+      mutateGobal(
+        unstable_serialize(getListKey),
+        (prev: Page<CollectionOutput>[] | undefined) =>
+          prev?.map((page: Page<CollectionOutput>): typeof page => ({
+            ...page,
+            result: page.result.map((item) =>
+              isSameCollection(item.id, result.result.id)
+                ? { ...item, ...result.result }
+                : item
+            ),
+          })),
+        {
+          revalidate: false,
+          populateCache: true,
+        }
+      )
+    }
+
+    return result?.result
+  }, [getKey, getListKey, mutate, mutateGobal])
 
   return {
     collection: data?.result,

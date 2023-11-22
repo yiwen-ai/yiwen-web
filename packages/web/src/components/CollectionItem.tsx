@@ -25,28 +25,26 @@ export default function CollectionItem({
   item,
   hasWritePermission,
   isPublishing,
-  isEditing,
   isArchiving,
   onClick,
   onPublish,
-  onEdit,
+  onSetting,
   onArchive,
 }: {
   item: CollectionOutput
   hasWritePermission: boolean
   isPublishing: boolean
-  isEditing: boolean
   isArchiving: boolean
   onClick: (item: CollectionOutput) => void
   onPublish: (item: CollectionOutput) => void
-  onEdit: (item: CollectionOutput) => void
+  onSetting: (item: CollectionOutput) => void
   onArchive: (item: CollectionOutput) => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
-  const disabled = isEditing || isArchiving || isPublishing
+  const disabled = isArchiving || isPublishing
   const handleClick = useCallback(() => onClick(item), [item, onClick])
-  const handleEdit = useCallback(() => onEdit(item), [item, onEdit])
+  const handleSetting = useCallback(() => onSetting(item), [item, onSetting])
   const handlePublish = useCallback(() => onPublish(item), [item, onPublish])
   const handleArchive = useCallback(() => onArchive(item), [item, onArchive])
 
@@ -148,13 +146,9 @@ export default function CollectionItem({
                   color='secondary'
                   variant='text'
                   disabled={disabled}
-                  onClick={handleEdit}
+                  onClick={handleSetting}
                 >
-                  {isEditing ? (
-                    <Spinner size={12} />
-                  ) : (
-                    <Icon name='edit' size='small' />
-                  )}
+                  <Icon name='settings' size='small' />
                   <span>{intl.formatMessage({ defaultMessage: '设置' })}</span>
                 </Button>
               )}

@@ -1,11 +1,11 @@
 import { css } from '@emotion/react'
-import { Button, Select, SelectOption, Spinner } from '@yiwen-ai/component'
+import { Button, Select, Spinner } from '@yiwen-ai/component'
 import {
   getCollectionTitle,
   useCollectionList,
   type CollectionOutput,
 } from '@yiwen-ai/store'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { Xid } from 'xid-ts'
 import Placeholder from './Placeholder'
@@ -20,27 +20,35 @@ export default function CollectionSelector({
   onSelect,
 }: CollectionSelectorProps) {
   const intl = useIntl()
-  // const theme = useTheme()
 
-  const {
-    isLoading,
-    items,
-    // hasMore,
-    // loadMore,
-  } = useCollectionList(gid, undefined)
+  const { isLoading, items } = useCollectionList(gid, undefined)
 
-  const [title, setTitle] = useState('')
+  const [selected, setSelected] = useState<CollectionOutput | null>(null)
 
   const handleSelect = useCallback(
-    (item: CollectionOutput, ev: React.SyntheticEvent) => {
-      ev.preventDefault()
-      ev.stopPropagation()
-
-      setTitle(getCollectionTitle(item))
-      onSelect(Xid.fromValue(item.id).toString())
-      return true
+    (item: CollectionOutput | null) => {
+      setSelected(item)
+      onSelect(item ? Xid.fromValue(item.id).toString() : '')
     },
-    [setTitle, onSelect]
+    [setSelected, onSelect]
+  )
+
+  const options = useMemo(
+    () => [
+      {
+        key: '',
+        label: intl.formatMessage({ defaultMessage: '选择合集' }),
+        value: null,
+        onSelect: () => handleSelect(null),
+      },
+      ...items.map((item) => ({
+        key: Xid.fromValue(item.id).toString(),
+        label: getCollectionTitle(item),
+        value: item,
+        onSelect: () => handleSelect(item),
+      })),
+    ],
+    [items, intl, handleSelect]
   )
 
   return (
@@ -49,26 +57,19 @@ export default function CollectionSelector({
         <Button color='secondary' size={'medium'} {...props}>
           {isLoading ? (
             <Spinner size={'medium'} />
-          ) : title ? (
-            title
+          ) : selected ? (
+            getCollectionTitle(selected)
           ) : (
             intl.formatMessage({ defaultMessage: '选择合集' })
           )}
         </Button>
       )}
+      options={options}
       css={css`
         width: fit-content;
         max-width: 600px;
       `}
     >
-      {items.map((item) => (
-        <SelectOption
-          key={Xid.fromValue(item.id).toString()}
-          label={getCollectionTitle(item)}
-          value={item}
-          onSelect={handleSelect}
-        />
-      ))}
       {items.length === 0 && <Placeholder />}
     </Select>
   )

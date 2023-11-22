@@ -1,25 +1,30 @@
+import CollectionSelector from '#/components/CollectionSelector'
 import CommonEditor from '#/components/CommonEditor'
 import CreateFromFileDialog from '#/components/CreateFromFileDialog'
 import CreateFromLinkDialog from '#/components/CreateFromLinkDialog'
 import { renderIconMoreAnchor } from '#/components/IconMoreAnchor'
 import SaveHeader from '#/components/SaveHeader'
-import { useIsNarrow } from '#/shared'
+import { MAX_WIDTH, useIsNarrow } from '#/shared'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { useNewCreationPage } from '#/store/useNewCreationPage'
-import { css } from '@emotion/react'
+import { css, useTheme } from '@emotion/react'
 import {
   Button,
   Icon,
   Menu,
   MenuItem,
   Spinner,
+  TextField,
   useToast,
 } from '@yiwen-ai/component'
+import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import { useSearchParams } from 'react-router-dom'
+import { Xid } from 'xid-ts'
 
 export default function NewCreationPage() {
   const intl = useIntl()
+  const theme = useTheme()
   const [searchParams] = useSearchParams()
   const { renderToastContainer, pushToast } = useToast()
   const isNarrow = useIsNarrow()
@@ -45,6 +50,21 @@ export default function NewCreationPage() {
     pushToast,
     searchParams.get('gid'),
     searchParams.get('scrapingOutput')
+  )
+
+  const gid = searchParams.get('gid') || ''
+  const updateParent = useCallback(
+    (parent: string) => {
+      updateDraft({ parent: parent ? Xid.fromValue(parent) : undefined })
+    },
+    [updateDraft]
+  )
+
+  const updateUrl = useCallback(
+    (ev: React.ChangeEvent<HTMLInputElement>) => {
+      updateDraft({ original_url: ev.currentTarget.value.trim() || '' })
+    },
+    [updateDraft]
   )
 
   return (
@@ -125,10 +145,53 @@ export default function NewCreationPage() {
         type={GroupViewType.Creation}
         draft={draft}
         updateDraft={updateDraft}
-        withParent={true}
         isLoading={isLoading}
         isSaving={isSaving}
       />
+      <div
+        css={css`
+          width: 100%;
+          box-shadow: ${theme.effect.card};
+        `}
+      >
+        <div
+          css={css`
+            max-width: ${MAX_WIDTH};
+            margin: auto;
+            padding: 36px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+          `}
+        >
+          <div
+            css={css`
+              ${theme.typography.bodyBold}
+            `}
+          >
+            {intl.formatMessage({ defaultMessage: '文稿设置' })}
+          </div>
+          {gid && (
+            <Field label={intl.formatMessage({ defaultMessage: '归属合集：' })}>
+              <CollectionSelector gid={gid} onSelect={updateParent} />
+            </Field>
+          )}
+          <Field label={intl.formatMessage({ defaultMessage: '文稿来源：' })}>
+            <TextField
+              size='large'
+              placeholder={intl.formatMessage({
+                defaultMessage: '原文链接',
+              })}
+              value={draft.original_url || ''}
+              onChange={updateUrl}
+              css={css`
+                width: 480px;
+              `}
+            />
+          </Field>
+        </div>
+      </div>
+
       {createFromLinkDialog.open && (
         <CreateFromLinkDialog
           onClose={closeCreateFromLinkDialog}
@@ -142,5 +205,39 @@ export default function NewCreationPage() {
         />
       )}
     </>
+  )
+}
+
+function Field({
+  label,
+  ...props
+}: React.PropsWithChildren<{
+  label: string
+}>) {
+  return (
+    <div
+      css={css`
+        display: flex;
+        align-items: flex-start;
+      `}
+    >
+      <span
+        css={css`
+          min-width: 80px;
+          text-align: right;
+        `}
+      >
+        {label}
+      </span>
+      <div
+        css={css`
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+        `}
+      >
+        {props.children}
+      </div>
+    </div>
   )
 }

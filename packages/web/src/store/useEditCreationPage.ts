@@ -2,15 +2,19 @@ import { GROUP_DETAIL_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   decode,
+  diffCreationDraft,
+  encode,
+  initialCreationDraft,
   toMessage,
-  useAuth,
   useCreation,
   useCreationAPI,
   useCreationUploadPolicy,
   useUploadAPI,
   type CreationDraft,
+  type CreationOutput,
 } from '@yiwen-ai/store'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { isEqual } from 'lodash-es'
+import { useCallback, useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { concatMap, from } from 'rxjs'
@@ -24,80 +28,73 @@ export function useEditCreationPage(
 ) {
   const intl = useIntl()
   const navigate = useNavigate()
-  const { updateCreation } = useCreationAPI()
+  const { updateCreation, updateCreationContent } = useCreationAPI()
   const { upload: _upload } = useUploadAPI()
 
   //#region draft
-  const { locale } = useAuth().user ?? {}
-
-  const { refresh } = useCreation(_gid, _cid)
+  const { isLoading, creation, refresh } = useCreation(_gid, _cid)
   const { uploadPolicy, refresh: refreshUploadPolicy } =
     useCreationUploadPolicy(_gid, _cid)
 
-  const [draft, setDraft] = useState<CreationDraft>(() => ({
-    __isReady: false,
-    gid: _gid ? Xid.fromValue(_gid) : undefined,
-    id: _cid ? Xid.fromValue(_cid) : undefined,
-    language: locale,
-    updated_at: undefined,
-    title: '',
-    content: undefined,
-  }))
+  const [draft, setDraft] = useState<CreationDraft>(initialCreationDraft)
 
   useEffect(() => {
-    const controller = new AbortController()
-    refresh()
-      .then((creation) => {
-        if (!controller.signal.aborted && creation) {
-          setDraft((prev) => ({
-            ...prev,
-            ...creation,
-            content: decode(creation.content),
-            __isReady: true,
-          }))
-        }
-      })
-      .catch(() => {})
-    return () => controller.abort()
-  }, [refresh])
+    if (creation) {
+      setDraft((prev) => ({
+        ...prev,
+        ...creation,
+        content: decode(creation.content),
+      }))
+    }
+  }, [creation])
 
   const updateDraft = useCallback((draft: Partial<CreationDraft>) => {
     setDraft((prev) => ({ ...prev, ...draft }))
   }, [])
   //#endregion
 
-  const isLoading = !draft.__isReady
-
   const [isSaving, setIsSaving] = useState(false)
 
   // TODO: validate draft.content
-  const isDisabled = useMemo(() => {
-    return (
-      isLoading ||
-      isSaving ||
-      !draft.gid ||
-      !draft.id ||
-      !draft.language ||
-      !draft.title.trim() ||
-      !draft.content
-    )
-  }, [draft, isLoading, isSaving])
+  const isDisabled = isLoading || isSaving || !draft.title.trim()
 
   const onSave = useCallback(async () => {
+    if (!creation) return
     try {
       setIsSaving(true)
-      const result = await updateCreation(draft)
-      pushToast({
-        type: 'success',
-        message: intl.formatMessage({ defaultMessage: '保存成功' }),
-      })
+      const input = diffCreationDraft(creation, draft)
+      let result: CreationOutput | null = null
+      if (input) {
+        result = await updateCreation(input)
+      }
+
+      if (draft.content && creation.content) {
+        if (!isEqual(draft.content, decode(creation.content))) {
+          const result2 = await updateCreationContent({
+            gid: creation.gid,
+            id: creation.id,
+            language: creation.language,
+            updated_at: result?.updated_at || creation.updated_at,
+            content: encode(draft.content),
+          })
+          result = { ...result, ...result2 }
+        }
+      }
+
+      if (result) {
+        refresh()
+        pushToast({
+          type: 'success',
+          message: intl.formatMessage({ defaultMessage: '保存成功' }),
+        })
+      }
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
-          gid: Xid.fromValue(result.gid).toString(),
+          gid: Xid.fromValue(creation.gid).toString(),
           type: GroupViewType.Creation,
         }),
         search: new URLSearchParams({
-          cid: Xid.fromValue(result.id).toString(),
+          cid: Xid.fromValue(creation.id).toString(),
         }).toString(),
       })
     } catch (error) {
@@ -109,7 +106,16 @@ export function useEditCreationPage(
     } finally {
       setIsSaving(false)
     }
-  }, [draft, intl, navigate, pushToast, updateCreation])
+  }, [
+    draft,
+    creation,
+    intl,
+    refresh,
+    navigate,
+    pushToast,
+    updateCreation,
+    updateCreationContent,
+  ])
 
   const upload = useCallback(
     (file: File) => {

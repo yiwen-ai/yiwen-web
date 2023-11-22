@@ -170,7 +170,7 @@ export function useTranslateDialog(
                   cid: _cid,
                   language: _language,
                   version: _version,
-                  fields: null,
+                  fields: undefined,
                 },
                 controller.signal
               )

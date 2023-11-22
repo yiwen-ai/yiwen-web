@@ -67,7 +67,7 @@ export default function CreateFromLinkDialog({
       ) : (
         <>
           <div id={id}>
-            {intl.formatMessage({ defaultMessage: '文章链接' })}
+            {intl.formatMessage({ defaultMessage: '原文链接' })}
           </div>
           <TextareaAutosize
             aria-labelledby={id}

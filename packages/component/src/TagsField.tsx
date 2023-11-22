@@ -37,7 +37,7 @@ export interface TagsFieldProps
   size?: TagsFieldSize | undefined
   maxTags?: number | undefined
   defaultValue?: string[] | undefined
-  onEnter?: (value: string[], ev: React.KeyboardEvent<HTMLInputElement>) => void
+  onUpdate?: (value: string[]) => void
   onDismiss?: (ev: React.KeyboardEvent<HTMLInputElement>) => void
 }
 
@@ -49,7 +49,7 @@ export const TagsField = memo(
       maxTags = 0,
       defaultValue = [],
       onKeyDown,
-      onEnter,
+      onUpdate,
       onDismiss,
       ...props
     }: TagsFieldProps,
@@ -79,7 +79,7 @@ export const TagsField = memo(
           ) {
             setTags((tags) => {
               const val = [...tags, ...items]
-              onEnter?.(val, ev)
+              onUpdate?.(val)
               return val
             })
           }
@@ -89,7 +89,7 @@ export const TagsField = memo(
           onDismiss?.(ev)
         }
       },
-      [onDismiss, onKeyDown, onEnter, tags, setTags, maxTags]
+      [onDismiss, onKeyDown, onUpdate, tags, setTags, maxTags]
     )
 
     const handleDelete = useCallback(
@@ -97,10 +97,12 @@ export const TagsField = memo(
         const tag = ev.currentTarget.value
         setTags((tags) => {
           const i = tags.indexOf(tag)
-          return [...tags.slice(0, i), ...tags.slice(i + 1)]
+          const val = [...tags.slice(0, i), ...tags.slice(i + 1)]
+          onUpdate?.(val)
+          return val
         })
       },
-      [setTags]
+      [setTags, onUpdate]
     )
 
     const ariaLabel = props['aria-label']

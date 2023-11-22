@@ -20,6 +20,7 @@ import {
 } from '@yiwen-ai/component'
 import {
   ObjectKind,
+  PublicationStatus,
   isRTL,
   useAuth,
   type CollectionChildrenOutput,
@@ -77,7 +78,9 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   isRemovingFavorite: boolean
   onAddFavorite: () => void
   onRemoveFavorite: () => void
+  onEdit?: (item: PublicationOutput) => void
   onClose?: () => void
+  hasGroupAdminPermission?: boolean
   translateConfirmDialog: Omit<
     TranslateConfirmDialogProps,
     'onCharge' | 'onTranslate'
@@ -111,7 +114,9 @@ export default function PublicationViewer({
   isRemovingFavorite,
   onAddFavorite,
   onRemoveFavorite,
+  onEdit,
   onClose,
+  hasGroupAdminPermission,
   translateConfirmDialog,
   translateDialog,
   chargeDialog,
@@ -135,6 +140,11 @@ export default function PublicationViewer({
       setKeyword(ev.currentTarget.value)
     },
     []
+  )
+
+  const handleEdit = useCallback(
+    () => publication && onEdit && onEdit(publication),
+    [publication, onEdit]
   )
 
   const [prevCid, setPrevCid] = useState<string>('')
@@ -454,6 +464,20 @@ export default function PublicationViewer({
                   )}
                 </Select>
               )}
+              {hasGroupAdminPermission &&
+                publication.status < PublicationStatus.Published && (
+                  <Button
+                    size='large'
+                    color='secondary'
+                    variant='outlined'
+                    onClick={handleEdit}
+                  >
+                    <Icon name='edit' size='medium' />
+                    <span>
+                      {intl.formatMessage({ defaultMessage: '修正' })}
+                    </span>
+                  </Button>
+                )}
               <div
                 css={css`
                   display: flex;
@@ -775,7 +799,7 @@ export default function PublicationViewer({
                   `}
                 >
                   <span>
-                    {intl.formatMessage({ defaultMessage: '为作品付费' })}
+                    {intl.formatMessage({ defaultMessage: '为文章付费' })}
                   </span>
                   <span>
                     {intl.formatMessage(

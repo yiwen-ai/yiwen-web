@@ -146,9 +146,6 @@
   "9n8bNu": {
     "defaultMessage": "支付中"
   },
-  "9tiP5Q": {
-    "defaultMessage": "已归档的发布"
-  },
   "B+YBvr": {
     "defaultMessage": "退出登录"
   },
@@ -230,6 +227,9 @@
   "Gru4sD": {
     "defaultMessage": "退出管理模式"
   },
+  "HIyIJ1": {
+    "defaultMessage": "文章"
+  },
   "HLQK6J": {
     "defaultMessage": "充值"
   },
@@ -241,9 +241,6 @@
   },
   "I/1233": {
     "defaultMessage": "确定充值"
-  },
-  "I/k8FH": {
-    "defaultMessage": "发布"
   },
   "IMlqQ+": {
     "defaultMessage": "GPT-4（质量高，适用于内容复杂、要求专业的翻译）"
@@ -278,6 +275,9 @@
   "MMfFsl": {
     "defaultMessage": "{count} 篇公开内容"
   },
+  "Mghsye": {
+    "defaultMessage": "文章的亿文币价格，-1 为永久免费，0 为当前免费"
+  },
   "NIrePy": {
     "defaultMessage": "从文件创作"
   },
@@ -307,6 +307,9 @@
   },
   "QV3pnn": {
     "defaultMessage": "状态"
+  },
+  "QbCT1N": {
+    "defaultMessage": "合集中单篇文章的的亿文币价格，-1 为永久免费，0 为当前免费"
   },
   "QlnqkN": {
     "defaultMessage": "充值失败"
@@ -359,6 +362,9 @@
   "W0JM72": {
     "defaultMessage": "选择文章"
   },
+  "WZbayl": {
+    "defaultMessage": "为文章付费"
+  },
   "WrTRyQ": {
     "defaultMessage": "（分成）"
   },
@@ -407,6 +413,9 @@
   "a4I1pA": {
     "defaultMessage": "更新版本失败"
   },
+  "aRnUVf": {
+    "defaultMessage": "输入文稿简介"
+  },
   "agMrua": {
     "defaultMessage": "移除书签"
   },
@@ -431,11 +440,8 @@
   "bOjxOK": {
     "defaultMessage": "（收入）"
   },
-  "bc6368": {
-    "defaultMessage": "声明："
-  },
-  "blrJqt": {
-    "defaultMessage": "合集中单篇内容的的亿文币价格，-1 为永久免费，0 为当前免费"
+  "bjcsWj": {
+    "defaultMessage": "GPT 提示词追加的上下文"
   },
   "bosFVa": {
     "defaultMessage": "请登录后再操作"
@@ -473,6 +479,9 @@
   "ezVhiW": {
     "defaultMessage": "货币"
   },
+  "fBSQu8": {
+    "defaultMessage": "文章设置"
+  },
   "fFmyYM": {
     "defaultMessage": "数量"
   },
@@ -482,11 +491,11 @@
   "frqra4": {
     "defaultMessage": "转出记录"
   },
-  "fs3016": {
-    "defaultMessage": "为作品付费"
-  },
   "g6V3he": {
     "defaultMessage": "微信"
+  },
+  "gGF6QX": {
+    "defaultMessage": "原文链接"
   },
   "h7w4pz": {
     "defaultMessage": "暂无数据"
@@ -508,9 +517,6 @@
   },
   "iRkavT": {
     "defaultMessage": "我有内容，去创作"
-  },
-  "iY0ak1": {
-    "defaultMessage": "非原创"
   },
   "ikJDiM": {
     "defaultMessage": "翻译失败"
@@ -584,11 +590,11 @@
   "p6tgtU": {
     "defaultMessage": "合集的亿文币价格，-1 为永久免费，0 为当前免费"
   },
+  "pAbrgU": {
+    "defaultMessage": "输入文章简介"
+  },
   "pV2t/S": {
     "defaultMessage": "基本信息"
-  },
-  "pZUDXc": {
-    "defaultMessage": "原创"
   },
   "plTZFx": {
     "defaultMessage": "已归档：{title}"
@@ -629,17 +635,20 @@
   "spMXqt": {
     "defaultMessage": "会员等级：LV{level}"
   },
+  "swL56s": {
+    "defaultMessage": "已归档的文章"
+  },
   "tr2z/6": {
     "defaultMessage": "添加书签"
-  },
-  "u926pB": {
-    "defaultMessage": "文章链接"
   },
   "uSeB4L": {
     "defaultMessage": "正在处理，请稍后"
   },
   "udtnTl": {
     "defaultMessage": "上一篇"
+  },
+  "ugZMy3": {
+    "defaultMessage": "文稿来源："
   },
   "vCmahJ": {
     "defaultMessage": "无权限查看"

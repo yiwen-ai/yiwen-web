@@ -1,6 +1,7 @@
 import { GROUP_DETAIL_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
+  initialCollectionDraft,
   toMessage,
   useAuth,
   useCollectionAPI,
@@ -11,7 +12,7 @@ import {
   type UpdateCollectionInput,
 } from '@yiwen-ai/store'
 import { isBlobURL } from '@yiwen-ai/util'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { lastValueFrom } from 'rxjs'
@@ -37,19 +38,14 @@ export function useCreateCollectionDialog(
 
   const { locale } = useAuth().user ?? {}
 
-  const [draft, setDraft] = useState<CollectionDraft>(() => ({
-    language: locale || '',
-    context: '',
-    info: {
-      title: '',
-      summary: '',
-      keywords: [],
-      authors: [],
-    },
-    cover: '',
-    price: 0,
-    creation_price: 0,
-  }))
+  const [draft, setDraft] = useState<CollectionDraft>(initialCollectionDraft)
+
+  useEffect(() => {
+    setDraft((prev) => ({
+      ...prev,
+      language: locale || '',
+    }))
+  }, [locale])
 
   const { refresh: refreshCollectionList } = useCollectionList(
     open ? _gid : null,

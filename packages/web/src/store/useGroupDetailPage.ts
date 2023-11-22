@@ -732,7 +732,6 @@ export function useGroupDetailPage(
         ...editCollection,
       },
       hasGroupAdminPermission,
-      isEditing: collectionList.isRestoring,
       ...collectionList,
     },
     archivedCollectionList: {
@@ -747,6 +746,7 @@ export function useGroupDetailPage(
     onArchivedCollectionDialogShow,
     publicationViewer: {
       ...publicationViewer,
+      hasGroupAdminPermission,
       onTranslate: handlePublicationTranslate,
       onSwitch: handlePublicationSwitch,
     },

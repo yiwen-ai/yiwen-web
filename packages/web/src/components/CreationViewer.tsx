@@ -1,9 +1,9 @@
 import { BREAKPOINT } from '#/shared'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
-import { Button, IconButton } from '@yiwen-ai/component'
+import { Button, Icon, IconButton } from '@yiwen-ai/component'
 import { type CreationOutput, type Language } from '@yiwen-ai/store'
-import { type HTMLAttributes } from 'react'
+import { useCallback, type HTMLAttributes } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
 import CommonViewer from './CommonViewer'
@@ -16,6 +16,7 @@ export interface CreationViewerProps extends HTMLAttributes<HTMLDivElement> {
   error: unknown
   creation: CreationOutput | undefined
   currentLanguage: Language | undefined
+  onEdit?: (item: CreationOutput) => void
   onClose: () => void
 }
 
@@ -25,6 +26,7 @@ export default function CreationViewer({
   error,
   creation,
   currentLanguage,
+  onEdit,
   onClose,
   ...props
 }: CreationViewerProps) {
@@ -32,6 +34,12 @@ export default function CreationViewer({
   const theme = useTheme()
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const isNarrow = responsive && width <= BREAKPOINT.small
+  const hasReleases = (creation?.version as number) >= 2
+
+  const handleEdit = useCallback(
+    () => creation && onEdit && onEdit(creation),
+    [creation, onEdit]
+  )
 
   return (
     <div
@@ -82,6 +90,23 @@ export default function CreationViewer({
                 disabled={true}
               >
                 {currentLanguage?.nativeName ?? creation.language}
+              </Button>
+              <Button
+                size='large'
+                color='secondary'
+                variant='outlined'
+                onClick={handleEdit}
+              >
+                {hasReleases ? (
+                  <Icon name='refresh' size='medium' />
+                ) : (
+                  <Icon name='edit' size='medium' />
+                )}
+                <span>
+                  {hasReleases
+                    ? intl.formatMessage({ defaultMessage: '更新版本' })
+                    : intl.formatMessage({ defaultMessage: '编辑' })}
+                </span>
               </Button>
             </div>
             <div

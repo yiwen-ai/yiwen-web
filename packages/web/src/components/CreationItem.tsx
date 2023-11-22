@@ -23,7 +23,7 @@ export default function CreationItem({
   isReleasing,
   isArchiving,
   onClick,
-  onEdit,
+  onSetting,
   onRelease,
   onArchive,
 }: {
@@ -33,16 +33,15 @@ export default function CreationItem({
   isReleasing: boolean
   isArchiving: boolean
   onClick: (item: CreationOutput) => void
-  onEdit: (item: CreationOutput) => void
+  onSetting: (item: CreationOutput) => void
   onRelease: (item: CreationOutput) => void
   onArchive: (item: CreationOutput) => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
   const disabled = isEditing || isReleasing || isArchiving
-  const hasReleases = item.version >= 2
   const handleClick = useCallback(() => onClick(item), [item, onClick])
-  const handleEdit = useCallback(() => onEdit(item), [item, onEdit])
+  const handleSetting = useCallback(() => onSetting(item), [item, onSetting])
   const handleRelease = useCallback(() => onRelease(item), [item, onRelease])
   const handleArchive = useCallback(() => onArchive(item), [item, onArchive])
 
@@ -102,7 +101,8 @@ export default function CreationItem({
             }
           `}
         >
-          {item.status === CreationStatus.Draft ? (
+          {item.status === CreationStatus.Draft ||
+          item.status === CreationStatus.Review ? (
             <Button
               size='small'
               color='primary'
@@ -123,20 +123,10 @@ export default function CreationItem({
             color='secondary'
             variant='text'
             disabled={disabled}
-            onClick={handleEdit}
+            onClick={handleSetting}
           >
-            {isEditing ? (
-              <Spinner size={12} />
-            ) : hasReleases ? (
-              <Icon name='refresh' size='small' />
-            ) : (
-              <Icon name='edit' size='small' />
-            )}
-            <span>
-              {hasReleases
-                ? intl.formatMessage({ defaultMessage: '更新版本' })
-                : intl.formatMessage({ defaultMessage: '编辑' })}
-            </span>
+            <Icon name='settings' size='small' />
+            <span>{intl.formatMessage({ defaultMessage: '设置' })}</span>
           </Button>
           <Menu bringFocusBack={false} anchor={renderIconMoreAnchor}>
             <MenuItem

@@ -143,7 +143,7 @@ export default function PaymentConfirmDialog({
               >
                 {paymentInfo.kind === ObjectKind.Collection
                   ? intl.formatMessage({ defaultMessage: '为合集付费' })
-                  : intl.formatMessage({ defaultMessage: '为作品付费' })}
+                  : intl.formatMessage({ defaultMessage: '为文章付费' })}
               </div>
               <div
                 css={css`

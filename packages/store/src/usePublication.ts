@@ -1,12 +1,11 @@
 import { type JSONContent } from '@tiptap/core'
 import { useLoading } from '@yiwen-ai/util'
-import { omitBy } from 'lodash-es'
+import { isEqual, omitBy } from 'lodash-es'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import useSWR, { type SWRConfiguration } from 'swr'
-import useSWRInfinite from 'swr/infinite'
+import useSWR, { useSWRConfig, type SWRConfiguration } from 'swr'
+import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
-import { encode } from './CBOR'
 import {
   usePagination,
   type GIDPagination,
@@ -119,7 +118,6 @@ export interface UpdatePublicationInput {
   language: string
   version: number
   updated_at: number
-  model?: string
   title?: string
   cover?: string
   keywords?: string[]
@@ -127,15 +125,12 @@ export interface UpdatePublicationInput {
 }
 
 export interface PublicationDraft {
-  __isReady: boolean
-  gid: Uint8Array | undefined
-  cid: Uint8Array | undefined
-  language: string | undefined
-  version: number | undefined
-  model: string
-  updated_at: number | undefined
   title: string
-  content: JSONContent | undefined
+  content?: JSONContent | undefined
+  cover?: string
+  keywords?: string[]
+  summary?: string
+  __cover_name?: string
 }
 
 export enum PublicationJobStatus {
@@ -156,12 +151,48 @@ export interface PublicationJob {
 
 const path = '/v1/publication'
 
+export function initialPublicationDraft(): PublicationDraft {
+  return {
+    title: '',
+  }
+}
+
+export function diffPublicationDraft(
+  src: PublicationOutput,
+  draft: PublicationDraft
+): UpdatePublicationInput | null {
+  if (!src || !draft) return null
+
+  const rt: UpdatePublicationInput = {
+    gid: src.gid,
+    cid: src.cid,
+    language: src.language,
+    version: src.version,
+    updated_at: src.updated_at,
+  }
+
+  if (draft.title && src.title != draft.title) {
+    rt.title = draft.title
+  }
+  if (draft.cover && src.cover != draft.cover) {
+    rt.cover = draft.cover
+  }
+  if (draft.summary && src.summary != draft.summary) {
+    rt.summary = draft.summary
+  }
+  if (draft.keywords && !isEqual(src.keywords, draft.keywords)) {
+    rt.keywords = draft.keywords
+  }
+
+  return Object.keys(rt).length > 5 ? rt : null
+}
+
 export function usePublicationAPI(baseURL?: string) {
   const request = useFetcher(baseURL)
 
   const readPublication = useCallback(
     (
-      params: Record<keyof QueryPublication, string | number | null>,
+      params: Record<keyof QueryPublication, string | number | undefined>,
       signal?: AbortSignal
     ) => {
       return request.get<{ result: PublicationOutput }>(path, params, signal)
@@ -251,27 +282,10 @@ export function usePublicationAPI(baseURL?: string) {
   )
 
   const createPublication = useCallback(
-    async (draft: PublicationDraft) => {
-      if (
-        !draft.gid ||
-        !draft.cid ||
-        !draft.language ||
-        draft.version === undefined
-      ) {
-        throw new Error(
-          'group id, creation id, language and version are required to create a publication'
-        )
-      }
-      const body: CreatePublicationInput = {
-        ...draft,
-        gid: draft.gid,
-        cid: draft.cid,
-        language: draft.language,
-        version: draft.version,
-      }
+    async (input: CreatePublicationInput) => {
       const { result } = await request.post<{ result: PublicationOutput }>(
         path,
-        body
+        omitBy(input, (val) => val == null || val === '')
       )
       return result
     },
@@ -279,44 +293,21 @@ export function usePublicationAPI(baseURL?: string) {
   )
 
   const updatePublication = useCallback(
-    async (draft: PublicationDraft) => {
-      if (
-        !draft.gid ||
-        !draft.cid ||
-        !draft.language ||
-        draft.version === undefined ||
-        !draft.updated_at ||
-        !draft.title.trim() ||
-        !draft.content
-      ) {
-        throw new Error(
-          'group id, creation id, language, version, updated_at, title and content are required to update a publication'
-        )
-      }
-      const body1: UpdatePublicationContentInput = {
-        gid: draft.gid,
-        cid: draft.cid,
-        language: draft.language,
-        version: draft.version,
-        updated_at: draft.updated_at,
-        content: encode(draft.content),
-      }
-      const { result: result1 } = await request.put<{
-        result: PublicationOutput
-      }>(`${path}/update_content`, body1)
-      const body2: UpdatePublicationInput = {
-        ...draft,
-        gid: result1.gid,
-        cid: result1.cid,
-        language: result1.language,
-        version: result1.version,
-        updated_at: result1.updated_at,
-        title: draft.title.trim(),
-      }
+    async (input: UpdatePublicationInput) => {
       const { result } = await request.patch<{ result: PublicationOutput }>(
         path,
-        omitBy(body2, (val) => val == null || val === '')
+        omitBy(input, (val) => val == null || val === '')
       )
+      return result
+    },
+    [request]
+  )
+
+  const updatePublicationContent = useCallback(
+    async (input: UpdatePublicationContentInput) => {
+      const { result } = await request.put<{
+        result: PublicationOutput
+      }>(`${path}/update_content`, input)
       return result
     },
     [request]
@@ -382,6 +373,7 @@ export function usePublicationAPI(baseURL?: string) {
     translatePublication,
     createPublication,
     updatePublication,
+    updatePublicationContent,
     deletePublication,
     publishPublication,
     archivePublication,
@@ -398,16 +390,17 @@ export function usePublication(
     baseURL?: string
   }
 ) {
+  const { mutate: mutateGobal } = useSWRConfig()
   const { readPublication } = usePublicationAPI(config?.baseURL)
 
   const getKey = useCallback(() => {
     if (!_cid) return null
-    const params: Record<keyof QueryPublication, string | number | null> = {
-      gid: _gid || null,
+    const params: Record<keyof QueryPublication, string | undefined> = {
+      gid: _gid || undefined,
       cid: _cid,
-      language: _language || null,
-      version: _version || null,
-      fields: null,
+      language: _language || undefined,
+      version: _version != null ? String(_version) : undefined,
+      fields: undefined,
     }
     return [path, params] as const
   }, [_cid, _gid, _language, _version])
@@ -424,10 +417,41 @@ export function usePublication(
     {} as SWRConfiguration
   )
 
-  const refresh = useCallback(
-    async () => getKey() && (await mutate())?.result,
-    [getKey, mutate]
+  const getListKey = useCallback(
+    (_: unknown, prevPage: Page<PublicationOutput> | null) => {
+      if (!_gid) return null
+      if (prevPage && !prevPage.next_page_token) return null
+
+      const params = {
+        gid: _gid,
+        page_token: prevPage?.next_page_token,
+      }
+
+      return [`${path}/list`, params] as const
+    },
+    [_gid]
   )
+
+  const refresh = useCallback(async () => {
+    const result = getKey() && (await mutate())?.result
+    if (result) {
+      mutateGobal(
+        unstable_serialize(getListKey),
+        (prev: Page<PublicationOutput>[] | undefined) =>
+          prev?.map((page: Page<PublicationOutput>): typeof page => ({
+            ...page,
+            result: page.result.map((item) =>
+              isSamePublication(item, result) ? { ...item, ...result } : item
+            ),
+          })),
+        {
+          revalidate: false,
+          populateCache: true,
+        }
+      )
+    }
+    return result
+  }, [getKey, getListKey, mutate, mutateGobal])
 
   return {
     isLoading,
@@ -955,24 +979,41 @@ export function usePublicationList(
           updated_at: item.updated_at,
           status: PublicationStatus.Review,
         })
-        mutate(
-          (prev) =>
-            prev?.map((page): typeof page => ({
-              ...page,
-              result: page.result.filter(
-                (item) => !isSamePublication(item, result)
-              ),
-            })),
-          {
-            revalidate: false,
-            populateCache: true,
-          }
-        )
+
+        _status === PublicationStatus.Archived
+          ? mutate(
+              (prev) =>
+                prev?.map((page): typeof page => ({
+                  ...page,
+                  result: page.result.filter(
+                    (item) => !isSamePublication(item, result)
+                  ),
+                })),
+              {
+                revalidate: false,
+                populateCache: true,
+              }
+            )
+          : mutate(
+              (prev) =>
+                prev?.map((page): typeof page => ({
+                  ...page,
+                  result: page.result.map((item) =>
+                    isSamePublication(item, result)
+                      ? { ...item, ...result }
+                      : item
+                  ),
+                })),
+              {
+                revalidate: false,
+                populateCache: true,
+              }
+            )
       } finally {
         setRestoring(item, false)
       }
     },
-    [mutate, restorePublication, setRestoring]
+    [_status, mutate, restorePublication, setRestoring]
   )
 
   const deleteItem = useCallback(

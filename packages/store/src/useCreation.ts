@@ -1,10 +1,9 @@
 import { type JSONContent } from '@tiptap/core'
-import { omitBy } from 'lodash-es'
+import { isEqual, omitBy } from 'lodash-es'
 import { useCallback, useMemo, useState } from 'react'
-import useSWR from 'swr'
-import useSWRInfinite from 'swr/infinite'
+import useSWR, { useSWRConfig } from 'swr'
+import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
 import { Xid } from 'xid-ts'
-import { encode } from './CBOR'
 import {
   type GIDPagination,
   type GroupInfo,
@@ -46,6 +45,8 @@ export interface CreateCreationInput {
   labels?: string[]
   authors?: string[]
   license?: string
+  parent?: Uint8Array
+  price?: number
 }
 
 export interface CreationOutput {
@@ -53,6 +54,7 @@ export interface CreationOutput {
   gid: Uint8Array
   status: CreationStatus
   rating?: number
+  price?: number
   version: number
   language: string
   creator?: Uint8Array
@@ -77,6 +79,7 @@ export interface UpdateCreationInput {
   gid: Uint8Array
   id: Uint8Array
   updated_at: number
+  price?: number
   title?: string
   cover?: string
   keywords?: string[]
@@ -116,18 +119,65 @@ export interface ScrapingOutput {
 }
 
 export interface CreationDraft {
-  __isReady?: boolean
-  gid: Uint8Array | undefined
-  id: Uint8Array | undefined
-  language: string | undefined
-  updated_at: number | undefined
   title: string
-  content: JSONContent | undefined
-  original_url?: string | undefined
+  content?: JSONContent | undefined
+  original_url?: string
+  cover?: string
+  keywords?: string[]
+  labels?: string[]
+  authors?: string[]
+  summary?: string
+  license?: string
+  price?: number
   parent?: Uint8Array | undefined
+  __cover_name?: string
 }
 
 const path = '/v1/creation'
+
+export function initialCreationDraft(): CreationDraft {
+  return {
+    title: '',
+  }
+}
+
+export function diffCreationDraft(
+  src: CreationOutput,
+  draft: CreationDraft
+): UpdateCreationInput | null {
+  if (!src || !draft) return null
+  const rt: UpdateCreationInput = {
+    gid: src.gid,
+    id: src.id,
+    updated_at: src.updated_at,
+  }
+  if (draft.price != null && src.price != draft.price) {
+    rt.price = draft.price
+  }
+  if (src.title != draft.title) {
+    rt.title = draft.title
+  }
+  if (draft.cover && src.cover != draft.cover) {
+    rt.cover = draft.cover
+  }
+  if (draft.summary && src.summary != draft.summary) {
+    rt.summary = draft.summary
+  }
+  if (draft.license && src.license != draft.license) {
+    rt.license = draft.license
+  }
+  if (draft.keywords && !isEqual(src.keywords, draft.keywords)) {
+    rt.keywords = draft.keywords
+  }
+  if (draft.labels && !isEqual(src.labels, draft.labels)) {
+    rt.labels = draft.labels
+  }
+  if (draft.authors && !isEqual(src.authors, draft.authors)) {
+    rt.authors = draft.authors
+  }
+
+  return Object.keys(rt).length > 3 ? rt : null
+}
 
 export function useCreationAPI() {
   const request = useFetcher()
@@ -170,27 +220,10 @@ export function useCreationAPI() {
   )
 
   const createCreation = useCallback(
-    async (draft: CreationDraft) => {
-      if (
-        !draft.gid ||
-        !draft.language ||
-        !draft.title.trim() ||
-        !draft.content
-      ) {
-        throw new Error(
-          'group id, language, title and content are required to create a creation'
-        )
-      }
-      const body: CreateCreationInput = {
-        ...draft,
-        gid: draft.gid,
-        language: draft.language,
-        title: draft.title.trim(),
-        content: encode(draft.content),
-      }
+    async (input: CreateCreationInput) => {
       const { result } = await request.post<{ result: CreationOutput }>(
         path,
-        omitBy(body, (val) => val == null)
+        omitBy(input, (val) => val == null || val === '')
       )
       return result
     },
@@ -198,42 +231,21 @@ export function useCreationAPI() {
   )
 
   const updateCreation = useCallback(
-    async (draft: CreationDraft, contentOnly?: boolean) => {
-      if (
-        !draft.gid ||
-        !draft.id ||
-        !draft.language ||
-        !draft.updated_at ||
-        !draft.title.trim() ||
-        !draft.content
-      ) {
-        throw new Error(
-          'group id, creation id, language, updated_at, title and content are required to update a creation'
-        )
-      }
-      const body1: UpdateCreationContentInput = {
-        gid: draft.gid,
-        id: draft.id,
-        language: draft.language,
-        updated_at: draft.updated_at,
-        content: encode(draft.content),
-      }
-      const { result: result1 } = await request.put<{ result: CreationOutput }>(
-        `${path}/update_content`,
-        body1
-      )
-      if (contentOnly) return result1
-      const body2: UpdateCreationInput = {
-        ...draft,
-        gid: result1.gid,
-        id: result1.id,
-        updated_at: result1.updated_at,
-        title: draft.title.trim(),
-      }
+    async (input: UpdateCreationInput) => {
       const { result } = await request.patch<{ result: CreationOutput }>(
         path,
-        omitBy(body2, (val) => val == null || val === '')
+        omitBy(input, (val) => val == null || val === '')
       )
+      return result
+    },
+    [request]
+  )
+
+  const updateCreationContent = useCallback(
+    async (input: UpdateCreationContentInput) => {
+      const { result } = await request.put<{
+        result: CreationOutput
+      }>(`${path}/update_content`, input)
       return result
     },
     [request]
@@ -299,6 +311,7 @@ export function useCreationAPI() {
     readCreationUploadPolicy,
     createCreation,
     updateCreation,
+    updateCreationContent,
     deleteCreation,
     releaseCreation,
     archiveCreation,
@@ -312,6 +325,7 @@ export function useCreation(
   _gid: string | null | undefined,
   _cid: string | null | undefined
 ) {
+  const { mutate: mutateGobal } = useSWRConfig()
   const { readCreation } = useCreationAPI()
 
   const getKey = useCallback(() => {
@@ -324,21 +338,55 @@ export function useCreation(
     return [path, params] as const
   }, [_cid, _gid])
 
-  const {
-    data: { result: creation } = {},
-    error,
-    mutate,
-    isValidating,
-    isLoading,
-  } = useSWR(getKey, ([path, params]) => readCreation(params), {})
-
-  const refresh = useCallback(
-    async () => getKey() && (await mutate())?.result,
-    [getKey, mutate]
+  const { data, error, mutate, isValidating, isLoading } = useSWR(
+    getKey,
+    ([path, params]) => readCreation(params),
+    {}
   )
 
+  const getListKey = useCallback(
+    (_: unknown, prevPage: Page<CreationOutput> | null) => {
+      if (!_gid) return null
+      if (prevPage && !prevPage.next_page_token) return null
+
+      const params = {
+        gid: _gid,
+        page_token: prevPage?.next_page_token,
+      }
+
+      return [`${path}/list`, params] as const
+    },
+    [_gid]
+  )
+
+  const refresh = useCallback(async () => {
+    if (!getKey()) return
+
+    const result = await mutate()
+
+    if (result) {
+      mutateGobal(
+        unstable_serialize(getListKey),
+        (prev: Page<CreationOutput>[] | undefined) =>
+          prev?.map((page: Page<CreationOutput>): typeof page => ({
+            ...page,
+            result: page.result.map((item) =>
+              isSameCreation(item, result.result)
+                ? { ...item, ...result.result }
+                : item
+            ),
+          })),
+        {
+          revalidate: false,
+          populateCache: true,
+        }
+      )
+    }
+    return result?.result
+  }, [getKey, getListKey, mutate, mutateGobal])
+
   return {
-    creation,
+    creation: data?.result,
     error,
     isLoading,
     isValidating,
@@ -625,24 +673,38 @@ export function useCreationList(
           updated_at: item.updated_at,
           status: CreationStatus.Draft,
         })
-        mutate(
-          (prev) =>
-            prev?.map((page): typeof page => ({
-              ...page,
-              result: page.result.filter(
-                (item) => !isSameCreation(item, result)
-              ),
-            })),
-          {
-            revalidate: false,
-            populateCache: true,
-          }
-        )
+        _status === CreationStatus.Archived
+          ? mutate(
+              (prev) =>
+                prev?.map((page): typeof page => ({
+                  ...page,
+                  result: page.result.filter(
+                    (item) => !isSameCreation(item, result)
+                  ),
+                })),
+              {
+                revalidate: false,
+                populateCache: true,
+              }
+            )
+          : mutate(
+              (prev) =>
+                prev?.map((page): typeof page => ({
+                  ...page,
+                  result: page.result.map((item) =>
+                    isSameCreation(item, result) ? { ...item, ...result } : item
+                  ),
+                })),
+              {
+                revalidate: false,
+                populateCache: true,
+              }
+            )
       } finally {
         setRestoring(item, false)
       }
     },
-    [mutate, restoreCreation, setRestoring]
+    [_status, mutate, restoreCreation, setRestoring]
   )
 
   const deleteItem = useCallback(

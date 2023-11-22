@@ -10,6 +10,7 @@ import CollectionViewer from '#/components/CollectionViewer'
 import CreateCollectionDialog from '#/components/CreateCollectionDialog'
 import CreationCompactItem from '#/components/CreationCompactItem'
 import CreationItem from '#/components/CreationItem'
+import CreationSettingDialog from '#/components/CreationSettingDialog'
 import CreationViewer from '#/components/CreationViewer'
 import EditGroupDialog from '#/components/EditGroupDialog'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
@@ -20,10 +21,13 @@ import MediumDialog from '#/components/MediumDialog'
 import Placeholder from '#/components/Placeholder'
 import PublicationCompactItem from '#/components/PublicationCompactItem'
 import PublicationItem from '#/components/PublicationItem'
+import PublicationSettingDialog from '#/components/PublicationSettingDialog'
 import PublicationViewer from '#/components/PublicationViewer'
 import { BREAKPOINT, MAX_WIDTH } from '#/shared'
+import { useCreationSettingDialog } from '#/store/useCreationSettingDialog'
 import { useEditGroupDialog } from '#/store/useEditGroupDialog'
 import { GroupViewType, useGroupDetailPage } from '#/store/useGroupDetailPage'
+import { usePublicationSettingDialog } from '#/store/usePublicationSettingDialog'
 import { css, useTheme } from '@emotion/react'
 import {
   Avatar,
@@ -166,7 +170,7 @@ export default function GroupDetailPage() {
     }
   }, [hasGroupReadPermission, params.type, handleViewTypeChange])
 
-  const handleCollectionEdit = useCallback(
+  const handleCollectionSetting = useCallback(
     (item: CollectionOutput) => {
       showEditCollectionDialog(item.gid, item.id)
     },
@@ -362,7 +366,7 @@ export default function GroupDetailPage() {
                   {intl.formatMessage({ defaultMessage: '合集' })}
                 </Tab>
                 <Tab value={GroupViewType.Publication}>
-                  {intl.formatMessage({ defaultMessage: '发布' })}
+                  {intl.formatMessage({ defaultMessage: '文章' })}
                 </Tab>
                 {hasGroupReadPermission && (
                   <>
@@ -425,7 +429,7 @@ export default function GroupDetailPage() {
                               <MediumDialog
                                 anchor={anchor}
                                 title={intl.formatMessage({
-                                  defaultMessage: '已归档的发布',
+                                  defaultMessage: '已归档的文章',
                                 })}
                                 onShow={onArchivedPublicationDialogShow}
                               >
@@ -463,13 +467,14 @@ export default function GroupDetailPage() {
                   {...collectionList}
                   onArchive={onCollectionArchive}
                   onPublish={onCollectionPublish}
-                  onEdit={handleCollectionEdit}
+                  onSetting={handleCollectionSetting}
                   onClick={handleCollectionClick}
                 />
               </TabPanel>
               <TabPanel value={GroupViewType.Publication}>
                 <PublicationPart
                   {...publicationList}
+                  pushToast={pushToast}
                   onPublish={onPublicationPublish}
                   onEdit={onPublicationEdit}
                   onArchive={onPublicationArchive}
@@ -479,7 +484,7 @@ export default function GroupDetailPage() {
               <TabPanel value={GroupViewType.Creation}>
                 <CreationPart
                   {...creationList}
-                  onEdit={onCreationEdit}
+                  pushToast={pushToast}
                   onRelease={onCreationRelease}
                   onArchive={onCreationArchive}
                   onClick={handleCreationClick}
@@ -504,6 +509,7 @@ export default function GroupDetailPage() {
         <LargeDialog open={true} onClose={handlePublicationDialogClose}>
           <PublicationViewer
             responsive={true}
+            onEdit={onPublicationEdit}
             onClose={handlePublicationDialogClose}
             {...publicationViewer}
           />
@@ -513,6 +519,7 @@ export default function GroupDetailPage() {
         <LargeDialog open={true} onClose={handleCreationDialogClose}>
           <CreationViewer
             responsive={true}
+            onEdit={onCreationEdit}
             onClose={handleCreationDialogClose}
             {...creationViewer}
           />
@@ -656,20 +663,12 @@ function GroupPart({
               ? intl.formatMessage({ defaultMessage: '取消关注' })
               : intl.formatMessage({ defaultMessage: '关注' })}
           </Button>
-          {/* <Menu anchor={IconMoreAnchor}>
-            <MenuItem
-              label={intl.formatMessage({ defaultMessage: '删除' })}
-              danger={true}
-              onClick={handleDelete}
-            />
-          </Menu> */}
         </div>
       </div>
     </div>
   )
 }
 
-// hasGroupAdminPermission, isEditing, onPublish
 function CollectionPart({
   isLoading,
   error,
@@ -678,9 +677,8 @@ function CollectionPart({
   loadMore,
   hasGroupAdminPermission,
   isPublishing,
-  isEditing,
   isArchiving,
-  onEdit,
+  onSetting,
   onArchive,
   onPublish,
   onClick,
@@ -692,9 +690,8 @@ function CollectionPart({
   loadMore: () => void
   hasGroupAdminPermission: boolean
   isPublishing: (item: CollectionOutput) => boolean
-  isEditing: (item: CollectionOutput) => boolean
   isArchiving: (item: CollectionOutput) => boolean
-  onEdit: (item: CollectionOutput) => void
+  onSetting: (item: CollectionOutput) => void
   onArchive: (item: CollectionOutput) => void
   onPublish: (item: CollectionOutput) => void
   onClick: (item: CollectionOutput) => void
@@ -719,11 +716,10 @@ function CollectionPart({
               item={item}
               hasWritePermission={hasGroupAdminPermission}
               isPublishing={isPublishing(item)}
-              isEditing={isEditing(item)}
               isArchiving={isArchiving(item)}
               onClick={onClick}
               onPublish={onPublish}
-              onEdit={onEdit}
+              onSetting={onSetting}
               onArchive={onArchive}
             />
           ))}
@@ -805,6 +801,7 @@ function ArchivedCollectionPart({
 }
 
 function PublicationPart({
+  pushToast,
   isLoading,
   error,
   items,
@@ -819,6 +816,7 @@ function PublicationPart({
   onArchive,
   onClick,
 }: {
+  pushToast: ToastAPI['pushToast']
   isLoading: boolean
   error: unknown
   items: PublicationOutput[]
@@ -833,6 +831,9 @@ function PublicationPart({
   onArchive: (item: PublicationOutput) => void
   onClick: (item: PublicationOutput) => void
 }) {
+  const { show: showPublicationSettingDialog, ...publicationSetting } =
+    usePublicationSettingDialog(pushToast)
+
   return (
     <div
       css={css`
@@ -857,7 +858,14 @@ function PublicationPart({
               isArchiving={isArchiving(item)}
               onClick={onClick}
               onPublish={onPublish}
-              onEdit={onEdit}
+              onSetting={() =>
+                showPublicationSettingDialog(
+                  item.gid,
+                  item.cid,
+                  item.language,
+                  item.version
+                )
+              }
               onArchive={onArchive}
             />
           ))}
@@ -866,6 +874,7 @@ function PublicationPart({
             isLoadingMore={isLoading}
             onLoadMore={loadMore}
           />
+          <PublicationSettingDialog {...publicationSetting} />
         </>
       )}
     </div>
@@ -939,6 +948,7 @@ function ArchivedPublicationPart({
 }
 
 function CreationPart({
+  pushToast,
   isLoading,
   error,
   items,
@@ -948,11 +958,11 @@ function CreationPart({
   isEditing,
   isReleasing,
   isArchiving,
-  onEdit,
   onRelease,
   onArchive,
   onClick,
 }: {
+  pushToast: ToastAPI['pushToast']
   isLoading: boolean
   error: unknown
   items: CreationOutput[]
@@ -962,11 +972,13 @@ function CreationPart({
   isEditing: (item: CreationOutput) => boolean
   isReleasing: (item: CreationOutput) => boolean
   isArchiving: (item: CreationOutput) => boolean
-  onEdit: (item: CreationOutput) => void
   onRelease: (item: CreationOutput) => void
   onArchive: (item: CreationOutput) => void
   onClick: (item: CreationOutput) => void
 }) {
+  const { show: showCreationSettingDialog, ...creationSetting } =
+    useCreationSettingDialog(pushToast)
+
   return (
     <div
       css={css`
@@ -990,7 +1002,7 @@ function CreationPart({
               isReleasing={isReleasing(item)}
               isArchiving={isArchiving(item)}
               onClick={onClick}
-              onEdit={onEdit}
+              onSetting={() => showCreationSettingDialog(item.gid, item.id)}
               onRelease={onRelease}
               onArchive={onArchive}
             />
@@ -1000,6 +1012,7 @@ function CreationPart({
             isLoadingMore={isLoading}
             onLoadMore={loadMore}
           />
+          <CreationSettingDialog {...creationSetting} />
         </>
       )}
     </div>

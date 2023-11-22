@@ -1,7 +1,7 @@
 import { BREAKPOINT } from '#/shared'
 import { css, useTheme } from '@emotion/react'
 import { Button, Icon, TagsField, TextareaAutosize } from '@yiwen-ai/component'
-import { type CollectionDraft } from '@yiwen-ai/store'
+import { type PublicationDraft } from '@yiwen-ai/store'
 import { useCallback, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { Form } from 'react-router-dom'
@@ -9,33 +9,32 @@ import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
 import MediumDialog from './MediumDialog'
 
-export interface CreateCollectionDialogProps {
+export interface PublicationSettingDialogProps {
   open: boolean
-  draft: CollectionDraft
-  setDraft: React.Dispatch<React.SetStateAction<CollectionDraft>>
+  draft: PublicationDraft
+  setDraft: React.Dispatch<React.SetStateAction<PublicationDraft>>
   error: unknown
-  editMode: boolean
   isLoading: boolean
   isSaving: boolean
+  dir: string
   onClose: () => void
   onSave: () => void
 }
 
-export default function CreateCollectionDialog({
+export default function PublicationSettingDialog({
   open,
   draft,
   setDraft,
   error,
-  editMode,
   isLoading,
   isSaving,
+  dir,
   onClose,
   onSave,
-}: CreateCollectionDialogProps) {
+}: PublicationSettingDialogProps) {
   const intl = useIntl()
   const theme = useTheme()
   const [disabled, setDisabled] = useState(true)
-  const disablePrice = draft.price === -1
 
   const handleSave = useCallback(
     (ev: React.MouseEvent<HTMLButtonElement>) => {
@@ -60,53 +59,12 @@ export default function CreateCollectionDialog({
         return false
       }
 
-      const title = String(
-        (ev.currentTarget['title'] as unknown as HTMLFormElement)['value']
-      ).trim()
-      if (!title) {
-        setDisabled(true)
-        return false
-      }
-
-      if (title !== draft.info.title) {
-        _disabled = false
-        setDraft({ ...draft, info: { ...draft.info, title } })
-      }
-
       const summary = String(
         (ev.currentTarget['summary'] as unknown as HTMLFormElement)['value']
       ).trim()
-      if (summary && summary !== draft.info.summary) {
+      if (summary && summary !== draft.summary) {
         _disabled = false
-        setDraft({ ...draft, info: { ...draft.info, summary } })
-      }
-
-      const context = String(
-        (ev.currentTarget['context'] as unknown as HTMLFormElement)['value']
-      ).trim()
-      if (context && context !== draft.context) {
-        _disabled = false
-        setDraft({ ...draft, context })
-      }
-
-      const price = Number(
-        (ev.currentTarget['price'] as unknown as HTMLFormElement)['value']
-      )
-      if (price !== draft.price) {
-        _disabled = false
-        setDraft({ ...draft, price })
-      }
-
-      const creation_price = Number(
-        (ev.currentTarget['creation_price'] as unknown as HTMLFormElement)[
-          'value'
-        ]
-      )
-      if (creation_price > price) {
-        ev.currentTarget['creation_price'].value = price
-      } else if (creation_price !== draft.creation_price) {
-        _disabled = false
-        setDraft({ ...draft, creation_price })
+        setDraft({ ...draft, summary })
       }
 
       setDisabled(_disabled)
@@ -138,60 +96,22 @@ export default function CreateCollectionDialog({
 
   const handleKeywordsChange = useCallback(
     (keywords: string[]) => {
-      if (JSON.stringify(keywords) === JSON.stringify(draft.info.keywords))
-        return
-      setDraft({ ...draft, info: { ...draft.info, keywords } })
+      if (JSON.stringify(keywords) === JSON.stringify(draft.keywords)) return
+      setDraft({ ...draft, keywords })
       setDisabled(false)
     },
     [draft, setDraft, setDisabled]
-  )
-
-  const handleAuthorsChange = useCallback(
-    (authors: string[]) => {
-      if (JSON.stringify(authors) === JSON.stringify(draft.info.authors)) return
-      setDraft({ ...draft, info: { ...draft.info, authors } })
-      setDisabled(false)
-    },
-    [draft, setDraft, setDisabled]
-  )
-
-  const priceTips = useCallback(
-    (price: number) => {
-      if (price === -1) {
-        return intl.formatMessage({ defaultMessage: '永久免费' })
-      } else if (price === 0) {
-        return intl.formatMessage({ defaultMessage: '当前免费' })
-      } else {
-        return intl.formatMessage({ defaultMessage: '亿文币' })
-      }
-    },
-    [intl]
   )
 
   return (
     <MediumDialog
-      title={
-        editMode
-          ? intl.formatMessage({ defaultMessage: '合集设置' })
-          : intl.formatMessage({ defaultMessage: '创建合集' })
-      }
+      title={intl.formatMessage({ defaultMessage: '文章设置' })}
       open={open}
       onClose={onClose}
       css={css`
         height: fit-content;
       `}
     >
-      <div
-        css={css`
-          color: ${theme.palette.grayLight};
-        `}
-      >
-        <span>
-          {intl.formatMessage({
-            defaultMessage: '合集可用于组合书籍、小说、论文、相同主题文章等。',
-          })}
-        </span>
-      </div>
       {isLoading ? (
         <Loading
           css={css`
@@ -253,6 +173,15 @@ export default function CreateCollectionDialog({
             })}
           </h2>
           <div
+            dir={dir}
+            css={css`
+              ${theme.typography.h2}
+              margin-bottom: 12px;
+            `}
+          >
+            <span>{draft.title}</span>
+          </div>
+          <div
             css={css`
               display: flex;
               flex-direction: row;
@@ -292,7 +221,7 @@ export default function CreateCollectionDialog({
                 />
               )}
               <label
-                htmlFor='collection-dialog-file-input'
+                htmlFor='publication-dialog-file-input'
                 css={css`
                   position: absolute;
                   top: calc(50% - 24px);
@@ -315,7 +244,7 @@ export default function CreateCollectionDialog({
                 />
                 <input
                   type='file'
-                  id='collection-dialog-file-input'
+                  id='publication-dialog-file-input'
                   accept='.png,.jpg,.jpeg,.gif,.webp'
                   onChange={handleCoverInputChange}
                   css={css`
@@ -335,168 +264,35 @@ export default function CreateCollectionDialog({
               `}
             >
               <label
-                css={css`
-                  cursor: text;
-                `}
-              >
-                <input
-                  type='text'
-                  name='title'
-                  aria-label='Collection title'
-                  data-1p-ignore={true}
-                  placeholder={intl.formatMessage({
-                    defaultMessage: '输入合集名称',
-                  })}
-                  minLength={2}
-                  maxLength={256}
-                  defaultValue={draft.info.title}
-                />
-              </label>
-              <label
-                htmlFor='collection-dialog-summary'
+                htmlFor='publication-dialog-summary'
                 css={css`
                   cursor: text;
                 `}
               >
                 <TextareaAutosize
-                  id='collection-dialog-summary'
+                  id='publication-dialog-summary'
                   name='summary'
                   minRows={2}
                   maxRows={6}
-                  aria-label='Collection summary'
+                  aria-label='Publication summary'
                   placeholder={intl.formatMessage({
-                    defaultMessage: '输入合集简介',
+                    defaultMessage: '输入文章简介',
                   })}
                   minLength={3}
                   maxLength={2048}
-                  defaultValue={draft.info.summary}
+                  defaultValue={draft.summary}
                 />
               </label>
               <TagsField
-                id='collection-dialog-keywords'
-                defaultValue={draft.info.keywords}
+                id='publication-dialog-keywords'
+                defaultValue={draft.keywords}
                 onUpdate={handleKeywordsChange}
-                placeholder={'输入合集关键词，按回车键添加'}
-                css={css`
-                  height: fit-content;
-                `}
-              />
-              <TagsField
-                id='collection-dialog-authors'
-                defaultValue={draft.info.authors}
-                onUpdate={handleAuthorsChange}
-                placeholder={'输入合集作者，按回车键添加'}
+                placeholder={'输入文章关键词，按回车键添加'}
                 css={css`
                   height: fit-content;
                 `}
               />
             </div>
-          </div>
-          <div
-            css={css`
-              ${theme.typography.body}
-              margin: 24px 0 12px;
-            `}
-          >
-            <p
-              css={css`
-                color: ${theme.palette.grayLight};
-              `}
-            >
-              {intl.formatMessage({
-                defaultMessage: 'GPT 提示上下文（可选）',
-              })}
-            </p>
-            <label
-              htmlFor='collection-dialog-context'
-              css={css`
-                cursor: text;
-              `}
-            >
-              <TextareaAutosize
-                id='collection-dialog-context'
-                name='context'
-                minRows={2}
-                maxRows={6}
-                aria-label='Context for GPT translating'
-                placeholder={intl.formatMessage({
-                  defaultMessage: 'GPT 提示词追加的上下文',
-                })}
-                minLength={0}
-                maxLength={1024}
-                defaultValue={draft.context}
-              />
-            </label>
-          </div>
-          <h2
-            css={css`
-              ${theme.typography.h2}
-              color: ${theme.palette.primaryNormal};
-            `}
-          >
-            {intl.formatMessage({
-              defaultMessage: '付费设置',
-            })}
-          </h2>
-          <div
-            css={css`
-              display: flex;
-              flex-direction: column;
-              width: 100%;
-              gap: 12px;
-              p {
-                color: ${theme.palette.grayLight};
-              }
-              input {
-                width: 80px !important;
-                margin-right: 12px;
-              }
-            `}
-          >
-            <p>
-              {intl.formatMessage({
-                defaultMessage: '合集的亿文币价格，-1 为永久免费，0 为当前免费',
-              })}
-            </p>
-            <label
-              css={css`
-                width: fit-content;
-                cursor: ${disablePrice ? 'not-allowed' : 'text'};
-              `}
-            >
-              <input
-                type='number'
-                min={-1}
-                max={10000}
-                name='price'
-                disabled={disablePrice}
-                aria-label='Collection price'
-                defaultValue={draft.price}
-              />
-              <span>{priceTips(draft.price)}</span>
-            </label>
-            <p>
-              {intl.formatMessage({
-                defaultMessage:
-                  '合集中单篇文章的的亿文币价格，-1 为永久免费，0 为当前免费',
-              })}
-            </p>
-            <label
-              css={css`
-                width: fit-content;
-                cursor: text;
-              `}
-            >
-              <input
-                type='number'
-                min={-1}
-                max={1000}
-                name='creation_price'
-                aria-label='Creation price in collection'
-                defaultValue={draft.creation_price}
-              />
-              <span>{priceTips(draft.creation_price)}</span>
-            </label>
           </div>
           <div
             css={css`

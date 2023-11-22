@@ -1,16 +1,17 @@
 import { GROUP_DETAIL_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
-  initialCollectionDraft,
+  CreationStatus,
+  diffCreationDraft,
+  initialCreationDraft,
+  isRTL,
   toMessage,
-  useCollection,
-  useCollectionAPI,
+  useCreation,
+  useCreationAPI,
   useUploadAPI,
-  type CollectionDraft,
-  type UpdateCollectionInput,
+  type CreationDraft,
 } from '@yiwen-ai/store'
 import { isBlobURL } from '@yiwen-ai/util'
-import { isEqual } from 'lodash-es'
 import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
@@ -24,17 +25,15 @@ interface Params {
   _cid: string | undefined
 }
 
-export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
+export function useCreationSettingDialog(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
   const navigate = useNavigate()
   const { uploadFromBlobURL } = useUploadAPI()
-  const { readCollectionFull, readCollectionUploadPolicy, updateCollection } =
-    useCollectionAPI()
+  const { readCreationUploadPolicy, updateCreation, restoreCreation } =
+    useCreationAPI()
 
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-
-  const [draft, setDraft] = useState<CollectionDraft>(initialCollectionDraft)
 
   const [{ open, ...params }, setParams] = useState<Params>({
     open: false,
@@ -42,7 +41,8 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
     _cid: undefined,
   })
 
-  const { refresh } = useCollection(params._gid, params._cid, undefined)
+  const { creation, refresh } = useCreation(params._gid, params._cid)
+  const [draft, setDraft] = useState<CreationDraft>(initialCreationDraft)
 
   const show = useCallback(
     (
@@ -71,44 +71,32 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
   )
 
   const close = useCallback(() => {
-    setDraft(initialCollectionDraft())
     setParams({
       open: false,
       _gid: undefined,
       _cid: undefined,
     })
-  }, [])
+    setDraft(initialCreationDraft())
+  }, [setParams, setDraft])
 
   const output = useMemo(async () => {
     if (params._gid && params._cid && open) {
       setIsLoading(true)
-      const { result } = await readCollectionFull({
-        gid: params._gid,
-        id: params._cid,
-        fields: undefined,
-        language: undefined,
-      })
-
-      setDraft({
-        language: result.language,
-        context: result.context,
-        info: { ...result.info },
-        cover: result.cover,
-        price: result.price,
-        creation_price: result.creation_price,
-      })
-      setIsLoading(false)
-      return result
+      if (creation) {
+        setDraft((prev) => ({ ...prev, ...creation }))
+        setIsLoading(false)
+        return creation
+      }
     }
     return undefined
-  }, [open, params._gid, params._cid, readCollectionFull])
+  }, [open, params._gid, params._cid, creation, setDraft])
 
   const navigateTo = useCallback(
     (gid: Uint8Array, cid: Uint8Array) => {
       navigate({
         pathname: generatePath(GROUP_DETAIL_PATH, {
           gid: Xid.fromValue(gid).toString(),
-          type: GroupViewType.Collection,
+          type: GroupViewType.Creation,
         }),
         search: new URLSearchParams({
           cid: Xid.fromValue(cid).toString(),
@@ -119,43 +107,29 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
   )
 
   const onSave = useCallback(async () => {
-    if (!output) {
-      return
-    }
-    const collection = await output
-    if (!collection) {
-      return
-    }
+    if (!output) return
+    const creation = await output
+    if (!creation) return
 
     try {
       setIsSaving(true)
-      const input: UpdateCollectionInput = {
-        gid: collection.gid,
-        id: collection.id,
-        updated_at: collection.updated_at,
-        version: collection.version,
-        language: collection.language,
-      }
-      if (draft.context !== collection.context) {
-        input.context = draft.context
-      }
-      if (draft.price !== collection.price) {
-        input.price = draft.price
-      }
-      if (draft.creation_price !== collection.creation_price) {
-        input.creation_price = draft.creation_price
-      }
-
-      if (!isEqual(input.info, draft.info)) {
-        input.info = { ...draft.info }
+      const input = diffCreationDraft(creation, draft)
+      if (!input) return
+      if (creation.status != CreationStatus.Draft) {
+        const { result } = await restoreCreation({
+          gid: input.gid,
+          id: input.id,
+          updated_at: input.updated_at,
+          status: CreationStatus.Draft,
+        })
+        input.updated_at = result.updated_at
       }
 
       if (isBlobURL(draft.cover)) {
-        const { result: uploadPolicy } = await readCollectionUploadPolicy({
-          gid: Xid.fromValue(collection.gid).toString(),
-          id: Xid.fromValue(collection.id).toString(),
+        const { result: uploadPolicy } = await readCreationUploadPolicy({
+          gid: Xid.fromValue(creation.gid).toString(),
+          id: Xid.fromValue(creation.id).toString(),
           fields: undefined,
-          language: undefined,
         })
 
         const uploadOutput = await lastValueFrom(
@@ -169,14 +143,14 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
         input.cover = uploadOutput.value
       }
 
-      await updateCollection(input)
+      await updateCreation(input)
       refresh()
       close()
       pushToast({
         type: 'success',
         message: intl.formatMessage({ defaultMessage: '保存成功' }),
       })
-      navigateTo(collection.gid, collection.id)
+      navigateTo(creation.gid, creation.id)
     } catch (error) {
       pushToast({
         type: 'warning',
@@ -195,8 +169,9 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
     pushToast,
     navigateTo,
     setIsSaving,
-    updateCollection,
-    readCollectionUploadPolicy,
+    updateCreation,
+    restoreCreation,
+    readCreationUploadPolicy,
     uploadFromBlobURL,
   ])
   //#endregion
@@ -207,10 +182,11 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
     setDraft,
     show,
     close,
-    editMode: true,
     isLoading,
     isSaving,
+    dir: isRTL(creation?.language || '') ? 'rtl' : 'ltr',
     error: null,
     onSave,
+    onClose: close,
   } as const
 }

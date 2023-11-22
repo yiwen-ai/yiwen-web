@@ -3,16 +3,19 @@ import { useUploadDocumentImages } from '#/shared'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   decode,
+  encode,
+  initialCreationDraft,
   parseBlobURL,
   revokeBlobURL,
   toMessage,
   useAuth,
   useCreationAPI,
   useMyGroupList,
+  type CreateCreationInput,
   type CreationDraft,
   type ScrapingOutput,
 } from '@yiwen-ai/store'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath, useNavigate } from 'react-router-dom'
 import { Xid } from 'xid-ts'
@@ -27,26 +30,20 @@ export function useNewCreationPage(
 ) {
   const intl = useIntl()
   const navigate = useNavigate()
-  const { createCreation, readCreationUploadPolicy, updateCreation } =
+  const { createCreation, readCreationUploadPolicy, updateCreationContent } =
     useCreationAPI()
   const uploadDocumentImages = useUploadDocumentImages()
 
   //#region draft
   const { locale } = useAuth().user ?? {}
-
   const { defaultGroup } = useMyGroupList()
-  const defaultGroupId = defaultGroup?.id
 
-  const [draft, setDraft] = useState<CreationDraft>(() => ({
-    __isReady: false,
-    gid: _gid ? Xid.fromValue(_gid) : undefined,
-    id: undefined,
-    language: locale,
-    updated_at: undefined,
-    title: '',
-    content: undefined,
-    parent: undefined,
-  }))
+  const [draft, setDraft] = useState<CreationDraft>(initialCreationDraft)
+
+  const gid = useMemo(
+    () => (_gid ? Xid.fromValue(_gid) : defaultGroup?.id),
+    [defaultGroup?.id, _gid]
+  )
 
   useEffect(() => {
     if (!_scrapingOutput) return
@@ -69,32 +66,18 @@ export function useNewCreationPage(
     }
   }, [_scrapingOutput])
 
-  useEffect(() => {
-    const gid = draft.gid || defaultGroupId
-    setDraft((prev) => ({
-      ...prev,
-      gid,
-      __isReady: !!gid,
-    }))
-  }, [defaultGroupId, draft.gid])
-
-  const updateDraft = useCallback((draft: Partial<CreationDraft>) => {
-    setDraft((prev) => ({ ...prev, ...draft }))
-  }, [])
+  const updateDraft = useCallback(
+    (draft: Partial<CreationDraft>) => {
+      setDraft((prev) => ({ ...prev, ...draft }))
+    },
+    [setDraft]
+  )
   //#endregion
-
-  const isLoading = !draft.__isReady
 
   const [isSaving, setIsSaving] = useState(false)
 
   // TODO: validate draft.content
-  const isDisabled =
-    isLoading ||
-    isSaving ||
-    !draft.gid ||
-    !draft.language ||
-    !draft.title.trim() ||
-    !draft.content
+  const isDisabled = isSaving || !gid || !draft.title.trim() || !draft.content
 
   const navigateTo = useCallback(
     (gid: Uint8Array, cid: Uint8Array) => {
@@ -114,7 +97,42 @@ export function useNewCreationPage(
   const onSave = useCallback(async () => {
     try {
       setIsSaving(true)
-      let result = await createCreation(draft)
+      if (!gid || !draft.title.trim() || !draft.content) {
+        throw new Error(
+          'group id, title and content are required to create a creation'
+        )
+      }
+
+      const input: CreateCreationInput = {
+        gid,
+        language: locale || '',
+        title: draft.title.trim(),
+        content: encode(draft.content),
+      }
+
+      if (draft.original_url) {
+        input.original_url = draft.original_url
+      }
+      if (draft.cover) {
+        input.cover = draft.cover
+      }
+      if (draft.license) {
+        input.license = draft.license
+      }
+      if (draft.keywords && draft.keywords.length > 0) {
+        input.keywords = draft.keywords
+      }
+      if (draft.labels && draft.labels.length > 0) {
+        input.labels = draft.labels
+      }
+      if (draft.authors && draft.authors.length > 0) {
+        input.authors = draft.authors
+      }
+      if (draft.parent) {
+        input.parent = draft.parent
+      }
+
+      let result = await createCreation(input)
       const content = await uploadDocumentImages(draft.content, () =>
         readCreationUploadPolicy({
           gid: Xid.fromValue(result.gid).toString(),
@@ -123,10 +141,13 @@ export function useNewCreationPage(
         }).then(({ result }) => result)
       )
       if (content) {
-        result = await updateCreation(
-          { ...result, content } as CreationDraft,
-          true
-        )
+        result = await updateCreationContent({
+          gid: result.gid,
+          id: result.id,
+          language: result.language,
+          updated_at: result.updated_at,
+          content: encode(content),
+        })
       }
       pushToast({
         type: 'success',
@@ -143,13 +164,15 @@ export function useNewCreationPage(
       setIsSaving(false)
     }
   }, [
-    createCreation,
+    gid,
+    locale,
     draft,
     intl,
     navigateTo,
     pushToast,
+    createCreation,
+    updateCreationContent,
     readCreationUploadPolicy,
-    updateCreation,
     uploadDocumentImages,
   ])
 
@@ -157,7 +180,7 @@ export function useNewCreationPage(
     close: closeCreateFromLinkDialog,
     onCrawl,
     ...createFromLinkDialog
-  } = useCreateFromLinkDialog(pushToast, draft.gid)
+  } = useCreateFromLinkDialog(pushToast, gid)
 
   const handleCrawl = useCallback(async () => {
     const result = await onCrawl()
@@ -185,7 +208,7 @@ export function useNewCreationPage(
     close: closeCreateFromFileDialog,
     onUpload,
     ...createFromFileDialog
-  } = useCreateFromFileDialog(pushToast, draft.gid)
+  } = useCreateFromFileDialog(pushToast, gid)
 
   const handleUpload = useCallback(async () => {
     const result = await onUpload()
@@ -210,8 +233,9 @@ export function useNewCreationPage(
 
   return {
     draft,
+    setDraft,
     updateDraft,
-    isLoading,
+    isLoading: false,
     isDisabled,
     isSaving,
     onSave,

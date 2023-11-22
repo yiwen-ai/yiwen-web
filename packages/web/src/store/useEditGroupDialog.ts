@@ -8,7 +8,7 @@ import {
   type UpdateGroupInput,
 } from '@yiwen-ai/store'
 import { isBlobURL } from '@yiwen-ai/util'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { lastValueFrom } from 'rxjs'
 import { Xid } from 'xid-ts'
@@ -58,18 +58,17 @@ export function useEditGroupDialog(pushToast: ToastAPI['pushToast']) {
       open: false,
       _gid: undefined,
     })
+    setDraft({} as GroupDraft)
   }, [])
 
-  useMemo(() => {
+  useEffect(() => {
     if (params._gid && open && groupInfo) {
       setDraft({
         name: groupInfo.name,
         logo: groupInfo.logo,
         slogan: groupInfo.slogan || '',
       })
-      return groupInfo
     }
-    return undefined
   }, [open, params._gid, groupInfo])
 
   const onSave = useCallback(async () => {

@@ -28,7 +28,7 @@ export default function PublicationItem({
   isArchiving,
   onClick,
   onPublish,
-  onEdit,
+  onSetting,
   onArchive,
 }: {
   item: PublicationOutput
@@ -38,7 +38,7 @@ export default function PublicationItem({
   isArchiving?: boolean
   onClick?: (item: PublicationOutput) => void
   onPublish?: (item: PublicationOutput) => void
-  onEdit?: (item: PublicationOutput) => void
+  onSetting?: (item: PublicationOutput) => void
   onArchive?: (item: PublicationOutput) => void
 }) {
   const intl = useIntl()
@@ -48,7 +48,10 @@ export default function PublicationItem({
     () => onClick && onClick(item),
     [item, onClick]
   )
-  const handleEdit = useCallback(() => onEdit && onEdit(item), [item, onEdit])
+  const handleSetting = useCallback(
+    () => onSetting && onSetting(item),
+    [item, onSetting]
+  )
   const handlePublish = useCallback(
     () => onPublish && onPublish(item),
     [item, onPublish]
@@ -117,22 +120,6 @@ export default function PublicationItem({
           `}
         >
           <PublicationItemStatus status={item.status} />
-          {item.status === PublicationStatus.Review && (
-            <Button
-              size='small'
-              color='secondary'
-              variant='text'
-              disabled={disabled}
-              onClick={handleEdit}
-            >
-              {isEditing ? (
-                <Spinner size={12} />
-              ) : (
-                <Icon name='edit' size='small' />
-              )}
-              <span>{intl.formatMessage({ defaultMessage: '修正' })}</span>
-            </Button>
-          )}
           {item.status === PublicationStatus.Approved && (
             <Button
               size='small'
@@ -143,6 +130,19 @@ export default function PublicationItem({
             >
               {isPublishing && <Spinner size={12} />}
               <span>{intl.formatMessage({ defaultMessage: '公开发布' })}</span>
+            </Button>
+          )}
+          {(item.status === PublicationStatus.Review ||
+            item.status === PublicationStatus.Approved) && (
+            <Button
+              size='small'
+              color='secondary'
+              variant='text'
+              disabled={disabled}
+              onClick={handleSetting}
+            >
+              <Icon name='settings' size='small' />
+              <span>{intl.formatMessage({ defaultMessage: '设置' })}</span>
             </Button>
           )}
           {(item.status === PublicationStatus.Review ||

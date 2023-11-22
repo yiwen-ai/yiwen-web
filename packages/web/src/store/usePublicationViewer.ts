@@ -67,6 +67,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
   //#region fetch
   const {
     isLoading,
+    isValidating,
     error,
     publication,
     refresh: refreshPublication,
@@ -289,7 +290,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
               cid: _cid,
               language: _language,
               version: _version,
-              fields: null,
+              fields: undefined,
             },
             controller.signal
           )
@@ -442,7 +443,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       onCharge: handleCharge,
       ...chargeDialog,
     },
-    isLoading,
+    isLoading: isLoading || isValidating,
     error,
     publication,
     collectionMenu,
