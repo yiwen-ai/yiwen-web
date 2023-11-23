@@ -8,7 +8,6 @@ import { Xid } from 'xid-ts'
 import Loading from './Loading'
 import MediumDialog from './MediumDialog'
 
-const ScrollViewMaxHeight = 600
 export interface PublicationSelectorProps {
   open: boolean
   gid: string | undefined
@@ -100,14 +99,21 @@ export default function PublicationSelector({
     [selected, setSelected]
   )
 
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const loadMoresRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (open && hasMore && !isValidating && scrollRef.current) {
-      if (scrollRef.current.clientHeight <= ScrollViewMaxHeight) {
-        loadMore()
-      }
+    if (open && hasMore && !isValidating) {
+      setTimeout(() => {
+        if (open && hasMore && !isValidating && loadMoresRef.current) {
+          if (
+            loadMoresRef.current.clientHeight >=
+            loadMoresRef.current.scrollHeight
+          ) {
+            loadMore()
+          }
+        }
+      }, 800)
     }
-  }, [open, hasMore, loadMore, isValidating, scrollRef])
+  }, [open, hasMore, loadMore, isValidating, loadMoresRef])
 
   const handleScroll = useCallback(
     (ev: React.UIEvent<HTMLDivElement>) => {
@@ -189,7 +195,7 @@ export default function PublicationSelector({
           `}
         >
           <div
-            ref={scrollRef}
+            ref={loadMoresRef}
             onScroll={handleScroll}
             css={css`
               display: flex;
@@ -198,7 +204,7 @@ export default function PublicationSelector({
               gap: 8px;
               border-radius: 8px;
               border: 1px solid ${theme.color.input.border};
-              max-height: ${ScrollViewMaxHeight}px;
+              max-height: 600px;
               overflow-y: auto;
               padding: 12px 0;
             `}

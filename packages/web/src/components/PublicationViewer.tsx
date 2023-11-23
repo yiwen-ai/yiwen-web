@@ -1,5 +1,4 @@
 import { GROUP_DETAIL_PATH, ThemeContext } from '#/App'
-import { AutoLoadMore } from '#/components/LoadMore'
 import { BREAKPOINT } from '#/shared'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
@@ -36,6 +35,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type HTMLAttributes,
 } from 'react'
@@ -46,6 +46,7 @@ import { Xid } from 'xid-ts'
 import ChargeDialog, { type ChargeDialogProps } from './ChargeDialog'
 import CommonViewer from './CommonViewer'
 import ErrorPlaceholder from './ErrorPlaceholder'
+import { LoadMore } from './LoadMore'
 import Loading from './Loading'
 import PaymentConfirmDialog from './PaymentConfirmDialog'
 import TranslateConfirmDialog, {
@@ -259,6 +260,37 @@ export default function PublicationViewer({
   const handleCheckSubscription = useCallback(() => {
     refreshPublication()
   }, [refreshPublication])
+
+  const loadMoresRef = useRef<HTMLUListElement>(null)
+  useEffect(() => {
+    if (showMenu && hasMore && !isLoadingMore) {
+      setTimeout(() => {
+        if (showMenu && hasMore && !isLoadingMore && loadMoresRef.current) {
+          if (
+            loadMoresRef.current.clientHeight >=
+            loadMoresRef.current.scrollHeight
+          ) {
+            loadMore()
+          }
+        }
+      }, 800)
+    }
+  }, [showMenu, hasMore, loadMore, isLoadingMore])
+
+  const handleScroll = useCallback(
+    (ev: React.UIEvent<HTMLUListElement>) => {
+      const { clientHeight, scrollTop, scrollHeight } = ev.currentTarget
+      if (
+        hasMore &&
+        loadMore &&
+        !isLoadingMore &&
+        clientHeight + scrollTop === scrollHeight
+      ) {
+        loadMore()
+      }
+    },
+    [hasMore, loadMore, isLoadingMore]
+  )
 
   return (
     <div
@@ -623,6 +655,8 @@ export default function PublicationViewer({
             />
             {showMenu && collectionMenu.length > 0 && (
               <ul
+                ref={loadMoresRef}
+                onScroll={handleScroll}
                 css={css`
                   display: flex;
                   flex-direction: column;
@@ -702,9 +736,9 @@ export default function PublicationViewer({
                     </Link>
                   </li>
                 ))}
-                <AutoLoadMore
+                <LoadMore
                   hasMore={hasMore}
-                  isLoadingMore={isLoading}
+                  isLoadingMore={isLoadingMore}
                   onLoadMore={loadMore}
                 />
               </ul>

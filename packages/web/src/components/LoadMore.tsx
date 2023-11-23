@@ -1,6 +1,5 @@
 import { css, useTheme } from '@emotion/react'
 import { Button, Spinner } from '@yiwen-ai/component'
-import { useMemo } from 'react'
 import { useIntl } from 'react-intl'
 
 interface LoadMoreProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -53,36 +52,36 @@ export function LoadMore({
   ) : null
 }
 
-interface AutoLoadMoreProps extends React.HTMLAttributes<HTMLDivElement> {
-  hasMore: boolean
-  isLoadingMore: boolean
-  onLoadMore: () => void
-}
+// interface AutoLoadMoreProps extends React.HTMLAttributes<HTMLDivElement> {
+//   hasMore: boolean
+//   isLoadingMore: boolean
+//   onLoadMore: () => void
+// }
 
-export function AutoLoadMore({
-  hasMore,
-  isLoadingMore,
-  onLoadMore,
-  ...props
-}: AutoLoadMoreProps) {
-  useMemo(() => {
-    hasMore && !isLoadingMore && onLoadMore()
-  }, [hasMore, isLoadingMore, onLoadMore])
+// export function AutoLoadMore({
+//   hasMore,
+//   isLoadingMore,
+//   onLoadMore,
+//   ...props
+// }: AutoLoadMoreProps) {
+//   useMemo(() => {
+//     hasMore && !isLoadingMore && onLoadMore()
+//   }, [hasMore, isLoadingMore, onLoadMore])
 
-  const content = isLoadingMore ? <Spinner /> : null
+//   const content = isLoadingMore ? <Spinner /> : null
 
-  return content ? (
-    <div
-      {...props}
-      css={css`
-        height: 80px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      `}
-    >
-      {content}
-    </div>
-  ) : null
-}
+//   return content ? (
+//     <div
+//       {...props}
+//       css={css`
+//         height: 80px;
+//         display: flex;
+//         flex-direction: column;
+//         align-items: center;
+//         justify-content: center;
+//       `}
+//     >
+//       {content}
+//     </div>
+//   ) : null
+// }

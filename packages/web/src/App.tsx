@@ -127,7 +127,7 @@ function Layout() {
 
   useEffect(() => {
     document.title =
-      'Yiwen AI — ' +
+      'Yiwen — ' +
       intl.formatMessage({
         defaultMessage: '基于人工智能的跨语言知识内容平台',
       })
