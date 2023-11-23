@@ -24,7 +24,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 ```shell
 pnpm install
 pnpm --filter web run build --mode=testing --base=https://cdn.yiwen.pub/dev/web # build for testing (.env.testing applied)
-pnpm --filter web run build --mode=staging --base=https://cdn.yiwen.pub/web # build for staging (.env.staging applied)
+pnpm --filter web run build --mode=staging --base=https://cdn.yiwen.pub/beta/web # build for staging (.env.staging applied)
 pnpm --filter web run build --mode=production --base=https://cdn.yiwen.pub/web # build for production (.env.production applied)
 # then deploy all the files in the `packages/web/dist` directory
 ```

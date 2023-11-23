@@ -5,13 +5,15 @@ import { defineConfig } from 'vite'
 import { checker } from 'vite-plugin-checker'
 import { VitePWA } from 'vite-plugin-pwa'
 
-const scope = process.env['npm_package_scripts_build']?.includes('testing')
+const buildEnv = process.env['npm_package_scripts_build'] || ''
+const scope = buildEnv.includes('testing')
   ? 'https://www.yiwen.ltd'
   : 'https://www.yiwen.ai'
-const cdnPrefix =
-  scope === 'https://www.yiwen.ltd'
-    ? 'https://cdn.yiwen.pub/dev/web/'
-    : 'https://cdn.yiwen.pub/web/'
+const cdnPrefix = buildEnv.includes('testing')
+  ? 'https://cdn.yiwen.pub/dev/web/'
+  : buildEnv.includes('staging')
+  ? 'https://cdn.yiwen.pub/beta/web/'
+  : 'https://cdn.yiwen.pub/web/'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -28,10 +30,10 @@ export default defineConfig({
       workbox: {
         clientsClaim: true,
         skipWaiting: true,
+        navigateFallback: cdnPrefix + 'index.html',
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        globPatterns: [
-          '**/*.{js,css,html,txt,webmanifest,svg,png,jpg,jpeg,ico,ttf,woff2,woff}',
-        ],
+        globIgnores: ['*/*-legacy*'],
+        globPatterns: ['**/*.{js,css,html,txt,webmanifest,svg,png,ico}'],
         modifyURLPrefix: {
           '': cdnPrefix,
         },
@@ -43,7 +45,7 @@ export default defineConfig({
       manifest: {
         'name': 'Yiwen',
         'short_name': 'Yiwen',
-        'start_url': '.',
+        'start_url': scope,
         'display': 'standalone',
         'theme_color': '#ffffff',
         'background_color': '#ffffff',
@@ -75,7 +77,7 @@ export default defineConfig({
         'related_applications': [
           {
             'platform': 'web',
-            'url': 'https://www.yiwen.ai',
+            'url': scope,
           },
         ],
       },
