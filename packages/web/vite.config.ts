@@ -32,23 +32,23 @@ export default defineConfig({
         'description': 'AI-based Translingual Knowledge Content Platform.',
         'icons': [
           {
-            'src': 'https://cdn.yiwen.pub/web/favicon-64x64.png',
+            'src': 'favicon-64x64.png',
             'sizes': '64x64',
             'type': 'image/png',
           },
           {
-            'src': 'https://cdn.yiwen.pub/web/favicon-192x192.png',
+            'src': 'favicon-192x192.png',
             'sizes': '192x192',
             'type': 'image/png',
           },
           {
-            'src': 'https://cdn.yiwen.pub/web/favicon-512x512.png',
+            'src': 'favicon-512x512.png',
             'sizes': '512x512',
             'type': 'image/png',
             'purpose': 'any',
           },
           {
-            'src': 'https://cdn.yiwen.pub/web/favicon-512x512-maskable.png',
+            'src': 'favicon-512x512-maskable.png',
             'sizes': '512x512',
             'type': 'image/png',
             'purpose': 'maskable',

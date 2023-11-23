@@ -1,8 +1,11 @@
 import { Buffer } from 'buffer'
 import { decode, encode } from 'cborg'
+import stringify from 'json-stable-stringify'
 import fs from 'node:fs/promises'
+import { Xid } from 'xid-ts'
 
 const HOST = 'https://api.yiwen.ai'
+const GROUP_ID = 'ck08p30j4vfh80pte7a0'
 const MESSAGE_ID = 'ckjjdj2sblvpm7b5ad70'
 const SESS_COOKIE = process.env.SESS_COOKIE // 'YW_DID=xxxxxxx; YW_SESS=xxxxxxxxx'
 
@@ -18,6 +21,14 @@ async function main() {
       await api.updateZho()
       break
     }
+    case 'translate': {
+      await api.translate()
+      break
+    }
+    case 'compile': {
+      await api.compile()
+      break
+    }
     case 'updateI18n': {
       await api.updateI18n(process.argv[3])
       break
@@ -26,14 +37,6 @@ async function main() {
     //   await api.updateAllI18n()
     //   break
     // }
-    case 'compile': {
-      await api.compile()
-      break
-    }
-    case 'translate': {
-      await api.translate()
-      break
-    }
     default: {
       throw new Error(`Unknown command: "${process.argv[2]}"`)
     }
@@ -65,11 +68,13 @@ class YiwenMessage {
     for (const key of keys) {
       message[key] = msg[key].defaultMessage
     }
+    console.log(message)
 
     result.message = Buffer.from(encode(message))
 
     const res = await this.fetch('PATCH', `v1/message`, {
       id: result.id,
+      gid: Buffer.from(Xid.fromValue(GROUP_ID)),
       language: 'zho',
       version: result.version,
       message: result.message,
@@ -96,6 +101,7 @@ class YiwenMessage {
 
     await this.fetch('PATCH', `v1/message`, {
       id: result.id,
+      gid: Buffer.from(Xid.fromValue(GROUP_ID)),
       language: lang[0],
       version: result.version,
       message: Buffer.from(encode(msg.messages)),
@@ -125,6 +131,7 @@ class YiwenMessage {
       )
       await this.fetch('PATCH', `v1/message`, {
         id: result.id,
+        gid: Buffer.from(Xid.fromValue(GROUP_ID)),
         language: lang[0],
         version: result.version,
         message: Buffer.from(encode(msg.messages)),
@@ -144,6 +151,7 @@ class YiwenMessage {
       try {
         await this.fetch('POST', `v1/message/translate`, {
           id: result.id,
+          gid: Buffer.from(Xid.fromValue(GROUP_ID)),
           language: code,
           version: result.version,
         })
@@ -177,7 +185,7 @@ class YiwenMessage {
       }
       await fs.writeFile(
         `./packages/web/lang/${locale.language}.json`,
-        JSON.stringify({ messages }, null, 2)
+        stringify({ messages }, { space: '  ' })
       )
 
       console.log(`Compiled ${code}`)
@@ -240,8 +248,8 @@ class YiwenMessage {
     }
 
     const res = await fetch(api, options)
-    if (res.status !== 200) {
-      throw new Error(await res.text())
+    if (res.status >= 300) {
+      throw new Error(`${res.status}: ${await res.text()}`)
     }
     return decode(Buffer.from(await res.arrayBuffer()))
   }
