@@ -126,9 +126,11 @@ function Layout() {
   const { defaultGroup: { id: gid } = {} } = useMyGroupList()
 
   useEffect(() => {
-    document.title = intl.formatMessage({
-      defaultMessage: 'Yiwen AI — 跨语言的知识网络',
-    })
+    document.title =
+      'Yiwen AI — ' +
+      intl.formatMessage({
+        defaultMessage: '基于人工智能的跨语言知识内容平台',
+      })
   }, [intl])
 
   //#region close auth dialog on location change

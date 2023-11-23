@@ -1,0 +1,40 @@
+{
+  "name": "Yiwen AI",
+  "short_name": "Yiwen",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "description": "AI-based Translingual Knowledge Content Platform.",
+  "icons": [
+    {
+      "src": "https://cdn.yiwen.pub/web/images/yiwen.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "https://cdn.yiwen.pub/web/logo.svg",
+      "sizes": "48x48 72x72 96x96 128x128 192x192 256x256 512x512"
+    },
+    {
+      "src": "https://cdn.yiwen.pub/web/images/yiwen.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn.yiwen.pub/web/images/yiwen-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn.yiwen.pub/web/images/yiwen-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "web"
+    }
+  ]
+}
