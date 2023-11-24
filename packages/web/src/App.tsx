@@ -30,6 +30,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import {
@@ -117,11 +118,16 @@ function Fallback({
   )
 }
 
+export const LayoutDivRefContext =
+  createContext<React.RefObject<HTMLDivElement> | null>(null)
+
 function Layout() {
   const logger = useLogger()
   const intl = useIntl()
   const { dialog } = useAuth()
   const navigate = useNavigate()
+
+  const layoutDivRef = useRef<HTMLDivElement>(null)
 
   const { defaultGroup: { id: gid } = {} } = useMyGroupList()
 
@@ -218,6 +224,7 @@ function Layout() {
           `}
         />
         <div
+          ref={layoutDivRef}
           css={css`
             flex: 1;
             display: flex;
@@ -225,13 +232,15 @@ function Layout() {
             overflow-y: auto;
           `}
         >
-          <ErrorBoundary
-            key={key}
-            fallbackRender={renderFallback}
-            onError={onError}
-          >
-            <Outlet />
-          </ErrorBoundary>
+          <LayoutDivRefContext.Provider value={layoutDivRef}>
+            <ErrorBoundary
+              key={key}
+              fallbackRender={renderFallback}
+              onError={onError}
+            >
+              <Outlet />
+            </ErrorBoundary>
+          </LayoutDivRefContext.Provider>
         </div>
       </main>
     </SetHeaderPropsContext.Provider>
@@ -258,7 +267,7 @@ export const WALLET_PATH = '/wallet'
 export const NEW_CREATION_PATH = '/creation/new'
 export const EDIT_CREATION_PATH = '/creation/:cid'
 export const EDIT_PUBLICATION_PATH = '/publication/:cid'
-export const SHARE_COLLECTION_PATH = '/coll/:cid'
+export const SHARE_COLLECTION_PATH = '/group/:gid/:type'
 export const SHARE_PUBLICATION_PATH = '/pub/:cid'
 export const DEFAULT_GROUP_PATH = '/group/:gid'
 export const GROUP_DETAIL_PATH = '/group/:gid/:type'

@@ -33,12 +33,16 @@ import {
   type QueryPaymentCode,
   type UILanguageItem,
 } from '@yiwen-ai/store'
-import { preventDefaultStopPropagation } from '@yiwen-ai/util'
+import {
+  preventDefaultStopPropagation,
+  useScrollOnBottom,
+} from '@yiwen-ai/util'
 import { escapeRegExp } from 'lodash-es'
 import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type HTMLAttributes,
 } from 'react'
@@ -430,6 +434,8 @@ function CollectionDetail({
     return getCollectionInfo(collection)
   }, [collection])
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
   const dir = useMemo(() => {
     return isRTL(language) ? 'rtl' : undefined
   }, [language])
@@ -465,6 +471,7 @@ function CollectionDetail({
   return (
     info && (
       <div
+        ref={scrollContainerRef}
         css={css`
           width: 100%;
           max-width: calc(${MAX_WIDTH} + 36px * 2);
@@ -576,13 +583,12 @@ function CollectionDetail({
                   {collection.rfp?.collection && (
                     <>
                       <span>
-                        {intl.formatMessage({ defaultMessage: '付费阅读' })}
-                      </span>
-                      <span>
-                        {intl.formatMessage(
-                          { defaultMessage: '{amount} 文' },
-                          { amount: collection.rfp.collection.price }
-                        )}
+                        {intl.formatMessage({ defaultMessage: '付费阅读' }) +
+                          ' - ' +
+                          intl.formatMessage(
+                            { defaultMessage: '{amount} 文' },
+                            { amount: collection.rfp.collection.price }
+                          )}
                       </span>
                     </>
                   )}
@@ -652,6 +658,7 @@ function CollectionDetail({
           collection={collection}
           dir={dir}
           isEditing={isEditing}
+          scrollContainerRef={scrollContainerRef}
         ></CollectionChildren>
       </div>
     )
@@ -663,11 +670,13 @@ function CollectionChildren({
   collection,
   dir,
   isEditing,
+  scrollContainerRef,
 }: {
   pushToast: ToastAPI['pushToast']
   collection: CollectionOutput
   dir: string | undefined
   isEditing: boolean
+  scrollContainerRef: React.RefObject<HTMLElement>
 }) {
   const intl = useIntl()
   const theme = useTheme()
@@ -705,6 +714,12 @@ function CollectionChildren({
   const handleLoadMore = useCallback(() => {
     loadMore()
   }, [loadMore])
+
+  const shouldLoadMore = hasMore && !isValidating && loadMore
+  const handleScroll = useCallback(() => {
+    shouldLoadMore && shouldLoadMore()
+  }, [shouldLoadMore])
+  useScrollOnBottom(scrollContainerRef, handleScroll)
 
   const handleDragEnd: OnDragEndResponder = useCallback(
     (result) => {

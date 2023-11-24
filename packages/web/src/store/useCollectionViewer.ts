@@ -151,15 +151,22 @@ export function useCollectionViewer(pushToast: ToastAPI['pushToast']) {
   const { user } = useAuth()
 
   const shareLink = useMemo(() => {
-    if (!params._cid) return undefined
+    if (!params._cid || !params._gid) return undefined
     if (collection?.status !== CollectionStatus.Public) return undefined
     return generateCollectionShareLink(
       SHARE_URL,
-      null,
+      params._gid,
       params._cid,
       user?.cn ?? params._by
     )
-  }, [SHARE_URL, params._cid, params._by, collection?.status, user?.cn])
+  }, [
+    SHARE_URL,
+    params._gid,
+    params._cid,
+    params._by,
+    collection?.status,
+    user?.cn,
+  ])
 
   useEffect(() => {
     if (!collection) return

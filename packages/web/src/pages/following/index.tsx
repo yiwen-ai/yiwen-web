@@ -1,3 +1,4 @@
+import { LayoutDivRefContext } from '#/App'
 import CreatedBy from '#/components/CreatedBy'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import LargeDialog from '#/components/LargeDialog'
@@ -15,7 +16,8 @@ import {
   isRTL,
   type PublicationOutput,
 } from '@yiwen-ai/store'
-import { useCallback } from 'react'
+import { useScrollOnBottom } from '@yiwen-ai/util'
+import { useCallback, useContext } from 'react'
 
 export default function FollowingPage() {
   const { renderToastContainer, pushToast } = useToast()
@@ -36,6 +38,16 @@ export default function FollowingPage() {
       ...publicationViewer
     },
   } = useFollowingPage(pushToast)
+
+  const layoutDivRef = useContext(
+    LayoutDivRefContext
+  ) as React.RefObject<HTMLDivElement>
+
+  const shouldLoadMore = hasMore && !isLoadingMore && loadMore
+  const handleScroll = useCallback(() => {
+    shouldLoadMore && shouldLoadMore()
+  }, [shouldLoadMore])
+  useScrollOnBottom(layoutDivRef, handleScroll)
 
   return (
     <>

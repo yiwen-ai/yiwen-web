@@ -250,7 +250,7 @@ export function useCollectionAPI() {
         gid: Xid.fromValue(params.gid),
         id: Xid.fromValue(params.id),
         page_token: params.page_token,
-        page_size: 100,
+        page_size: 20,
       }
       return request.post<Page<CollectionChildrenOutput>>(
         `${path}/list_children`,
@@ -542,7 +542,7 @@ export function useCollectionList(
         path === '/v1/collection/list_archived'
           ? readArchivedCollectionList(params)
           : readCollectionList(params),
-      { revalidateFirstPage: false }
+      { revalidateFirstPage: true }
     )
 
   //#region processing state
@@ -820,13 +820,13 @@ export function useCollectionChildren(
 
   const { data, error, mutate, isValidating, isLoading, setSize } =
     useSWRInfinite(getKey, ([path, params]) => readCollectionChildren(params), {
-      revalidateFirstPage: false,
+      revalidateFirstPage: true,
     })
 
   //#region loading state
-  const items = useMemo(() => {
-    if (!data) return []
-    return data.flatMap((page) => page.result)
+  const [items, itemsLength] = useMemo(() => {
+    const result = data ? data.flatMap((page) => page.result) : []
+    return [result, result.length]
   }, [data])
 
   const hasMore = useMemo(() => {
@@ -834,11 +834,14 @@ export function useCollectionChildren(
     return !!data[data.length - 1]?.next_page_token
   }, [data, error])
 
-  const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
-
   const refresh = useCallback(
     async () => getKey(0, null) && (await mutate()),
     [getKey, mutate]
+  )
+
+  const loadMore = useCallback(
+    () => (itemsLength === 0 ? refresh() : setSize((size) => size + 1)),
+    [setSize, itemsLength, refresh]
   )
   //#endregion
 

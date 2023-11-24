@@ -1,7 +1,8 @@
 import { css, useTheme } from '@emotion/react'
 import { Button, textEllipsis } from '@yiwen-ai/component'
 import { usePublicationList, type PublicationStatus } from '@yiwen-ai/store'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useScrollOnBottom } from '@yiwen-ai/util'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useIntl } from 'react-intl'
 import { Form } from 'react-router-dom'
 import { Xid } from 'xid-ts'
@@ -99,36 +100,12 @@ export default function PublicationSelector({
     [selected, setSelected]
   )
 
-  const loadMoresRef = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (open && hasMore && !isValidating) {
-      setTimeout(() => {
-        if (open && hasMore && !isValidating && loadMoresRef.current) {
-          if (
-            loadMoresRef.current.clientHeight >=
-            loadMoresRef.current.scrollHeight
-          ) {
-            loadMore()
-          }
-        }
-      }, 800)
-    }
-  }, [open, hasMore, loadMore, isValidating, loadMoresRef])
-
-  const handleScroll = useCallback(
-    (ev: React.UIEvent<HTMLDivElement>) => {
-      const { clientHeight, scrollTop, scrollHeight } = ev.currentTarget
-      if (
-        hasMore &&
-        loadMore &&
-        !isValidating &&
-        clientHeight + scrollTop === scrollHeight
-      ) {
-        loadMore()
-      }
-    },
-    [hasMore, loadMore, isValidating]
-  )
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const shouldLoadMore = open && hasMore && !isValidating && loadMore
+  const handleScroll = useCallback(() => {
+    shouldLoadMore && shouldLoadMore()
+  }, [shouldLoadMore])
+  useScrollOnBottom(scrollContainerRef, handleScroll)
 
   const handleSave = useCallback(
     (ev: React.FormEvent<HTMLFormElement>) => {
@@ -195,8 +172,7 @@ export default function PublicationSelector({
           `}
         >
           <div
-            ref={loadMoresRef}
-            onScroll={handleScroll}
+            ref={scrollContainerRef}
             css={css`
               display: flex;
               flex-direction: column;

@@ -53,17 +53,18 @@ export function generatePublicationShareLink(
 
 export function generateCollectionShareLink(
   SHARE_URL: string,
-  gid: Uint8Array | string | null | undefined,
+  gid: Uint8Array | string,
   cid: Uint8Array | string,
   by: string | null | undefined
 ) {
   return joinURL(
     SHARE_URL,
     generatePath(SHARE_COLLECTION_PATH, {
-      cid: Xid.fromValue(cid).toString(),
+      gid: Xid.fromValue(gid).toString(),
+      type: 'collection',
     }),
     {
-      gid: gid && Xid.fromValue(gid).toString(),
+      cid: Xid.fromValue(cid).toString(),
       by,
     }
   )

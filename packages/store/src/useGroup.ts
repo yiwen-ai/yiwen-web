@@ -303,7 +303,7 @@ export function useFollowedGroupList() {
       if (!isAuthorized) return null
       if (prevPage && !prevPage.next_page_token) return null
       const body: Pagination = {
-        page_size: 100,
+        page_size: 20,
         page_token: prevPage?.next_page_token,
       }
       return [`${path}/list_following`, body] as const
@@ -314,7 +314,7 @@ export function useFollowedGroupList() {
   const response = useSWRInfinite(
     getKey,
     ([, body]) => readFollowedGroupList(body),
-    { revalidateFirstPage: false }
+    { revalidateFirstPage: true }
   )
 
   return usePagination({

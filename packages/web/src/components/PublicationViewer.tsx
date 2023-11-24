@@ -28,7 +28,7 @@ import {
   type QueryPaymentCode,
   type UILanguageItem,
 } from '@yiwen-ai/store'
-import { RGBA } from '@yiwen-ai/util'
+import { RGBA, useScrollOnBottom } from '@yiwen-ai/util'
 import { escapeRegExp } from 'lodash-es'
 import {
   useCallback,
@@ -43,6 +43,7 @@ import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
 import { Link, generatePath } from 'react-router-dom'
 import { Xid } from 'xid-ts'
+import { type RFP } from '../../../store/src/common'
 import ChargeDialog, { type ChargeDialogProps } from './ChargeDialog'
 import CommonViewer from './CommonViewer'
 import ErrorPlaceholder from './ErrorPlaceholder'
@@ -261,36 +262,14 @@ export default function PublicationViewer({
     refreshPublication()
   }, [refreshPublication])
 
-  const loadMoresRef = useRef<HTMLUListElement>(null)
-  useEffect(() => {
-    if (showMenu && hasMore && !isLoadingMore) {
-      setTimeout(() => {
-        if (showMenu && hasMore && !isLoadingMore && loadMoresRef.current) {
-          if (
-            loadMoresRef.current.clientHeight >=
-            loadMoresRef.current.scrollHeight
-          ) {
-            loadMore()
-          }
-        }
-      }, 800)
-    }
-  }, [showMenu, hasMore, loadMore, isLoadingMore])
-
-  const handleScroll = useCallback(
-    (ev: React.UIEvent<HTMLUListElement>) => {
-      const { clientHeight, scrollTop, scrollHeight } = ev.currentTarget
-      if (
-        hasMore &&
-        loadMore &&
-        !isLoadingMore &&
-        clientHeight + scrollTop === scrollHeight
-      ) {
-        loadMore()
-      }
-    },
-    [hasMore, loadMore, isLoadingMore]
-  )
+  const scrollContainerRef = useRef<HTMLUListElement>(null)
+  const shouldLoadMore = showMenu && hasMore && !isLoadingMore && loadMore
+  const handleScroll = useCallback(() => {
+    shouldLoadMore && shouldLoadMore()
+  }, [shouldLoadMore])
+  useScrollOnBottom(scrollContainerRef, handleScroll)
+  // hack for useScrollOnBottom failed because scrollContainerRef is null in same cases
+  useEffect(() => handleScroll(), [handleScroll])
 
   const [hidePayment, setHidePayment] = useState(false)
   const handleHidePayment = useCallback(() => {
@@ -657,11 +636,19 @@ export default function PublicationViewer({
               parent={parent}
               prevItem={prevItem}
               nextItem={nextItem}
+              footer={
+                hidePayment && publication.rfp ? (
+                  <PaymentSection
+                    rfp={publication.rfp}
+                    handlePayForCollection={handlePayForCollection}
+                    handlePayForPublication={handlePayForPublication}
+                  />
+                ) : null
+              }
             />
             {showMenu && collectionMenu.length > 0 && (
               <ul
-                ref={loadMoresRef}
-                onScroll={handleScroll}
+                ref={scrollContainerRef}
                 css={css`
                   display: flex;
                   flex-direction: column;
@@ -768,7 +755,7 @@ export default function PublicationViewer({
             left: 0;
             background-color: ${RGBA(theme.palette.white, 0.94)};
             box-shadow: ${theme.effect.card};
-            transform: ${hidePayment ? 'translateY(78%)' : 'none'};
+            transform: ${hidePayment ? 'translateY(100%)' : 'none'};
             transition: height 0.3s ease-in-out, transform 0.3s ease-in-out;
             :hover {
               box-shadow: ${theme.effect.cardHover};
@@ -785,7 +772,7 @@ export default function PublicationViewer({
             `}
           >
             <Icon
-              name={hidePayment ? 'arrow-up-s-line' : 'arrow-down-s-line'}
+              name='arrow-down-s-line'
               size='medium'
               css={css`
                 display: block;
@@ -793,81 +780,11 @@ export default function PublicationViewer({
               `}
             />
           </Button>
-          <div
-            css={css`
-              width: 100%;
-              max-width: 800px;
-              margin: 0 auto;
-              padding-bottom: 24px;
-            `}
-          >
-            <p
-              css={css`
-                width: 100%;
-                color: ${theme.color.body.primary};
-                text-align: center;
-                ${theme.typography.bodyBold}
-              `}
-            >
-              {intl.formatMessage({
-                defaultMessage: '付费后即可阅读剩余 38% 的内容',
-              })}
-            </p>
-            <div
-              css={css`
-                display: flex;
-                flex-direction: row;
-                margin-top: 16px;
-                gap: 16px;
-                width: 100%;
-                text-align: center;
-                justify-content: center;
-                flex-wrap: wrap;
-                align-items: center;
-              `}
-            >
-              {publication.rfp.collection && (
-                <Button
-                  color='primary'
-                  variant='contained'
-                  onClick={handlePayForCollection}
-                  css={css`
-                    width: fit-content;
-                  `}
-                >
-                  <span>
-                    {intl.formatMessage({ defaultMessage: '为合集付费' })}
-                  </span>
-                  <span>
-                    {intl.formatMessage(
-                      { defaultMessage: '{amount} 文' },
-                      { amount: publication.rfp.collection.price }
-                    )}
-                  </span>
-                </Button>
-              )}
-              {publication.rfp.creation && (
-                <Button
-                  color='secondary'
-                  variant='outlined'
-                  onClick={handlePayForPublication}
-                  css={css`
-                    width: fit-content;
-                  `}
-                >
-                  <span>
-                    {intl.formatMessage({ defaultMessage: '为文章付费' })}
-                  </span>
-                  <span>
-                    {intl.formatMessage(
-                      { defaultMessage: '{amount} 文' },
-                      { amount: publication.rfp.creation.price }
-                    )}
-                  </span>
-                </Button>
-              )}
-            </div>
-          </div>
+          <PaymentSection
+            rfp={publication.rfp}
+            handlePayForCollection={handlePayForCollection}
+            handlePayForPublication={handlePayForPublication}
+          />
           <PaymentConfirmDialog
             pushToast={pushToast}
             onClose={handlePaymentClose}
@@ -879,6 +796,94 @@ export default function PublicationViewer({
           />
         </div>
       )}
+    </div>
+  )
+}
+
+function PaymentSection({
+  rfp,
+  handlePayForCollection,
+  handlePayForPublication,
+}: React.HTMLAttributes<HTMLDivElement> & {
+  rfp: RFP
+  handlePayForCollection: () => void
+  handlePayForPublication: () => void
+}) {
+  const intl = useIntl()
+  const theme = useTheme()
+  return (
+    <div
+      css={css`
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding-bottom: 48px;
+      `}
+    >
+      <p
+        css={css`
+          width: 100%;
+          color: ${theme.color.body.primary};
+          text-align: center;
+          ${theme.typography.bodyBold}
+        `}
+      >
+        {intl.formatMessage({
+          defaultMessage: '付费后即可阅读剩余 38% 的内容',
+        })}
+      </p>
+      <div
+        css={css`
+          display: flex;
+          flex-direction: row;
+          margin-top: 16px;
+          gap: 16px;
+          width: 100%;
+          text-align: center;
+          justify-content: center;
+          flex-wrap: wrap;
+          align-items: center;
+        `}
+      >
+        {rfp.collection && (
+          <Button
+            color='primary'
+            variant='contained'
+            onClick={handlePayForCollection}
+            css={css`
+              width: fit-content;
+            `}
+          >
+            <span>
+              {intl.formatMessage({ defaultMessage: '为合集付费' }) +
+                ' - ' +
+                intl.formatMessage(
+                  { defaultMessage: '{amount} 文' },
+                  { amount: rfp.collection.price }
+                )}
+            </span>
+          </Button>
+        )}
+        {rfp.creation && (
+          <Button
+            color='secondary'
+            variant='outlined'
+            onClick={handlePayForPublication}
+            css={css`
+              width: fit-content;
+            `}
+          >
+            <span>
+              {intl.formatMessage({ defaultMessage: '为文章付费' }) +
+                ' - ' +
+                intl.formatMessage(
+                  { defaultMessage: '{amount} 文' },
+                  { amount: rfp.creation.price }
+                )}
+            </span>
+          </Button>
+        )}
+      </div>
     </div>
   )
 }

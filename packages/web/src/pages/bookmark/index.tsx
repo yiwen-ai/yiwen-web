@@ -1,3 +1,4 @@
+import { LayoutDivRefContext } from '#/App'
 import CollectionLink from '#/components/CollectionLink'
 import CollectionViewer from '#/components/CollectionViewer'
 import CreatedBy from '#/components/CreatedBy'
@@ -21,8 +22,11 @@ import {
   useToast,
 } from '@yiwen-ai/component'
 import { ObjectKind, isRTL, type BookmarkOutput } from '@yiwen-ai/store'
-import { preventDefaultStopPropagation } from '@yiwen-ai/util'
-import { useCallback } from 'react'
+import {
+  preventDefaultStopPropagation,
+  useScrollOnBottom,
+} from '@yiwen-ai/util'
+import { useCallback, useContext } from 'react'
 import { useIntl } from 'react-intl'
 import { Xid } from 'xid-ts'
 
@@ -50,6 +54,16 @@ export default function BookmarkPage() {
       ...publicationViewer
     },
   } = useBookmarkPage(pushToast)
+
+  const layoutDivRef = useContext(
+    LayoutDivRefContext
+  ) as React.RefObject<HTMLDivElement>
+
+  const shouldLoadMore = hasMore && !isLoadingMore && loadMore
+  const handleScroll = useCallback(() => {
+    shouldLoadMore && shouldLoadMore()
+  }, [shouldLoadMore])
+  useScrollOnBottom(layoutDivRef, handleScroll)
 
   return (
     <>

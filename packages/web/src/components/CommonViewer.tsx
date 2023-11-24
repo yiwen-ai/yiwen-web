@@ -26,6 +26,7 @@ export default function CommonViewer({
   parent,
   prevItem,
   nextItem,
+  footer,
   ...props
 }: React.HTMLAttributes<HTMLDivElement> & {
   type: GroupViewType
@@ -35,6 +36,7 @@ export default function CommonViewer({
   parent?: string | null | undefined
   prevItem?: CollectionChildrenOutput | null | undefined
   nextItem?: CollectionChildrenOutput | null | undefined
+  footer?: JSX.Element | null | undefined
 }) {
   const intl = useIntl()
   const theme = useTheme()
@@ -112,6 +114,7 @@ export default function CommonViewer({
           `}
         />
       )}
+      {footer}
       {(prevItem || nextItem) && (
         <div
           css={css`

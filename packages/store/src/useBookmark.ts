@@ -392,7 +392,7 @@ export function useBookmarkList() {
       if (!isAuthorized) return null
       if (prevPage && !prevPage.next_page_token) return null
       const body: Pagination = {
-        page_size: 100,
+        page_size: 20,
         page_token: prevPage?.next_page_token,
       }
       return [`${path}/list`, body] as const
@@ -403,7 +403,7 @@ export function useBookmarkList() {
   const { mutate, ...response } = useSWRInfinite(
     getKey,
     ([, body]) => readBookmarkList(body),
-    { revalidateFirstPage: false }
+    { revalidateFirstPage: true }
   )
 
   const [setRemoving, isRemoving] = useLoading((item: BookmarkOutput) =>

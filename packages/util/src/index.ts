@@ -44,4 +44,5 @@ export {
   type ModalRef,
 } from './useModal'
 export { mergeForwardedRef, useRefCallback } from './useRefCallback'
+export { useScrollOnBottom } from './useScrollOnBottom'
 export { onLocationChange, waitUntilClosed } from './waitUntilClosed'

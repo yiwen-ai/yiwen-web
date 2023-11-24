@@ -1,5 +1,6 @@
 import {
   GROUP_DETAIL_PATH,
+  LayoutDivRefContext,
   NEW_CREATION_PATH,
   SetHeaderProps,
   ThemeContext,
@@ -53,7 +54,11 @@ import {
   type GroupStatisticOutput,
   type PublicationOutput,
 } from '@yiwen-ai/store'
-import { joinURLPath, type AnchorProps } from '@yiwen-ai/util'
+import {
+  joinURLPath,
+  useScrollOnBottom,
+  type AnchorProps,
+} from '@yiwen-ai/util'
 import { useCallback, useContext, useEffect } from 'react'
 import { useIntl } from 'react-intl'
 import {
@@ -671,6 +676,7 @@ function GroupPart({
 
 function CollectionPart({
   isLoading,
+  isValidating,
   error,
   items,
   hasMore,
@@ -684,6 +690,7 @@ function CollectionPart({
   onClick,
 }: {
   isLoading: boolean
+  isValidating: boolean
   error: unknown
   items: CollectionOutput[]
   hasMore: boolean
@@ -696,6 +703,16 @@ function CollectionPart({
   onPublish: (item: CollectionOutput) => void
   onClick: (item: CollectionOutput) => void
 }) {
+  const layoutDivRef = useContext(
+    LayoutDivRefContext
+  ) as React.RefObject<HTMLDivElement>
+
+  const shouldLoadMore = hasMore && !isValidating && loadMore
+  const handleScroll = useCallback(() => {
+    shouldLoadMore && shouldLoadMore()
+  }, [shouldLoadMore])
+  useScrollOnBottom(layoutDivRef, handleScroll)
+
   return (
     <div
       css={css`
@@ -803,6 +820,7 @@ function ArchivedCollectionPart({
 function PublicationPart({
   pushToast,
   isLoading,
+  isValidating,
   error,
   items,
   hasMore,
@@ -818,6 +836,7 @@ function PublicationPart({
 }: {
   pushToast: ToastAPI['pushToast']
   isLoading: boolean
+  isValidating: boolean
   error: unknown
   items: PublicationOutput[]
   hasMore: boolean
@@ -833,6 +852,16 @@ function PublicationPart({
 }) {
   const { show: showPublicationSettingDialog, ...publicationSetting } =
     usePublicationSettingDialog(pushToast)
+
+  const layoutDivRef = useContext(
+    LayoutDivRefContext
+  ) as React.RefObject<HTMLDivElement>
+
+  const shouldLoadMore = hasMore && !isValidating && loadMore
+  const handleScroll = useCallback(() => {
+    shouldLoadMore && shouldLoadMore()
+  }, [shouldLoadMore])
+  useScrollOnBottom(layoutDivRef, handleScroll)
 
   return (
     <div
@@ -950,6 +979,7 @@ function ArchivedPublicationPart({
 function CreationPart({
   pushToast,
   isLoading,
+  isValidating,
   error,
   items,
   hasMore,
@@ -964,6 +994,7 @@ function CreationPart({
 }: {
   pushToast: ToastAPI['pushToast']
   isLoading: boolean
+  isValidating: boolean
   error: unknown
   items: CreationOutput[]
   hasMore: boolean
@@ -978,6 +1009,16 @@ function CreationPart({
 }) {
   const { show: showCreationSettingDialog, ...creationSetting } =
     useCreationSettingDialog(pushToast)
+
+  const layoutDivRef = useContext(
+    LayoutDivRefContext
+  ) as React.RefObject<HTMLDivElement>
+
+  const shouldLoadMore = hasMore && !isValidating && loadMore
+  const handleScroll = useCallback(() => {
+    shouldLoadMore && shouldLoadMore()
+  }, [shouldLoadMore])
+  useScrollOnBottom(layoutDivRef, handleScroll)
 
   return (
     <div
