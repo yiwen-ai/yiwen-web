@@ -86,6 +86,7 @@ export default function PaymentConfirmDialog({
     try {
       setDisabled(true)
       const { result: _data } = await payByCode({ code: paymentInfo.code })
+      refresh()
       pushToast({
         type: 'success',
         message: intl.formatMessage({ defaultMessage: '支付完成' }),
@@ -104,6 +105,7 @@ export default function PaymentConfirmDialog({
   }, [
     pushToast,
     intl,
+    refresh,
     paymentInfo,
     payByCode,
     setDisabled,

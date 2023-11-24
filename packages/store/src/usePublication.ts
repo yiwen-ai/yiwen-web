@@ -791,7 +791,7 @@ export function usePublicationList(
         path === '/v1/publication/list_archived'
           ? readArchivedPublicationList(params)
           : readPublicationList(params),
-      { revalidateFirstPage: true }
+      { revalidateFirstPage: false } // trigger too many requests when loading more if true
     )
 
   //#region processing state
@@ -1080,7 +1080,7 @@ export function useFollowedPublicationList() {
   const response = useSWRInfinite(
     getKey,
     ([, body]) => readFollowedPublicationList(body),
-    { revalidateFirstPage: true }
+    { revalidateFirstPage: false }
   )
 
   return usePagination({

@@ -403,7 +403,7 @@ export function useBookmarkList() {
   const { mutate, ...response } = useSWRInfinite(
     getKey,
     ([, body]) => readBookmarkList(body),
-    { revalidateFirstPage: true }
+    { revalidateFirstPage: false }
   )
 
   const [setRemoving, isRemoving] = useLoading((item: BookmarkOutput) =>

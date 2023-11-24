@@ -1,4 +1,3 @@
-import { GROUP_DETAIL_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   CreationStatus,
@@ -15,10 +14,8 @@ import {
 import { isBlobURL } from '@yiwen-ai/util'
 import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
-import { generatePath, useNavigate } from 'react-router-dom'
 import { lastValueFrom } from 'rxjs'
 import { Xid } from 'xid-ts'
-import { GroupViewType } from './useGroupDetailPage'
 
 interface Params {
   open: boolean
@@ -28,7 +25,6 @@ interface Params {
 
 export function useCreationSettingDialog(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
-  const navigate = useNavigate()
   const { uploadFromBlobURL } = useUploadAPI()
   const { readCreationUploadPolicy, updateCreation, restoreCreation } =
     useCreationAPI()
@@ -92,21 +88,6 @@ export function useCreationSettingDialog(pushToast: ToastAPI['pushToast']) {
     return undefined
   }, [open, params._gid, params._cid, creation, setDraft])
 
-  const navigateTo = useCallback(
-    (gid: Uint8Array, cid: Uint8Array) => {
-      navigate({
-        pathname: generatePath(GROUP_DETAIL_PATH, {
-          gid: Xid.fromValue(gid).toString(),
-          type: GroupViewType.Creation,
-        }),
-        search: new URLSearchParams({
-          cid: Xid.fromValue(cid).toString(),
-        }).toString(),
-      })
-    },
-    [navigate]
-  )
-
   const onSave = useCallback(async () => {
     if (!output) return
     const creation = await output
@@ -154,7 +135,6 @@ export function useCreationSettingDialog(pushToast: ToastAPI['pushToast']) {
         type: 'success',
         message: intl.formatMessage({ defaultMessage: '保存成功' }),
       })
-      navigateTo(creation.gid, creation.id)
     } catch (error) {
       pushToast({
         type: 'warning',
@@ -171,7 +151,6 @@ export function useCreationSettingDialog(pushToast: ToastAPI['pushToast']) {
     refresh,
     close,
     pushToast,
-    navigateTo,
     setIsSaving,
     updateCreation,
     restoreCreation,

@@ -1,4 +1,3 @@
-import { GROUP_DETAIL_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   PublicationStatus,
@@ -14,10 +13,8 @@ import {
 import { isBlobURL } from '@yiwen-ai/util'
 import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
-import { generatePath, useNavigate } from 'react-router-dom'
 import { lastValueFrom } from 'rxjs'
 import { Xid } from 'xid-ts'
-import { GroupViewType } from './useGroupDetailPage'
 
 interface Params {
   open: boolean
@@ -29,7 +26,6 @@ interface Params {
 
 export function usePublicationSettingDialog(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
-  const navigate = useNavigate()
   const { uploadFromBlobURL } = useUploadAPI()
   const { readPublicationUploadPolicy, updatePublication, restorePublication } =
     usePublicationAPI()
@@ -111,23 +107,6 @@ export function usePublicationSettingDialog(pushToast: ToastAPI['pushToast']) {
     return undefined
   }, [open, params._gid, params._cid, publication, setDraft])
 
-  const navigateTo = useCallback(
-    (gid: Uint8Array, cid: Uint8Array, language: string, version: number) => {
-      navigate({
-        pathname: generatePath(GROUP_DETAIL_PATH, {
-          gid: Xid.fromValue(gid).toString(),
-          type: GroupViewType.Publication,
-        }),
-        search: new URLSearchParams({
-          cid: Xid.fromValue(cid).toString(),
-          language,
-          version: String(version),
-        }).toString(),
-      })
-    },
-    [navigate]
-  )
-
   const onSave = useCallback(async () => {
     if (!output) return
     const publication = await output
@@ -176,12 +155,6 @@ export function usePublicationSettingDialog(pushToast: ToastAPI['pushToast']) {
         type: 'success',
         message: intl.formatMessage({ defaultMessage: '保存成功' }),
       })
-      navigateTo(
-        publication.gid,
-        publication.cid,
-        publication.language,
-        publication.version
-      )
     } catch (error) {
       pushToast({
         type: 'warning',
@@ -198,7 +171,6 @@ export function usePublicationSettingDialog(pushToast: ToastAPI['pushToast']) {
     refresh,
     close,
     pushToast,
-    navigateTo,
     setIsSaving,
     updatePublication,
     restorePublication,

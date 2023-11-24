@@ -437,7 +437,7 @@ export function useChargeList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readChargeList(body),
-    { revalidateFirstPage: true }
+    { revalidateFirstPage: false }
   )
 
   return usePagination({
@@ -463,7 +463,7 @@ export function useOutgoList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readTransactionOutgoList(body),
-    { revalidateFirstPage: true }
+    { revalidateFirstPage: false }
   )
 
   return usePagination({
@@ -489,7 +489,7 @@ export function useIncomeList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readTransactionIncomeList(body),
-    { revalidateFirstPage: true }
+    { revalidateFirstPage: false }
   )
 
   return usePagination({
@@ -515,7 +515,7 @@ export function useCreditList() {
   const response = useSWRInfinite(
     getKey,
     ([path, body]) => readCreditList(body),
-    { revalidateFirstPage: true }
+    { revalidateFirstPage: false }
   )
 
   return usePagination({

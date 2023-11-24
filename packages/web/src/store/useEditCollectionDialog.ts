@@ -1,4 +1,3 @@
-import { GROUP_DETAIL_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   initialCollectionDraft,
@@ -13,10 +12,8 @@ import { isBlobURL } from '@yiwen-ai/util'
 import { isEqual } from 'lodash-es'
 import { useCallback, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
-import { generatePath, useNavigate } from 'react-router-dom'
 import { lastValueFrom } from 'rxjs'
 import { Xid } from 'xid-ts'
-import { GroupViewType } from './useGroupDetailPage'
 
 interface Params {
   open: boolean
@@ -26,7 +23,6 @@ interface Params {
 
 export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
-  const navigate = useNavigate()
   const { uploadFromBlobURL } = useUploadAPI()
   const { readCollectionFull, readCollectionUploadPolicy, updateCollection } =
     useCollectionAPI()
@@ -103,21 +99,6 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
     return undefined
   }, [open, params._gid, params._cid, readCollectionFull])
 
-  const navigateTo = useCallback(
-    (gid: Uint8Array, cid: Uint8Array) => {
-      navigate({
-        pathname: generatePath(GROUP_DETAIL_PATH, {
-          gid: Xid.fromValue(gid).toString(),
-          type: GroupViewType.Collection,
-        }),
-        search: new URLSearchParams({
-          cid: Xid.fromValue(cid).toString(),
-        }).toString(),
-      })
-    },
-    [navigate]
-  )
-
   const onSave = useCallback(async () => {
     if (!output) {
       return
@@ -176,7 +157,6 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
         type: 'success',
         message: intl.formatMessage({ defaultMessage: '保存成功' }),
       })
-      navigateTo(collection.gid, collection.id)
     } catch (error) {
       pushToast({
         type: 'warning',
@@ -193,7 +173,6 @@ export function useEditCollectionDialog(pushToast: ToastAPI['pushToast']) {
     refresh,
     close,
     pushToast,
-    navigateTo,
     setIsSaving,
     updateCollection,
     readCollectionUploadPolicy,

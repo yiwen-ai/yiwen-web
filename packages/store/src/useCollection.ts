@@ -542,7 +542,7 @@ export function useCollectionList(
         path === '/v1/collection/list_archived'
           ? readArchivedCollectionList(params)
           : readCollectionList(params),
-      { revalidateFirstPage: true }
+      { revalidateFirstPage: false }
     )
 
   //#region processing state
@@ -820,7 +820,7 @@ export function useCollectionChildren(
 
   const { data, error, mutate, isValidating, isLoading, setSize } =
     useSWRInfinite(getKey, ([path, params]) => readCollectionChildren(params), {
-      revalidateFirstPage: true,
+      revalidateFirstPage: false,
     })
 
   //#region loading state
