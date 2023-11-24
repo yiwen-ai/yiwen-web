@@ -730,6 +730,7 @@ const EditorCSS = (theme: Theme) => {
       * > p {
         margin-top: 0;
         margin-bottom: 0;
+        text-indent: 2em;
         + p {
           margin-top: 20px;
         }
@@ -911,6 +912,10 @@ const EditorCSS = (theme: Theme) => {
         :hover {
           color: ${theme.color.body.primaryHover};
         }
+      }
+
+      p {
+        text-indent: 2em;
       }
 
       p.is-editor-empty::before,

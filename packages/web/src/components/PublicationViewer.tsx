@@ -292,6 +292,11 @@ export default function PublicationViewer({
     [hasMore, loadMore, isLoadingMore]
   )
 
+  const [hidePayment, setHidePayment] = useState(false)
+  const handleHidePayment = useCallback(() => {
+    setHidePayment((v) => !v)
+  }, [setHidePayment])
+
   return (
     <div
       {...props}
@@ -757,26 +762,43 @@ export default function PublicationViewer({
         <div
           css={css`
             position: fixed;
-            height: 140px;
+            height: fit-content;
             width: 100%;
             bottom: 0;
             left: 0;
             background-color: ${RGBA(theme.palette.white, 0.94)};
             box-shadow: ${theme.effect.card};
+            transform: ${hidePayment ? 'translateY(78%)' : 'none'};
+            transition: height 0.3s ease-in-out, transform 0.3s ease-in-out;
             :hover {
               box-shadow: ${theme.effect.cardHover};
             }
           `}
         >
+          <Button
+            color='secondary'
+            variant='text'
+            onClick={handleHidePayment}
+            css={css`
+              display: block;
+              width: 100%;
+            `}
+          >
+            <Icon
+              name={hidePayment ? 'arrow-up-s-line' : 'arrow-down-s-line'}
+              size='medium'
+              css={css`
+                display: block;
+                margin: 0 auto;
+              `}
+            />
+          </Button>
           <div
             css={css`
               width: 100%;
               max-width: 800px;
               margin: 0 auto;
-              padding: 24px 36px;
-              @media (max-width: ${BREAKPOINT.small}px) {
-                padding: 12px 24px;
-              }
+              padding-bottom: 24px;
             `}
           >
             <p
@@ -800,6 +822,7 @@ export default function PublicationViewer({
                 width: 100%;
                 text-align: center;
                 justify-content: center;
+                flex-wrap: wrap;
                 align-items: center;
               `}
             >

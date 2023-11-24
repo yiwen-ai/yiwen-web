@@ -499,15 +499,16 @@ function CollectionDetail({
             css={css`
               display: block;
               width: 160px;
-              height: 210px;
+              min-height: 210px;
+              max-height: 250px;
               border-radius: 4px;
-              border: 1px solid ${theme.color.divider.secondary};
               object-fit: contain;
               background-color: ${theme.color.divider.secondary};
               box-shadow: ${theme.effect.card};
               @media (max-width: ${BREAKPOINT.small}px) {
                 width: 120px;
-                height: 160px;
+                min-height: 160px;
+                max-height: 210px;
               }
             `}
           ></img>
@@ -518,6 +519,10 @@ function CollectionDetail({
               gap: 12px;
               margin-left: 24px;
               width: calc(${MAX_WIDTH} + 36px * 2 - 160px - 24px);
+              @media (max-width: ${BREAKPOINT.small}px) {
+                margin-left: 12px;
+                width: calc(100% - 132px);
+              }
             `}
           >
             <div
@@ -528,7 +533,6 @@ function CollectionDetail({
             >
               {info.title}
             </div>
-            {info.summary && <div dir={dir}>{info.summary}</div>}
             {collection.group_info && (
               <Link
                 to={{
@@ -546,6 +550,9 @@ function CollectionDetail({
                 <CreatedBy
                   item={collection.group_info}
                   timestamp={collection.updated_at || 0}
+                  css={css`
+                    flex-wrap: wrap;
+                  `}
                 />
               </Link>
             )}
@@ -629,6 +636,17 @@ function CollectionDetail({
             )}
           </div>
         </div>
+        {info.summary && (
+          <p
+            dir={dir}
+            css={css`
+              margin-top: 24px;
+              text-indent: 2em;
+            `}
+          >
+            {info.summary}
+          </p>
+        )}
         <CollectionChildren
           pushToast={pushToast}
           collection={collection}
@@ -770,6 +788,9 @@ function CollectionChildren({
       padding: 0;
       width: 100%;
       list-style: none;
+      @media (max-width: ${BREAKPOINT.small}px) {
+        justify-content: center;
+      }
       li {
         padding: 0px;
         height: 60px;

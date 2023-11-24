@@ -5,6 +5,7 @@ import {
   diffCreationDraft,
   initialCreationDraft,
   isRTL,
+  requireDraftStatus,
   toMessage,
   useCreation,
   useCreationAPI,
@@ -115,7 +116,10 @@ export function useCreationSettingDialog(pushToast: ToastAPI['pushToast']) {
       setIsSaving(true)
       const input = diffCreationDraft(creation, draft)
       if (!input) return
-      if (creation.status != CreationStatus.Draft) {
+      if (
+        creation.status != CreationStatus.Draft &&
+        requireDraftStatus(input)
+      ) {
         const { result } = await restoreCreation({
           gid: input.gid,
           id: input.id,

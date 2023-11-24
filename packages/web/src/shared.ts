@@ -5,7 +5,7 @@ import {
   useUploadAPI,
   type PostFilePolicy,
 } from '@yiwen-ai/store'
-import { joinURL } from '@yiwen-ai/util'
+import { checkNarrow, joinURL } from '@yiwen-ai/util'
 import { useCallback, useEffect, useState, type ImgHTMLAttributes } from 'react'
 import { useIntl } from 'react-intl'
 import { generatePath } from 'react-router-dom'
@@ -14,22 +14,14 @@ import { Xid } from 'xid-ts'
 import { SHARE_COLLECTION_PATH, SHARE_PUBLICATION_PATH } from './App'
 
 export const MAX_WIDTH = '800px'
-
-export const BREAKPOINT = {
-  small: 480,
-  medium: 960,
-  large: 1280,
-} as const
+export { BREAKPOINT } from '@yiwen-ai/util'
 
 export function useIsNarrow() {
-  const check = () =>
-    typeof window !== 'undefined' && window.innerWidth <= BREAKPOINT.small
-
-  const [isNarrow, setIsNarrow] = useState(check)
+  const [isNarrow, setIsNarrow] = useState(checkNarrow)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const handleResize = () => setIsNarrow(check())
+    const handleResize = () => setIsNarrow(checkNarrow())
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])

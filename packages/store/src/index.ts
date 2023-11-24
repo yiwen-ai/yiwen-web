@@ -59,6 +59,7 @@ export {
   buildCreationKey,
   diffCreationDraft,
   initialCreationDraft,
+  requireDraftStatus,
   useCrawlDocument,
   useCreation,
   useCreationAPI,

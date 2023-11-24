@@ -33,10 +33,10 @@ async function main() {
       await api.updateI18n(process.argv[3])
       break
     }
-    // case 'updateAllI18n': {
-    //   await api.updateAllI18n()
-    //   break
-    // }
+    case 'updateAllI18n': {
+      await api.updateAllI18n()
+      break
+    }
     default: {
       throw new Error(`Unknown command: "${process.argv[2]}"`)
     }
@@ -117,6 +117,9 @@ class YiwenMessage {
       fields: 'language,version',
     })
 
+    const keys = Object.keys(
+      JSON.parse(await fs.readFile('./lang/zho.json', 'utf-8'))
+    )
     const files = await fs.readdir('./packages/web/lang')
 
     for (const file of files) {
@@ -129,6 +132,17 @@ class YiwenMessage {
       const msg = JSON.parse(
         await fs.readFile(`./packages/web/lang/${file}`, 'utf-8')
       )
+      // remove unused keys
+      // for (const key of Object.keys(msg.messages)) {
+      //   if (!keys.includes(key)) {
+      //     delete msg.messages[key]
+      //   }
+      // }
+      // await fs.writeFile(
+      //   `./packages/web/lang/${file}`,
+      //   stringify(msg, { space: '  ' })
+      // )
+
       await this.fetch('PATCH', `v1/message`, {
         id: result.id,
         gid: Buffer.from(Xid.fromValue(GROUP_ID)),

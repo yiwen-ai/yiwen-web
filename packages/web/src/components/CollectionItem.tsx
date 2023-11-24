@@ -14,7 +14,7 @@ import {
   isRTL,
   type CollectionOutput,
 } from '@yiwen-ai/store'
-import { preventDefaultStopPropagation } from '@yiwen-ai/util'
+import { checkNarrow, preventDefaultStopPropagation } from '@yiwen-ai/util'
 import { useCallback, useMemo } from 'react'
 import { useIntl } from 'react-intl'
 import CollectionItemStatus from './CollectionItemStatus'
@@ -56,6 +56,8 @@ export default function CollectionItem({
     return getCollectionInfo(item)
   }, [item])
 
+  const maxSumLength = checkNarrow() ? 60 : 140
+
   return (
     info && (
       <CollectionLink
@@ -87,12 +89,17 @@ export default function CollectionItem({
           css={css`
             display: block;
             width: 120px;
-            height: 160px;
+            min-height: 160px;
+            max-height: 200px;
             border-radius: 4px;
-            border: 1px solid ${theme.color.divider.secondary};
             object-fit: contain;
             background-color: ${theme.color.divider.secondary};
             box-shadow: ${theme.effect.card};
+            @media (max-width: ${BREAKPOINT.small}px) {
+              width: 100px;
+              min-height: 130px;
+              max-height: 160px;
+            }
           `}
         ></img>
         <div
@@ -117,9 +124,9 @@ export default function CollectionItem({
                 margin-top: 12px;
               `}
             >
-              {info.summary.length < 140
+              {info.summary.length < maxSumLength
                 ? info.summary
-                : info.summary.slice(0, 140) + '...'}
+                : info.summary.slice(0, maxSumLength) + '...'}
             </div>
           )}
           {hasWritePermission && (

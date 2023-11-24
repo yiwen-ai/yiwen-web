@@ -1,5 +1,6 @@
 import { css, useTheme } from '@emotion/react'
 import { ObjectKind, isRTL, type SearchDocument } from '@yiwen-ai/store'
+import { checkNarrow } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import CreatedBy from './CreatedBy'
@@ -18,6 +19,8 @@ export default function SearchItem({
   const handleClick = useCallback(() => {
     onClick(item)
   }, [item, onClick])
+
+  const maxSumLength = checkNarrow() ? 80 : 140
 
   return (
     <PublicationLink
@@ -64,9 +67,9 @@ export default function SearchItem({
             margin-top: 12px;
           `}
         >
-          {item.summary.length < 140
+          {item.summary.length < maxSumLength
             ? item.summary
-            : item.summary.slice(0, 140) + '...'}
+            : item.summary.slice(0, maxSumLength) + '...'}
         </div>
       )}
       {item.group_info && (

@@ -9,7 +9,7 @@ import {
   textEllipsis,
 } from '@yiwen-ai/component'
 import { CreationStatus, isRTL, type CreationOutput } from '@yiwen-ai/store'
-import { preventDefaultStopPropagation } from '@yiwen-ai/util'
+import { checkNarrow, preventDefaultStopPropagation } from '@yiwen-ai/util'
 import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import CreationItemStatus from './CreationItemStatus'
@@ -44,6 +44,7 @@ export default function CreationItem({
   const handleSetting = useCallback(() => onSetting(item), [item, onSetting])
   const handleRelease = useCallback(() => onRelease(item), [item, onRelease])
   const handleArchive = useCallback(() => onArchive(item), [item, onArchive])
+  const maxSumLength = checkNarrow() ? 80 : 140
 
   return (
     <CreationLink
@@ -81,9 +82,9 @@ export default function CreationItem({
             margin-top: 12px;
           `}
         >
-          {item.summary.length < 140
+          {item.summary.length < maxSumLength
             ? item.summary
-            : item.summary.slice(0, 140) + '...'}
+            : item.summary.slice(0, maxSumLength) + '...'}
         </div>
       )}
       {hasWritePermission && (

@@ -89,6 +89,19 @@ export interface UpdateCreationInput {
   license?: string
 }
 
+export function requireDraftStatus(input: UpdateCreationInput) {
+  const v = omitBy(input, (val) => val == null || val === '')
+  return (
+    Object.hasOwn(v, 'title') ||
+    Object.hasOwn(v, 'cover') ||
+    Object.hasOwn(v, 'keywords') ||
+    Object.hasOwn(v, 'labels') ||
+    Object.hasOwn(v, 'authors') ||
+    Object.hasOwn(v, 'summary') ||
+    Object.hasOwn(v, 'license')
+  )
+}
+
 export interface UpdateCreationContentInput {
   gid: Uint8Array
   id: Uint8Array
