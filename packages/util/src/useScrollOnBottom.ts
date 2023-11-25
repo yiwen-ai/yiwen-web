@@ -1,15 +1,18 @@
 import { debounce } from 'lodash-es'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export function useScrollOnBottom<T extends HTMLElement>(
   scrollContainerRef: React.RefObject<T>,
-  onCall: () => void
+  onCall: () => void,
+  maxCount = 3
 ) {
+  const [count, setCount] = useState(maxCount)
+
   useEffect(() => {
     const ele = scrollContainerRef?.current
     // console.log('useScrollOnBottom ref', ref)
     if (ele) {
-      const call = debounce(onCall, 600, {
+      const call = debounce(onCall, 618, {
         leading: true,
         trailing: false,
       })
@@ -27,19 +30,23 @@ export function useScrollOnBottom<T extends HTMLElement>(
       ele.addEventListener('scroll', handler)
 
       // auto trigger if the content is not overflow
-      const id = setTimeout(() => {
-        if (ele && ele.clientHeight >= ele.scrollHeight) {
-          // console.log('auto trigger')
-          call()
-        }
-      }, 600)
+      const id =
+        ele && ele.clientHeight >= ele.scrollHeight && count > 0
+          ? setTimeout(() => {
+              if (ele && ele.clientHeight >= ele.scrollHeight && count > 0) {
+                // console.log('auto trigger')
+                setCount(count - 1)
+                call()
+              }
+            }, 618)
+          : null
 
       return () => {
         ele.removeEventListener('scroll', handler)
         call.cancel()
-        clearTimeout(id)
+        id && clearTimeout(id)
       }
     }
     return undefined
-  }, [scrollContainerRef, onCall])
+  }, [scrollContainerRef, onCall, count, setCount])
 }

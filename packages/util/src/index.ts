@@ -34,6 +34,7 @@ export { useDragHover } from './useDragHover'
 export { useHover } from './useHover'
 export { useIsMounted } from './useIsMounted'
 export { useLayoutEffect } from './useIsomorphicLayoutEffect'
+export { useKeyDown } from './useKeyDown'
 export { useLoading } from './useLoading'
 export {
   mergeAnchorProps,

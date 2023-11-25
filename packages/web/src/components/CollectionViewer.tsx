@@ -540,6 +540,60 @@ function CollectionDetail({
             >
               {info.title}
             </div>
+            {info.authors && info.authors.length > 0 && (
+              <div
+                dir={dir}
+                css={css`
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                  flex-wrap: wrap;
+                  flex-direction: row;
+                `}
+              >
+                {info.authors.map((author) => (
+                  <Button
+                    key={author}
+                    color='primary'
+                    variant='outlined'
+                    size='medium'
+                    readOnly={true}
+                  >
+                    {author}
+                  </Button>
+                ))}
+              </div>
+            )}
+            {info.keywords && info.keywords.length > 0 && (
+              <div
+                dir={dir}
+                css={css`
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                  flex-wrap: wrap;
+                  flex-direction: row;
+
+                  span {
+                    padding: 4px 8px;
+                    border-radius: 12px;
+                    background-color: ${theme.color.divider.secondary};
+                    ${theme.typography.tooltip};
+                  }
+                `}
+              >
+                {info.keywords.map((keyword) => (
+                  <Button
+                    key={keyword}
+                    color='secondary'
+                    size='medium'
+                    readOnly={true}
+                  >
+                    {keyword}
+                  </Button>
+                ))}
+              </div>
+            )}
             {collection.group_info && (
               <Link
                 to={{
@@ -552,6 +606,7 @@ function CollectionDetail({
                   display: flex;
                   width: fit-content;
                   max-width: 100%;
+                  margin-top: 12px;
                 `}
               >
                 <CreatedBy
@@ -569,7 +624,13 @@ function CollectionDetail({
                   color={collection.rfp ? 'primary' : 'secondary'}
                   variant='contained'
                   disabled={!collection.rfp}
-                  size={isNarrow ? 'small' : 'medium'}
+                  size={
+                    isNarrow &&
+                    collection.subscription &&
+                    collection.subscription.expire_at > 0
+                      ? 'small'
+                      : 'medium'
+                  }
                   onClick={handlePayForCollection}
                   css={css`
                     width: fit-content;
@@ -604,6 +665,7 @@ function CollectionDetail({
                           {intl.formatMessage({
                             defaultMessage: '有效期至',
                           }) +
+                            ' ' +
                             new Date(
                               collection.subscription.expire_at * 1000
                             ).toLocaleDateString()}

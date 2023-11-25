@@ -57,6 +57,7 @@ export default function CollectionItem({
   }, [item])
 
   const maxSumLength = checkNarrow() ? 60 : 140
+  const dir = isRTL(language) ? 'rtl' : undefined
 
   return (
     info && (
@@ -109,7 +110,7 @@ export default function CollectionItem({
           `}
         >
           <div
-            dir={isRTL(language) ? 'rtl' : undefined}
+            dir={dir}
             css={css`
               ${textEllipsis}
               ${theme.typography.h2}
@@ -117,9 +118,34 @@ export default function CollectionItem({
           >
             {info.title}
           </div>
+          {info.authors && info.authors.length > 0 && (
+            <div
+              dir={dir}
+              css={css`
+                margin-top: 12px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                flex-wrap: wrap;
+                flex-direction: row;
+              `}
+            >
+              {info.authors.map((author) => (
+                <Button
+                  key={author}
+                  color='primary'
+                  size='small'
+                  variant='outlined'
+                  readOnly={true}
+                >
+                  {author}
+                </Button>
+              ))}
+            </div>
+          )}
           {info.summary && (
             <div
-              dir={isRTL(language) ? 'rtl' : undefined}
+              dir={dir}
               css={css`
                 margin-top: 12px;
               `}
@@ -127,6 +153,37 @@ export default function CollectionItem({
               {info.summary.length < maxSumLength
                 ? info.summary
                 : info.summary.slice(0, maxSumLength) + '...'}
+            </div>
+          )}
+          {info.keywords && info.keywords.length > 0 && (
+            <div
+              dir={dir}
+              css={css`
+                margin-top: 12px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                flex-wrap: wrap;
+                flex-direction: row;
+
+                span {
+                  padding: 4px 8px;
+                  border-radius: 12px;
+                  background-color: ${theme.color.divider.secondary};
+                  ${theme.typography.tooltip};
+                }
+              `}
+            >
+              {info.keywords.map((keyword) => (
+                <Button
+                  key={keyword}
+                  color='secondary'
+                  size='small'
+                  readOnly={true}
+                >
+                  {keyword}
+                </Button>
+              ))}
             </div>
           )}
           {hasWritePermission && (

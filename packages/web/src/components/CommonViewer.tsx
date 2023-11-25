@@ -8,13 +8,15 @@ import {
   ObjectKind,
   decode,
   isRTL,
+  usePublication,
   type CollectionChildrenOutput,
   type CreationOutput,
   type PublicationOutput,
 } from '@yiwen-ai/store'
-import { useMemo } from 'react'
+import { useKeyDown } from '@yiwen-ai/util'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useIntl } from 'react-intl'
-import { Link, generatePath } from 'react-router-dom'
+import { Link, generatePath, useNavigate } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 import CreatedBy from './CreatedBy'
 
@@ -40,11 +42,57 @@ export default function CommonViewer({
 }) {
   const intl = useIntl()
   const theme = useTheme()
+  const navigate = useNavigate()
 
   const content = useMemo(
     () => item?.content && (decode(item.content) as JSONContent),
     [item?.content]
   )
+
+  const [params, setParams] = useState({
+    _gid: '',
+    _cid: '',
+    _language: '',
+    _version: 0,
+  })
+
+  // preload next publication for better UX
+  useEffect(() => {
+    if (nextItem && nextItem.kind !== ObjectKind.Collection) {
+      setParams({
+        _gid: Xid.fromValue(nextItem.gid).toString(),
+        _cid: Xid.fromValue(nextItem.cid).toString(),
+        _language: nextItem.language,
+        _version: nextItem.version,
+      })
+    }
+  }, [nextItem, setParams])
+
+  //#region fetch
+  usePublication(params._gid, params._cid, params._language, params._version)
+
+  // ArrowUp ArrowRight ArrowDown ArrowLeft
+  const onKeyDown = useCallback(
+    (key: string) => {
+      switch (key) {
+        case 'ArrowUp':
+        case 'ArrowLeft':
+          if (prevItem) {
+            navigate(genChildrenTo(prevItem))
+          }
+          break
+        case 'ArrowDown':
+        case 'ArrowRight':
+          if (nextItem) {
+            navigate(genChildrenTo(nextItem))
+          }
+          break
+      }
+    },
+    [navigate, prevItem, nextItem]
+  )
+
+  useKeyDown(Boolean(prevItem || nextItem), onKeyDown)
 
   return item ? (
     <div
@@ -101,6 +149,22 @@ export default function CommonViewer({
           />
         )}
       </Link>
+      {item.summary && (
+        <blockquote
+          css={css`
+            ${theme.typography.body}
+            margin: 1em 0;
+            padding: 1em 1.5em 1em 1em;
+            border-left: 0.5em solid ${theme.color.body.primaryHover};
+            background-color: ${theme.color.popover.background};
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+            box-shadow: ${theme.effect.card};
+          `}
+        >
+          {item.summary}
+        </blockquote>
+      )}
       {content && (
         <RichTextViewer
           content={content}
@@ -131,26 +195,7 @@ export default function CommonViewer({
               reloadDocument={prevItem.kind === ObjectKind.Collection}
               unstable_viewTransition={true}
               key={Xid.fromValue(prevItem.cid).toString()}
-              to={{
-                pathname: generatePath(GROUP_DETAIL_PATH, {
-                  gid: Xid.fromValue(prevItem.gid).toString(),
-                  type:
-                    prevItem.kind === ObjectKind.Collection
-                      ? GroupViewType.Collection
-                      : GroupViewType.Publication,
-                }),
-                search:
-                  prevItem.kind === ObjectKind.Collection
-                    ? new URLSearchParams({
-                        cid: Xid.fromValue(prevItem.cid).toString(),
-                      }).toString()
-                    : new URLSearchParams({
-                        parent: Xid.fromValue(prevItem.parent).toString(),
-                        cid: Xid.fromValue(prevItem.cid).toString(),
-                        language: prevItem.language,
-                        version: String(prevItem.version),
-                      }).toString(),
-              }}
+              to={genChildrenTo(prevItem)}
               css={css`
                 display: block;
               `}
@@ -203,26 +248,7 @@ export default function CommonViewer({
               reloadDocument={nextItem.kind === ObjectKind.Collection}
               unstable_viewTransition={true}
               key={Xid.fromValue(nextItem.cid).toString()}
-              to={{
-                pathname: generatePath(GROUP_DETAIL_PATH, {
-                  gid: Xid.fromValue(nextItem.gid).toString(),
-                  type:
-                    nextItem.kind === ObjectKind.Collection
-                      ? GroupViewType.Collection
-                      : GroupViewType.Publication,
-                }),
-                search:
-                  nextItem.kind === ObjectKind.Collection
-                    ? new URLSearchParams({
-                        cid: Xid.fromValue(nextItem.cid).toString(),
-                      }).toString()
-                    : new URLSearchParams({
-                        parent: Xid.fromValue(nextItem.parent).toString(),
-                        cid: Xid.fromValue(nextItem.cid).toString(),
-                        language: nextItem.language,
-                        version: String(nextItem.version),
-                      }).toString(),
-              }}
+              to={genChildrenTo(nextItem)}
               css={css`
                 display: block;
               `}
@@ -245,4 +271,27 @@ export default function CommonViewer({
       )}
     </div>
   ) : null
+}
+
+function genChildrenTo(item: CollectionChildrenOutput) {
+  return {
+    pathname: generatePath(GROUP_DETAIL_PATH, {
+      gid: Xid.fromValue(item.gid).toString(),
+      type:
+        item.kind === ObjectKind.Collection
+          ? GroupViewType.Collection
+          : GroupViewType.Publication,
+    }),
+    search:
+      item.kind === ObjectKind.Collection
+        ? new URLSearchParams({
+            cid: Xid.fromValue(item.cid).toString(),
+          }).toString()
+        : new URLSearchParams({
+            parent: Xid.fromValue(item.parent).toString(),
+            cid: Xid.fromValue(item.cid).toString(),
+            language: item.language,
+            version: String(item.version),
+          }).toString(),
+  }
 }
