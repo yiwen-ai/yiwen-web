@@ -71,6 +71,8 @@ module.exports = {
     'react/jsx-boolean-value': ['error', 'always'],
     'react/no-unknown-property': ['error', { ignore: ['css'] }],
     'react/prop-types': 'off',
+    'jsx-a11y/label-has-associated-control': 'off',
+    'jsx-a11y/label-has-for': 'off',
   },
   settings: {
     'import/internal-regex': '^#',
