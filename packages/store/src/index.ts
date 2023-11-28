@@ -118,6 +118,7 @@ export {
   usePublicationAPI,
   usePublicationList,
   usePublicationUploadPolicy,
+  useReadPublicationByJob,
   useRecommendedPublicationList,
   useTranslatedPublicationList,
   type ModelCost,

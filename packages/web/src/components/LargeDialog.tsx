@@ -1,11 +1,13 @@
 import { BREAKPOINT } from '#/shared'
 import { css, useTheme } from '@emotion/react'
 import { Dialog, DialogBody, type DialogProps } from '@yiwen-ai/component'
-import { createContext, useCallback, useState } from 'react'
+import { createContext, useCallback, useRef, useState } from 'react'
 
 interface LargeDialogProps extends DialogProps {}
 
 export const LargeDialogContext = createContext((_: boolean) => undefined)
+export const LargeDialogBodyRefContext =
+  createContext<React.RefObject<HTMLElement> | null>(null)
 
 export default function LargeDialog({
   title,
@@ -21,6 +23,7 @@ export default function LargeDialog({
     },
     [setFullScreen]
   )
+  const dialogBodyRef = useRef<HTMLDivElement>(null)
 
   return (
     <LargeDialogContext.Provider value={switchFullScreen}>
@@ -57,13 +60,16 @@ export default function LargeDialog({
         `}
       >
         <DialogBody
+          ref={dialogBodyRef}
           css={css`
             padding: unset;
             display: flex;
             flex-direction: column;
           `}
         >
-          {children}
+          <LargeDialogBodyRefContext.Provider value={dialogBodyRef}>
+            {children}
+          </LargeDialogBodyRefContext.Provider>
         </DialogBody>
       </Dialog>
     </LargeDialogContext.Provider>

@@ -1,12 +1,20 @@
 import { GROUP_DETAIL_PATH, ThemeContext } from '#/App'
+import CollectionChildrenViewer from '#/components/CollectionChildrenViewer'
 import CreatedBy from '#/components/CreatedBy'
-import { LargeDialogContext } from '#/components/LargeDialog'
+import CreationSettingDialog from '#/components/CreationSettingDialog'
+import LargeDialog, {
+  LargeDialogBodyRefContext,
+  LargeDialogContext,
+} from '#/components/LargeDialog'
 import { LoadMore } from '#/components/LoadMore'
 import Placeholder from '#/components/Placeholder'
 import PublicationSelector from '#/components/PublicationSelector'
+import PublicationSettingDialog from '#/components/PublicationSettingDialog'
 import { BREAKPOINT, MAX_WIDTH } from '#/shared'
 import { useCollectionChildrenViewer } from '#/store/useCollectionChildrenViewer'
+import { useCreationSettingDialog } from '#/store/useCreationSettingDialog'
 import { GroupViewType } from '#/store/useGroupDetailPage'
+import { usePublicationSettingDialog } from '#/store/usePublicationSettingDialog'
 import { css, useTheme } from '@emotion/react'
 import {
   Button,
@@ -25,11 +33,18 @@ import {
   type ToastAPI,
 } from '@yiwen-ai/component'
 import {
+  CollectionStatus,
   ObjectKind,
   getCollectionInfo,
   isRTL,
+  useCollectionAPI,
+  useCollectionBookmarkList,
+  useCreationAPI,
+  usePublicationAPI,
+  useReadPublicationByJob,
   type CollectionChildrenOutput,
   type CollectionOutput,
+  type PublicationOutput,
   type QueryPaymentCode,
   type UILanguageItem,
 } from '@yiwen-ai/store'
@@ -42,7 +57,6 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useRef,
   useState,
   type HTMLAttributes,
 } from 'react'
@@ -59,6 +73,7 @@ import { useResizeDetector } from 'react-resize-detector'
 import { Link, generatePath } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 import ChargeDialog, { type ChargeDialogProps } from './ChargeDialog'
+import CollectionItemStatus from './CollectionItemStatus'
 import ErrorPlaceholder from './ErrorPlaceholder'
 import Loading from './Loading'
 import PaymentConfirmDialog from './PaymentConfirmDialog'
@@ -402,6 +417,8 @@ export default function CollectionViewer({
               onCharge={onCharge}
               hasGroupAdminPermission={hasGroupAdminPermission || false}
               isNarrow={isNarrow}
+              shareLink={shareLink}
+              onShare={onShare}
             ></CollectionDetail>
           )}
         </>
@@ -418,6 +435,8 @@ function CollectionDetail({
   onCharge,
   hasGroupAdminPermission,
   isNarrow,
+  shareLink,
+  onShare,
 }: {
   pushToast: ToastAPI['pushToast']
   collection: CollectionOutput
@@ -425,25 +444,30 @@ function CollectionDetail({
   onCharge: () => void
   hasGroupAdminPermission: boolean
   isNarrow: boolean
+  shareLink: string | undefined
+  onShare: () => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
   const switchFullScreen = useContext(LargeDialogContext)
-  const [isEditing, setIsEditing] = useState(false)
+  const [editing, setEditing] = useState(0)
   const [language, info] = useMemo(() => {
     return getCollectionInfo(collection)
   }, [collection])
-
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const dir = useMemo(() => {
     return isRTL(language) ? 'rtl' : undefined
   }, [language])
 
   const handleEditChildrenClick = useCallback(() => {
-    setIsEditing(!isEditing)
-    switchFullScreen(!isEditing)
-  }, [isEditing, setIsEditing, switchFullScreen])
+    setEditing(editing == 0 ? 1 : 0)
+    switchFullScreen(editing == 0)
+  }, [editing, setEditing, switchFullScreen])
+
+  const handleDragStart = useCallback(
+    () => setEditing((v) => (v == 1 ? 2 : 1)),
+    [setEditing]
+  )
 
   const [payFor, setPayFor] = useState<Record<
     keyof QueryPaymentCode,
@@ -471,18 +495,14 @@ function CollectionDetail({
   return (
     info && (
       <div
-        ref={scrollContainerRef}
         css={css`
           width: 100%;
           max-width: calc(${MAX_WIDTH} + 36px * 2);
           margin: 0 auto;
           padding: 0 36px;
           box-sizing: border-box;
-          height: calc(100vh - 160px);
-          overflow-y: auto;
           @media (max-width: ${BREAKPOINT.small}px) {
             padding: 0 16px;
-            height: calc(100vh - 60px);
           }
         `}
       >
@@ -687,7 +707,14 @@ function CollectionDetail({
               </>
             )}
             {hasGroupAdminPermission && !isNarrow && (
-              <>
+              <div
+                css={css`
+                  display: flex;
+                  flex-direction: row;
+                  gap: 12px;
+                  width: fit-content;
+                `}
+              >
                 <Button
                   color='primary'
                   variant='outlined'
@@ -696,11 +723,21 @@ function CollectionDetail({
                     width: fit-content;
                   `}
                 >
-                  {isEditing
+                  {editing > 0
                     ? intl.formatMessage({ defaultMessage: '退出管理模式' })
                     : intl.formatMessage({ defaultMessage: '进入管理模式' })}
                 </Button>
-              </>
+                {editing > 0 && (
+                  <IconButton
+                    iconName='draggable'
+                    size='medium'
+                    shape='rounded'
+                    variant='contained'
+                    color={editing > 1 ? 'primary' : 'secondary'}
+                    onClick={handleDragStart}
+                  />
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -719,8 +756,10 @@ function CollectionDetail({
           pushToast={pushToast}
           collection={collection}
           dir={dir}
-          isEditing={isEditing}
-          scrollContainerRef={scrollContainerRef}
+          editing={editing}
+          shareLink={shareLink}
+          onShare={onShare}
+          onCharge={onCharge}
         ></CollectionChildren>
       </div>
     )
@@ -731,20 +770,30 @@ function CollectionChildren({
   pushToast,
   collection,
   dir,
-  isEditing,
-  scrollContainerRef,
+  editing,
+  shareLink,
+  onShare,
+  onCharge,
 }: {
   pushToast: ToastAPI['pushToast']
   collection: CollectionOutput
   dir: string | undefined
-  isEditing: boolean
-  scrollContainerRef: React.RefObject<HTMLElement>
+  editing: number
+  shareLink: string | undefined
+  onShare: () => void
+  onCharge: () => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
 
   const parent = Xid.fromValue(collection.id).toString()
   const gid = Xid.fromValue(collection.gid).toString()
+  const { updateCollectionStatus } = useCollectionAPI()
+  const { publishPublication } = usePublicationAPI()
+  const { releaseCreation } = useCreationAPI()
+  const readPublicationByJob = useReadPublicationByJob()
+
+  const { getPayload: getBookmarkPayload } = useCollectionBookmarkList(parent)
 
   const {
     items,
@@ -762,6 +811,18 @@ function CollectionChildren({
     return items.map((item) => Xid.fromValue(item.cid).toString())
   }, [items])
 
+  const bookmarkPayload = useMemo(() => {
+    if (items && items.length > 0) {
+      const payload = getBookmarkPayload(collection.id)
+      if (payload) {
+        return items.find((item) => {
+          return Xid.fromValue(item.cid).equals(Xid.fromValue(payload.cid))
+        })
+      }
+    }
+    return undefined
+  }, [getBookmarkPayload, collection.id, items])
+
   const onRemove = useCallback(
     (item: CollectionChildrenOutput) => {
       removeChild({
@@ -772,6 +833,10 @@ function CollectionChildren({
     },
     [removeChild]
   )
+
+  const scrollContainerRef = useContext(
+    LargeDialogBodyRefContext
+  ) as React.RefObject<HTMLDivElement>
 
   const handleLoadMore = useCallback(() => {
     loadMore()
@@ -854,6 +919,98 @@ function CollectionChildren({
     }
   }, [collection, selected, setIsSaving, addChildren, refresh])
 
+  const [currentChild, setCurrentChild] = useState<
+    CollectionChildrenOutput | undefined
+  >(undefined)
+
+  const onClick = useCallback(
+    (item: CollectionChildrenOutput) => {
+      setCurrentChild(item)
+    },
+    [setCurrentChild]
+  )
+
+  const handleCollectionChildrenViewerClose = useCallback(() => {
+    setCurrentChild(undefined)
+  }, [setCurrentChild])
+
+  const { show: showPublicationSettingDialog, ...publicationSetting } =
+    usePublicationSettingDialog(pushToast)
+
+  const { show: showCreationSettingDialog, ...creationSetting } =
+    useCreationSettingDialog(pushToast)
+
+  const onSetting = useCallback(
+    (item: CollectionChildrenOutput) => {
+      switch (item.kind) {
+        case ObjectKind.Publication:
+          showPublicationSettingDialog(
+            item.gid,
+            item.cid,
+            item.language,
+            item.version
+          )
+          return
+        case ObjectKind.Creation:
+          showCreationSettingDialog(item.gid, item.cid)
+          return
+      }
+    },
+    [showPublicationSettingDialog, showCreationSettingDialog]
+  )
+
+  const onPublish = useCallback(
+    async (item: CollectionChildrenOutput) => {
+      if (item.status == 2) {
+        return
+      }
+      let res: {
+        job: string
+        result: PublicationOutput
+      }
+      switch (item.kind) {
+        case ObjectKind.Collection:
+          await updateCollectionStatus({
+            gid: item.gid,
+            id: item.cid,
+            updated_at: item.updated_at,
+            status: 2,
+          })
+          refresh()
+          return
+        case ObjectKind.Publication:
+          await publishPublication({
+            gid: item.gid,
+            cid: item.cid,
+            language: item.language,
+            version: item.version,
+            updated_at: item.updated_at,
+            status: 2,
+          })
+          refresh()
+          return
+        case ObjectKind.Creation:
+          res = await releaseCreation({
+            gid: item.gid,
+            cid: item.cid,
+            language: item.language,
+            version: item.version,
+            model: '',
+          })
+          await readPublicationByJob(res.job)
+          refresh()
+          return
+      }
+    },
+    [
+      updateCollectionStatus,
+      publishPublication,
+      releaseCreation,
+      readPublicationByJob,
+      refresh,
+    ]
+  )
+
   const containerCss = useMemo(
     () => css`
       display: flex;
@@ -870,7 +1027,6 @@ function CollectionChildren({
       }
       li {
         padding: 0px;
-        height: 60px;
         width: max-content;
         min-width: 23%;
         max-width: 100%;
@@ -878,7 +1034,11 @@ function CollectionChildren({
         @media (max-width: ${BREAKPOINT.small}px) {
           height: 48px;
         }
-        ${isEditing &&
+        ${editing > 0 &&
+        css`
+          min-width: 100%;
+        `}
+        ${editing > 1 &&
         css`
           height: 40px;
         `}
@@ -886,10 +1046,9 @@ function CollectionChildren({
       li > a {
         position: relative;
         ${textEllipsis}
-        display: inline-block;
-        padding: 0 24px;
-        height: 100%;
-        line-height: 60px;
+        display: flex;
+        flex-direction: column;
+        padding: 12px 24px;
         width: calc(100% - 24px * 2);
         border-radius: 12px;
         box-shadow: ${theme.effect.card};
@@ -902,31 +1061,56 @@ function CollectionChildren({
           width: calc(100% - 16px * 2);
           line-height: 48px;
         }
-        ${isEditing &&
+        ${editing > 1 &&
         css`
           padding: 0 24px 0 20px;
           line-height: 40px;
         `}
       }
     `,
-    [isEditing, theme]
+    [editing, theme]
   )
 
   return (
-    <div
-      css={css`
-        margin: 36px auto;
-        @media (max-width: ${BREAKPOINT.small}px) {
-          margin: 24px auto;
-        }
-      `}
-    >
-      {isLoading ? (
-        <Loading />
-      ) : items ? (
-        <>
-          {isEditing ? (
-            <>
+    <>
+      {bookmarkPayload && editing == 0 && (
+        <Clickable
+          onClick={() => onClick(bookmarkPayload)}
+          css={css`
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            margin-top: 24px;
+            color: ${theme.palette.green};
+            gap: 8px;
+            max-width: calc(100% - 40px);
+            flex: 1;
+          `}
+        >
+          <Icon name='memory' size='medium' />
+          <span
+            css={css`
+              ${textEllipsis}
+            `}
+          >
+            {bookmarkPayload.title}
+          </span>
+        </Clickable>
+      )}
+      <div
+        css={css`
+          margin: 36px auto;
+          @media (max-width: ${BREAKPOINT.small}px) {
+            margin: 24px auto;
+          }
+        `}
+      >
+        {isLoading ? (
+          <Loading />
+        ) : items ? (
+          <>
+            {editing > 1 ? (
               <DragDropContext onDragEnd={handleDragEnd}>
                 <Droppable
                   key={parent}
@@ -947,9 +1131,8 @@ function CollectionChildren({
                             {(provided, snapshot) => (
                               <ChildItem
                                 item={item}
-                                gid={gid}
-                                parent={parent}
-                                isEditing={isEditing}
+                                editing={editing}
+                                onClick={onClick}
                                 onRemove={onRemove}
                                 provided={provided}
                                 snapshot={snapshot}
@@ -963,84 +1146,127 @@ function CollectionChildren({
                   )}
                 </Droppable>
               </DragDropContext>
-              <Clickable
-                onClick={showPublicationSelector}
-                css={css`
-                  display: inline-flex;
-                  align-items: center;
-                  justify-content: center;
-                  margin-top: 12px;
-                  padding: 12px 0px;
-                  color: ${theme.color.body.primary};
-                `}
-              >
-                <Icon name='add' size='medium' />
-                <span>
-                  {intl.formatMessage({
-                    defaultMessage: '添加内容',
-                  })}
-                </span>
-              </Clickable>
-              <PublicationSelector
-                open={openPublicationSelector}
-                gid={gid}
-                excludes={excludes}
-                selected={selected}
-                setSelected={setSelected}
-                isSaving={isSaving}
-                onClose={handlePublicationSelectorClose}
-                onSave={handlePublicationSelectorSubmit}
-              />
-            </>
-          ) : (
-            <ul dir={dir} css={containerCss}>
-              {items.map((item) => (
-                <ChildItem
-                  key={Xid.fromValue(item.cid).toString()}
-                  item={item}
-                  gid={gid}
-                  parent={parent}
-                  isEditing={isEditing}
-                ></ChildItem>
-              ))}
-            </ul>
-          )}
-          <LoadMore
-            hasMore={hasMore}
-            isLoadingMore={isValidating}
-            onLoadMore={handleLoadMore}
-            css={css`
-              width: 100%;
-            `}
-          />
-        </>
-      ) : (
-        <Placeholder />
-      )}
-    </div>
+            ) : (
+              <>
+                {editing > 0 && (
+                  <>
+                    <Clickable
+                      onClick={showPublicationSelector}
+                      css={css`
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-top: 12px;
+                        padding: 12px 0px;
+                        color: ${theme.color.body.primary};
+                      `}
+                    >
+                      <Icon name='add' size='medium' />
+                      <span>
+                        {intl.formatMessage({
+                          defaultMessage: '添加内容',
+                        })}
+                      </span>
+                    </Clickable>
+                    <PublicationSelector
+                      open={openPublicationSelector}
+                      gid={gid}
+                      excludes={excludes}
+                      selected={selected}
+                      setSelected={setSelected}
+                      isSaving={isSaving}
+                      onClose={handlePublicationSelectorClose}
+                      onSave={handlePublicationSelectorSubmit}
+                    />
+                  </>
+                )}
+
+                <ul dir={dir} css={containerCss}>
+                  {items.map((item) => (
+                    <ChildItem
+                      key={Xid.fromValue(item.cid).toString()}
+                      item={item}
+                      editing={editing}
+                      onClick={onClick}
+                      onSetting={onSetting}
+                      onPublish={onPublish}
+                    ></ChildItem>
+                  ))}
+                </ul>
+              </>
+            )}
+            <LoadMore
+              hasMore={hasMore}
+              isLoadingMore={isValidating}
+              onLoadMore={handleLoadMore}
+              css={css`
+                width: 100%;
+              `}
+            />
+          </>
+        ) : (
+          <Placeholder />
+        )}
+        {currentChild && (
+          <LargeDialog
+            open={true}
+            onClose={handleCollectionChildrenViewerClose}
+          >
+            <CollectionChildrenViewer
+              pushToast={pushToast}
+              isLoading={isLoading}
+              collection={collection}
+              child={currentChild}
+              childrenItems={items}
+              hasMore={hasMore}
+              isLoadingMore={isValidating}
+              shareLink={shareLink}
+              onShare={onShare}
+              loadMore={loadMore}
+              onCharge={onCharge}
+              onClose={handleCollectionChildrenViewerClose}
+            />
+          </LargeDialog>
+        )}
+      </div>
+      <PublicationSettingDialog {...publicationSetting} />
+      <CreationSettingDialog {...creationSetting} />
+    </>
   )
 }
 
 function ChildItem({
   item,
-  gid,
-  parent,
-  isEditing,
+  editing,
+  onClick,
+  onSetting,
+  onPublish,
   onRemove,
   provided,
   snapshot,
 }: {
   item: CollectionChildrenOutput
-  gid: string
-  parent: string
-  isEditing: boolean
+  editing: number
+  onClick: (item: CollectionChildrenOutput) => void
+  onSetting?: (item: CollectionChildrenOutput) => void
+  onPublish?: (item: CollectionChildrenOutput) => Promise<void>
   onRemove?: (item: CollectionChildrenOutput) => void
   provided?: DraggableProvided
   snapshot?: DraggableStateSnapshot
 }) {
+  const intl = useIntl()
   const theme = useTheme()
   const cid = Xid.fromValue(item.cid).toString()
   const [isRemove, setIsRemove] = useState(false)
+  const handleClick = useCallback(
+    (ev: React.MouseEvent<HTMLAnchorElement>) => {
+      ev.preventDefault()
+      onClick(item)
+      return true
+    },
+    [onClick, item]
+  )
+
   const handleRemove = useCallback(() => {
     if (onRemove) {
       setIsRemove(true)
@@ -1048,49 +1274,48 @@ function ChildItem({
     }
   }, [item, onRemove, setIsRemove])
 
+  const [isPublishing, setIsPublishing] = useState(false)
+  const handlePublish = useCallback(async () => {
+    if (item.status < 2 && onPublish) {
+      setIsPublishing(true)
+      await onPublish(item)
+      setIsPublishing(false)
+    }
+  }, [item, onPublish, setIsPublishing])
+
+  const handleSetting = useCallback(() => {
+    if (onSetting) {
+      onSetting(item)
+    }
+  }, [item, onSetting])
+
   return (
     <li
       key={cid}
+      dir={isRTL(item.language) ? 'rtl' : undefined}
       ref={provided?.innerRef}
       {...provided?.draggableProps}
       {...provided?.dragHandleProps}
-      css={
-        isRemove &&
+      css={css`
+        ${isRemove &&
         css`
           transform: scale(0);
           height: 0px !important;
-        `
-      }
+        `}
+      `}
     >
       <Link
         unstable_viewTransition={true}
         key={cid}
-        onClick={isEditing ? preventDefaultStopPropagation : undefined}
-        to={{
-          pathname: generatePath(GROUP_DETAIL_PATH, {
-            gid: gid as string,
-            type:
-              item.kind === ObjectKind.Collection
-                ? GroupViewType.Collection
-                : GroupViewType.Publication,
-          }),
-          search:
-            item.kind === ObjectKind.Collection
-              ? new URLSearchParams(cid).toString()
-              : new URLSearchParams({
-                  parent: parent as string,
-                  cid,
-                  language: item.language,
-                  version: String(item.version),
-                }).toString(),
-        }}
+        onClick={editing > 0 ? preventDefaultStopPropagation : handleClick}
+        to={'#'}
         style={{
           backgroundColor: snapshot?.isDragging
             ? theme.palette.grayLight0
             : undefined,
         }}
       >
-        {isEditing && (
+        {editing == 2 && (
           <Icon
             name='draggable'
             size='small'
@@ -1101,8 +1326,75 @@ function ChildItem({
             `}
           />
         )}
-        {item.title}
-        {isEditing && (
+        <div
+          css={css`
+            ${textEllipsis}
+          `}
+        >
+          {item.title}
+        </div>
+        {editing == 1 && (
+          <>
+            {item.summary && (
+              <div
+                css={css`
+                  margin-top: 12px;
+                  ${textEllipsis}
+                `}
+              >
+                {item.summary}
+              </div>
+            )}
+            <div
+              role='none'
+              onClick={preventDefaultStopPropagation}
+              css={css`
+                width: fit-content;
+                margin-top: 12px;
+                display: flex;
+                align-items: center;
+                gap: 24px;
+                @media (max-width: ${BREAKPOINT.small}px) {
+                  display: none;
+                }
+              `}
+            >
+              <CollectionItemStatus status={item.status} />
+              {(item.status === CollectionStatus.Private ||
+                item.status === CollectionStatus.Internal ||
+                item.status === CollectionStatus.Public) && (
+                <Button
+                  size='small'
+                  color='secondary'
+                  variant='text'
+                  disabled={
+                    item.kind === ObjectKind.Publication && item.status == 2
+                  }
+                  onClick={handleSetting}
+                >
+                  <Icon name='settings' size='small' />
+                  <span>{intl.formatMessage({ defaultMessage: '设置' })}</span>
+                </Button>
+              )}
+              {(item.status === CollectionStatus.Private ||
+                item.status === CollectionStatus.Internal) && (
+                <Button
+                  size='small'
+                  color='primary'
+                  variant='outlined'
+                  disabled={isPublishing}
+                  onClick={handlePublish}
+                >
+                  {isPublishing && <Spinner size={12} />}
+                  <span>
+                    {intl.formatMessage({ defaultMessage: '公开发布' })}
+                  </span>
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+        {editing == 2 && (
           <IconButton
             iconName='delete'
             size='medium'

@@ -223,6 +223,7 @@ export function useCollectionAPI() {
       const body: GIDPagination = {
         gid: Xid.fromValue(params.gid),
         page_token: params.page_token,
+        page_size: 20,
         fields: ['info', 'updated_at'],
       }
       return request.post<Page<CollectionOutput>>(`${path}/list`, body)

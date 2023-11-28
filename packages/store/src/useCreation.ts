@@ -208,6 +208,7 @@ export function useCreationAPI() {
       const body: GIDPagination = {
         gid: Xid.fromValue(params.gid),
         page_token: params.page_token,
+        page_size: 20,
       }
       return request.post<Page<CreationOutput>>(`${path}/list`, body)
     },

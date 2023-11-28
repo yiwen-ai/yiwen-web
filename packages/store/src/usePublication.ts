@@ -4,6 +4,7 @@ import { isEqual, omitBy } from 'lodash-es'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import useSWR, { useSWRConfig, type SWRConfiguration } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
+import useSWRSubscription from 'swr/subscription'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
 import {
@@ -60,8 +61,11 @@ export interface QueryPublication {
   language: string
   version: number
   fields: string
-  // parent?: Uint8Array
-  // subtoken?: string
+}
+
+export interface QueryPublicationWithParent extends QueryPublication {
+  parent?: Uint8Array
+  subtoken?: string
 }
 
 export interface CreatePublicationInput {
@@ -192,7 +196,10 @@ export function usePublicationAPI(baseURL?: string) {
 
   const readPublication = useCallback(
     (
-      params: Record<keyof QueryPublication, string | number | undefined>,
+      params: Record<
+        keyof QueryPublicationWithParent,
+        string | number | undefined
+      >,
       signal?: AbortSignal
     ) => {
       return request.get<{ result: PublicationOutput }>(path, params, signal)
@@ -205,6 +212,7 @@ export function usePublicationAPI(baseURL?: string) {
       const body: GIDPagination = {
         gid: Xid.fromValue(params.gid),
         page_token: params.page_token,
+        page_size: 20,
       }
       return request.post<Page<PublicationOutput>>(`${path}/list`, body)
     },
@@ -386,6 +394,8 @@ export function usePublication(
   _cid: string | null | undefined,
   _language: string | null | undefined,
   _version: number | string | null | undefined,
+  _parent?: string | undefined,
+  _subtoken?: string | undefined,
   config?: {
     baseURL?: string
   }
@@ -395,13 +405,16 @@ export function usePublication(
 
   const getKey = useCallback(() => {
     if (!_cid) return null
-    const params: Record<keyof QueryPublication, string | undefined> = {
-      gid: _gid || undefined,
-      cid: _cid,
-      language: _language || undefined,
-      version: _version != null ? String(_version) : undefined,
-      fields: undefined,
-    }
+    const params: Record<keyof QueryPublicationWithParent, string | undefined> =
+      {
+        gid: _gid || undefined,
+        cid: _cid,
+        language: _language || undefined,
+        version: _version != null ? String(_version) : undefined,
+        fields: undefined,
+        parent: undefined,
+        subtoken: undefined,
+      }
     return [path, params] as const
   }, [_cid, _gid, _language, _version])
 
@@ -413,7 +426,8 @@ export function usePublication(
     isLoading,
   } = useSWR(
     getKey,
-    ([path, params]) => readPublication(params),
+    ([path, params]) =>
+      readPublication({ ...params, parent: _parent, subtoken: _subtoken }),
     {} as SWRConfiguration
   )
 
@@ -701,6 +715,62 @@ export function useTranslatedPublicationList(
     isTranslating,
     estimate,
     translate,
+  } as const
+}
+
+export function usePublicationByJob(job: string | null | undefined) {
+  const request = useFetcher()
+
+  const getKey = useCallback(() => {
+    if (!job) return null
+    const params = {
+      job,
+    }
+    return [path, params] as const
+  }, [job])
+
+  const [controller, setController] = useState<AbortController | undefined>()
+
+  useEffect(() => {
+    const controller = new AbortController()
+    setController(controller)
+    return () => controller.abort()
+  }, [])
+
+  const fetchData = useCallback(
+    async (job: string) => {
+      return await request<{
+        job?: string
+        progress?: number
+        result: PublicationOutput | null
+      }>(`${path}/by_job`, { job }, { signal: controller?.signal || null })
+    },
+    [controller?.signal, request]
+  )
+
+  const { data, error } = useSWRSubscription(
+    getKey,
+    ([_, params], { next }) => {
+      ;(async () => {
+        let i = 100
+        while (--i > 0) {
+          const result = await fetchData(params.job)
+          if (result) {
+            next(undefined, result)
+            if (result.result) return
+          }
+          await new Promise((resolve) => setTimeout(resolve, 3000))
+        }
+        throw new Error('timeout')
+      })().catch((err) => next(err))
+      return () => controller?.abort()
+    }
+  )
+
+  return {
+    error,
+    progress: data?.progress,
+    publication: data?.result,
   } as const
 }
 

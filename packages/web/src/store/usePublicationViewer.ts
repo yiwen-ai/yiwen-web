@@ -7,7 +7,6 @@ import {
   setXLanguage,
   toMessage,
   useAuth,
-  useCollectionChildren,
   useEnsureAuthorized,
   useFetcherConfig,
   useLanguageList,
@@ -221,14 +220,6 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     })
   }, [])
 
-  const {
-    isLoading: isMenuLoading,
-    isValidating: isMenuLoadingMore,
-    hasMore: menuHasMore,
-    loadMore: menuLoadMore,
-    items: collectionMenu,
-  } = useCollectionChildren(_gid, params._parent)
-
   const refresh = useCallback(async () => {
     const [publication] = await Promise.all([
       refreshTranslatedList(),
@@ -291,6 +282,8 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
               language: _language,
               version: _version,
               fields: undefined,
+              parent: undefined,
+              subtoken: undefined,
             },
             controller.signal
           )
@@ -446,10 +439,6 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
     isLoading: isLoading || isValidating,
     error,
     publication,
-    collectionMenu,
-    hasMore: menuHasMore,
-    isLoadingMore: isMenuLoading || isMenuLoadingMore,
-    loadMore: menuLoadMore,
     open,
     show,
     close,

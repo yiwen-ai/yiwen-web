@@ -1,10 +1,11 @@
 import { useLoading } from '@yiwen-ai/util'
-import { without } from 'lodash-es'
+import { omitBy, without } from 'lodash-es'
 import { useCallback, useState } from 'react'
 import useSWR from 'swr'
 import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
+import { decode, encode } from './CBOR'
 import {
   ObjectKind,
   usePagination,
@@ -35,6 +36,7 @@ export interface BookmarkOutput {
   updated_at: number
   title: string
   labels?: string[]
+  payload?: Uint8Array
   group_info?: GroupInfo
 }
 
@@ -63,6 +65,13 @@ export interface UpdateBookmarkInput {
   version?: number
   title?: string
   labels?: string[]
+  payload?: Uint8Array
+}
+
+export interface BookmarkCollectionPayload {
+  gid: Uint8Array // read child group id
+  cid: Uint8Array // read child id
+  offset: number // read child offset
 }
 
 const path = '/v1/bookmark'
@@ -102,25 +111,41 @@ export function useBookmarkAPI() {
     [request]
   )
 
+  const updateBookmark = useCallback(
+    async (input: UpdateBookmarkInput) => {
+      const { result } = await request.patch<{ result: BookmarkOutput }>(
+        path,
+        omitBy(input, (val) => val == null || val === '')
+      )
+      return result
+    },
+    [request]
+  )
+
   return {
     readObjectBookmarkList,
     readBookmarkList,
     addBookmark,
     removeBookmark,
+    updateBookmark,
   } as const
 }
 
 export function useCollectionBookmarkList(_cid: string | null | undefined) {
   const { isAuthorized } = useAuth()
-  const { readObjectBookmarkList, addBookmark, removeBookmark } =
-    useBookmarkAPI()
+  const {
+    readObjectBookmarkList,
+    addBookmark,
+    removeBookmark,
+    updateBookmark,
+  } = useBookmarkAPI()
 
   const getKey = useCallback(() => {
     if (!isAuthorized || !_cid) return null
 
     const params: Record<keyof QueryBookmarkByCid, string | undefined> = {
       cid: _cid,
-      fields: 'gid,cid,language,version,kind',
+      fields: '',
     }
 
     return [`${path}/by_cid`, params] as const
@@ -142,6 +167,44 @@ export function useCollectionBookmarkList(_cid: string | null | undefined) {
       return !!data?.result.some((v) => isSameCollection(v.cid, item.id))
     },
     [data?.result]
+  )
+
+  const getPayload = useCallback(
+    (id: Uint8Array) => {
+      const bookmark = data?.result.find((v) => isSameCollection(v.cid, id))
+      if (bookmark && bookmark.payload) {
+        try {
+          return decode(bookmark.payload) as BookmarkCollectionPayload
+        } catch (_e) {
+          return undefined
+        }
+      }
+      return undefined
+    },
+    [data?.result]
+  )
+
+  const tryUpdatePayload = useCallback(
+    async (id: Uint8Array, input: BookmarkCollectionPayload) => {
+      const bookmark = data?.result.find((v) => isSameCollection(v.cid, id))
+      if (bookmark) {
+        const payload = encode({
+          gid: input.gid,
+          cid: input.cid,
+          offset: input.offset,
+        })
+
+        const output = await updateBookmark({
+          id: bookmark.id,
+          updated_at: bookmark.updated_at,
+          payload,
+        })
+        bookmark.updated_at = output.updated_at
+        bookmark.payload = payload
+      }
+      return undefined
+    },
+    [data?.result, updateBookmark]
   )
 
   const [state, setState] = useState({
@@ -243,6 +306,8 @@ export function useCollectionBookmarkList(_cid: string | null | undefined) {
     isRemoving,
     add,
     remove,
+    getPayload,
+    tryUpdatePayload,
   } as const
 }
 

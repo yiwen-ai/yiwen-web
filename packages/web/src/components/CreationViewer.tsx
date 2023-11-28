@@ -91,23 +91,25 @@ export default function CreationViewer({
               >
                 {currentLanguage?.nativeName ?? creation.language}
               </Button>
-              <Button
-                size='large'
-                color='secondary'
-                variant='outlined'
-                onClick={handleEdit}
-              >
-                {hasReleases ? (
-                  <Icon name='refresh' size='medium' />
-                ) : (
-                  <Icon name='edit' size='medium' />
-                )}
-                <span>
-                  {hasReleases
-                    ? intl.formatMessage({ defaultMessage: '更新版本' })
-                    : intl.formatMessage({ defaultMessage: '编辑' })}
-                </span>
-              </Button>
+              {!isNarrow && (
+                <Button
+                  size='large'
+                  color='secondary'
+                  variant='outlined'
+                  onClick={handleEdit}
+                >
+                  {hasReleases ? (
+                    <Icon name='refresh' size='medium' />
+                  ) : (
+                    <Icon name='edit' size='medium' />
+                  )}
+                  <span>
+                    {hasReleases
+                      ? intl.formatMessage({ defaultMessage: '更新版本' })
+                      : intl.formatMessage({ defaultMessage: '编辑' })}
+                  </span>
+                </Button>
+              )}
             </div>
             <div
               css={css`

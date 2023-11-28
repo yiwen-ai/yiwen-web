@@ -19,6 +19,8 @@ export default function YiwenCoin(props: React.HTMLAttributes<HTMLElement>) {
     params._cid,
     params._language,
     params._version,
+    undefined,
+    undefined,
     { baseURL: 'https://api.yiwen.ai/' }
   )
 

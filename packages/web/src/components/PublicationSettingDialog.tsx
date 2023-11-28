@@ -59,6 +59,19 @@ export default function PublicationSettingDialog({
         return false
       }
 
+      const title = String(
+        (ev.currentTarget['title'] as unknown as HTMLFormElement)['value']
+      ).trim()
+      if (!title) {
+        setDisabled(_disabled)
+        return false
+      }
+
+      if (title !== draft.title) {
+        _disabled = false
+        setDraft({ ...draft, title })
+      }
+
       const summary = String(
         (ev.currentTarget['summary'] as unknown as HTMLFormElement)['value']
       ).trim()
@@ -179,7 +192,20 @@ export default function PublicationSettingDialog({
               margin-bottom: 12px;
             `}
           >
-            <span>{draft.title}</span>
+            <label
+              css={css`
+                cursor: text;
+              `}
+            >
+              <input
+                type='text'
+                name='title'
+                aria-label='Publication title'
+                minLength={1}
+                maxLength={256}
+                defaultValue={draft.title}
+              />
+            </label>
           </div>
           <div
             css={css`

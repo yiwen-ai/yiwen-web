@@ -171,6 +171,8 @@ export function useTranslateDialog(
                   language: _language,
                   version: _version,
                   fields: undefined,
+                  parent: undefined,
+                  subtoken: undefined,
                 },
                 controller.signal
               )

@@ -60,6 +60,19 @@ export default function CreationSettingDialog({
         return false
       }
 
+      const title = String(
+        (ev.currentTarget['title'] as unknown as HTMLFormElement)['value']
+      ).trim()
+      if (!title) {
+        setDisabled(_disabled)
+        return false
+      }
+
+      if (title !== draft.title) {
+        _disabled = false
+        setDraft({ ...draft, title })
+      }
+
       const original_url = String(
         (ev.currentTarget['original_url'] as unknown as HTMLFormElement)[
           'value'
@@ -220,7 +233,20 @@ export default function CreationSettingDialog({
               margin-bottom: 12px;
             `}
           >
-            <span>{draft.title}</span>
+            <label
+              css={css`
+                cursor: text;
+              `}
+            >
+              <input
+                type='text'
+                name='title'
+                aria-label='Creation title'
+                minLength={1}
+                maxLength={256}
+                defaultValue={draft.title}
+              />
+            </label>
           </div>
           <div
             css={css`

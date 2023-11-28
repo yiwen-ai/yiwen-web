@@ -60,6 +60,7 @@ const SVG_LIST = {
   'link': () => import('./icon/remixicon/link.svg'),
   'link2': () => import('./icon/24/link.svg'),
   'link-unlink': () => import('./icon/remixicon/link-unlink.svg'),
+  'memory': () => import('./icon/remixicon/memories-line.svg'),
   'messagenotif': () => import('./icon/16/messagenotif.svg'),
   'more': () => import('./icon/16/more.svg'),
   'more2': () => import('./icon/24/more.svg'),

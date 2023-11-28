@@ -1,4 +1,4 @@
-import { GROUP_DETAIL_PATH, ThemeContext } from '#/App'
+import { ThemeContext } from '#/App'
 import { BREAKPOINT } from '#/shared'
 import { GroupViewType } from '#/store/useGroupDetailPage'
 import { css, useTheme } from '@emotion/react'
@@ -18,36 +18,29 @@ import {
   type ToastAPI,
 } from '@yiwen-ai/component'
 import {
-  ObjectKind,
   PublicationStatus,
-  isRTL,
   useAuth,
-  type CollectionChildrenOutput,
   type GPT_MODEL,
   type PublicationOutput,
   type QueryPaymentCode,
   type UILanguageItem,
 } from '@yiwen-ai/store'
-import { RGBA, useScrollOnBottom } from '@yiwen-ai/util'
+import { RGBA } from '@yiwen-ai/util'
 import { escapeRegExp } from 'lodash-es'
 import {
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
   useState,
   type HTMLAttributes,
 } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
-import { Link, generatePath } from 'react-router-dom'
 import { Xid } from 'xid-ts'
 import { type RFP } from '../../../store/src/common'
 import ChargeDialog, { type ChargeDialogProps } from './ChargeDialog'
 import CommonViewer from './CommonViewer'
 import ErrorPlaceholder from './ErrorPlaceholder'
-import { LoadMore } from './LoadMore'
 import Loading from './Loading'
 import PaymentConfirmDialog from './PaymentConfirmDialog'
 import TranslateConfirmDialog, {
@@ -65,11 +58,7 @@ export interface PublicationViewerProps extends HTMLAttributes<HTMLDivElement> {
   originalLanguage: UILanguageItem | undefined
   translatedLanguageList: UILanguageItem[] | undefined
   pendingLanguageList: UILanguageItem[] | undefined
-  collectionMenu: CollectionChildrenOutput[]
-  hasMore: boolean
-  isLoadingMore: boolean
   refreshPublication: () => void
-  loadMore: () => void
   onCharge: () => void
   onTranslate: (language: UILanguageItem, model: GPT_MODEL) => void
   onSwitch: (language: UILanguageItem, canTranslate: boolean) => void
@@ -101,11 +90,7 @@ export default function PublicationViewer({
   originalLanguage,
   translatedLanguageList: _translatedLanguageList,
   pendingLanguageList: _pendingLanguageList,
-  collectionMenu,
-  hasMore,
-  isLoadingMore,
   refreshPublication,
-  loadMore,
   onCharge,
   onTranslate,
   onSwitch,
@@ -130,7 +115,6 @@ export default function PublicationViewer({
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const setTheme = useContext(ThemeContext)
   const isNarrow = responsive && width <= BREAKPOINT.small
-  const [showMenu, setShowMenu] = useState(false)
 
   const [keyword, setKeyword] = useState('')
   const keywordRE = useMemo(
@@ -148,27 +132,6 @@ export default function PublicationViewer({
     () => publication && onEdit && onEdit(publication),
     [publication, onEdit]
   )
-
-  const [prevCid, setPrevCid] = useState<string>('')
-  const { _cid, _gid, dir } = useMemo(() => {
-    if (!publication) return {}
-    return {
-      _gid: Xid.fromValue(publication.gid).toString(),
-      _cid: Xid.fromValue(publication.cid).toString(),
-      dir: isRTL(publication.language) ? 'rtl' : undefined,
-    }
-  }, [publication])
-
-  useEffect(() => {
-    if (isNarrow) {
-      if (_cid && prevCid != _cid) {
-        setPrevCid(_cid)
-        setShowMenu(false)
-      }
-    } else {
-      setShowMenu(collectionMenu.length > 0)
-    }
-  }, [isNarrow, _cid, prevCid, setPrevCid, setShowMenu, collectionMenu.length])
 
   const translatedLanguageList = useMemo(() => {
     return _translatedLanguageList?.filter((item) => {
@@ -207,29 +170,6 @@ export default function PublicationViewer({
     )
   }, [originalLanguage, currentLanguage, isProcessing, user])
 
-  const [parent, prevItem, nextItem] = useMemo(() => {
-    if (_cid && collectionMenu.length > 0) {
-      const parent = collectionMenu[0]?.parent || null
-      for (const [index, item] of collectionMenu.entries()) {
-        if (Xid.fromValue(item.cid).toString() === _cid) {
-          return [
-            parent && Xid.fromValue(parent).toString(),
-            index > 0 ? collectionMenu[index - 1] : null,
-            index < collectionMenu.length - 1
-              ? collectionMenu[index + 1]
-              : null,
-          ]
-        }
-      }
-    }
-
-    return [null, null, null]
-  }, [collectionMenu, _cid])
-
-  const handleShowMenu = useCallback(() => {
-    setShowMenu((v) => !v)
-  }, [setShowMenu])
-
   const [payFor, setPayFor] = useState<Record<
     keyof QueryPaymentCode,
     string
@@ -261,15 +201,6 @@ export default function PublicationViewer({
   const handleCheckSubscription = useCallback(() => {
     refreshPublication()
   }, [refreshPublication])
-
-  const scrollContainerRef = useRef<HTMLUListElement>(null)
-  const shouldLoadMore = showMenu && hasMore && !isLoadingMore && loadMore
-  const handleScroll = useCallback(() => {
-    shouldLoadMore && shouldLoadMore()
-  }, [shouldLoadMore])
-  useScrollOnBottom(scrollContainerRef, handleScroll)
-  // hack for useScrollOnBottom failed because scrollContainerRef is null in same cases
-  useEffect(() => handleScroll(), [handleScroll])
 
   const [hidePayment, setHidePayment] = useState(false)
   const handleHidePayment = useCallback(() => {
@@ -317,27 +248,6 @@ export default function PublicationViewer({
                 }
               `}
             >
-              {collectionMenu.length > 0 && (
-                <Button
-                  title={intl.formatMessage({ defaultMessage: '目录' })}
-                  color={showMenu ? 'primary' : 'secondary'}
-                  variant='outlined'
-                  size={isNarrow ? 'small' : 'large'}
-                  onClick={handleShowMenu}
-                >
-                  <Icon
-                    name={showMenu ? 'menu-unfold-line' : 'menu-fold-line'}
-                    size={isNarrow ? 'small' : 'medium'}
-                  />
-                  {isNarrow ? null : (
-                    <span>
-                      {intl.formatMessage({
-                        defaultMessage: '目录',
-                      })}
-                    </span>
-                  )}
-                </Button>
-              )}
               <Button
                 title={intl.formatMessage({ defaultMessage: '创作语言' })}
                 color='primary'
@@ -480,7 +390,8 @@ export default function PublicationViewer({
                   )}
                 </Select>
               )}
-              {hasGroupAdminPermission &&
+              {!isNarrow &&
+                hasGroupAdminPermission &&
                 publication.status < PublicationStatus.Published && (
                   <Button
                     size='large'
@@ -616,126 +527,21 @@ export default function PublicationViewer({
               </div>
             )}
           </div>
-          <div
-            css={css`
-              display: flex;
-              flex-direction: row-reverse;
-              padding: 0 36px;
-              @media (max-width: ${BREAKPOINT.small}px) {
-                flex-direction: column;
-                align-items: center;
-                padding: 16px 0 0 0;
-              }
-            `}
-          >
-            <CommonViewer
-              type={GroupViewType.Publication}
-              item={publication}
-              isNarrow={isNarrow}
-              gid={_gid}
-              parent={parent}
-              prevItem={prevItem}
-              nextItem={nextItem}
-              footer={
-                hidePayment && publication.rfp ? (
-                  <PaymentSection
-                    rfp={publication.rfp}
-                    handlePayForCollection={handlePayForCollection}
-                    handlePayForPublication={handlePayForPublication}
-                  />
-                ) : null
-              }
-            />
-            {showMenu && collectionMenu.length > 0 && (
-              <ul
-                ref={scrollContainerRef}
-                css={css`
-                  display: flex;
-                  flex-direction: column;
-                  gap: 16px;
-                  margin: 0;
-                  padding: 0;
-                  width: 300px;
-                  list-style: none;
-                  max-height: calc(100vh - 160px);
-                  overflow-y: auto;
-                  @media (max-width: ${BREAKPOINT.small}px) {
-                    position: fixed;
-                    bottom: 0;
-                    width: 100%;
-                    max-height: calc(100vh - 160px);
-                    padding: 16px;
-                    margin-bottom: 0;
-                    box-shadow: ${theme.effect.card};
-                    background-color: ${theme.color.body.background};
-                    box-sizing: border-box;
-                    border-radius: 12px 12px 0 0;
-                  }
-                `}
-              >
-                {collectionMenu.map((item) => (
-                  <li
-                    key={Xid.fromValue(item.cid).toString()}
-                    css={css`
-                      padding: 0px;
-                      height: 32px;
-                      width: 100%;
-                    `}
-                  >
-                    <Link
-                      unstable_viewTransition={true}
-                      key={Xid.fromValue(item.cid).toString()}
-                      to={{
-                        pathname: generatePath(GROUP_DETAIL_PATH, {
-                          gid: _gid as string,
-                          type:
-                            item.kind === ObjectKind.Collection
-                              ? GroupViewType.Collection
-                              : GroupViewType.Publication,
-                        }),
-                        search:
-                          item.kind === ObjectKind.Collection
-                            ? new URLSearchParams({
-                                cid: Xid.fromValue(item.cid).toString(),
-                              }).toString()
-                            : new URLSearchParams({
-                                parent: Xid.fromValue(item.parent).toString(),
-                                cid: Xid.fromValue(item.cid).toString(),
-                                language: item.language,
-                                version: String(item.version),
-                              }).toString(),
-                      }}
-                      dir={dir}
-                      css={css`
-                        ${textEllipsis}
-                        display: inline-block;
-                        padding: 4px 12px;
-                        height: 28px;
-                        width: calc(100% - 12px * 2);
-                        border-radius: 8px;
-                        background-color: ${Xid.fromValue(
-                          item.cid
-                        ).toString() === _cid
-                          ? theme.color.button.secondary.contained.background
-                          : ''};
-                        :hover {
-                          background-color: ${theme.color.button.secondary
-                            .contained.background};
-                        }
-                      `}
-                    >
-                      {item.title}
-                    </Link>
-                  </li>
-                ))}
-                <LoadMore
-                  hasMore={hasMore}
-                  isLoadingMore={isLoadingMore}
-                  onLoadMore={loadMore}
+          <CommonViewer
+            type={GroupViewType.Publication}
+            item={publication}
+            isNarrow={isNarrow}
+            gid={Xid.fromValue(publication.gid).toString()}
+            footer={
+              hidePayment && publication.rfp ? (
+                <PaymentSection
+                  rfp={publication.rfp}
+                  handlePayForCollection={handlePayForCollection}
+                  handlePayForPublication={handlePayForPublication}
                 />
-              </ul>
-            )}
-          </div>
+              ) : null
+            }
+          />
         </>
       ) : null}
       <TranslateConfirmDialog

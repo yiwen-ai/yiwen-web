@@ -97,21 +97,25 @@ export const DialogHead = memo(function DialogHead(
   )
 })
 
-export const DialogBody = memo(function DialogBody(
-  props: HTMLAttributes<HTMLDivElement>
-) {
-  return (
-    <div
-      data-dialog-body={true}
-      {...props}
-      css={css`
-        flex: 1;
-        padding: 0 36px 24px;
-        overflow-y: auto;
-      `}
-    />
-  )
-})
+export const DialogBody = memo(
+  forwardRef(function DialogBody(
+    props: HTMLAttributes<HTMLDivElement>,
+    ref: React.Ref<HTMLDivElement>
+  ) {
+    return (
+      <div
+        ref={ref}
+        data-dialog-body={true}
+        {...props}
+        css={css`
+          flex: 1;
+          padding: 0 36px 24px;
+          overflow-y: auto;
+        `}
+      />
+    )
+  })
+)
 
 export const DialogFoot = memo(function DialogFoot(
   props: HTMLAttributes<HTMLDivElement>
