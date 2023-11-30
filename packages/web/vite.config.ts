@@ -31,6 +31,9 @@ export default defineConfig({
       injectRegister: null,
       useCredentials: true,
       registerType: 'autoUpdate',
+      // strategies: 'injectManifest', // can not handle CDN prefix
+      // srcDir: 'src',
+      // filename: 'sw.ts',
       workbox: {
         clientsClaim: true,
         skipWaiting: true,
