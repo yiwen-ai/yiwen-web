@@ -1,5 +1,5 @@
 import { css } from '@emotion/react'
-import { forwardRef, memo, type HTMLAttributes } from 'react'
+import { forwardRef, memo, useCallback, type HTMLAttributes } from 'react'
 import { Link } from 'react-router-dom'
 import { AccountManager } from './AccountManager'
 import { Brand } from './Brand'
@@ -16,6 +16,15 @@ export const Header = memo(
     { brand, userMenu, ...props }: HeaderProps,
     ref: React.Ref<HTMLElement>
   ) {
+    const handleClick = useCallback(
+      (ev: React.MouseEvent<HTMLAnchorElement>) => {
+        if (ev.detail == 2) {
+          window.location.reload() // for PWA that has no refresh button
+        }
+      },
+      []
+    )
+
     return (
       <header
         {...props}
@@ -30,6 +39,7 @@ export const Header = memo(
       >
         <Link
           to='/'
+          onClick={handleClick}
           css={css`
             display: flex;
             align-items: center;

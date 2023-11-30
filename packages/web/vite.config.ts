@@ -6,14 +6,17 @@ import { checker } from 'vite-plugin-checker'
 import { VitePWA } from 'vite-plugin-pwa'
 
 const buildEnv = process.env['npm_package_scripts_build'] || ''
-const scope = buildEnv.includes('testing')
-  ? 'https://www.yiwen.ltd'
-  : 'https://www.yiwen.ai'
-const cdnPrefix = buildEnv.includes('testing')
-  ? 'https://cdn.yiwen.pub/dev/web/'
-  : buildEnv.includes('staging')
-  ? 'https://cdn.yiwen.pub/beta/web/'
-  : 'https://cdn.yiwen.pub/web/'
+
+const scope =
+  buildEnv.includes('testing') || !buildEnv.includes('--mode')
+    ? 'https://www.yiwen.ltd'
+    : 'https://www.yiwen.ai'
+const cdnPrefix =
+  buildEnv.includes('testing') || !buildEnv.includes('--mode')
+    ? 'https://cdn.yiwen.pub/dev/web/'
+    : buildEnv.includes('staging')
+    ? 'https://cdn.yiwen.pub/beta/web/'
+    : 'https://cdn.yiwen.pub/web/'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -26,12 +29,13 @@ export default defineConfig({
       scope,
       buildBase: cdnPrefix,
       injectRegister: null,
+      useCredentials: true,
       registerType: 'autoUpdate',
       workbox: {
         clientsClaim: true,
         skipWaiting: true,
         navigateFallback: cdnPrefix + 'index.html',
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 3000000,
         globIgnores: ['*/*-legacy*'],
         globPatterns: ['**/*.{js,css,html,txt,webmanifest,svg,png,ico}'],
         modifyURLPrefix: {
@@ -72,12 +76,6 @@ export default defineConfig({
             'sizes': '512x512',
             'type': 'image/png',
             'purpose': 'maskable',
-          },
-        ],
-        'related_applications': [
-          {
-            'platform': 'web',
-            'url': scope,
           },
         ],
       },
