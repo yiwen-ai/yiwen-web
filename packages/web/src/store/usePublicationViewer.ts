@@ -4,7 +4,6 @@ import {
   PublicationJobStatus,
   PublicationStatus,
   RequestError,
-  setXLanguage,
   toMessage,
   useAuth,
   useEnsureAuthorized,
@@ -314,7 +313,7 @@ export function usePublicationViewer(pushToast: ToastAPI['pushToast']) {
       } else if (!publication || canTranslate) {
         showTranslateConfirmDialog(language)
       } else if (publication) {
-        setXLanguage(publication.language)
+        // setXLanguage(publication.language)
         show(
           publication.gid,
           publication.cid,

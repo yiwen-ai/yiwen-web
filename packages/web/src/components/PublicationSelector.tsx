@@ -105,7 +105,11 @@ export default function PublicationSelector({
   const handleScroll = useCallback(() => {
     shouldLoadMore && shouldLoadMore()
   }, [shouldLoadMore])
-  useScrollOnBottom(scrollContainerRef, handleScroll)
+  useScrollOnBottom({
+    ref: scrollContainerRef,
+    autoTriggerBottomCount: 3,
+    onBottom: handleScroll,
+  })
 
   const handleSave = useCallback(
     (ev: React.FormEvent<HTMLFormElement>) => {

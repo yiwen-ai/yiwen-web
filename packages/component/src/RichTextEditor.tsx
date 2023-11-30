@@ -906,7 +906,6 @@ const EditorCSS = (theme: Theme) => {
       }
 
       a {
-        display: inline-block;
         cursor: pointer;
         color: ${theme.color.body.primary};
         :hover {

@@ -63,7 +63,11 @@ export default function BookmarkPage() {
   const handleScroll = useCallback(() => {
     shouldLoadMore && shouldLoadMore()
   }, [shouldLoadMore])
-  useScrollOnBottom(layoutDivRef, handleScroll)
+  useScrollOnBottom({
+    ref: layoutDivRef,
+    autoTriggerBottomCount: 3,
+    onBottom: handleScroll,
+  })
 
   return (
     <>

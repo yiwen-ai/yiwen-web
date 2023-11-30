@@ -72,6 +72,7 @@ export interface BookmarkCollectionPayload {
   gid: Uint8Array // read child group id
   cid: Uint8Array // read child id
   offset: number // read child offset
+  title?: string
 }
 
 const path = '/v1/bookmark'
@@ -192,6 +193,7 @@ export function useCollectionBookmarkList(_cid: string | null | undefined) {
           gid: input.gid,
           cid: input.cid,
           offset: input.offset,
+          title: input.title,
         })
 
         const output = await updateBookmark({

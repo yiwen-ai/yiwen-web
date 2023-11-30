@@ -794,7 +794,8 @@ export function useCollectionList(
 
 export function useCollectionChildren(
   _gid: string | null | undefined,
-  _id: string | null | undefined
+  _id: string | null | undefined,
+  _language?: string | undefined
 ) {
   const {
     readCollectionChildren,
@@ -811,12 +812,13 @@ export function useCollectionChildren(
       const params = {
         id: _id,
         gid: _gid,
+        language: _language || '',
         page_token: prevPage?.next_page_token,
       }
 
       return [`${path}/list_children`, params] as const
     },
-    [_gid, _id]
+    [_gid, _id, _language]
   )
 
   const { data, error, mutate, isValidating, isLoading, setSize } =

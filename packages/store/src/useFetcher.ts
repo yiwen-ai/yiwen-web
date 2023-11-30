@@ -1,4 +1,8 @@
-import { joinURL, type URLSearchParamsInit } from '@yiwen-ai/util'
+import {
+  joinURL,
+  toURLSearchParams,
+  type URLSearchParamsInit,
+} from '@yiwen-ai/util'
 import { compact } from 'lodash-es'
 import { createContext, useContext, useMemo } from 'react'
 import { useAuth, xLanguage } from './AuthContext'
@@ -51,7 +55,12 @@ export function createRequest(
     params?: URLSearchParamsInit,
     options?: RequestInit
   ) => {
-    const url = joinURL(baseURL, path, params)
+    const pa = toURLSearchParams(params ?? {})
+    if (xLanguage.current && !pa.has('language')) {
+      pa.set('language', xLanguage.current)
+    }
+    const url = joinURL(baseURL, path, pa)
+
     const headers = new Headers(defaultOptions.headers)
     new Headers(options?.headers).forEach((value, key) =>
       headers.set(key, value)

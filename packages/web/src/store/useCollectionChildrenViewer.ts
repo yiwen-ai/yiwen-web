@@ -4,7 +4,8 @@ import { useCollectionChildren } from '@yiwen-ai/store'
 export function useCollectionChildrenViewer(
   pushToast: ToastAPI['pushToast'],
   _gid: string | undefined,
-  _cid: string | undefined
+  _cid: string | undefined,
+  _language: string | undefined
 ) {
   const {
     error,
@@ -17,7 +18,7 @@ export function useCollectionChildrenViewer(
     addChildren,
     updateChild,
     removeChild,
-  } = useCollectionChildren(_gid, _cid)
+  } = useCollectionChildren(_gid, _cid, _language)
 
   return {
     error,

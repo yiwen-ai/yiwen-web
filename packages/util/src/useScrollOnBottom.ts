@@ -1,32 +1,68 @@
 import { debounce } from 'lodash-es'
 import { useEffect, useState } from 'react'
 
-export function useScrollOnBottom<T extends HTMLElement>(
-  scrollContainerRef: React.RefObject<T>,
-  onCall: () => void,
-  maxCount = 3
-) {
-  const [count, setCount] = useState(maxCount)
+export interface ScrollProps<T extends HTMLElement> {
+  ref: React.RefObject<T>
+  autoTriggerBottomCount: number
+  onBottom?: (() => void) | undefined
+  onMoveUp?: (() => void) | undefined
+  onMoveDown?: (() => void) | undefined
+}
+
+export function useScrollOnBottom<T extends HTMLElement>({
+  ref,
+  autoTriggerBottomCount,
+  onBottom,
+  onMoveUp,
+  onMoveDown,
+}: ScrollProps<T>) {
+  const [count, setCount] = useState(autoTriggerBottomCount)
 
   useEffect(() => {
-    const ele = scrollContainerRef?.current
+    const ele = ref?.current
     // console.log('useScrollOnBottom ref', ref)
     if (ele) {
-      const call = debounce(onCall, 618, {
-        leading: true,
-        trailing: false,
-      })
+      const callBottom =
+        onBottom &&
+        debounce(onBottom, 618, {
+          leading: true,
+          trailing: false,
+        })
 
+      const callMoveUp =
+        onMoveUp &&
+        debounce(onMoveUp, 618, {
+          leading: true,
+          trailing: false,
+        })
+
+      const callMoveDown =
+        onMoveDown &&
+        debounce(onMoveDown, 618, {
+          leading: true,
+          trailing: false,
+        })
+
+      let lastScrollTop = 0
       const handler = (ev: Event) => {
         const target = ev.currentTarget as HTMLElement
+        if (target.scrollTop > lastScrollTop) {
+          callMoveUp && callMoveUp()
+        } else {
+          callMoveDown && callMoveDown()
+        }
+
         if (
           target &&
           target.clientHeight + target.scrollTop === target.scrollHeight
         ) {
           // console.log('scroll trigger')
-          call()
+          callBottom && callBottom()
         }
+
+        lastScrollTop = target.scrollTop
       }
+
       ele.addEventListener('scroll', handler)
 
       // auto trigger if the content is not overflow
@@ -36,17 +72,17 @@ export function useScrollOnBottom<T extends HTMLElement>(
               if (ele && ele.clientHeight >= ele.scrollHeight && count > 0) {
                 // console.log('auto trigger')
                 setCount(count - 1)
-                call()
+                callBottom && callBottom()
               }
             }, 618)
           : null
 
       return () => {
         ele.removeEventListener('scroll', handler)
-        call.cancel()
+        callBottom && callBottom.cancel()
         id && clearTimeout(id)
       }
     }
     return undefined
-  }, [scrollContainerRef, onCall, count, setCount])
+  }, [ref, onBottom, onMoveUp, onMoveDown, count, setCount])
 }

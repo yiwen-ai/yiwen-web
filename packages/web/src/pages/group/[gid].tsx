@@ -711,7 +711,12 @@ function CollectionPart({
   const handleScroll = useCallback(() => {
     shouldLoadMore && shouldLoadMore()
   }, [shouldLoadMore])
-  useScrollOnBottom(layoutDivRef, handleScroll)
+
+  useScrollOnBottom({
+    ref: layoutDivRef,
+    autoTriggerBottomCount: 3,
+    onBottom: handleScroll,
+  })
 
   return (
     <div
@@ -861,7 +866,11 @@ function PublicationPart({
   const handleScroll = useCallback(() => {
     shouldLoadMore && shouldLoadMore()
   }, [shouldLoadMore])
-  useScrollOnBottom(layoutDivRef, handleScroll)
+  useScrollOnBottom({
+    ref: layoutDivRef,
+    autoTriggerBottomCount: 3,
+    onBottom: handleScroll,
+  })
 
   return (
     <div
@@ -1018,7 +1027,11 @@ function CreationPart({
   const handleScroll = useCallback(() => {
     shouldLoadMore && shouldLoadMore()
   }, [shouldLoadMore])
-  useScrollOnBottom(layoutDivRef, handleScroll)
+  useScrollOnBottom({
+    ref: layoutDivRef,
+    autoTriggerBottomCount: 3,
+    onBottom: handleScroll,
+  })
 
   return (
     <div

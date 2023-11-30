@@ -123,16 +123,24 @@ export default function CollectionChildrenViewer({
   const handleScroll = useCallback(() => {
     shouldLoadMore && shouldLoadMore()
   }, [shouldLoadMore])
-  useScrollOnBottom(scrollContainerRef, handleScroll)
+  useScrollOnBottom({
+    ref: scrollContainerRef,
+    autoTriggerBottomCount: 3,
+    onBottom: handleScroll,
+  })
+
+  const [hideHeader, setHideHeader] = useState(false)
+  const onMoveUp = useCallback(() => setHideHeader(true), [setHideHeader])
+  const onMoveDown = useCallback(() => setHideHeader(false), [setHideHeader])
 
   return (
     <div
       {...props}
       ref={ref}
       css={css`
-        flex: 1;
-        display: flex;
-        flex-direction: column;
+        display: block;
+        position: relative;
+        height: 100%;
       `}
     >
       {isLoading ? (
@@ -141,13 +149,28 @@ export default function CollectionChildrenViewer({
         <>
           <div
             css={css`
-              padding: 36px;
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              z-index: 1;
+              height: 40px;
               display: flex;
               align-items: flex-start;
+              padding: 36px;
               gap: 24px;
+              opacity: 1;
+              transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+              ${hideHeader &&
+              isNarrow &&
+              css`
+                opacity: 0;
+                transform: translateY(-110%);
+              `}
               @media (max-width: ${BREAKPOINT.small}px) {
                 padding: 16px;
                 gap: 16px;
+                height: 28px;
                 box-shadow: ${theme.effect.card};
               }
             `}
@@ -192,7 +215,7 @@ export default function CollectionChildrenViewer({
                 dir={isRTL(headerChild.language) ? 'rtl' : undefined}
                 css={css`
                   ${textEllipsis}
-                  ${theme.typography.h2}
+                  ${!isNarrow && theme.typography.h2}
                   margin-right: auto;
                   max-width: 800px;
                   flex: 1;
@@ -283,14 +306,23 @@ export default function CollectionChildrenViewer({
           </div>
           <div
             css={css`
+              position: relative;
+              top: 112px;
               display: flex;
               flex-direction: column;
               padding: 0 36px;
+              transition: top 0.3s ease-in-out;
               @media (max-width: ${BREAKPOINT.small}px) {
+                top: 60px;
                 flex-direction: column;
                 align-items: center;
                 padding: 0;
               }
+              ${hideHeader &&
+              isNarrow &&
+              css`
+                top: 0 !important;
+              `}
               ${showMenu &&
               css`
                 flex-direction: row-reverse;
@@ -301,6 +333,7 @@ export default function CollectionChildrenViewer({
               <ChildrenSection
                 pushToast={pushToast}
                 isNarrow={isNarrow}
+                hideHeader={hideHeader}
                 collection={collection}
                 currentChild={anchorChild}
                 childrenItems={childrenItems}
@@ -308,6 +341,8 @@ export default function CollectionChildrenViewer({
                 setActiveCid={setActiveCid}
                 onItemChange={handleMenuItemChange}
                 onCharge={onCharge}
+                onMoveUp={onMoveUp}
+                onMoveDown={onMoveDown}
               />
             )}
             {showMenu && childrenItems.length > 0 && (
@@ -401,9 +436,12 @@ function ChildrenSection({
   setActiveCid,
   onItemChange,
   onCharge,
+  onMoveUp,
+  onMoveDown,
 }: React.HTMLAttributes<HTMLDivElement> & {
   pushToast: ToastAPI['pushToast']
   isNarrow: boolean
+  hideHeader: boolean
   collection: CollectionOutput
   currentChild: CollectionChildrenOutput
   childrenItems: CollectionChildrenOutput[]
@@ -411,6 +449,8 @@ function ChildrenSection({
   setActiveCid: React.Dispatch<React.SetStateAction<string>>
   onItemChange: (item: CollectionChildrenOutput) => void
   onCharge: () => void
+  onMoveUp?: () => void
+  onMoveDown?: () => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
@@ -530,7 +570,13 @@ function ChildrenSection({
     }
   }, [childrenItems, nextItem, nextArgs, setRenderList, setActiveCid])
 
-  useScrollOnBottom(childrenViewerRef, handleScroll)
+  useScrollOnBottom({
+    ref: childrenViewerRef,
+    autoTriggerBottomCount: 3,
+    onBottom: handleScroll,
+    onMoveUp,
+    onMoveDown,
+  })
 
   useEffect(() => {
     const item = findLast(
@@ -543,6 +589,7 @@ function ChildrenSection({
         gid: item.gid,
         cid: item.cid,
         offset: 1,
+        title: item.title,
       })
     }
   }, [tryUpdatePayload, activeCid, childrenItems])
@@ -592,7 +639,7 @@ function ChildrenSection({
         max-height: calc(100vh - 160px);
         overflow-y: auto;
         @media (max-width: ${BREAKPOINT.small}px) {
-          max-height: calc(100vh - 60px);
+          max-height: 100vh;
         }
       `}
     >

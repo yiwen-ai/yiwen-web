@@ -51,12 +51,15 @@ import {
 import {
   preventDefaultStopPropagation,
   useScrollOnBottom,
+  type ModalRef,
 } from '@yiwen-ai/util'
 import { escapeRegExp } from 'lodash-es'
 import {
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type HTMLAttributes,
 } from 'react'
@@ -157,6 +160,15 @@ export default function CollectionViewer({
     })
   }, [_translatedLanguageList, keywordRE])
 
+  const selectorRef = useRef<ModalRef>(null)
+  const handleOnSwitch = useCallback(
+    (value: UILanguageItem, _ev: React.SyntheticEvent) => {
+      onSwitch(value)
+      selectorRef.current?.close()
+    },
+    [onSwitch]
+  )
+
   return (
     <div
       {...props}
@@ -227,6 +239,7 @@ export default function CollectionViewer({
               )}
               {translatedLanguageList && (
                 <Select
+                  ref={selectorRef}
                   anchor={(props) => (
                     <Button
                       color='secondary'
@@ -275,9 +288,9 @@ export default function CollectionViewer({
                         { defaultMessage: '{name} (创作语言)' },
                         { name: originalLanguage.nativeName }
                       )}
-                      value={originalLanguage.code}
+                      value={originalLanguage}
                       dir={originalLanguage.dir}
-                      onSelect={() => onSwitch(originalLanguage)}
+                      onSelect={handleOnSwitch}
                     />
                   )}
                   {translatedLanguageList.length > 0 && (
@@ -289,9 +302,9 @@ export default function CollectionViewer({
                           key={item.code}
                           after={item.isProcessing && <Spinner size='small' />}
                           label={`${item.nativeName} (${item.name})`}
-                          value={item.code}
+                          value={item}
                           dir={item.dir}
-                          onSelect={() => onSwitch(item)}
+                          onSelect={handleOnSwitch}
                         />
                       ))}
                     </SelectOptionGroup>
@@ -455,10 +468,7 @@ function CollectionDetail({
     return getCollectionInfo(collection)
   }, [collection])
 
-  const dir = useMemo(() => {
-    return isRTL(language) ? 'rtl' : undefined
-  }, [language])
-
+  const dir = isRTL(language) ? 'rtl' : undefined
   const handleEditChildrenClick = useCallback(() => {
     setEditing(editing == 0 ? 1 : 0)
     switchFullScreen(editing == 0)
@@ -755,7 +765,7 @@ function CollectionDetail({
         <CollectionChildren
           pushToast={pushToast}
           collection={collection}
-          dir={dir}
+          language={language}
           editing={editing}
           shareLink={shareLink}
           onShare={onShare}
@@ -769,7 +779,7 @@ function CollectionDetail({
 function CollectionChildren({
   pushToast,
   collection,
-  dir,
+  language,
   editing,
   shareLink,
   onShare,
@@ -777,7 +787,7 @@ function CollectionChildren({
 }: {
   pushToast: ToastAPI['pushToast']
   collection: CollectionOutput
-  dir: string | undefined
+  language: string
   editing: number
   shareLink: string | undefined
   onShare: () => void
@@ -785,6 +795,7 @@ function CollectionChildren({
 }) {
   const intl = useIntl()
   const theme = useTheme()
+  const dir = isRTL(language) ? 'rtl' : undefined
 
   const parent = Xid.fromValue(collection.id).toString()
   const gid = Xid.fromValue(collection.gid).toString()
@@ -805,23 +816,11 @@ function CollectionChildren({
     addChildren,
     updateChild,
     removeChild,
-  } = useCollectionChildrenViewer(pushToast, gid, parent)
+  } = useCollectionChildrenViewer(pushToast, gid, parent, language)
 
   const excludes = useMemo(() => {
     return items.map((item) => Xid.fromValue(item.cid).toString())
   }, [items])
-
-  const bookmarkPayload = useMemo(() => {
-    if (items && items.length > 0) {
-      const payload = getBookmarkPayload(collection.id)
-      if (payload) {
-        return items.find((item) => {
-          return Xid.fromValue(item.cid).equals(Xid.fromValue(payload.cid))
-        })
-      }
-    }
-    return undefined
-  }, [getBookmarkPayload, collection.id, items])
 
   const onRemove = useCallback(
     (item: CollectionChildrenOutput) => {
@@ -838,15 +837,15 @@ function CollectionChildren({
     LargeDialogBodyRefContext
   ) as React.RefObject<HTMLDivElement>
 
-  const handleLoadMore = useCallback(() => {
-    loadMore()
-  }, [loadMore])
-
   const shouldLoadMore = hasMore && !isValidating && loadMore
   const handleScroll = useCallback(() => {
     shouldLoadMore && shouldLoadMore()
   }, [shouldLoadMore])
-  useScrollOnBottom(scrollContainerRef, handleScroll)
+  useScrollOnBottom({
+    ref: scrollContainerRef,
+    autoTriggerBottomCount: 3,
+    onBottom: handleScroll,
+  })
 
   const handleDragEnd: OnDragEndResponder = useCallback(
     (result) => {
@@ -1011,6 +1010,23 @@ function CollectionChildren({
     ]
   )
 
+  const bookmarkPayload = useMemo(
+    () => getBookmarkPayload(collection.id),
+    [getBookmarkPayload, collection.id]
+  )
+
+  const currentRead =
+    bookmarkPayload &&
+    items.find((item) =>
+      Xid.fromValue(item.cid).equals(Xid.fromValue(bookmarkPayload.cid))
+    )
+
+  useEffect(() => {
+    if (bookmarkPayload && shouldLoadMore && !currentRead) {
+      shouldLoadMore()
+    }
+  }, [bookmarkPayload, currentRead, shouldLoadMore])
+
   const containerCss = useMemo(
     () => css`
       display: flex;
@@ -1075,14 +1091,16 @@ function CollectionChildren({
     <>
       {bookmarkPayload && editing == 0 && (
         <Clickable
-          onClick={() => onClick(bookmarkPayload)}
+          onClick={currentRead && (() => onClick(currentRead))}
           css={css`
             display: flex;
             flex-direction: row;
             justify-content: flex-start;
             align-items: center;
             margin-top: 24px;
-            color: ${theme.palette.green};
+            color: ${currentRead
+              ? theme.palette.green
+              : theme.color.body.default};
             gap: 8px;
             max-width: calc(100% - 40px);
             flex: 1;
@@ -1198,7 +1216,7 @@ function CollectionChildren({
             <LoadMore
               hasMore={hasMore}
               isLoadingMore={isValidating}
-              onLoadMore={handleLoadMore}
+              onLoadMore={loadMore}
               css={css`
                 width: 100%;
               `}
