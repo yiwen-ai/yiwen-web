@@ -156,6 +156,20 @@ export function initialCollectionDraft(): CollectionDraft {
   }
 }
 
+export function genFullChildTitle(
+  collectionTitle: string,
+  child: CollectionChildrenOutput
+): string {
+  if (
+    child.title.includes(collectionTitle) &&
+    child.summary &&
+    child.summary.length > child.title.length
+  ) {
+    return child.title.replace(collectionTitle, '').trim() + ' ' + child.summary
+  }
+  return child.title
+}
+
 export function isSameCollection(a: Uint8Array, b: Uint8Array) {
   return Xid.fromValue(a).equals(Xid.fromValue(b))
 }

@@ -133,19 +133,16 @@ export default function PublicationItem({
               <span>{intl.formatMessage({ defaultMessage: '公开发布' })}</span>
             </Button>
           )}
-          {(item.status === PublicationStatus.Review ||
-            item.status === PublicationStatus.Approved) && (
-            <Button
-              size='small'
-              color='secondary'
-              variant='text'
-              disabled={disabled}
-              onClick={handleSetting}
-            >
-              <Icon name='settings' size='small' />
-              <span>{intl.formatMessage({ defaultMessage: '设置' })}</span>
-            </Button>
-          )}
+          <Button
+            size='small'
+            color='secondary'
+            variant='text'
+            disabled={disabled}
+            onClick={handleSetting}
+          >
+            <Icon name='settings' size='small' />
+            <span>{intl.formatMessage({ defaultMessage: '设置' })}</span>
+          </Button>
           {(item.status === PublicationStatus.Review ||
             item.status === PublicationStatus.Approved) && (
             <Menu bringFocusBack={false} anchor={renderIconMoreAnchor}>

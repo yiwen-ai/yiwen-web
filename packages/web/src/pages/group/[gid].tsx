@@ -61,6 +61,7 @@ import {
 } from '@yiwen-ai/util'
 import { useCallback, useContext, useEffect } from 'react'
 import { useIntl } from 'react-intl'
+import { useResizeDetector } from 'react-resize-detector'
 import {
   Link,
   generatePath,
@@ -703,6 +704,9 @@ function CollectionPart({
   onPublish: (item: CollectionOutput) => void
   onClick: (item: CollectionOutput) => void
 }) {
+  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
+  const isNarrow = width <= BREAKPOINT.small
+
   const layoutDivRef = useContext(
     LayoutDivRefContext
   ) as React.RefObject<HTMLDivElement>
@@ -720,10 +724,11 @@ function CollectionPart({
 
   return (
     <div
+      ref={ref}
       css={css`
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 8px;
       `}
     >
       {!isLoading && error ? (
@@ -736,6 +741,7 @@ function CollectionPart({
             <CollectionItem
               key={buildCollectionKey(item.gid, item.id)}
               item={item}
+              isNarrow={isNarrow}
               hasWritePermission={hasGroupAdminPermission}
               isPublishing={isPublishing(item)}
               isArchiving={isArchiving(item)}

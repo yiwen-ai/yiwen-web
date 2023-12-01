@@ -14,6 +14,8 @@ import {
 } from '@yiwen-ai/component'
 import {
   ObjectKind,
+  genFullChildTitle,
+  getCollectionInfo,
   isRTL,
   toMessage,
   useCollectionBookmarkList,
@@ -81,6 +83,10 @@ export default function CollectionChildrenViewer({
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const isNarrow = width <= BREAKPOINT.small
   const [showMenu, setShowMenu] = useState(false)
+
+  const [_, info] = useMemo(() => {
+    return collection ? getCollectionInfo(collection) : []
+  }, [collection])
 
   useEffect(() => {
     setShowMenu(!isNarrow && childrenItems.length > 0)
@@ -372,7 +378,7 @@ export default function CollectionChildrenViewer({
                   }
                 `}
               >
-                {childrenItems.map((item) => (
+                {childrenItems.map((item, i) => (
                   <li
                     key={Xid.fromValue(item.cid).toString()}
                     css={css`
@@ -408,7 +414,7 @@ export default function CollectionChildrenViewer({
                         }
                       `}
                     >
-                      {item.title}
+                      {genFullChildTitle(info?.title || '', item)}
                     </Link>
                   </li>
                 ))}
@@ -718,7 +724,7 @@ function ChildrenSection({
             css={css`
               margin: 8px auto;
               padding: 16px 36px;
-              border-radius: 4px;
+              border-radius: 8px;
               box-shadow: ${theme.effect.card};
             `}
           />

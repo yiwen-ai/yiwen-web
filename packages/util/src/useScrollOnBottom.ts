@@ -54,7 +54,7 @@ export function useScrollOnBottom<T extends HTMLElement>({
 
         if (
           target &&
-          target.clientHeight + target.scrollTop === target.scrollHeight
+          target.clientHeight + target.scrollTop + 5 >= target.scrollHeight
         ) {
           // console.log('scroll trigger')
           callBottom && callBottom()

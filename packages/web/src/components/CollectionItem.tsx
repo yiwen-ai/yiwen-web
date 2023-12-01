@@ -23,6 +23,7 @@ import { renderIconMoreAnchor } from './IconMoreAnchor'
 
 export default function CollectionItem({
   item,
+  isNarrow,
   hasWritePermission,
   isPublishing,
   isArchiving,
@@ -32,6 +33,7 @@ export default function CollectionItem({
   onArchive,
 }: {
   item: CollectionOutput
+  isNarrow: boolean
   hasWritePermission: boolean
   isPublishing: boolean
   isArchiving: boolean
@@ -56,7 +58,7 @@ export default function CollectionItem({
     return getCollectionInfo(item)
   }, [item])
 
-  const maxSumLength = checkNarrow() ? 60 : 140
+  const maxSumLength = checkNarrow() ? 60 : 120
   const dir = isRTL(language) ? 'rtl' : undefined
 
   return (
@@ -113,7 +115,7 @@ export default function CollectionItem({
             dir={dir}
             css={css`
               ${textEllipsis}
-              ${theme.typography.h2}
+              ${isNarrow ? theme.typography.body : theme.typography.h2}
             `}
           >
             {info.title}
@@ -122,10 +124,9 @@ export default function CollectionItem({
             <div
               dir={dir}
               css={css`
-                margin-top: 12px;
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                gap: 8px;
                 flex-wrap: wrap;
                 flex-direction: row;
               `}
@@ -134,8 +135,8 @@ export default function CollectionItem({
                 <Button
                   key={author}
                   color='primary'
-                  size='small'
-                  variant='outlined'
+                  size='medium'
+                  variant='text'
                   readOnly={true}
                 >
                   {author}
@@ -143,26 +144,13 @@ export default function CollectionItem({
               ))}
             </div>
           )}
-          {info.summary && (
-            <div
-              dir={dir}
-              css={css`
-                margin-top: 12px;
-              `}
-            >
-              {info.summary.length < maxSumLength
-                ? info.summary
-                : info.summary.slice(0, maxSumLength) + '...'}
-            </div>
-          )}
           {info.keywords && info.keywords.length > 0 && (
             <div
               dir={dir}
               css={css`
-                margin-top: 12px;
                 display: flex;
                 align-items: center;
-                gap: 12px;
+                gap: 8px;
                 flex-wrap: wrap;
                 flex-direction: row;
 
@@ -184,6 +172,18 @@ export default function CollectionItem({
                   {keyword}
                 </Button>
               ))}
+            </div>
+          )}
+          {info.summary && (
+            <div
+              dir={dir}
+              css={css`
+                ${isNarrow && theme.typography.tooltip}
+              `}
+            >
+              {info.summary.length < maxSumLength
+                ? info.summary
+                : info.summary.slice(0, maxSumLength) + '...'}
             </div>
           )}
           {hasWritePermission && (

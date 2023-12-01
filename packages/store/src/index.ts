@@ -35,6 +35,7 @@ export {
 export {
   CollectionStatus,
   buildCollectionKey,
+  genFullChildTitle,
   getCollectionInfo,
   getCollectionTitle,
   initialCollectionDraft,
@@ -59,7 +60,6 @@ export {
   buildCreationKey,
   diffCreationDraft,
   initialCreationDraft,
-  requireDraftStatus,
   useCrawlDocument,
   useCreation,
   useCreationAPI,

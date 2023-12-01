@@ -35,6 +35,7 @@ import {
 import {
   CollectionStatus,
   ObjectKind,
+  genFullChildTitle,
   getCollectionInfo,
   isRTL,
   useCollectionAPI,
@@ -53,7 +54,7 @@ import {
   useScrollOnBottom,
   type ModalRef,
 } from '@yiwen-ai/util'
-import { escapeRegExp } from 'lodash-es'
+import { escapeRegExp, some } from 'lodash-es'
 import {
   useCallback,
   useContext,
@@ -523,7 +524,7 @@ function CollectionDetail({
             flex-direction: row;
             justify-content: flex-start;
             @media (max-width: ${BREAKPOINT.small}px) {
-              margin-top: 24px;
+              margin-top: 12px;
             }
           `}
         >
@@ -553,7 +554,7 @@ function CollectionDetail({
             css={css`
               display: flex;
               flex-direction: column;
-              gap: 12px;
+              gap: 8px;
               margin-left: 24px;
               width: calc(${MAX_WIDTH} + 36px * 2 - 160px - 24px);
               @media (max-width: ${BREAKPOINT.small}px) {
@@ -585,7 +586,7 @@ function CollectionDetail({
                   <Button
                     key={author}
                     color='primary'
-                    variant='outlined'
+                    variant='text'
                     size='medium'
                     readOnly={true}
                   >
@@ -616,7 +617,8 @@ function CollectionDetail({
                   <Button
                     key={keyword}
                     color='secondary'
-                    size='medium'
+                    size='small'
+                    variant='contained'
                     readOnly={true}
                   >
                     {keyword}
@@ -636,7 +638,6 @@ function CollectionDetail({
                   display: flex;
                   width: fit-content;
                   max-width: 100%;
-                  margin-top: 12px;
                 `}
               >
                 <CreatedBy
@@ -644,6 +645,7 @@ function CollectionDetail({
                   timestamp={collection.updated_at || 0}
                   css={css`
                     flex-wrap: wrap;
+                    ${isNarrow && theme.typography.tooltip};
                   `}
                 />
               </Link>
@@ -757,6 +759,9 @@ function CollectionDetail({
             css={css`
               margin-top: 24px;
               text-indent: 2em;
+              @media (max-width: ${BREAKPOINT.small}px) {
+                margin-top: 12px;
+              }
             `}
           >
             {info.summary}
@@ -765,6 +770,7 @@ function CollectionDetail({
         <CollectionChildren
           pushToast={pushToast}
           collection={collection}
+          title={info.title}
           language={language}
           editing={editing}
           shareLink={shareLink}
@@ -779,6 +785,7 @@ function CollectionDetail({
 function CollectionChildren({
   pushToast,
   collection,
+  title,
   language,
   editing,
   shareLink,
@@ -787,6 +794,7 @@ function CollectionChildren({
 }: {
   pushToast: ToastAPI['pushToast']
   collection: CollectionOutput
+  title: string
   language: string
   editing: number
   shareLink: string | undefined
@@ -1027,6 +1035,20 @@ function CollectionChildren({
     }
   }, [bookmarkPayload, currentRead, shouldLoadMore])
 
+  const ulRef = useRef<HTMLUListElement>(null)
+  const [hasLongTitle, setHasLongTitle] = useState(false)
+  useEffect(() => {
+    if (ulRef.current) {
+      const ulWidth = ulRef.current.clientWidth
+      setHasLongTitle(
+        some(
+          ulRef.current.children,
+          (li: HTMLElement) => li.offsetWidth * 2 > ulWidth
+        )
+      )
+    }
+  }, [setHasLongTitle, items])
+
   const containerCss = useMemo(
     () => css`
       display: flex;
@@ -1043,10 +1065,10 @@ function CollectionChildren({
       }
       li {
         padding: 0px;
-        width: max-content;
-        min-width: 23%;
+        width: fit-content;
+        min-width: ${hasLongTitle ? '100%' : '49%'};
         max-width: 100%;
-        transition: height 0.4s ease-in-out;
+        transition: height 0.4s ease-in-out, width 0.4s ease-in-out;
         @media (max-width: ${BREAKPOINT.small}px) {
           height: 48px;
         }
@@ -1084,7 +1106,7 @@ function CollectionChildren({
         `}
       }
     `,
-    [editing, theme]
+    [editing, hasLongTitle, theme]
   )
 
   return (
@@ -1148,6 +1170,7 @@ function CollectionChildren({
                           <Draggable key={cid} draggableId={cid} index={index}>
                             {(provided, snapshot) => (
                               <ChildItem
+                                title={title}
                                 item={item}
                                 editing={editing}
                                 onClick={onClick}
@@ -1199,10 +1222,11 @@ function CollectionChildren({
                   </>
                 )}
 
-                <ul dir={dir} css={containerCss}>
+                <ul ref={ulRef} dir={dir} css={containerCss}>
                   {items.map((item) => (
                     <ChildItem
                       key={Xid.fromValue(item.cid).toString()}
+                      title={title}
                       item={item}
                       editing={editing}
                       onClick={onClick}
@@ -1254,6 +1278,7 @@ function CollectionChildren({
 }
 
 function ChildItem({
+  title,
   item,
   editing,
   onClick,
@@ -1263,6 +1288,7 @@ function ChildItem({
   provided,
   snapshot,
 }: {
+  title: string
   item: CollectionChildrenOutput
   editing: number
   onClick: (item: CollectionChildrenOutput) => void
@@ -1325,7 +1351,7 @@ function ChildItem({
       <Link
         unstable_viewTransition={true}
         key={cid}
-        onClick={editing > 0 ? preventDefaultStopPropagation : handleClick}
+        onClick={editing > 1 ? preventDefaultStopPropagation : handleClick}
         to={'#'}
         style={{
           backgroundColor: snapshot?.isDragging
@@ -1349,7 +1375,7 @@ function ChildItem({
             ${textEllipsis}
           `}
         >
-          {item.title}
+          {editing == 1 ? item.title : genFullChildTitle(title, item)}
         </div>
         {editing == 1 && (
           <>
@@ -1378,22 +1404,15 @@ function ChildItem({
               `}
             >
               <CollectionItemStatus status={item.status} />
-              {(item.status === CollectionStatus.Private ||
-                item.status === CollectionStatus.Internal ||
-                item.status === CollectionStatus.Public) && (
-                <Button
-                  size='small'
-                  color='secondary'
-                  variant='text'
-                  disabled={
-                    item.kind === ObjectKind.Publication && item.status == 2
-                  }
-                  onClick={handleSetting}
-                >
-                  <Icon name='settings' size='small' />
-                  <span>{intl.formatMessage({ defaultMessage: '设置' })}</span>
-                </Button>
-              )}
+              <Button
+                size='small'
+                color='secondary'
+                variant='text'
+                onClick={handleSetting}
+              >
+                <Icon name='settings' size='small' />
+                <span>{intl.formatMessage({ defaultMessage: '设置' })}</span>
+              </Button>
               {(item.status === CollectionStatus.Private ||
                 item.status === CollectionStatus.Internal) && (
                 <Button

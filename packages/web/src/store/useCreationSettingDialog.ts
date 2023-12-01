@@ -1,10 +1,8 @@
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
-  CreationStatus,
   diffCreationDraft,
   initialCreationDraft,
   isRTL,
-  requireDraftStatus,
   toMessage,
   useCreation,
   useCreationAPI,
@@ -26,8 +24,7 @@ interface Params {
 export function useCreationSettingDialog(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
   const { uploadFromBlobURL } = useUploadAPI()
-  const { readCreationUploadPolicy, updateCreation, restoreCreation } =
-    useCreationAPI()
+  const { readCreationUploadPolicy, updateCreation } = useCreationAPI()
 
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -97,18 +94,6 @@ export function useCreationSettingDialog(pushToast: ToastAPI['pushToast']) {
       setIsSaving(true)
       const input = diffCreationDraft(creation, draft)
       if (!input) return
-      if (
-        creation.status != CreationStatus.Draft &&
-        requireDraftStatus(input)
-      ) {
-        const { result } = await restoreCreation({
-          gid: input.gid,
-          id: input.id,
-          updated_at: input.updated_at,
-          status: CreationStatus.Draft,
-        })
-        input.updated_at = result.updated_at
-      }
 
       if (isBlobURL(draft.cover)) {
         const { result: uploadPolicy } = await readCreationUploadPolicy({
@@ -153,7 +138,6 @@ export function useCreationSettingDialog(pushToast: ToastAPI['pushToast']) {
     pushToast,
     setIsSaving,
     updateCreation,
-    restoreCreation,
     readCreationUploadPolicy,
     uploadFromBlobURL,
   ])

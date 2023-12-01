@@ -1,6 +1,5 @@
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
-  PublicationStatus,
   diffPublicationDraft,
   initialPublicationDraft,
   isRTL,
@@ -27,8 +26,7 @@ interface Params {
 export function usePublicationSettingDialog(pushToast: ToastAPI['pushToast']) {
   const intl = useIntl()
   const { uploadFromBlobURL } = useUploadAPI()
-  const { readPublicationUploadPolicy, updatePublication, restorePublication } =
-    usePublicationAPI()
+  const { readPublicationUploadPolicy, updatePublication } = usePublicationAPI()
 
   const [isSaving, setIsSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -116,17 +114,6 @@ export function usePublicationSettingDialog(pushToast: ToastAPI['pushToast']) {
       setIsSaving(true)
       const input = diffPublicationDraft(publication, draft)
       if (!input) return
-      if (publication.status != PublicationStatus.Review) {
-        const { result } = await restorePublication({
-          gid: input.gid,
-          cid: input.cid,
-          language: input.language,
-          version: input.version,
-          updated_at: input.updated_at,
-          status: PublicationStatus.Review,
-        })
-        input.updated_at = result.updated_at
-      }
 
       if (isBlobURL(draft.cover)) {
         const { result: uploadPolicy } = await readPublicationUploadPolicy({
@@ -173,7 +160,6 @@ export function usePublicationSettingDialog(pushToast: ToastAPI['pushToast']) {
     pushToast,
     setIsSaving,
     updatePublication,
-    restorePublication,
     readPublicationUploadPolicy,
     uploadFromBlobURL,
   ])
