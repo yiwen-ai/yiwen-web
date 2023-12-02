@@ -30,9 +30,26 @@ registerRoute(
   })
 )
 
+const wwwCapture = self.location.hostname.includes('.ai')
+  ? 'https://www\\.yiwen\\.ai.*'
+  : 'https://www\\.yiwen\\.ltd.*'
+
+registerRoute(
+  new RegExp(wwwCapture),
+  new StaleWhileRevalidate({
+    cacheName: 'html-res',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 100,
+        maxAgeSeconds: 7 * 24 * 60 * 60,
+      }) as WorkboxPlugin,
+    ],
+  })
+)
+
 const apiCapture = self.location.hostname.includes('.ai')
-  ? 'https://api\\.yiwen\\.ai/.*'
-  : 'https://api\\.yiwen\\.ltd/.*'
+  ? 'https://(api|wallet|auth)\\.yiwen\\.ai/.*'
+  : 'https://(api|wallet|auth)\\.yiwen\\.ltd/.*'
 
 registerRoute(
   new RegExp(apiCapture),
@@ -47,19 +64,20 @@ registerRoute(
   })
 )
 
-const wwwCapture = self.location.hostname.includes('.ai')
-  ? 'https://www\\.yiwen\\.ai/.*'
-  : 'https://www\\.yiwen\\.ltd/.*'
+const apiPostCapture = self.location.hostname.includes('.ai')
+  ? 'https://(api|wallet)\\.yiwen\\.ai/.*/list.*'
+  : 'https://(api|wallet)\\.yiwen\\.ltd/.*/list.*'
 
 registerRoute(
-  new RegExp(wwwCapture),
-  new StaleWhileRevalidate({
-    cacheName: 'html-res',
+  new RegExp(apiPostCapture),
+  new NetworkFirst({
+    cacheName: 'api-res',
     plugins: [
       new ExpirationPlugin({
-        maxEntries: 100,
+        maxEntries: 100000,
         maxAgeSeconds: 3 * 24 * 60 * 60,
       }) as WorkboxPlugin,
     ],
-  })
+  }),
+  'POST'
 )
