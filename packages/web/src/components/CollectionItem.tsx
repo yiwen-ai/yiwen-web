@@ -120,18 +120,19 @@ export default function CollectionItem({
           >
             {info.title}
           </div>
-          {info.authors && info.authors.length > 0 && (
+          {(info.authors || info.keywords) && (
             <div
               dir={dir}
               css={css`
                 display: flex;
                 align-items: center;
                 gap: 8px;
+                margin-top: 8px;
                 flex-wrap: wrap;
                 flex-direction: row;
               `}
             >
-              {info.authors.map((author) => (
+              {info.authors?.map((author) => (
                 <Button
                   key={author}
                   color='primary'
@@ -142,27 +143,7 @@ export default function CollectionItem({
                   {author}
                 </Button>
               ))}
-            </div>
-          )}
-          {info.keywords && info.keywords.length > 0 && (
-            <div
-              dir={dir}
-              css={css`
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                flex-wrap: wrap;
-                flex-direction: row;
-
-                span {
-                  padding: 4px 8px;
-                  border-radius: 12px;
-                  background-color: ${theme.color.divider.secondary};
-                  ${theme.typography.tooltip};
-                }
-              `}
-            >
-              {info.keywords.map((keyword) => (
+              {info.keywords?.map((keyword) => (
                 <Button
                   key={keyword}
                   color='secondary'
@@ -174,10 +155,12 @@ export default function CollectionItem({
               ))}
             </div>
           )}
+
           {info.summary && (
             <div
               dir={dir}
               css={css`
+                margin-top: 8px;
                 ${isNarrow && theme.typography.tooltip}
               `}
             >

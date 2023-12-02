@@ -31,13 +31,22 @@ export default defineConfig({
       injectRegister: null,
       useCredentials: true,
       registerType: 'autoUpdate',
-      // strategies: 'injectManifest', // can not handle CDN prefix
-      // srcDir: 'src',
-      // filename: 'sw.ts',
-      workbox: {
-        clientsClaim: true,
-        skipWaiting: true,
-        navigateFallback: cdnPrefix + 'index.html',
+      strategies: 'injectManifest', // default to generateSW
+      srcDir: 'src',
+      filename: 'sw.ts',
+      // workbox: { // for generateSW strategies
+      //   clientsClaim: true,
+      //   skipWaiting: true,
+      //   navigateFallback: cdnPrefix + 'index.html',
+      //   maximumFileSizeToCacheInBytes: 3000000,
+      //   globIgnores: ['*/*-legacy*'],
+      //   globPatterns: ['**/*.{js,css,html,txt,webmanifest,svg,png,ico}'],
+      //   modifyURLPrefix: {
+      //     '': cdnPrefix,
+      //   },
+      // },
+      injectManifest: {
+        // for injectManifest strategies
         maximumFileSizeToCacheInBytes: 3000000,
         globIgnores: ['*/*-legacy*'],
         globPatterns: ['**/*.{js,css,html,txt,webmanifest,svg,png,ico}'],

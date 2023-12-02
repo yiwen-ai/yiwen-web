@@ -260,7 +260,7 @@ importers:
         version: 7.5.3(react-dom@18.2.0)(react@18.2.0)(typescript@5.3.2)(vite@4.5.0)
       '@svgr/rollup':
         specifier: ^8.1.0
-        version: 8.1.0(typescript@5.3.2)
+        version: 8.1.0(rollup@2.79.1)(typescript@5.3.2)
       '@types/katex':
         specifier: ^0.16.7
         version: 0.16.7
@@ -485,7 +485,19 @@ importers:
       workbox-core:
         specifier: ^7.0.0
         version: 7.0.0
+      workbox-expiration:
+        specifier: ^7.0.0
+        version: 7.0.0
+      workbox-google-analytics:
+        specifier: ^7.0.0
+        version: 7.0.0
       workbox-precaching:
+        specifier: ^7.0.0
+        version: 7.0.0
+      workbox-routing:
+        specifier: ^7.0.0
+        version: 7.0.0
+      workbox-strategies:
         specifier: ^7.0.0
         version: 7.0.0
       workbox-window:
@@ -4761,18 +4773,6 @@ packages:
       - supports-color
     dev: true
 
-  /@svgr/plugin-svgo@8.1.0(@svgr/core@8.1.0):
-    resolution: {integrity: sha512-Ywtl837OGO9pTLIN/onoWLmDQ4zFUycI1g76vuKGEz6evR/ZTJlJuz3G/fIkb6OVBJ2g0o6CGJzaEjfmEo3AHA==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      '@svgr/core': '*'
-    dependencies:
-      '@svgr/core': 8.1.0(typescript@5.3.2)
-      cosmiconfig: 8.2.0
-      deepmerge: 4.3.1
-      svgo: 3.0.2
-    dev: true
-
   /@svgr/plugin-svgo@8.1.0(@svgr/core@8.1.0)(typescript@5.3.2):
     resolution: {integrity: sha512-Ywtl837OGO9pTLIN/onoWLmDQ4zFUycI1g76vuKGEz6evR/ZTJlJuz3G/fIkb6OVBJ2g0o6CGJzaEjfmEo3AHA==}
     engines: {node: '>=14'}
@@ -4800,25 +4800,6 @@ packages:
       '@svgr/core': 8.1.0(typescript@5.3.2)
       '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0)
       '@svgr/plugin-svgo': 8.1.0(@svgr/core@8.1.0)(typescript@5.3.2)
-    transitivePeerDependencies:
-      - rollup
-      - supports-color
-      - typescript
-    dev: true
-
-  /@svgr/rollup@8.1.0(typescript@5.3.2):
-    resolution: {integrity: sha512-0XR1poYvPQoPpmfDYLEqUGu5ePAQ4pdgN3VFsZBNAeze7qubVpsIY1o1R6PZpKep/DKu33GSm2NhwpCLkMs2Cw==}
-    engines: {node: '>=14'}
-    dependencies:
-      '@babel/core': 7.23.3
-      '@babel/plugin-transform-react-constant-elements': 7.23.3(@babel/core@7.23.3)
-      '@babel/preset-env': 7.23.3(@babel/core@7.23.3)
-      '@babel/preset-react': 7.23.3(@babel/core@7.23.3)
-      '@babel/preset-typescript': 7.23.3(@babel/core@7.23.3)
-      '@rollup/pluginutils': 5.0.5(rollup@2.79.1)
-      '@svgr/core': 8.1.0(typescript@5.3.2)
-      '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0)
-      '@svgr/plugin-svgo': 8.1.0(@svgr/core@8.1.0)
     transitivePeerDependencies:
       - rollup
       - supports-color
@@ -7187,16 +7168,6 @@ packages:
       parse-json: 5.2.0
       path-type: 4.0.0
       yaml: 1.10.2
-    dev: true
-
-  /cosmiconfig@8.2.0:
-    resolution: {integrity: sha512-3rTMnFJA1tCOPwRxtgF4wd7Ab2qvDbL8jX+3smjIbS4HlZBagTlpERbdN7iAbWlrfxE3M8c27kTwTawQ7st+OQ==}
-    engines: {node: '>=14'}
-    dependencies:
-      import-fresh: 3.3.0
-      js-yaml: 4.1.0
-      parse-json: 5.2.0
-      path-type: 4.0.0
     dev: true
 
   /cosmiconfig@8.3.6(typescript@5.3.2):
@@ -12577,19 +12548,6 @@ packages:
 
   /svg-tags@1.0.0:
     resolution: {integrity: sha512-ovssysQTa+luh7A5Weu3Rta6FJlFBBbInjOh722LIt6klpU2/HtdUbszju/G4devcvk8PGt7FCLv5wftu3THUA==}
-    dev: true
-
-  /svgo@3.0.2:
-    resolution: {integrity: sha512-Z706C1U2pb1+JGP48fbazf3KxHrWOsLme6Rv7imFBn5EnuanDW1GPaA/P1/dvObE670JDePC3mnj0k0B7P0jjQ==}
-    engines: {node: '>=14.0.0'}
-    hasBin: true
-    dependencies:
-      '@trysound/sax': 0.2.0
-      commander: 7.2.0
-      css-select: 5.1.0
-      css-tree: 2.3.1
-      csso: 5.0.5
-      picocolors: 1.0.0
     dev: true
 
   /svgo@3.0.4:
