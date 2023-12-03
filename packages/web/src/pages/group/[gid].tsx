@@ -81,6 +81,9 @@ export default function GroupDetailPage() {
   const navigate = useNavigate()
   const ensureAuthorized = useEnsureAuthorizedCallback()
 
+  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
+  const isNarrow = width <= BREAKPOINT.small
+
   const _gid = params.gid ?? null
   const _type = params.type as GroupViewType | GroupViewType.Publication
   const _cid = searchParams.get('cid')
@@ -293,21 +296,23 @@ export default function GroupDetailPage() {
                 }
               `}
             >
-              <Link
-                to={
-                  hasGroupMemberPermission
-                    ? joinURLPath(NEW_CREATION_PATH, { gid: _gid })
-                    : joinURLPath(NEW_CREATION_PATH, { gid: undefined })
-                }
-                onClick={ensureAuthorized}
-                css={css`
-                  margin-left: auto;
-                `}
-              >
-                <Button color='primary' variant='text'>
-                  {intl.formatMessage({ defaultMessage: '创作内容' })}
-                </Button>
-              </Link>
+              {!isNarrow && (
+                <Link
+                  to={
+                    hasGroupMemberPermission
+                      ? joinURLPath(NEW_CREATION_PATH, { gid: _gid })
+                      : joinURLPath(NEW_CREATION_PATH, { gid: undefined })
+                  }
+                  onClick={ensureAuthorized}
+                  css={css`
+                    margin-left: auto;
+                  `}
+                >
+                  <Button color='primary' variant='text'>
+                    {intl.formatMessage({ defaultMessage: '创作内容' })}
+                  </Button>
+                </Link>
+              )}
               <IconButton
                 iconName='celo'
                 onClick={setTheme}
@@ -328,6 +333,7 @@ export default function GroupDetailPage() {
             pushToast={pushToast}
             groupInfo={groupInfo}
             groupStatistic={groupStatistic}
+            isNarrow={isNarrow}
             hasGroupAdminPermission={hasGroupAdminPermission}
             isFollowed={isGroupFollowed}
             isFollowing={isFollowingGroup}
@@ -336,6 +342,7 @@ export default function GroupDetailPage() {
             onUnfollow={onGroupUnfollow}
           />
           <div
+            ref={ref}
             css={css`
               padding: 0 24px;
             `}
@@ -358,7 +365,7 @@ export default function GroupDetailPage() {
                     padding: 8px;
                     &,
                     &[data-selected] {
-                      ${theme.typography.h2}
+                      ${isNarrow ? theme.typography.body : theme.typography.h2}
                     }
                     &[data-selected] {
                       ::after {
@@ -390,6 +397,7 @@ export default function GroupDetailPage() {
                       `}
                     >
                       {hasGroupAdminPermission &&
+                        !isNarrow &&
                         _type == GroupViewType.Collection && (
                           <>
                             <Button
@@ -425,6 +433,7 @@ export default function GroupDetailPage() {
                               >
                                 <ArchivedCollectionPart
                                   {...archivedCollectionList}
+                                  isNarrow={isNarrow}
                                   onRestore={onCollectionRestore}
                                   onDelete={onCollectionDelete}
                                 />
@@ -441,6 +450,7 @@ export default function GroupDetailPage() {
                               >
                                 <ArchivedPublicationPart
                                   {...archivedPublicationList}
+                                  isNarrow={isNarrow}
                                   onRestore={onPublicationRestore}
                                   onDelete={onPublicationDelete}
                                 />
@@ -457,6 +467,7 @@ export default function GroupDetailPage() {
                               >
                                 <ArchivedCreationPart
                                   {...archivedCreationList}
+                                  isNarrow={isNarrow}
                                   onRestore={onCreationRestore}
                                   onDelete={onCreationDelete}
                                 />
@@ -471,6 +482,7 @@ export default function GroupDetailPage() {
               <TabPanel value={GroupViewType.Collection}>
                 <CollectionPart
                   {...collectionList}
+                  isNarrow={isNarrow}
                   onArchive={onCollectionArchive}
                   onPublish={onCollectionPublish}
                   onSetting={handleCollectionSetting}
@@ -481,6 +493,7 @@ export default function GroupDetailPage() {
                 <PublicationPart
                   {...publicationList}
                   pushToast={pushToast}
+                  isNarrow={isNarrow}
                   onPublish={onPublicationPublish}
                   onEdit={onPublicationEdit}
                   onArchive={onPublicationArchive}
@@ -491,6 +504,7 @@ export default function GroupDetailPage() {
                 <CreationPart
                   {...creationList}
                   pushToast={pushToast}
+                  isNarrow={isNarrow}
                   onRelease={onCreationRelease}
                   onArchive={onCreationArchive}
                   onClick={handleCreationClick}
@@ -539,6 +553,7 @@ function GroupPart({
   pushToast,
   groupInfo,
   groupStatistic,
+  isNarrow,
   hasGroupAdminPermission,
   isFollowed,
   isFollowing,
@@ -549,6 +564,7 @@ function GroupPart({
   pushToast: ToastAPI['pushToast']
   groupInfo: GroupInfo
   groupStatistic: GroupStatisticOutput
+  isNarrow: boolean
   hasGroupAdminPermission: boolean
   isFollowed: boolean
   isFollowing: boolean
@@ -617,7 +633,7 @@ function GroupPart({
               <div>
                 <span
                   css={css`
-                    ${theme.typography.body}
+                    ${isNarrow && theme.typography.tooltip}
                   `}
                 >
                   {groupInfo.slogan}
@@ -651,6 +667,7 @@ function GroupPart({
               <Button
                 color='primary'
                 variant='outlined'
+                size={isNarrow ? 'small' : 'medium'}
                 onClick={handleEditGroupClick}
               >
                 {intl.formatMessage({ defaultMessage: '设置' })}
@@ -661,6 +678,7 @@ function GroupPart({
           <Button
             color='primary'
             variant='outlined'
+            size={isNarrow ? 'small' : 'medium'}
             disabled={isFollowing || isUnfollowing}
             onClick={isFollowed ? onUnfollow : onFollow}
           >
@@ -676,6 +694,7 @@ function GroupPart({
 }
 
 function CollectionPart({
+  isNarrow,
   isLoading,
   isValidating,
   error,
@@ -690,6 +709,7 @@ function CollectionPart({
   onPublish,
   onClick,
 }: {
+  isNarrow: boolean
   isLoading: boolean
   isValidating: boolean
   error: unknown
@@ -704,9 +724,6 @@ function CollectionPart({
   onPublish: (item: CollectionOutput) => void
   onClick: (item: CollectionOutput) => void
 }) {
-  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
-  const isNarrow = width <= BREAKPOINT.small
-
   const layoutDivRef = useContext(
     LayoutDivRefContext
   ) as React.RefObject<HTMLDivElement>
@@ -724,7 +741,6 @@ function CollectionPart({
 
   return (
     <div
-      ref={ref}
       css={css`
         display: flex;
         flex-direction: column;
@@ -763,6 +779,7 @@ function CollectionPart({
 }
 
 function ArchivedCollectionPart({
+  isNarrow,
   isLoading,
   error,
   items,
@@ -774,6 +791,7 @@ function ArchivedCollectionPart({
   onRestore,
   onDelete,
 }: {
+  isNarrow: boolean
   isLoading: boolean
   error: unknown
   items: CollectionOutput[]
@@ -806,6 +824,7 @@ function ArchivedCollectionPart({
           {items.map((item) => (
             <CollectionCompactItem
               key={buildCollectionKey(item.gid, item.id)}
+              isNarrow={isNarrow}
               item={item}
               hasWritePermission={hasGroupAdminPermission}
               isRestoring={isRestoring(item)}
@@ -830,6 +849,7 @@ function ArchivedCollectionPart({
 
 function PublicationPart({
   pushToast,
+  isNarrow,
   isLoading,
   isValidating,
   error,
@@ -846,6 +866,7 @@ function PublicationPart({
   onClick,
 }: {
   pushToast: ToastAPI['pushToast']
+  isNarrow: boolean
   isLoading: boolean
   isValidating: boolean
   error: unknown
@@ -895,6 +916,7 @@ function PublicationPart({
           {items.map((item) => (
             <PublicationItem
               key={buildPublicationKey(item)}
+              isNarrow={isNarrow}
               item={item}
               hasWritePermission={hasGroupAdminPermission}
               isPublishing={isPublishing(item)}
@@ -926,6 +948,7 @@ function PublicationPart({
 }
 
 function ArchivedPublicationPart({
+  isNarrow,
   isLoading,
   error,
   items,
@@ -937,6 +960,7 @@ function ArchivedPublicationPart({
   onRestore,
   onDelete,
 }: {
+  isNarrow: boolean
   isLoading: boolean
   error: unknown
   items: PublicationOutput[]
@@ -969,6 +993,7 @@ function ArchivedPublicationPart({
           {items.map((item) => (
             <PublicationCompactItem
               key={buildPublicationKey(item)}
+              isNarrow={isNarrow}
               item={item}
               hasWritePermission={hasGroupAdminPermission}
               isRestoring={isRestoring(item)}
@@ -993,6 +1018,7 @@ function ArchivedPublicationPart({
 
 function CreationPart({
   pushToast,
+  isNarrow,
   isLoading,
   isValidating,
   error,
@@ -1008,6 +1034,7 @@ function CreationPart({
   onClick,
 }: {
   pushToast: ToastAPI['pushToast']
+  isNarrow: boolean
   isLoading: boolean
   isValidating: boolean
   error: unknown
@@ -1056,6 +1083,7 @@ function CreationPart({
           {items.map((item) => (
             <CreationItem
               key={buildCreationKey(item)}
+              isNarrow={isNarrow}
               item={item}
               hasWritePermission={hasGroupAdminPermission}
               isEditing={isEditing(item)}
@@ -1080,6 +1108,7 @@ function CreationPart({
 }
 
 function ArchivedCreationPart({
+  isNarrow,
   isLoading,
   error,
   items,
@@ -1091,6 +1120,7 @@ function ArchivedCreationPart({
   onRestore,
   onDelete,
 }: {
+  isNarrow: boolean
   isLoading: boolean
   error: unknown
   items: CreationOutput[]
@@ -1123,6 +1153,7 @@ function ArchivedCreationPart({
           {items.map((item) => (
             <CreationCompactItem
               key={buildCreationKey(item)}
+              isNarrow={isNarrow}
               item={item}
               hasWritePermission={hasGroupAdminPermission}
               isRestoring={isRestoring(item)}

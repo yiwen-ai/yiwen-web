@@ -18,6 +18,7 @@ import { renderIconMoreAnchor } from './IconMoreAnchor'
 
 export default function CreationItem({
   item,
+  isNarrow,
   hasWritePermission,
   isEditing,
   isReleasing,
@@ -28,6 +29,7 @@ export default function CreationItem({
   onArchive,
 }: {
   item: CreationOutput
+  isNarrow: boolean
   hasWritePermission: boolean
   isEditing: boolean
   isReleasing: boolean
@@ -70,7 +72,7 @@ export default function CreationItem({
         dir={isRTL(item.language) ? 'rtl' : undefined}
         css={css`
           ${textEllipsis}
-          ${theme.typography.h2}
+          ${isNarrow ? theme.typography.body : theme.typography.h2}
         `}
       >
         {item.title}
@@ -80,6 +82,7 @@ export default function CreationItem({
           dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
             margin-top: 12px;
+            ${isNarrow && theme.typography.tooltip}
           `}
         >
           {item.summary.length < maxSumLength

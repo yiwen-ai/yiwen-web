@@ -20,6 +20,7 @@ export default function CreationCompactItem({
   onDelete,
 }: {
   item: CreationOutput
+  isNarrow: boolean
   hasWritePermission: boolean
   isRestoring: boolean
   isDeleting: boolean

@@ -12,6 +12,7 @@ import { LoadMore } from '#/components/LoadMore'
 import Loading from '#/components/Loading'
 import PublicationViewer from '#/components/PublicationViewer'
 import ResponsiveTabSection from '#/components/ResponsiveTabSection'
+import { SectionHeader, SectionTitle } from '#/components/Section'
 import { BREAKPOINT } from '#/shared'
 import { useHomePage } from '#/store/useHomePage'
 import { css, useTheme } from '@emotion/react'
@@ -31,7 +32,7 @@ import {
   useLatestCollectionList,
   type CollectionOutput,
 } from '@yiwen-ai/store'
-import { RGBA, useScrollOnBottom } from '@yiwen-ai/util'
+import { useScrollOnBottom } from '@yiwen-ai/util'
 import { useCallback, useContext } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
@@ -90,6 +91,7 @@ export default function Home() {
       {renderToastContainer()}
       <SetHeaderProps>
         <div
+          ref={ref}
           css={css`
             flex: 1;
             margin: 0 36px;
@@ -126,7 +128,6 @@ export default function Home() {
         </div>
       </SetHeaderProps>
       <div
-        ref={ref}
         css={css`
           width: 100%;
           max-width: calc(820px + 24px * 2);
@@ -136,13 +137,13 @@ export default function Home() {
           display: flex;
           flex-direction: column;
           @media (max-width: ${BREAKPOINT.small}px) {
-            margin: 24px auto;
+            margin: 24px auto 0;
           }
         `}
       >
         <div
           css={css`
-            padding: 0 32px;
+            padding: 0 36px;
             @media (max-width: ${BREAKPOINT.small}px) {
               padding: 0 0;
             }
@@ -160,17 +161,10 @@ export default function Home() {
               defaultMessage: '智能搜索内容，用熟悉的语言来阅读',
             })}
           </div>
-          <ResponsiveTabSection
-            isNarrow={isNarrow}
-            {...responsiveTabSection}
-            css={css`
-              margin-top: 24px;
-            `}
-          />
         </div>
         <div
           css={css`
-            margin-top: 36px;
+            margin-top: 12px;
             padding: 24px 36px;
             display: flex;
             flex-wrap: wrap;
@@ -180,8 +174,7 @@ export default function Home() {
             border-radius: 30px;
             background: ${theme.color.button.tile.background};
             @media (max-width: ${BREAKPOINT.small}px) {
-              margin-top: 24px;
-              padding: 24px 24px;
+              padding: 16px 24px;
             }
           `}
         >
@@ -255,6 +248,40 @@ export default function Home() {
             </Link>
           )}
         </div>
+      </div>
+      <div
+        css={css`
+          display: block;
+          position: relative;
+          width: 100%;
+          max-width: 1080px;
+          min-width: 780px;
+          margin: 100px auto 60px;
+          padding: 0 24px;
+          box-sizing: border-box;
+          @media (max-width: ${BREAKPOINT.small}px) {
+            margin: 24px auto;
+            min-width: unset;
+          }
+        `}
+      >
+        <ResponsiveTabSection
+          isNarrow={isNarrow}
+          {...responsiveTabSection}
+          css={css`
+            position: absolute;
+            top: 0;
+            right: 24px;
+            width: 300px;
+            @media (max-width: ${BREAKPOINT.small}px) {
+              position: relative;
+              width: 100%;
+              top: unset;
+              right: unset;
+              margin-bottom: 24px;
+            }
+          `}
+        />
         <LatestCollections
           isNarrow={isNarrow}
           isLoading={isLoading}
@@ -327,40 +354,31 @@ function LatestCollections({
       css={css`
         display: flex;
         flex-direction: column;
+        width: calc(100% - 324px);
         gap: 8px;
+        @media (max-width: ${BREAKPOINT.small}px) {
+          width: 100%;
+        }
       `}
     >
       {isLoading ? (
         <Loading />
       ) : (
         <>
-          <h2
-            css={(theme) => css`
-              display: flex;
-              flex-direction: row;
-              margin-top: 36px;
-              padding: 0 24px;
-              gap: 16px;
-              ${theme.typography.bodyBold}
-              color: ${theme.color.body.primary};
-              :before,
-              :after {
-                content: '';
-                flex: 1 1;
-                border-bottom: 2px solid
-                  ${RGBA(theme.palette.primaryLight, 0.5)};
-                box-shadow: 0px 2px 2px 1px
-                  ${RGBA(theme.palette.grayLight0, 0.75)};
-                margin: auto;
-              }
-              @media (min-width: ${BREAKPOINT.small}px) {
-                margin-top: 24px;
-                padding: 0 16px;
+          <SectionHeader
+            css={css`
+              padding: 0 8px;
+              @media (max-width: ${BREAKPOINT.small}px) {
+                padding: 0;
               }
             `}
           >
-            {intl.formatMessage({ defaultMessage: '合集' })}
-          </h2>
+            <SectionTitle
+              iconName={'book'}
+              label={intl.formatMessage({ defaultMessage: '合集' })}
+              active={true}
+            />
+          </SectionHeader>
           {items.map((item) => (
             <CollectionItem
               key={buildCollectionKey(item.gid, item.id)}

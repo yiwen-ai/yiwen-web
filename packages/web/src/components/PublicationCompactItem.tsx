@@ -20,6 +20,7 @@ export default function PublicationCompactItem({
   onDelete,
 }: {
   item: PublicationOutput
+  isNarrow: boolean
   hasWritePermission: boolean
   isRestoring: boolean
   isDeleting: boolean

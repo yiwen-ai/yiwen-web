@@ -5,7 +5,6 @@ import CreateFromLinkDialog from '#/components/CreateFromLinkDialog'
 import ErrorPlaceholder from '#/components/ErrorPlaceholder'
 import LargeDialog from '#/components/LargeDialog'
 import Loading from '#/components/Loading'
-import NewCreationLink from '#/components/NewCreationLink'
 import Placeholder from '#/components/Placeholder'
 import PublicationViewer from '#/components/PublicationViewer'
 import ResponsiveTabSection from '#/components/ResponsiveTabSection'
@@ -96,6 +95,7 @@ export default function SearchPage() {
         `}
       >
         <div
+          ref={ref}
           css={css`
             flex: 1;
             margin: 0 36px;
@@ -132,34 +132,40 @@ export default function SearchPage() {
         </div>
       </SetHeaderProps>
       <div
-        ref={ref}
         css={css`
-          flex: 1;
-          overflow-y: auto;
-          display: flex;
-          flex-wrap: wrap;
-          align-items: flex-start;
-          align-content: flex-start;
-          justify-content: space-between;
-          gap: 40px;
+          display: block;
+          position: relative;
+          width: 100%;
+          max-width: 1080px;
+          min-width: 780px;
           margin: 60px auto;
-          max-width: 1280px;
-          @media (max-width: ${BREAKPOINT.medium}px) {
-            margin: 30px auto;
-            padding: 0 24px;
-            gap: 24px;
+          padding: 0 24px;
+          box-sizing: border-box;
+          @media (max-width: ${BREAKPOINT.small}px) {
+            margin: 24px auto;
+            min-width: unset;
           }
         `}
       >
+        {!isNarrow && (
+          <ResponsiveTabSection
+            isNarrow={isNarrow}
+            {...responsiveTabSection}
+            css={css`
+              position: absolute;
+              top: 0;
+              right: 24px;
+              width: 300px;
+            `}
+          />
+        )}
         <div
           css={css`
-            flex: 1 100%;
-            max-width: ${MAX_WIDTH}px;
-            width: ${MAX_WIDTH}px;
             display: flex;
             flex-direction: column;
-            @media (max-width: ${BREAKPOINT.large}px) {
-              max-width: 480px;
+            width: calc(100% - 324px);
+            gap: 8px;
+            @media (max-width: ${BREAKPOINT.small}px) {
               width: 100%;
             }
           `}
@@ -186,28 +192,6 @@ export default function SearchPage() {
               ))}
             </div>
           ) : null}
-        </div>
-        <div
-          css={css`
-            flex: 1;
-            width: 100%;
-            max-width: 360px;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            @media (max-width: ${BREAKPOINT.large}px) {
-              max-width: 320px;
-            }
-          `}
-        >
-          {!isNarrow && <NewCreationLink />}
-          <ResponsiveTabSection
-            isNarrow={isNarrow}
-            {...responsiveTabSection}
-            css={css`
-              gap: inherit;
-            `}
-          />
         </div>
       </div>
       <div

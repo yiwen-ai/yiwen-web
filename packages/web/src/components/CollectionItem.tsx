@@ -136,8 +136,19 @@ export default function CollectionItem({
             `}
           >
             {info.title}
+            {info.authors?.map((author) => (
+              <Button
+                key={author}
+                color='primary'
+                size='small'
+                variant='text'
+                readOnly={true}
+              >
+                {author}
+              </Button>
+            ))}
           </div>
-          {(info.authors || info.keywords || languageList.length > 0) && (
+          {(info.keywords || languageList.length > 0) && (
             <div
               dir={dir}
               css={css`
@@ -149,17 +160,6 @@ export default function CollectionItem({
                 flex-direction: row;
               `}
             >
-              {info.authors?.map((author) => (
-                <Button
-                  key={author}
-                  color='primary'
-                  size='medium'
-                  variant='text'
-                  readOnly={true}
-                >
-                  {author}
-                </Button>
-              ))}
               {languageList.map((language) => (
                 <Button
                   key={language.code}

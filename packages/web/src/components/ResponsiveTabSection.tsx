@@ -3,18 +3,9 @@ import OrderedItem from '#/components/OrderedItem'
 import OrderedList from '#/components/OrderedList'
 import PublicationLink from '#/components/PublicationLink'
 import Section, { SectionHeader, SectionTitle } from '#/components/Section'
-import {
-  type ResponsiveTabItem,
-  type ResponsiveTabKey,
-} from '#/store/useResponsiveTabSection'
+import { type ResponsiveTabItem } from '#/store/useResponsiveTabSection'
 import { css } from '@emotion/react'
-import {
-  IconButton,
-  Tab,
-  TabList,
-  TabPanel,
-  TabSection,
-} from '@yiwen-ai/component'
+import { IconButton } from '@yiwen-ai/component'
 import {
   ObjectKind,
   buildCollectionKey,
@@ -22,7 +13,7 @@ import {
   type ObjectParams,
   type PublicationOutput,
 } from '@yiwen-ai/store'
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 import { useIntl } from 'react-intl'
 import { Link } from 'react-router-dom'
 import Loading from './Loading'
@@ -30,8 +21,6 @@ import Loading from './Loading'
 interface ResponsiveTabSectionProps {
   isNarrow: boolean
   className?: string
-  value: ResponsiveTabKey
-  onChange: (value: ResponsiveTabKey) => void
   items: ResponsiveTabItem[]
   onView: (item: ObjectParams) => void
 }
@@ -39,18 +28,11 @@ interface ResponsiveTabSectionProps {
 export default function ResponsiveTabSection({
   isNarrow,
   className,
-  value,
-  onChange,
   items,
   onView,
 }: ResponsiveTabSectionProps) {
   const intl = useIntl()
   const LIMIT = isNarrow ? 3 : 6
-
-  const currentTabMore = useMemo(
-    () => items.find((tab) => tab.key === value)?.more,
-    [items, value]
-  )
 
   const renderList = useCallback(
     (isLoading: boolean, items: ObjectParams[]) => {
@@ -59,22 +41,7 @@ export default function ResponsiveTabSection({
       ) : (
         <OrderedList
           css={css`
-            grid-template-columns: repeat(
-              auto-fill,
-              minmax(min(240px, 100%), 1fr)
-            );
-            ${!isNarrow &&
-            css`
-              grid-auto-flow: column;
-              grid-template-rows: repeat(
-                ${Math.min(items.length, Math.ceil(LIMIT / 2))},
-                auto
-              );
-            `}
-            ${items.length === 0 &&
-            css`
-              display: block;
-            `}
+            display: block;
           `}
         >
           {items.length === 0 ? (
@@ -126,7 +93,7 @@ export default function ResponsiveTabSection({
         </OrderedList>
       )
     },
-    [intl, isNarrow, LIMIT, onView]
+    [intl, LIMIT, onView]
   )
 
   return (
@@ -138,92 +105,26 @@ export default function ResponsiveTabSection({
         gap: 24px;
       `}
     >
-      {isNarrow ? (
-        items.map(({ key, icon, title, more, isLoading, items }) => (
-          <Section
-            key={key}
-            header={
-              <SectionHeader>
-                <SectionTitle iconName={icon} label={title} active={true} />
-                <Link
-                  to={more}
-                  css={css`
-                    display: flex;
-                  `}
-                >
-                  <IconButton iconName='right' size='small' />
-                </Link>
-              </SectionHeader>
-            }
-          >
-            {renderList(isLoading, items)}
-          </Section>
-        ))
-      ) : (
-        <TabSection
-          value={value}
-          onChange={onChange}
-          css={css`
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-          `}
+      {items.map(({ key, icon, title, more, isLoading, items }) => (
+        <Section
+          key={key}
+          header={
+            <SectionHeader>
+              <SectionTitle iconName={icon} label={title} active={true} />
+              <Link
+                to={more}
+                css={css`
+                  display: flex;
+                `}
+              >
+                <IconButton iconName='right' size='small' />
+              </Link>
+            </SectionHeader>
+          }
         >
-          <TabList
-            css={css`
-              padding: 0 32px;
-              gap: 24px;
-              border: unset;
-            `}
-          >
-            {items.map(({ key, icon, title }) => (
-              <Tab
-                key={key}
-                value={key}
-                css={css`
-                  padding: unset;
-                  :hover,
-                  &[data-selected] {
-                    background: unset;
-                    ::after {
-                      content: none;
-                    }
-                  }
-                `}
-              >
-                <SectionTitle
-                  iconName={icon}
-                  label={title}
-                  active={key === value}
-                />
-              </Tab>
-            ))}
-            {currentTabMore && (
-              <li
-                role='none'
-                css={css`
-                  margin-left: auto;
-                `}
-              >
-                <Link
-                  to={currentTabMore}
-                  css={css`
-                    display: flex;
-                  `}
-                >
-                  {intl.formatMessage({ defaultMessage: '查看所有' })}
-                  <IconButton iconName='right' size='small' />
-                </Link>
-              </li>
-            )}
-          </TabList>
-          {items.map(({ key, isLoading, items }) => (
-            <TabPanel key={key} value={key}>
-              {renderList(isLoading, items)}
-            </TabPanel>
-          ))}
-        </TabSection>
-      )}
+          {renderList(isLoading, items)}
+        </Section>
+      ))}
     </div>
   )
 }

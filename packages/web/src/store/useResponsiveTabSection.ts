@@ -7,7 +7,7 @@ import {
   useRecommendedPublicationList,
   type ObjectParams,
 } from '@yiwen-ai/store'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useIntl } from 'react-intl'
 import { type To } from 'react-router-dom'
 
@@ -28,10 +28,6 @@ export interface ResponsiveTabItem {
 export function useResponsiveTabSection() {
   const intl = useIntl()
   const { isAuthorized } = useAuth()
-
-  const [currentTab, setCurrentTab] = useState<ResponsiveTabKey>(
-    ResponsiveTabKey.following
-  )
 
   //#region following list
   const {
@@ -108,8 +104,6 @@ export function useResponsiveTabSection() {
   )
 
   return {
-    value: currentTab,
-    onChange: setCurrentTab,
     items,
     refreshFollowedPublicationList,
     refreshRecommendedPublicationList,

@@ -1,4 +1,5 @@
 import { omitBy } from 'lodash-es'
+import { classifyCharacter } from 'micromark-util-classify-character'
 import { useCallback, useMemo, useState } from 'react'
 import useSWR, { useSWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
@@ -167,7 +168,14 @@ export function genFullChildTitle(
     child.summary &&
     child.summary.length > child.title.length
   ) {
-    return child.title.replace(collectionTitle, '').trim() + ' ' + child.summary
+    const s = child.title.replace(collectionTitle, '').trim()
+    // 移除标点和空格
+    for (const c of s) {
+      // 首个非标点、空格字符
+      if (classifyCharacter(c.charCodeAt(0)) == null) {
+        return s.slice(s.indexOf(c)) + ' ' + child.summary.trim()
+      }
+    }
   }
   return child.title
 }

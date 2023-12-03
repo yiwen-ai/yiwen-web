@@ -24,6 +24,7 @@ const SVG_LIST = {
   'arrowcircleright': () => import('./icon/24/arrowcircleright.svg'),
   'backwarditem': () => import('./icon/16/backwarditem.svg'),
   'bold': () => import('./icon/remixicon/bold.svg'),
+  'book': () => import('./icon/remixicon/book-2-line.svg'),
   'brodcast': () => import('./icon/16/brodcast.svg'),
   'celo': () => import('./icon/bulk/celo.svg'),
   'closecircle': () => import('./icon/16/closecircle.svg'),

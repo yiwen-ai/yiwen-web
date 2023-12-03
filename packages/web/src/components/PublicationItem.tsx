@@ -22,6 +22,7 @@ import PublicationLink from './PublicationLink'
 
 export default function PublicationItem({
   item,
+  isNarrow,
   hasWritePermission,
   isPublishing,
   isEditing,
@@ -32,6 +33,7 @@ export default function PublicationItem({
   onArchive,
 }: {
   item: PublicationOutput
+  isNarrow: boolean
   hasWritePermission: boolean
   isPublishing?: boolean
   isEditing?: boolean
@@ -88,7 +90,7 @@ export default function PublicationItem({
         dir={isRTL(item.language) ? 'rtl' : undefined}
         css={css`
           ${textEllipsis}
-          ${theme.typography.h2}
+          ${isNarrow ? theme.typography.body : theme.typography.h2}
         `}
       >
         {item.title}
@@ -98,6 +100,7 @@ export default function PublicationItem({
           dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
             margin-top: 12px;
+            ${isNarrow && theme.typography.tooltip}
           `}
         >
           {item.summary.length < maxSumLength

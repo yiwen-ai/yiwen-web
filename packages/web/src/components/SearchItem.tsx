@@ -1,3 +1,4 @@
+import { BREAKPOINT } from '#/shared'
 import { css, useTheme } from '@emotion/react'
 import { ObjectKind, isRTL, type SearchDocument } from '@yiwen-ai/store'
 import { checkNarrow } from '@yiwen-ai/util'
@@ -56,6 +57,11 @@ export default function SearchItem({
               color: ${theme.color.button.primary.contained.text};
               background-color: ${theme.color.alert.success.icon};
               ${theme.typography.body}
+              @media (max-width: ${BREAKPOINT.small}px) {
+                border-radius: 8px;
+                padding: 1px 8px;
+                ${theme.typography.tooltip}
+              }
             `}
           >
             {intl.formatMessage({ defaultMessage: '合集' })}

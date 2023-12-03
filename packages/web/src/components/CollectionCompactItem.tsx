@@ -20,6 +20,7 @@ export default function CollectionCompactItem({
   onDelete,
 }: {
   item: CollectionOutput
+  isNarrow: boolean
   hasWritePermission: boolean
   isRestoring: boolean
   isDeleting: boolean
