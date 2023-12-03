@@ -34,21 +34,30 @@ export default function CollectionItem({
 }: {
   item: CollectionOutput
   isNarrow: boolean
-  hasWritePermission: boolean
-  isPublishing: boolean
-  isArchiving: boolean
+  hasWritePermission?: boolean
+  isPublishing?: boolean
+  isArchiving?: boolean
   onClick: (item: CollectionOutput) => void
-  onPublish: (item: CollectionOutput) => void
-  onSetting: (item: CollectionOutput) => void
-  onArchive: (item: CollectionOutput) => void
+  onPublish?: (item: CollectionOutput) => void
+  onSetting?: (item: CollectionOutput) => void
+  onArchive?: (item: CollectionOutput) => void
 }) {
   const intl = useIntl()
   const theme = useTheme()
   const disabled = isArchiving || isPublishing
   const handleClick = useCallback(() => onClick(item), [item, onClick])
-  const handleSetting = useCallback(() => onSetting(item), [item, onSetting])
-  const handlePublish = useCallback(() => onPublish(item), [item, onPublish])
-  const handleArchive = useCallback(() => onArchive(item), [item, onArchive])
+  const handleSetting = useCallback(
+    () => onSetting && onSetting(item),
+    [item, onSetting]
+  )
+  const handlePublish = useCallback(
+    () => onPublish && onPublish(item),
+    [item, onPublish]
+  )
+  const handleArchive = useCallback(
+    () => onArchive && onArchive(item),
+    [item, onArchive]
+  )
 
   const [language, info] = useMemo(() => {
     if (!item) {

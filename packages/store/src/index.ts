@@ -45,6 +45,7 @@ export {
   useCollectionChildren,
   useCollectionList,
   useCollectionUploadPolicy,
+  useLatestCollectionList,
   type AddCollectionChildrenInput,
   type CollectionChildrenOutput,
   type CollectionDraft,

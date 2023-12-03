@@ -3,7 +3,6 @@ import OrderedItem from '#/components/OrderedItem'
 import OrderedList from '#/components/OrderedList'
 import PublicationLink from '#/components/PublicationLink'
 import Section, { SectionHeader, SectionTitle } from '#/components/Section'
-import { BREAKPOINT } from '#/shared'
 import {
   type ResponsiveTabItem,
   type ResponsiveTabKey,
@@ -25,13 +24,11 @@ import {
 } from '@yiwen-ai/store'
 import { useCallback, useMemo } from 'react'
 import { useIntl } from 'react-intl'
-import { useResizeDetector } from 'react-resize-detector'
 import { Link } from 'react-router-dom'
 import Loading from './Loading'
 
-const LIMIT = 6
-
 interface ResponsiveTabSectionProps {
+  isNarrow: boolean
   className?: string
   value: ResponsiveTabKey
   onChange: (value: ResponsiveTabKey) => void
@@ -40,6 +37,7 @@ interface ResponsiveTabSectionProps {
 }
 
 export default function ResponsiveTabSection({
+  isNarrow,
   className,
   value,
   onChange,
@@ -47,8 +45,7 @@ export default function ResponsiveTabSection({
   onView,
 }: ResponsiveTabSectionProps) {
   const intl = useIntl()
-  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
-  const isNarrow = width <= BREAKPOINT.small
+  const LIMIT = isNarrow ? 3 : 6
 
   const currentTabMore = useMemo(
     () => items.find((tab) => tab.key === value)?.more,
@@ -129,13 +126,12 @@ export default function ResponsiveTabSection({
         </OrderedList>
       )
     },
-    [intl, isNarrow, onView]
+    [intl, isNarrow, LIMIT, onView]
   )
 
   return (
     <div
       className={className}
-      ref={ref}
       css={css`
         display: flex;
         flex-direction: column;

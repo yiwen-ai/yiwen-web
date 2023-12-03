@@ -81,6 +81,7 @@ export function useHomePage(pushToast: ToastAPI['pushToast']) {
 
   return {
     onSearch,
+    showCollectionViewer,
     collectionViewer: {
       onAddFavorite: handleCollectionAddFavorite,
       onRemoveFavorite: handleCollectionRemoveFavorite,

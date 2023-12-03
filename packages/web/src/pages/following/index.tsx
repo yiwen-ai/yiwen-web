@@ -18,9 +18,12 @@ import {
 } from '@yiwen-ai/store'
 import { useScrollOnBottom } from '@yiwen-ai/util'
 import { useCallback, useContext } from 'react'
+import { useResizeDetector } from 'react-resize-detector'
 
 export default function FollowingPage() {
   const { renderToastContainer, pushToast } = useToast()
+  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
+  const isNarrow = width <= BREAKPOINT.small
 
   const {
     followedPublicationList: {
@@ -57,6 +60,7 @@ export default function FollowingPage() {
     <>
       {renderToastContainer()}
       <div
+        ref={ref}
         css={css`
           padding: 60px 100px;
           @media (max-width: ${BREAKPOINT.small}px) {
@@ -79,6 +83,7 @@ export default function FollowingPage() {
           >
             {items.map((item) => (
               <PublicationItem
+                isNarrow={isNarrow}
                 key={buildPublicationKey(item)}
                 item={item}
                 onView={onView}
@@ -106,9 +111,11 @@ export default function FollowingPage() {
 }
 
 function PublicationItem({
+  isNarrow,
   item,
   onView,
 }: {
+  isNarrow: boolean
   item: PublicationOutput
   onView: (item: PublicationOutput) => void
 }) {
@@ -146,7 +153,7 @@ function PublicationItem({
         <div
           dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
-            ${theme.typography.h2}
+            ${!isNarrow && theme.typography.h2}
             ${textEllipsis}
           `}
         >
@@ -158,6 +165,7 @@ function PublicationItem({
           dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
             margin-top: 12px;
+            ${isNarrow && theme.typography.tooltip}
           `}
         >
           {item.summary.length < 140

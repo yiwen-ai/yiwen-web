@@ -12,6 +12,7 @@ import {
   type PostFilePolicy,
   type QueryGIDPagination,
   type QueryIDGIDPagination,
+  type QueryPagination,
   type RFP,
   type SubscriptionOutput,
 } from './common'
@@ -243,6 +244,16 @@ export function useCollectionAPI() {
     [request]
   )
 
+  const readLatestCollectionList = useCallback(
+    (params: Record<keyof QueryPagination, string | number | undefined>) => {
+      return request.get<Page<CollectionOutput>>(
+        `${path}/list_latest`,
+        Object.assign(params, { page_size: 10, fields: 'info,updated_at' })
+      )
+    },
+    [request]
+  )
+
   const readCollectionListByChild = useCallback(
     (params: { gid: string; cid: string }) => {
       return request.get<{ result: CollectionOutput[] }>(
@@ -375,6 +386,7 @@ export function useCollectionAPI() {
     readCollection,
     readCollectionFull,
     readCollectionList,
+    readLatestCollectionList,
     readCollectionListByChild,
     readCollectionChildren,
     readArchivedCollectionList,
@@ -801,6 +813,65 @@ export function useCollectionList(
     archiveItem,
     restoreItem,
     deleteItem,
+  }
+}
+
+export function useLatestCollectionList() {
+  const { readLatestCollectionList } = useCollectionAPI()
+
+  const getKey = useCallback(
+    (_: unknown, prevPage: Page<CollectionOutput> | null) => {
+      if (prevPage && !prevPage.next_page_token) return null
+
+      const params: Record<keyof QueryPagination, string | number | undefined> =
+        {
+          page_token: prevPage?.next_page_token
+            ? BytesToBase64Url(prevPage?.next_page_token)
+            : undefined,
+          page_size: undefined,
+          fields: undefined,
+          status: undefined,
+        }
+
+      return [`${path}/list_latest`, params] as const
+    },
+    []
+  )
+
+  const { data, error, mutate, isValidating, isLoading, setSize } =
+    useSWRInfinite(
+      getKey,
+      ([path, params]) => readLatestCollectionList(params),
+      { revalidateFirstPage: false }
+    )
+
+  //#region loading state
+  const items = useMemo(() => {
+    if (!data) return []
+    return data.flatMap((page) => page.result)
+  }, [data])
+
+  const hasMore = useMemo(() => {
+    if (!data || error) return false
+    return !!data[data.length - 1]?.next_page_token
+  }, [data, error])
+
+  const loadMore = useCallback(() => setSize((size) => size + 1), [setSize])
+
+  const refresh = useCallback(
+    async () => getKey(0, null) && (await mutate()),
+    [getKey, mutate]
+  )
+  //#endregion
+
+  return {
+    isLoading,
+    isValidating,
+    error,
+    items,
+    hasMore,
+    loadMore,
+    refresh,
   }
 }
 

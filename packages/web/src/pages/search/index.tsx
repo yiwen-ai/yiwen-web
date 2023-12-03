@@ -24,6 +24,7 @@ import { buildSearchKey, useEnsureAuthorizedCallback } from '@yiwen-ai/store'
 import { RGBA } from '@yiwen-ai/util'
 import { useCallback, useContext } from 'react'
 import { useIntl } from 'react-intl'
+import { useResizeDetector } from 'react-resize-detector'
 import { Link } from 'react-router-dom'
 
 const MAX_WIDTH = 680
@@ -34,6 +35,9 @@ export default function SearchPage() {
   const setTheme = useContext(ThemeContext)
   const { renderToastContainer, pushToast } = useToast()
   const ensureAuthorized = useEnsureAuthorizedCallback()
+
+  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
+  const isNarrow = width <= BREAKPOINT.small
 
   const {
     isLoading,
@@ -104,11 +108,13 @@ export default function SearchPage() {
             }
           `}
         >
-          <Link to={NEW_CREATION_PATH} onClick={ensureAuthorized}>
-            <Button color='primary' variant='text'>
-              {intl.formatMessage({ defaultMessage: '创作内容' })}
-            </Button>
-          </Link>
+          {!isNarrow && (
+            <Link to={NEW_CREATION_PATH} onClick={ensureAuthorized}>
+              <Button color='primary' variant='text'>
+                {intl.formatMessage({ defaultMessage: '创作内容' })}
+              </Button>
+            </Link>
+          )}
           <IconButton
             iconName='celo'
             onClick={setTheme}
@@ -126,6 +132,7 @@ export default function SearchPage() {
         </div>
       </SetHeaderProps>
       <div
+        ref={ref}
         css={css`
           flex: 1;
           overflow-y: auto;
@@ -171,6 +178,7 @@ export default function SearchPage() {
             >
               {data.hits.map((item) => (
                 <SearchItem
+                  isNarrow={isNarrow}
                   key={buildSearchKey(item)}
                   item={item}
                   onClick={onView}
@@ -192,8 +200,9 @@ export default function SearchPage() {
             }
           `}
         >
-          <NewCreationLink />
+          {!isNarrow && <NewCreationLink />}
           <ResponsiveTabSection
+            isNarrow={isNarrow}
             {...responsiveTabSection}
             css={css`
               gap: inherit;
@@ -239,20 +248,24 @@ export default function SearchPage() {
                   `}
                 />
               ) : null}
-              <IconButton
-                iconName='upload'
-                iconSize='medium'
-                shape='rounded'
-                disabled={createFromLinkDialog.isCrawling}
-                onClick={onCreateFromFileDialogShow}
-              />
-              <IconButton
-                iconName='link2'
-                iconSize='medium'
-                shape='rounded'
-                disabled={createFromFileDialog.isUploading}
-                onClick={onCreateFromLinkDialogShow}
-              />
+              {!isNarrow && (
+                <IconButton
+                  iconName='upload'
+                  iconSize='medium'
+                  shape='rounded'
+                  disabled={createFromLinkDialog.isCrawling}
+                  onClick={onCreateFromFileDialogShow}
+                />
+              )}
+              {!isNarrow && (
+                <IconButton
+                  iconName='link2'
+                  iconSize='medium'
+                  shape='rounded'
+                  disabled={createFromFileDialog.isUploading}
+                  onClick={onCreateFromLinkDialogShow}
+                />
+              )}
             </div>
           )}
           autoFocus={true} // eslint-disable-line jsx-a11y/no-autofocus

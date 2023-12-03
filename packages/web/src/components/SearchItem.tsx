@@ -7,9 +7,11 @@ import CreatedBy from './CreatedBy'
 import PublicationLink from './PublicationLink'
 
 export default function SearchItem({
+  isNarrow,
   item,
   onClick,
 }: {
+  isNarrow: boolean
   item: SearchDocument
   onClick: (item: SearchDocument) => void
 }) {
@@ -39,7 +41,7 @@ export default function SearchItem({
       <div
         dir={isRTL(item.language) ? 'rtl' : undefined}
         css={css`
-          ${theme.typography.h2}
+          ${!isNarrow && theme.typography.h2}
           color: ${theme.palette.primaryNormal};
         `}
       >
@@ -65,6 +67,7 @@ export default function SearchItem({
           dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
             margin-top: 12px;
+            ${isNarrow && theme.typography.tooltip}
           `}
         >
           {item.summary.length < maxSumLength

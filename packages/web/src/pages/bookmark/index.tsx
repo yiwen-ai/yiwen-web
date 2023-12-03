@@ -28,10 +28,14 @@ import {
 } from '@yiwen-ai/util'
 import { useCallback, useContext } from 'react'
 import { useIntl } from 'react-intl'
+import { useResizeDetector } from 'react-resize-detector'
 import { Xid } from 'xid-ts'
 
 export default function BookmarkPage() {
   const { renderToastContainer, pushToast } = useToast()
+
+  const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
+  const isNarrow = width <= BREAKPOINT.small
 
   const {
     isLoading,
@@ -73,6 +77,7 @@ export default function BookmarkPage() {
     <>
       {renderToastContainer()}
       <div
+        ref={ref}
         css={css`
           padding: 60px 100px;
           @media (max-width: ${BREAKPOINT.small}px) {
@@ -95,6 +100,7 @@ export default function BookmarkPage() {
           >
             {items.map((item) => (
               <BookmarkItem
+                isNarrow={isNarrow}
                 key={Xid.fromValue(item.id).toString()}
                 item={item}
                 isRemoving={isRemoving(item)}
@@ -135,11 +141,13 @@ export default function BookmarkPage() {
 
 function BookmarkItem({
   item,
+  isNarrow,
   isRemoving,
   onView,
   onRemove,
 }: {
   item: BookmarkOutput
+  isNarrow: boolean
   isRemoving: boolean
   onView: (item: BookmarkOutput) => void
   onRemove: (item: BookmarkOutput) => void
@@ -168,7 +176,7 @@ function BookmarkItem({
         <div
           dir={isRTL(item.language) ? 'rtl' : undefined}
           css={css`
-            ${theme.typography.h2}
+            ${!isNarrow && theme.typography.h2}
             ${textEllipsis}
           `}
         >

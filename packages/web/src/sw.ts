@@ -1,8 +1,13 @@
 import { clientsClaim, type WorkboxPlugin } from 'workbox-core'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { initialize as googleAnalytics } from 'workbox-google-analytics'
-import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching'
-import { registerRoute } from 'workbox-routing'
+import {
+  cleanupOutdatedCaches,
+  matchPrecache,
+  precacheAndRoute,
+  PrecacheController,
+} from 'workbox-precaching'
+import { registerRoute, setCatchHandler } from 'workbox-routing'
 import {
   CacheFirst,
   NetworkFirst,
@@ -16,6 +21,11 @@ clientsClaim()
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()
 googleAnalytics()
+
+const indexHtmlUrl = new PrecacheController()
+  .getCachedURLs()
+  .find((url: string) => url.endsWith('index.html'))
+console.log('Yiwen index', indexHtmlUrl)
 
 registerRoute(
   new RegExp('https://cdn\\.yiwen\\.pub/.*'),
@@ -41,7 +51,7 @@ registerRoute(
     plugins: [
       new ExpirationPlugin({
         maxEntries: 100,
-        maxAgeSeconds: 7 * 24 * 60 * 60,
+        maxAgeSeconds: 3 * 24 * 60 * 60,
       }) as WorkboxPlugin,
     ],
   })
@@ -63,3 +73,17 @@ registerRoute(
     ],
   })
 )
+
+if (indexHtmlUrl) {
+  setCatchHandler(async ({ request }) => {
+    let res: Response | undefined
+    switch (request.destination) {
+      case 'document':
+        res = await matchPrecache(indexHtmlUrl)
+      // case 'image':
+      //   return matchPrecache(FALLBACK_IMAGE_URL)
+    }
+
+    return res || Response.error()
+  })
+}
