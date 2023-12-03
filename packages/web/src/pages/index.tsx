@@ -1,4 +1,5 @@
 import {
+  GROUP_DETAIL_PATH,
   LayoutDivRefContext,
   NEW_CREATION_PATH,
   SetHeaderProps,
@@ -25,6 +26,7 @@ import {
 } from '@yiwen-ai/component'
 import {
   buildCollectionKey,
+  isInWechat,
   useEnsureAuthorizedCallback,
   useLatestCollectionList,
   type CollectionOutput,
@@ -33,11 +35,13 @@ import { RGBA, useScrollOnBottom } from '@yiwen-ai/util'
 import { useCallback, useContext } from 'react'
 import { useIntl } from 'react-intl'
 import { useResizeDetector } from 'react-resize-detector'
-import { Link } from 'react-router-dom'
+import { Link, generatePath, useNavigate } from 'react-router-dom'
+import { Xid } from 'xid-ts'
 
 export default function Home() {
   const intl = useIntl()
   const theme = useTheme()
+  const navigate = useNavigate()
   const setTheme = useContext(ThemeContext)
   const { renderToastContainer, pushToast } = useToast()
   const ensureAuthorized = useEnsureAuthorizedCallback()
@@ -66,9 +70,19 @@ export default function Home() {
 
   const handleCollectionClick = useCallback(
     (item: CollectionOutput) => {
-      showCollectionViewer(item.gid, item.id, undefined)
+      isInWechat()
+        ? navigate({
+            pathname: generatePath(GROUP_DETAIL_PATH, {
+              gid: Xid.fromValue(item.gid).toString(),
+              type: 'collection',
+            }),
+            search: new URLSearchParams({
+              cid: Xid.fromValue(item.id).toString(),
+            }).toString(),
+          })
+        : showCollectionViewer(item.gid, item.id, undefined)
     },
-    [showCollectionViewer]
+    [showCollectionViewer, navigate]
   )
 
   return (
@@ -329,7 +343,6 @@ function LatestCollections({
               gap: 16px;
               ${theme.typography.bodyBold}
               color: ${theme.color.body.primary};
-              text-shadow: 0px 2px 3px ${RGBA(theme.palette.grayLight0, 0.75)};
               :before,
               :after {
                 content: '';

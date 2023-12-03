@@ -19,6 +19,7 @@ export {
   BytesToBase64Url,
   ObjectKind,
   UserStatus,
+  isInWechat,
   isSystem,
   type ColorScheme,
   type GroupInfo,

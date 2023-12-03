@@ -33,7 +33,7 @@ import {
   timer,
   type Subscription,
 } from 'rxjs'
-import { type UserInfo } from './common'
+import { isInWechat, type UserInfo } from './common'
 import { useLogger } from './logger'
 import {
   createRequest,
@@ -77,11 +77,8 @@ class AuthAPI {
   authorize(provider: IdentityProvider, signal: AbortSignal | null) {
     return new Observable<UserInfo>((observer) => {
       const { AUTH_URL, PUBLIC_PATH } = this.config
-      const isInWechat = window.navigator.userAgent
-        .toLowerCase()
-        .includes('micromessenger/')
 
-      if (isInWechat) {
+      if (isInWechat()) {
         const idp = provider == 'wechat' ? 'wechat_h5' : provider
         const url = joinURL(AUTH_URL, `/idp/${idp}/authorize`, {
           next_url: document.location.href,

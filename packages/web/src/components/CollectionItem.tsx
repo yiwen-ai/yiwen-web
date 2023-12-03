@@ -12,6 +12,7 @@ import {
   CollectionStatus,
   getCollectionInfo,
   isRTL,
+  useLanguageList,
   type CollectionOutput,
 } from '@yiwen-ai/store'
 import { checkNarrow, preventDefaultStopPropagation } from '@yiwen-ai/util'
@@ -44,6 +45,8 @@ export default function CollectionItem({
 }) {
   const intl = useIntl()
   const theme = useTheme()
+  const { toLanguageList } = useLanguageList()
+
   const disabled = isArchiving || isPublishing
   const handleClick = useCallback(() => onClick(item), [item, onClick])
   const handleSetting = useCallback(
@@ -66,6 +69,11 @@ export default function CollectionItem({
 
     return getCollectionInfo(item)
   }, [item])
+
+  const languageList = useMemo(
+    () => toLanguageList(item.language as string, ...(item.languages || [])),
+    [toLanguageList, item.language, item.languages]
+  )
 
   const maxSumLength = checkNarrow() ? 60 : 120
   const dir = isRTL(language) ? 'rtl' : undefined
@@ -129,7 +137,7 @@ export default function CollectionItem({
           >
             {info.title}
           </div>
-          {(info.authors || info.keywords) && (
+          {(info.authors || info.keywords || languageList.length > 0) && (
             <div
               dir={dir}
               css={css`
@@ -150,6 +158,17 @@ export default function CollectionItem({
                   readOnly={true}
                 >
                   {author}
+                </Button>
+              ))}
+              {languageList.map((language) => (
+                <Button
+                  key={language.code}
+                  color='primary'
+                  size='small'
+                  variant='outlined'
+                  readOnly={true}
+                >
+                  {language.nativeName}
                 </Button>
               ))}
               {info.keywords?.map((keyword) => (

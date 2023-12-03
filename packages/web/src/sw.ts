@@ -5,7 +5,7 @@ import {
   cleanupOutdatedCaches,
   matchPrecache,
   precacheAndRoute,
-  PrecacheController,
+  type PrecacheEntry,
 } from 'workbox-precaching'
 import { registerRoute, setCatchHandler } from 'workbox-routing'
 import {
@@ -18,14 +18,20 @@ declare let self: ServiceWorkerGlobalScope
 
 self.skipWaiting()
 clientsClaim()
-precacheAndRoute(self.__WB_MANIFEST)
+
+const precaches = self.__WB_MANIFEST
+const indexHtml = precaches.find((entry) =>
+  (entry as PrecacheEntry).url.endsWith('index.html')
+) as PrecacheEntry | undefined
+
+console.log('Yiwen index', indexHtml)
+
+if (indexHtml) {
+  precaches.push(Object.assign({}, indexHtml, { url: 'index.html' }))
+}
+precacheAndRoute(precaches)
 cleanupOutdatedCaches()
 googleAnalytics()
-
-const indexHtmlUrl = new PrecacheController()
-  .getCachedURLs()
-  .find((url: string) => url.endsWith('index.html'))
-console.log('Yiwen index', indexHtmlUrl)
 
 registerRoute(
   new RegExp('https://cdn\\.yiwen\\.pub/.*'),
@@ -54,6 +60,11 @@ registerRoute(
         maxAgeSeconds: 3 * 24 * 60 * 60,
       }) as WorkboxPlugin,
     ],
+    matchOptions: {
+      ignoreMethod: false,
+      ignoreSearch: true,
+      ignoreVary: false,
+    },
   })
 )
 
@@ -71,19 +82,22 @@ registerRoute(
         maxAgeSeconds: 3 * 24 * 60 * 60,
       }) as WorkboxPlugin,
     ],
+    matchOptions: {
+      ignoreMethod: false,
+      ignoreSearch: false,
+      ignoreVary: false,
+    },
   })
 )
 
-if (indexHtmlUrl) {
-  setCatchHandler(async ({ request }) => {
-    let res: Response | undefined
-    switch (request.destination) {
-      case 'document':
-        res = await matchPrecache(indexHtmlUrl)
-      // case 'image':
-      //   return matchPrecache(FALLBACK_IMAGE_URL)
-    }
+setCatchHandler(async ({ request }) => {
+  let res: Response | undefined
+  switch (request.destination) {
+    case 'document':
+      res = await matchPrecache('index.html')
+    // case 'image':
+    //   return matchPrecache(FALLBACK_IMAGE_URL)
+  }
 
-    return res || Response.error()
-  })
-}
+  return res || Response.error()
+})

@@ -2,6 +2,7 @@ import '../types/weixin-js-sdk.d.ts'
 
 import { useCallback } from 'react'
 import wx from 'weixin-js-sdk'
+import { isInWechat } from './common'
 import { useLogger } from './logger'
 import { useFetcher } from './useFetcher'
 
@@ -36,9 +37,7 @@ export function useWechat() {
 
   const wechat = useCallback(
     async (opts: wx.UpdateAppMessageShareDataOptions) => {
-      if (
-        !window.navigator.userAgent.toLowerCase().includes('micromessenger/')
-      ) {
+      if (!isInWechat()) {
         return undefined
       }
 

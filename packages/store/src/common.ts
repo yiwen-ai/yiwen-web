@@ -122,6 +122,10 @@ export interface PostFilePolicy {
 
 export const isSystem = (info: UserInfo | undefined) => info?.cn === 'sys'
 
+export function isInWechat() {
+  return window.navigator.userAgent.toLowerCase().includes('micromessenger/')
+}
+
 export function usePagination<T>({
   getKey,
   data,

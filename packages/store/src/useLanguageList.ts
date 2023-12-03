@@ -1,3 +1,4 @@
+import { uniq } from 'lodash-es'
 import { useCallback, useMemo } from 'react'
 import useSWR from 'swr'
 import { useFetcher } from './useFetcher'
@@ -55,8 +56,19 @@ export function useLanguageList() {
     }))
   }, [data?.result])
 
+  const toLanguageList = useCallback(
+    (...languages: string[]): Language[] => {
+      if (!languageList) return []
+      return uniq(languages)
+        .map((code) => languageList?.find((lang) => lang.code === code))
+        .filter((v) => !!v) as Language[]
+    },
+    [languageList]
+  )
+
   return {
     languageList,
+    toLanguageList,
     error,
     isLoading,
     isValidating,

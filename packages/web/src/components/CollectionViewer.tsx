@@ -134,7 +134,7 @@ export default function CollectionViewer({
 }: CollectionViewerProps) {
   const intl = useIntl()
   const theme = useTheme()
-  // const { user } = useAuth()
+
   const { width = 0, ref } = useResizeDetector<HTMLDivElement>()
   const setTheme = useContext(ThemeContext)
   const isNarrow = responsive && width <= BREAKPOINT.small

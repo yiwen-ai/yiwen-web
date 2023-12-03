@@ -1,8 +1,9 @@
-import { NEW_CREATION_PATH } from '#/App'
+import { GROUP_DETAIL_PATH, NEW_CREATION_PATH } from '#/App'
 import { type ToastAPI } from '@yiwen-ai/component'
 import {
   ObjectKind,
   createBlobURL,
+  isInWechat,
   useSearch,
   type ObjectParams,
   type ScrapingOutput,
@@ -10,8 +11,9 @@ import {
 } from '@yiwen-ai/store'
 import { toURLSearchParams } from '@yiwen-ai/util'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { generatePath, useNavigate, useSearchParams } from 'react-router-dom'
 import { useDebounce } from 'use-debounce'
+import { Xid } from 'xid-ts'
 import { useCollectionViewer } from './useCollectionViewer'
 import { useCreateFromFileDialog } from './useCreateFromFileDialog'
 import { useCreateFromLinkDialog } from './useCreateFromLinkDialog'
@@ -73,12 +75,39 @@ export function useSearchPage(pushToast: ToastAPI['pushToast']) {
   const onView = useCallback(
     (item: ObjectParams) => {
       if (item.kind === ObjectKind.Collection) {
-        showCollectionViewer(item.gid, item.cid, item.language)
+        isInWechat()
+          ? navigate({
+              pathname: generatePath(GROUP_DETAIL_PATH, {
+                gid: Xid.fromValue(item.gid as Uint8Array).toString(),
+                type: 'collection',
+              }),
+              search: new URLSearchParams({
+                cid: Xid.fromValue(item.cid).toString(),
+              }).toString(),
+            })
+          : showCollectionViewer(item.gid, item.cid, item.language)
       } else {
-        showPublicationViewer(item.gid, item.cid, item.language, item.version)
+        isInWechat()
+          ? navigate({
+              pathname: generatePath(GROUP_DETAIL_PATH, {
+                gid: Xid.fromValue(item.gid as Uint8Array).toString(),
+                type: 'publication',
+              }),
+              search: new URLSearchParams({
+                cid: Xid.fromValue(item.cid).toString(),
+                language: item.language as string,
+                version: String(item.version),
+              }).toString(),
+            })
+          : showPublicationViewer(
+              item.gid,
+              item.cid,
+              item.language,
+              item.version
+            )
       }
     },
-    [showPublicationViewer, showCollectionViewer]
+    [showPublicationViewer, showCollectionViewer, navigate]
   )
   //#endregion
 
