@@ -58,26 +58,8 @@ registerRoute(
     plugins: [
       new ExpirationPlugin({
         maxEntries: 100000,
-        maxAgeSeconds: 1 * 24 * 60 * 60,
-      }) as WorkboxPlugin,
-    ],
-  })
-)
-
-const apiPostCapture = self.location.hostname.includes('.ai')
-  ? 'https://(api|wallet)\\.yiwen\\.ai/.*/list.*'
-  : 'https://(api|wallet)\\.yiwen\\.ltd/.*/list.*'
-
-registerRoute(
-  new RegExp(apiPostCapture),
-  new NetworkFirst({
-    cacheName: 'api-res',
-    plugins: [
-      new ExpirationPlugin({
-        maxEntries: 100000,
         maxAgeSeconds: 3 * 24 * 60 * 60,
       }) as WorkboxPlugin,
     ],
-  }),
-  'POST'
+  })
 )

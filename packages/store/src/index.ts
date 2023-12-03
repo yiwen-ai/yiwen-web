@@ -16,6 +16,7 @@ export {
   revokeBlobURL,
 } from './CBOR'
 export {
+  BytesToBase64Url,
   ObjectKind,
   UserStatus,
   isSystem,

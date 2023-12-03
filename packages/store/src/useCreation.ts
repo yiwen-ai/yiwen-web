@@ -5,10 +5,11 @@ import useSWR, { useSWRConfig } from 'swr'
 import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import {
-  type GIDPagination,
+  BytesToBase64Url,
   type GroupInfo,
   type Page,
   type PostFilePolicy,
+  type QueryGIDPagination,
   type UserInfo,
 } from './common'
 import { RequestMethod, useFetcher } from './useFetcher'
@@ -191,24 +192,21 @@ export function useCreationAPI() {
   )
 
   const readCreationList = useCallback(
-    (params: { gid: string; page_token: Uint8Array | null | undefined }) => {
-      const body: GIDPagination = {
-        gid: Xid.fromValue(params.gid),
-        page_token: params.page_token,
-        page_size: 20,
-      }
-      return request.post<Page<CreationOutput>>(`${path}/list`, body)
+    (params: Record<keyof QueryGIDPagination, string | number | undefined>) => {
+      return request.get<Page<CreationOutput>>(
+        `${path}/list`,
+        Object.assign(params, { page_size: 20 })
+      )
     },
     [request]
   )
 
   const readArchivedCreationList = useCallback(
-    (params: { gid: string; page_token: Uint8Array | null | undefined }) => {
-      const body: GIDPagination = {
-        gid: Xid.fromValue(params.gid),
-        page_token: params.page_token,
-      }
-      return request.post<Page<CreationOutput>>(`${path}/list_archived`, body)
+    (params: Record<keyof QueryGIDPagination, string | number | undefined>) => {
+      return request.get<Page<CreationOutput>>(
+        `${path}/list_archived`,
+        Object.assign(params, { page_size: 20 })
+      )
     },
     [request]
   )
@@ -352,7 +350,9 @@ export function useCreation(
 
       const params = {
         gid: _gid,
-        page_token: prevPage?.next_page_token,
+        page_token: prevPage?.next_page_token
+          ? BytesToBase64Url(prevPage?.next_page_token)
+          : undefined,
       }
 
       return [`${path}/list`, params] as const
@@ -464,9 +464,17 @@ export function useCreationList(
       if (!_gid) return null
       if (prevPage && !prevPage.next_page_token) return null
 
-      const params = {
+      const params: Record<
+        keyof QueryGIDPagination,
+        string | number | undefined
+      > = {
         gid: _gid,
-        page_token: prevPage?.next_page_token,
+        page_token: prevPage?.next_page_token
+          ? BytesToBase64Url(prevPage?.next_page_token)
+          : undefined,
+        page_size: undefined,
+        fields: undefined,
+        status: undefined,
       }
 
       return [

@@ -5,12 +5,13 @@ import useSWRInfinite, { unstable_serialize } from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { xLanguage } from './AuthContext'
 import {
-  type GIDPagination,
+  BytesToBase64Url,
   type GroupInfo,
-  type IDGIDPagination,
   type ObjectKind,
   type Page,
   type PostFilePolicy,
+  type QueryGIDPagination,
+  type QueryIDGIDPagination,
   type RFP,
   type SubscriptionOutput,
 } from './common'
@@ -233,14 +234,11 @@ export function useCollectionAPI() {
   )
 
   const readCollectionList = useCallback(
-    (params: { gid: string; page_token: Uint8Array | null | undefined }) => {
-      const body: GIDPagination = {
-        gid: Xid.fromValue(params.gid),
-        page_token: params.page_token,
-        page_size: 20,
-        fields: ['info', 'updated_at'],
-      }
-      return request.post<Page<CollectionOutput>>(`${path}/list`, body)
+    (params: Record<keyof QueryGIDPagination, string | number | undefined>) => {
+      return request.get<Page<CollectionOutput>>(
+        `${path}/list`,
+        Object.assign(params, { page_size: 20, fields: 'info,updated_at' })
+      )
     },
     [request]
   )
@@ -256,33 +254,23 @@ export function useCollectionAPI() {
   )
 
   const readCollectionChildren = useCallback(
-    (params: {
-      gid: string
-      id: string
-      page_token: Uint8Array | null | undefined
-    }) => {
-      const body: IDGIDPagination = {
-        gid: Xid.fromValue(params.gid),
-        id: Xid.fromValue(params.id),
-        page_token: params.page_token,
-        page_size: 20,
-      }
-      return request.post<Page<CollectionChildrenOutput>>(
+    (
+      params: Record<keyof QueryIDGIDPagination, string | number | undefined>
+    ) => {
+      return request.get<Page<CollectionChildrenOutput>>(
         `${path}/list_children`,
-        body
+        Object.assign(params, { page_size: 100 })
       )
     },
     [request]
   )
 
   const readArchivedCollectionList = useCallback(
-    (params: { gid: string; page_token: Uint8Array | null | undefined }) => {
-      const body: GIDPagination = {
-        gid: Xid.fromValue(params.gid),
-        page_token: params.page_token,
-        fields: ['info', 'updated_at'],
-      }
-      return request.post<Page<CollectionOutput>>(`${path}/list_archived`, body)
+    (params: Record<keyof QueryGIDPagination, string | number | undefined>) => {
+      return request.get<Page<CollectionOutput>>(
+        `${path}/list_archived`,
+        Object.assign(params, { page_size: 20, fields: 'info,updated_at' })
+      )
     },
     [request]
   )
@@ -439,7 +427,9 @@ export function useCollection(
 
       const params = {
         gid: _gid,
-        page_token: prevPage?.next_page_token,
+        page_token: prevPage?.next_page_token
+          ? BytesToBase64Url(prevPage?.next_page_token)
+          : undefined,
       }
 
       return [`${path}/list`, params] as const
@@ -535,9 +525,17 @@ export function useCollectionList(
       if (!_gid) return null
       if (prevPage && !prevPage.next_page_token) return null
 
-      const params = {
+      const params: Record<
+        keyof QueryGIDPagination,
+        string | number | undefined
+      > = {
         gid: _gid,
-        page_token: prevPage?.next_page_token,
+        page_token: prevPage?.next_page_token
+          ? BytesToBase64Url(prevPage?.next_page_token)
+          : undefined,
+        page_size: undefined,
+        fields: undefined,
+        status: undefined,
       }
 
       return [
@@ -823,11 +821,19 @@ export function useCollectionChildren(
       if (!_gid || !_id) return null
       if (prevPage && !prevPage.next_page_token) return null
 
-      const params = {
+      const params: Record<
+        keyof QueryIDGIDPagination,
+        string | number | undefined
+      > = {
         id: _id,
         gid: _gid,
         language: _language || '',
-        page_token: prevPage?.next_page_token,
+        page_token: prevPage?.next_page_token
+          ? BytesToBase64Url(prevPage?.next_page_token)
+          : undefined,
+        fields: undefined,
+        status: undefined,
+        page_size: undefined,
       }
 
       return [`${path}/list_children`, params] as const

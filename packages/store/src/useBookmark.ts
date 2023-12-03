@@ -7,11 +7,12 @@ import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
 import { decode, encode } from './CBOR'
 import {
+  BytesToBase64Url,
   ObjectKind,
   usePagination,
   type GroupInfo,
   type Page,
-  type Pagination,
+  type QueryPagination,
 } from './common'
 import {
   buildCollectionKey,
@@ -88,8 +89,11 @@ export function useBookmarkAPI() {
   )
 
   const readBookmarkList = useCallback(
-    (body: Pagination) => {
-      return request.post<Page<BookmarkOutput>>(`${path}/list`, body)
+    (params: Record<keyof QueryPagination, string | number | undefined>) => {
+      return request.get<Page<BookmarkOutput>>(
+        `${path}/list`,
+        Object.assign(params, { page_size: 20 })
+      )
     },
     [request]
   )
@@ -458,18 +462,24 @@ export function useBookmarkList() {
     (_: unknown, prevPage: Page<BookmarkOutput> | null) => {
       if (!isAuthorized) return null
       if (prevPage && !prevPage.next_page_token) return null
-      const body: Pagination = {
-        page_size: 20,
-        page_token: prevPage?.next_page_token,
-      }
-      return [`${path}/list`, body] as const
+      const page_token = prevPage?.next_page_token
+        ? BytesToBase64Url(prevPage?.next_page_token)
+        : undefined
+      const params: Record<keyof QueryPagination, string | number | undefined> =
+        {
+          page_size: undefined,
+          page_token,
+          fields: undefined,
+          status: undefined,
+        }
+      return [`${path}/list`, params] as const
     },
     [isAuthorized]
   )
 
   const { mutate, ...response } = useSWRInfinite(
     getKey,
-    ([, body]) => readBookmarkList(body),
+    ([, params]) => readBookmarkList(params),
     { revalidateFirstPage: false }
   )
 

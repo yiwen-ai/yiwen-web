@@ -3,11 +3,11 @@ import { type SWRInfiniteResponse } from 'swr/infinite'
 import { type CreationStatus } from './useCreation'
 import { type PublicationStatus } from './usePublication'
 
-export interface Pagination {
-  page_token?: Uint8Array | null | undefined
+export interface QueryPagination {
+  page_token?: string
   page_size?: number
   status?: number
-  fields?: string[]
+  fields?: string
 }
 
 export interface UIDPagination {
@@ -19,16 +19,17 @@ export interface UIDPagination {
   fields?: string[]
 }
 
-export interface GIDPagination {
-  gid: Uint8Array
-  page_token?: Uint8Array | null | undefined
+export interface QueryGIDPagination {
+  gid: string
+  page_token?: string
   page_size?: number
   status?: CreationStatus | PublicationStatus
-  fields?: string[]
+  fields?: string
 }
 
-export interface IDGIDPagination extends GIDPagination {
-  id: Uint8Array
+export interface QueryIDGIDPagination extends QueryGIDPagination {
+  id: string
+  language?: string
 }
 
 export interface Page<T> {
@@ -159,3 +160,9 @@ export function usePagination<T>({
     refresh,
   } as const
 }
+
+export const BytesToBase64Url = (bytes: Uint8Array) =>
+  btoa(String.fromCodePoint(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '')

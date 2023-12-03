@@ -5,12 +5,13 @@ import useSWRInfinite from 'swr/infinite'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
 import {
+  BytesToBase64Url,
   RoleLevel,
   usePagination,
   type GroupInfo,
   type Page,
-  type Pagination,
   type PostFilePolicy,
+  type QueryPagination,
   type UserInfo,
 } from './common'
 import { useFetcher } from './useFetcher'
@@ -85,12 +86,15 @@ export function useGroupAPI() {
   )
 
   const readMyGroupList = useCallback(() => {
-    return request.post<{ result: Group[] }>(`${path}/list_my`)
+    return request.get<{ result: Group[] }>(`${path}/list_my`)
   }, [request])
 
   const readFollowedGroupList = useCallback(
-    (body: Pagination) => {
-      return request.post<Page<Group>>(`${path}/list_following`, body)
+    (params: Record<keyof QueryPagination, string | number | undefined>) => {
+      return request.get<Page<Group>>(
+        `${path}/list_following`,
+        Object.assign(params, { page_size: 20 })
+      )
     },
     [request]
   )
@@ -302,11 +306,17 @@ export function useFollowedGroupList() {
     (_: unknown, prevPage: Page<Group> | null) => {
       if (!isAuthorized) return null
       if (prevPage && !prevPage.next_page_token) return null
-      const body: Pagination = {
-        page_size: 20,
-        page_token: prevPage?.next_page_token,
-      }
-      return [`${path}/list_following`, body] as const
+      const page_token = prevPage?.next_page_token
+        ? BytesToBase64Url(prevPage?.next_page_token)
+        : undefined
+      const params: Record<keyof QueryPagination, string | number | undefined> =
+        {
+          page_size: undefined,
+          page_token,
+          fields: undefined,
+          status: undefined,
+        }
+      return [`${path}/list_following`, params] as const
     },
     [isAuthorized]
   )

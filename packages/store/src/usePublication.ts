@@ -8,12 +8,13 @@ import useSWRSubscription from 'swr/subscription'
 import { Xid } from 'xid-ts'
 import { useAuth } from './AuthContext'
 import {
+  BytesToBase64Url,
   usePagination,
-  type GIDPagination,
   type GroupInfo,
   type Page,
-  type Pagination,
   type PostFilePolicy,
+  type QueryGIDPagination,
+  type QueryPagination,
   type RFP,
   type SubscriptionOutput,
   type UserInfo,
@@ -208,26 +209,20 @@ export function usePublicationAPI(baseURL?: string) {
   )
 
   const readPublicationList = useCallback(
-    (params: { gid: string; page_token: Uint8Array | null | undefined }) => {
-      const body: GIDPagination = {
-        gid: Xid.fromValue(params.gid),
-        page_token: params.page_token,
-        page_size: 20,
-      }
-      return request.post<Page<PublicationOutput>>(`${path}/list`, body)
+    (params: Record<keyof QueryGIDPagination, string | number | undefined>) => {
+      return request.get<Page<PublicationOutput>>(
+        `${path}/list`,
+        Object.assign(params, { page_size: 20 })
+      )
     },
     [request]
   )
 
   const readArchivedPublicationList = useCallback(
-    (params: { gid: string; page_token: Uint8Array | null | undefined }) => {
-      const body: GIDPagination = {
-        gid: Xid.fromValue(params.gid),
-        page_token: params.page_token,
-      }
-      return request.post<Page<PublicationOutput>>(
+    (params: Record<keyof QueryGIDPagination, string | number | undefined>) => {
+      return request.get<Page<PublicationOutput>>(
         `${path}/list_archived`,
-        body
+        Object.assign(params, { page_size: 20 })
       )
     },
     [request]
@@ -256,10 +251,10 @@ export function usePublicationAPI(baseURL?: string) {
   }, [request])
 
   const readFollowedPublicationList = useCallback(
-    (body: Omit<Pagination, 'page_size'>) => {
-      return request.post<Page<PublicationOutput>>(
+    (params: Record<keyof QueryPagination, string | number | undefined>) => {
+      return request.get<Page<PublicationOutput>>(
         `${path}/list_by_following`,
-        body
+        params
       )
     },
     [request]
@@ -426,7 +421,7 @@ export function usePublication(
     isLoading,
   } = useSWR(
     getKey,
-    ([path, params]) =>
+    ([_, params]) =>
       readPublication({ ...params, parent: _parent, subtoken: _subtoken }),
     {} as SWRConfiguration
   )
@@ -438,7 +433,9 @@ export function usePublication(
 
       const params = {
         gid: _gid,
-        page_token: prevPage?.next_page_token,
+        page_token: prevPage?.next_page_token
+          ? BytesToBase64Url(prevPage?.next_page_token)
+          : undefined,
       }
 
       return [`${path}/list`, params] as const
@@ -839,9 +836,17 @@ export function usePublicationList(
       if (!_gid) return null
       if (prevPage && !prevPage.next_page_token) return null
 
-      const params = {
+      const params: Record<
+        keyof QueryGIDPagination,
+        string | number | undefined
+      > = {
         gid: _gid,
-        page_token: prevPage?.next_page_token,
+        page_token: prevPage?.next_page_token
+          ? BytesToBase64Url(prevPage?.next_page_token)
+          : undefined,
+        page_size: undefined,
+        fields: undefined,
+        status: undefined,
       }
 
       return [
@@ -1139,10 +1144,17 @@ export function useFollowedPublicationList() {
     (_: unknown, prevPage: Page<PublicationOutput> | null) => {
       if (!isAuthorized) return null
       if (prevPage && !prevPage.next_page_token) return null
-      const body: Omit<Pagination, 'page_size'> = {
-        page_token: prevPage?.next_page_token,
-      }
-      return [`${path}/list_by_following`, body] as const
+      const page_token = prevPage?.next_page_token
+        ? BytesToBase64Url(prevPage?.next_page_token)
+        : undefined
+      const params: Record<keyof QueryPagination, string | number | undefined> =
+        {
+          page_size: undefined,
+          page_token,
+          fields: undefined,
+          status: undefined,
+        }
+      return [`${path}/list_by_following`, params] as const
     },
     [isAuthorized]
   )
